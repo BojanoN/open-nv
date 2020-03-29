@@ -1,24 +1,39 @@
+#include <cstdint>
+#include <fstream>
 #include <string>
 #include <unordered_map>
-#include <fstream>
+
 #include "data_file.hpp"
 
-class ESM{
+#define GRUP 0x47525550
+
+class ESM {
 
 public:
-  ESM(const char* path): name(path){
+  ESM(const char *path) : name(path) {
     std::ifstream file{path, std::ios::binary};
-    char type[4] = {0};
+    uint32_t type;
 
-    while( file.read(type, 4)){
-      switch(){
-        // Handle records
+    while (file.read(reinterpret_cast<char *>(&type), 4)) {
+      switch (type) {
+        // Load groups
+      case (GRUP):
+        Group *tmp_g = new Group(file);
+        groups->insert({tmp_g->id, tmp_g});
+        break;
+        // Load record
+      default:
+        Record *tmp_r = new Record(file);
+        records->insert({tmp_r->id, tmp_r});
+        break;
       }
     }
-
   };
 
   ~ESM(){};
 
   std::string name;
+
+  std::unordered_map<uint32_t, Record *> records;
+  std::unordered_map<uint32_t, Group *> groups;
 };
