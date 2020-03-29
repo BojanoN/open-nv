@@ -3,19 +3,22 @@
 #include <fstream>
 #include "data_file.hpp"
 
-class ESM{
+class ESM
+{
 
 public:
-  ESM(const char* path): name(path){
+  ESM(const char *path) : name(path)
+  {
     std::ifstream file{path, std::ios::binary};
     char type[4] = {0};
 
-    while( file.read(type, 4)){
-      switch(){
+    while (file.read(type, 4))
+    {
+      switch ()
+      {
         // Handle records
       }
     }
-
   };
 
   ~ESM(){};
