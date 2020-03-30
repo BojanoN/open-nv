@@ -2,7 +2,7 @@
 #include "spdlog/spdlog.h"
 #include <unistd.h>
 
-const char* opts = "f";
+const char* opts = "f:";
 const char* default_path = "./bin/esm/FalloutNV.esm";
 
 int main(int argc, char** argv)
@@ -11,7 +11,7 @@ int main(int argc, char** argv)
     const char* path = default_path;
     ESM* esm_file;
 
-    while ((c = getopt(argc, argv, opts) != -1)) {
+    while ((c = getopt(argc, argv, opts)) != -1) {
         switch (c) {
         case 'f':
             path = optarg;
