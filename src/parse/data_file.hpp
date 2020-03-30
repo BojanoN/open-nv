@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <fstream>
+#include <unordered_map>
 #include <vector>
 
 class SubRecord {
@@ -17,23 +18,29 @@ public:
 
 class Record {
 public:
-    uint8_t Type[4];
+    uint32_t Type;
     uint32_t DataSize;
     uint32_t Flags;
     uint32_t ID;
     uint32_t CreationKitRevision;
     uint16_t FormVersion;
+    /* ignoring this for now */
     uint16_t Unknown;
-    std::vector<SubRecord> Data;
 
-    Record(std::ifstream& stream) : stream(stream)
+    std::vector<SubRecord*> subrecords;
+
+    Record(std::ifstream& stream)
     {
-        u_int8_t type[4];
-        // ...
+        stream.read(reinterpret_cast<char*>(&this->DataSize), sizeof(uint32_t));
+        stream.read(reinterpret_cast<char*>(&this->Flags), sizeof(uint32_t));
+        stream.read(reinterpret_cast<char*>(&this->ID), sizeof(uint32_t));
+        stream.read(reinterpret_cast<char*>(&this->CreationKitRevision), sizeof(uint32_t));
+        stream.read(reinterpret_cast<char*>(&this->FormVersion), sizeof(uint16_t));
+        stream.read(reinterpret_cast<char*>(&this->Unknown), sizeof(uint16_t));
     }
 
-private:
-    std::ifstream& stream;
+    static Record* ParseRecord(std::ifstream& stream, uint32_t type);
+    static std::unordered_map<uint32_t, Record*> prototypes;
 };
 
 class Group {
@@ -41,7 +48,7 @@ public:
     /* TBD */
     uint32_t ID;
 
-    uint8_t Type[4];
+    uint32_t Type;
     uint32_t GroupSize;
     uint8_t Label[4];
     int32_t GroupType;
