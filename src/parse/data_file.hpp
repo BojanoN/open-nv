@@ -26,7 +26,7 @@ public:
     uint16_t Unknown;
     std::vector<SubRecord> Data;
 
-    Record(std::ifstream& stream) : stream(stream)
+    Record(std::ifstream& stream)
     {
         stream.read(reinterpret_cast<char*>(&Type), 4);
         stream.read(reinterpret_cast<char*>(&DataSize), 4);
@@ -39,9 +39,6 @@ public:
         // dummy data read to move the position in stream to the end of the record
         stream.seekg(DataSize, std::ios_base::cur);
     }
-
-private:
-    std::ifstream& stream;
 };
 
 class Group {
