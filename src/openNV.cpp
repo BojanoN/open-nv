@@ -7,6 +7,8 @@ const char* default_path = "./bin/esm/FalloutNV.esm";
 
 int main(int argc, char** argv)
 {
+    spdlog::set_level(spdlog::level::debug);
+
     int c;
     const char* path = default_path;
     ESM* esm_file;

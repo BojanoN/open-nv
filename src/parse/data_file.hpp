@@ -28,8 +28,16 @@ public:
 
     Record(std::ifstream& stream) : stream(stream)
     {
-        u_int8_t type[4];
-        // ...
+        stream.read(reinterpret_cast<char*>(&Type), 4);
+        stream.read(reinterpret_cast<char*>(&DataSize), 4);
+        stream.read(reinterpret_cast<char*>(&Flags), 4);
+        stream.read(reinterpret_cast<char*>(&ID), 4);
+        stream.read(reinterpret_cast<char*>(&CreationKitRevision), 4);
+        stream.read(reinterpret_cast<char*>(&FormVersion), 2);
+        stream.read(reinterpret_cast<char*>(&Unknown), 2);
+
+        // dummy data read to move the position in stream to the end of the record
+        stream.seekg(DataSize, std::ios_base::cur);
     }
 
 private:
@@ -41,7 +49,7 @@ public:
     /* TBD */
     uint32_t ID;
 
-    uint8_t Type[4];
+    uint8_t Type[4]; // always GRUP
     uint32_t GroupSize;
     uint8_t Label[4];
     int32_t GroupType;
@@ -59,5 +67,9 @@ public:
 
     Group(std::ifstream& stream)
     {
+        stream.read(reinterpret_cast<char*>(&Type), 4);
+        stream.read(reinterpret_cast<char*>(&GroupSize), 4);
+        stream.read(reinterpret_cast<char*>(&Label), 4);
+        stream.read(reinterpret_cast<char*>(&GroupType), 4);
     }
 };
