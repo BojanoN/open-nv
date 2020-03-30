@@ -39,6 +39,9 @@ public:
         stream.read(reinterpret_cast<char*>(&this->CreationKitRevision), sizeof(uint32_t));
         stream.read(reinterpret_cast<char*>(&this->FormVersion), sizeof(uint16_t));
         stream.read(reinterpret_cast<char*>(&this->Unknown), sizeof(uint16_t));
+
+        // dummy read - stream offset
+        stream.seekg(DataSize, std::ios_base::cur);
     }
 
     virtual Record* clone(std::ifstream& stream) = 0;
