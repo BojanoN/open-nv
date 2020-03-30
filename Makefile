@@ -12,7 +12,7 @@ BUILDFILES := $(subst $(SOURCEDIR)/,$(BUILDDIR)/,$(FILES))
 OBJS := $(BUILDFILES:.cpp=.o)
 
 CXX=g++
-CXXFLAGS := --std=c++11 -I $(SOURCEDIR)
+CXXFLAGS := --std=c++17 -I $(SOURCEDIR)
 
 LDFLAGS= -L $(LIBDIR) -lspdlog
 

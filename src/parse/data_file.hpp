@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../util/octet_hash.hpp"
+
 class SubRecord {
 public:
     uint8_t Type[4];
@@ -18,7 +20,7 @@ public:
 
 class Record {
 public:
-    uint32_t Type;
+    uint8_t Type[4];
     uint32_t DataSize;
     uint32_t Flags;
     uint32_t ID;
@@ -33,6 +35,7 @@ public:
 
     Record(std::ifstream& stream)
     {
+        stream.read(reinterpret_cast<char*>(&this->Type), 4);
         stream.read(reinterpret_cast<char*>(&this->DataSize), sizeof(uint32_t));
         stream.read(reinterpret_cast<char*>(&this->Flags), sizeof(uint32_t));
         stream.read(reinterpret_cast<char*>(&this->ID), sizeof(uint32_t));
@@ -47,12 +50,13 @@ public:
     virtual Record* clone(std::ifstream& stream) = 0;
 
     static Record* ParseRecord(std::ifstream& stream, uint32_t type);
-    static std::unordered_map<uint32_t, Record> prototypes;
+    static std::unordered_map<uint32_t, Record*> prototypes;
 };
 
 class Group {
 public:
-    /* TBD */
+
+  /* TBD */
     uint32_t ID;
 
     uint8_t Type[4]; // always GRUP

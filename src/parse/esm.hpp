@@ -5,10 +5,11 @@
 #include <string>
 #include <unordered_map>
 
+#include "../util/octet_hash.hpp"
 #include "data_file.hpp"
 #include "spdlog/spdlog.h"
 
-#define GRUP 0x47525550
+const uint32_t group_hash = fnv_hash("GRUP", 4);
 
 class ESM {
 public:
@@ -18,45 +19,49 @@ public:
           groups(new std::unordered_map<uint32_t, Group*>())
     {
         std::ifstream file{path, std::ios::binary};
-        uint32_t type;
+        uint8_t type[5] = {0};
 
         uint64_t group_count, record_count;
 
         while (file.read(reinterpret_cast<char*>(&type), 4)) {
-            switch (type) {
-                // Load groups
-            case (GRUP): {
+            file.seekg(-4, std::ios_base::cur); // move 4 chars backwards
+            uint32_t hash_val = fnv_hash(type, 4);
+
+            if (hash_val == group_hash) {
                 group_count++;
                 spdlog::trace("Loading group");
 
-                file.seekg(-4, std::ios_base::cur); // move 4 chars backwards
                 Group* tmp_g = new Group(file);
                 groups->insert({tmp_g->ID, tmp_g});
                 break;
             }
+            else {
                 // Load record
-            default: {
                 record_count++;
                 spdlog::trace("Loading record");
-
-                file.seekg(-4, std::ios_base::cur); // move 4 chars backwards
-                Record* tmp_r = new Record(file);
+                Record* tmp_r;
+                try{
+                  Record::ParseRecord(file, hash_val);
+                }catch (const std::runtime_error& e){
+                  spdlog::warn("Record {}: {}", type, e.what());
+                }
                 records->insert({tmp_r->ID, tmp_r});
                 break;
             }
-            }
-        }
-        spdlog::info("Loaded {} groups and {} records", group_count, record_count);
-    };
-
-    ~ESM()
-    {
-        delete records;
-        delete groups;
-    };
-
-    std::string name;
-
-    std::unordered_map<uint32_t, Record*>* records;
-    std::unordered_map<uint32_t, Group*>* groups;
+        
+    }
+    spdlog::info("Loaded {} groups and {} records", group_count, record_count);
 };
+
+~ESM()
+{
+    delete records;
+    delete groups;
+};
+
+std::string name;
+
+std::unordered_map<uint32_t, Record*>* records;
+std::unordered_map<uint32_t, Group*>* groups;
+}
+;
