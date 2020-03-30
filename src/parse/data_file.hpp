@@ -27,7 +27,7 @@ public:
     /* ignoring this for now */
     uint16_t Unknown;
 
-    std::vector<SubRecord*> subrecords;
+   std::vector<SubRecord*> subrecords;
 
     Record(std::ifstream& stream)
     {
@@ -48,7 +48,7 @@ public:
     /* TBD */
     uint32_t ID;
 
-    uint32_t Type;
+    uint8_t Type[4]; // always GRUP
     uint32_t GroupSize;
     uint8_t Label[4];
     int32_t GroupType;
@@ -66,5 +66,9 @@ public:
 
     Group(std::ifstream& stream)
     {
+        stream.read(reinterpret_cast<char*>(&Type), 4);
+        stream.read(reinterpret_cast<char*>(&GroupSize), 4);
+        stream.read(reinterpret_cast<char*>(&Label), 4);
+        stream.read(reinterpret_cast<char*>(&GroupType), 4);
     }
 };
