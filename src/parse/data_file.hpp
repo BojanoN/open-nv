@@ -27,7 +27,9 @@ public:
     /* ignoring this for now */
     uint16_t Unknown;
 
-   std::vector<SubRecord*> subrecords;
+    std::vector<SubRecord*> subrecords;
+
+    Record(){};
 
     Record(std::ifstream& stream)
     {
@@ -39,8 +41,10 @@ public:
         stream.read(reinterpret_cast<char*>(&this->Unknown), sizeof(uint16_t));
     }
 
+    virtual Record* clone(std::ifstream& stream) = 0;
+
     static Record* ParseRecord(std::ifstream& stream, uint32_t type);
-    static std::unordered_map<uint32_t, Record*> prototypes;
+    static std::unordered_map<uint32_t, Record> prototypes;
 };
 
 class Group {

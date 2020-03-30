@@ -2,11 +2,16 @@
 
 #include "data_file.hpp"
 
+class TES4Record : public Record {
+public:
+    TES4Record(){};
 
-class TES4Record: public Record{
+    TES4Record(std::ifstream& stream) : Record(stream)
+    {
+    }
 
-  TES4Record(std::ifstream& stream): Record(stream){
-  
-  }
-
+    virtual Record* clone(std::ifstream& stream)
+    {
+        return new TES4Record(stream);
+    }
 };
