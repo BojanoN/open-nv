@@ -6,27 +6,27 @@ SOURCEDIR = ./src
 BUILDDIR = ./build
 LIBDIR = ./lib
 
-FILES := $(call rwildcard,$(SOURCEDIR),*.cpp)
+FILES := $(call rwildcard,$(SOURCEDIR),*.c)
 BUILDFILES := $(subst $(SOURCEDIR)/,$(BUILDDIR)/,$(FILES)) 
 
-OBJS := $(BUILDFILES:.cpp=.o)
+OBJS := $(BUILDFILES:.c=.o)
 
-CXX=g++
-CXXFLAGS := --std=c++17 -I $(SOURCEDIR)
+CC=clang
+CFLAGS := -std=c99 -DLOG_USE_COLOR -I $(SOURCEDIR)
 
-LDFLAGS= -L $(LIBDIR) -lspdlog
+LDFLAGS= -L $(LIBDIR)
 
 all: $(BUILDDIR)/$(PROJECT)
 
-debug: CXXFLAGS += -DDEBUG
+debug: CFLAGS += -DDEBUG
 debug: $(BUILDDIR)/$(PROJECT)
 
 $(BUILDDIR)/$(PROJECT): $(OBJS)
-	$(CXX) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
-$(BUILDDIR)/%.o: $(SOURCEDIR)/%.cpp
+$(BUILDDIR)/%.o: $(SOURCEDIR)/%.c
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 
 clean:
