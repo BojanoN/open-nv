@@ -1,9 +1,28 @@
+#include <getopt.h>
+
 #include "logc/log.h"
+
+#define FALLOUTNV_ESM_DEFAULT_PATH "./bin/esm/FalloutNV.esm"
 
 int main(int argc, char** argv)
 {
     log_set_level(LOG_DEBUG);
-    log_info("Hello mom");
+
+    int c;
+    const char* path = FALLOUTNV_ESM_DEFAULT_PATH;
+
+    while ((c = getopt(argc, argv, "f:")) != -1) {
+        switch (c) {
+        case 'f':
+            path = optarg;
+            break;
+        default:
+            break;
+        }
+    }
+
+    log_info("loading esm file from %s", path);
+
     return 0;
 }
 #if 0
