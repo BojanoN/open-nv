@@ -11,6 +11,8 @@ Esm* esmnew(const sds path)
     // ...
 
     fclose(esm_file);
+
+    return NULL;
 }
 void esmfree(Esm* esm)
 {

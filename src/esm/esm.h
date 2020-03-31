@@ -18,6 +18,7 @@ typedef struct {
     uint32_t ID;
     uint32_t CreationKitRevision;
     uint16_t FormVersion;
+
     /* ignoring this for now */
     uint16_t Unknown;
     // TODO: container of subrecords
