@@ -1,4 +1,5 @@
 #pragma once
+#include <assert.h>
 #include <stdint.h>
 
 struct ref {
@@ -9,6 +10,8 @@ struct ref {
 static inline void
 ref_dec(const struct ref* obj)
 {
+    assert(obj->count >= 0);
+
     ((struct ref*)obj)->count--;
     if (obj->count == 0) {
         obj->free(obj);
