@@ -3,6 +3,7 @@
 #include "sds/sds.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef struct {
 } Esm;
@@ -18,7 +19,7 @@ typedef struct {
     uint32_t CreationKitRevision;
     uint16_t FormVersion;
     /* ignoring this for now */
-    uint16_t Unknown
+    uint16_t Unknown;
     // TODO: container of subrecords
 } Record;
 
