@@ -1,6 +1,8 @@
 #include <getopt.h>
 
+#include "esm/esm.h"
 #include "logc/log.h"
+#include "sds/sds.h"
 
 #define FALLOUTNV_ESM_DEFAULT_PATH "./bin/esm/FalloutNV.esm"
 
@@ -9,12 +11,13 @@ int main(int argc, char** argv)
     log_set_level(LOG_DEBUG);
 
     int c;
-    const char* path = FALLOUTNV_ESM_DEFAULT_PATH;
+    sds path = sdsnew(FALLOUTNV_ESM_DEFAULT_PATH);
 
     while ((c = getopt(argc, argv, "f:")) != -1) {
         switch (c) {
         case 'f':
-            path = optarg;
+            sdsfree(path);
+            path = sdsnew(optarg);
             break;
         default:
             break;
@@ -23,6 +26,12 @@ int main(int argc, char** argv)
 
     log_info("loading esm file from %s", path);
 
+    Esm* esm;
+    esm = esmnew(path);
+
+    // free block
+    sdsfree(path);
+    esmfree(esm);
     return 0;
 }
 #if 0
