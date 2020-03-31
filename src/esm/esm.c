@@ -16,8 +16,7 @@ void esmfree(Esm* esm)
 {
 }
 
-Record*
-recordnew(FILE* f)
+Record* recordnew(FILE* f)
 {
     Record* rec = malloc(sizeof(Record));
 
