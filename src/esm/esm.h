@@ -1,6 +1,8 @@
 #pragma once
 #include "logc/log.h"
 #include "sds/sds.h"
+#include "util/reference.h"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
