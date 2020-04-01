@@ -1,14 +1,14 @@
 PROJECT=openNV
 
-rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *,%,$2),$d))
-
+DIRS := ./src/util ./src/esm ./src/util ./src/sds ./src/logc ./src
 SOURCEDIR = ./src
 BUILDDIR = ./build
 LIBDIR = ./lib
+TESTS := ./src/tests
 
-FILES := $(call rwildcard,$(SOURCEDIR),*.c)
+
+FILES := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.c))
 BUILDFILES := $(subst $(SOURCEDIR)/,$(BUILDDIR)/,$(FILES)) 
-
 OBJS := $(BUILDFILES:.c=.o)
 
 CC=clang
@@ -18,8 +18,11 @@ LDFLAGS= -L $(LIBDIR)
 
 all: $(BUILDDIR)/$(PROJECT)
 
-debug: CFLAGS += -DDEBUG
+debug: CFLAGS += -DDEBUG -g
 debug: $(BUILDDIR)/$(PROJECT)
+
+leak_check: debug
+	valgrind --leak-check=full $(BUILDDIR)/$(PROJECT)
 
 $(BUILDDIR)/$(PROJECT): $(OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
@@ -28,6 +31,13 @@ $(BUILDDIR)/%.o: $(SOURCEDIR)/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+$(BUILDDIR)/%.o: $(TESTS)/%.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $< -o $@
+
+tests:
+	make -C $(TESTS)
 
 clean:
 	- rm -rf $(BUILDDIR)
+	make -C $(TESTS) clean

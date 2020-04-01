@@ -1,7 +1,7 @@
 #pragma once
 #include "logc/log.h"
 #include "sds/sds.h"
-#include "util/khash.h"
+#include "util/hashtable.h"
 #include "util/reference.h"
 
 #include <stdint.h>
@@ -9,10 +9,11 @@
 #include <stdlib.h>
 
 typedef struct {
-} Esm;
+    uint32_t type;
+    uint8_t  Type[4];
+    uint16_t DataSize;
 
-Esm* esmnew(const sds path);
-void esmfree(Esm* esm);
+} Subrecord;
 
 typedef struct {
     uint8_t  Type[4];
@@ -25,12 +26,13 @@ typedef struct {
     /* ignoring this for now */
     uint16_t Unknown;
     // TODO: container of subrecords
+    hash_table* subrecords;
 } Record;
 
 Record* recordnew(FILE* f);
 void    recordfree(Record* record);
 
-typedef enum RecordFlags {
+typedef enum {
     MASTER    = 1,
     FORM_INIT = (1 << 4),
     DELETED   = (1 << 5),
@@ -85,14 +87,15 @@ typedef enum RecordFlags {
     NAVMESH_GROUND = (1 << 30)
 } RecordFlags;
 
-typedef struct {
-    uint8_t  Type[4];
-    uint16_t DataSize;
-} Subrecord;
-
 /*
  * Zlib compressed records
  */
 typedef struct {
     uint32_t DecompSize;
 } CompressedData;
+
+typedef struct {
+} Esm;
+
+Esm* esmnew(const sds path);
+void esmfree(Esm* esm);

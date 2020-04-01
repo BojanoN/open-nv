@@ -1,4 +1,6 @@
 #include "esm.h"
+#include "util/byte_hash.h"
+
 Esm* esmnew(const sds path)
 {
     FILE* esm_file;
@@ -10,8 +12,10 @@ Esm* esmnew(const sds path)
 
     // ...
 
-    fclose(esm_file);
+    Record* r = recordnew(esm_file);
 
+    fclose(esm_file);
+    recordfree(r);
     return NULL;
 }
 void esmfree(Esm* esm)
@@ -31,14 +35,18 @@ Record* recordnew(FILE* f)
     fread(&(rec->Unknown), sizeof(rec->Unknown), 1, f);
 
     // dummy data read
-    fseek(f, (long)(rec->DataSize), SEEK_CUR);
+    // fseek(f, (long)(rec->DataSize), SEEK_CUR);
 
     // TODO: subrecord  loading and container store
+
+    rec->subrecords = new_hashtable();
+    Subrecord s;
 
     return rec;
 }
 void recordfree(Record* record)
 {
+    free_hashtable(record->subrecords);
     free(record);
     // TODO: free any internal containers
 }
