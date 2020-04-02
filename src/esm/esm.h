@@ -1,7 +1,7 @@
 #pragma once
 #include "logc/log.h"
 #include "sds/sds.h"
-#include "util/hashtable.h"
+#include "util/container.h"
 #include "util/reference.h"
 
 #include <stdint.h>
@@ -26,7 +26,7 @@ typedef struct {
     /* ignoring this for now */
     uint16_t Unknown;
     // TODO: container of subrecords
-    hash_table* subrecords;
+    Subrecord* subrecords;
 } Record;
 
 Record* recordnew(FILE* f);
@@ -95,6 +95,10 @@ typedef struct {
 } CompressedData;
 
 typedef struct {
+    struct {
+        uint32_t key;
+        Record*  value;
+    } * records;
 } Esm;
 
 Esm* esmnew(const sds path);

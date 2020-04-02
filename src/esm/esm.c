@@ -11,15 +11,23 @@ Esm* esmnew(const sds path)
     }
 
     // ...
+    Esm* test = (Esm *)malloc(sizeof(Esm));
+    test->records = NULL;
 
     Record* r = recordnew(esm_file);
 
+    hmput(test->records, 1337, r);
+
     fclose(esm_file);
-    recordfree(r);
-    return NULL;
+    return test;
 }
 void esmfree(Esm* esm)
 {
+  for(uint32_t i=0; i<hmlenu(esm->records); i++){
+    recordfree(esm->records[i].value);
+  }
+  hmfree(esm->records);
+  free(esm);
 }
 
 Record* recordnew(FILE* f)
@@ -38,15 +46,12 @@ Record* recordnew(FILE* f)
     // fseek(f, (long)(rec->DataSize), SEEK_CUR);
 
     // TODO: subrecord  loading and container store
-
-    rec->subrecords = new_hashtable();
     Subrecord s;
 
     return rec;
 }
 void recordfree(Record* record)
 {
-    free_hashtable(record->subrecords);
     free(record);
     // TODO: free any internal containers
 }
