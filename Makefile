@@ -21,7 +21,7 @@ all: $(BUILDDIR)/$(PROJECT)
 debug: CFLAGS += -DDEBUG -g
 debug: $(BUILDDIR)/$(PROJECT)
 
-leak_check: debug
+leak-check: debug
 	valgrind --leak-check=full $(BUILDDIR)/$(PROJECT)
 
 $(BUILDDIR)/$(PROJECT): $(OBJS)

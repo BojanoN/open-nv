@@ -1,11 +1,12 @@
 #include "esm.h"
-#include "util/byte_hash.h"
+#include "init.h"
 #include <string.h>
 
 /*
- * Record constructors
+ * Record constructors/destructors
  */
-extern RecordInits * record_initializers;
+FETCH_CONSTRUCTOR_MAP(Record);
+FETCH_DESTRUCTOR_MAP(Record);
 
 Esm* esmnew(const sds path)
 {
@@ -18,7 +19,7 @@ Esm* esmnew(const sds path)
 
     Esm* ret     = (Esm*)malloc(sizeof(Esm));
     ret->records = NULL;
-    init_functionmap();
+    INIT_CONSTRUCTOR_MAP(Record);
     sds type = sdsnewlen("init", 4);
 
     while (fread(type, 4, 1, esm_file)) {
@@ -28,13 +29,13 @@ Esm* esmnew(const sds path)
             // Load group
         } else {
             Record* r = recordnew(esm_file, type);
-            if(r){
-              hmput(ret->records, r->ID, r);
+            if (r) {
+                hmput(ret->records, r->ID, r);
             }
         }
         break;
     }
-    free_functionmap();
+    FREE_CONSTRUCTOR_MAP(Record);
     sdsfree(type);
     fclose(esm_file);
     return ret;
@@ -50,12 +51,12 @@ void esmfree(Esm* esm)
 
 Record* recordnew(FILE* f, sds type)
 {
-    Record* ret = NULL;
-    record_init* func = shget(record_initializers, type);
+    Record*            ret  = NULL;
+    RecordConstructor* func = GET_CONSTRUCTOR(Record, type);
 
-    if(func == NULL){
-      log_warn("Record type %s not yet implemented.", type);
-      return NULL;
+    if (func == NULL) {
+        log_warn("Record type %s not yet implemented.", type);
+        return NULL;
     }
 
     ret = func(f);
@@ -63,6 +64,9 @@ Record* recordnew(FILE* f, sds type)
 }
 void recordfree(Record* record)
 {
+  //sds type = sdsnewlen(record->Type, 4);
+    //RecordDestructor* func = GET_DESTRUCTOR(Record, type);
+    //func(record);
     free(record);
     // TODO: free any internal containers
 }

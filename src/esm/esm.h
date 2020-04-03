@@ -3,49 +3,42 @@
 #include "sds/sds.h"
 #include "util/container.h"
 #include "util/reference.h"
+#include "init.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct {
-    uint32_t type;
+typedef struct __attribute__((packed)) {
     uint8_t  Type[4];
     uint16_t DataSize;
-
 } Subrecord;
 
-typedef struct {
+#define log_subrecord(subrec) (log_debug("Record %.4s: Size: %hi", (subrec)->base.Type, (subrec)->base.DataSize));
+
+typedef struct __attribute__((packed)) {
     uint8_t  Type[4];
     uint32_t DataSize;
     uint32_t Flags;
     uint32_t ID;
     uint32_t CreationKitRevision;
     uint16_t FormVersion;
-
     /* ignoring this for now */
     uint16_t Unknown;
-    // TODO: container of subrecords
-  //    Subrecord* subrecords;
 } Record;
 
-#define RECORD_SIZE (sizeof(Record))
+#define RECORD_SIZE     (sizeof(Record))
+#define log_record(rec) (log_info("Record %.4s: Size: %u, ID: %u", (rec)->Type, (rec)->DataSize, (rec)->ID));
 
 Record* recordnew(FILE* f, sds type);
 void    recordfree(Record* record);
 
-typedef Record* record_init(FILE*);
-typedef struct {
-  sds          key;
-  record_init* value;
-} RecordInits;
-
-void init_functionmap();
-void free_functionmap();
-
+/*
+ * Record constructor and destructor typedef.
+ */
+DEFINE_OBJECT_TYPEDEFS(Record);
 
 typedef struct {
-
     uint8_t  Type[4];
     uint32_t GroupSize;
     uint8_t  Label[4];
@@ -56,7 +49,6 @@ typedef struct {
    * Data size = GroupSize - 24;
    */
     Record* records;
-
 } Group;
 
 #define GROUP_SIZE (sizeof(Group) - sizeof(Record*))

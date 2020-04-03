@@ -8,7 +8,11 @@
 
 int main(int argc, char** argv)
 {
+#ifdef DEBUG
     log_set_level(LOG_DEBUG);
+#else
+    log_set_level(LOG_INFO);
+#endif
 
     int c;
     sds path = sdsnew(FALLOUTNV_ESM_DEFAULT_PATH);
