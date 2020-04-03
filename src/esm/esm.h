@@ -26,11 +26,41 @@ typedef struct {
     /* ignoring this for now */
     uint16_t Unknown;
     // TODO: container of subrecords
-    Subrecord* subrecords;
+  //    Subrecord* subrecords;
 } Record;
 
-Record* recordnew(FILE* f);
+#define RECORD_SIZE (sizeof(Record))
+
+Record* recordnew(FILE* f, sds type);
 void    recordfree(Record* record);
+
+typedef Record* record_init(FILE*);
+typedef struct {
+  sds          key;
+  record_init* value;
+} RecordInits;
+
+void init_functionmap();
+void free_functionmap();
+
+
+typedef struct {
+
+    uint8_t  Type[4];
+    uint32_t GroupSize;
+    uint8_t  Label[4];
+    uint32_t GroupType;
+    uint16_t Datestamp;
+    uint8_t  Unknown[6];
+    /*
+   * Data size = GroupSize - 24;
+   */
+    Record* records;
+
+} Group;
+
+#define GROUP_SIZE (sizeof(Group) - sizeof(Record*))
+#define GROUP_TYPE "GRUP"
 
 typedef enum {
     MASTER    = 1,

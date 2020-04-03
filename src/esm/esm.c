@@ -1,5 +1,11 @@
 #include "esm.h"
 #include "util/byte_hash.h"
+#include <string.h>
+
+/*
+ * Record constructors
+ */
+extern RecordInits * record_initializers;
 
 Esm* esmnew(const sds path)
 {
@@ -10,45 +16,50 @@ Esm* esmnew(const sds path)
         exit(1);
     }
 
-    // ...
-    Esm* test = (Esm *)malloc(sizeof(Esm));
-    test->records = NULL;
+    Esm* ret     = (Esm*)malloc(sizeof(Esm));
+    ret->records = NULL;
+    init_functionmap();
+    sds type = sdsnewlen("init", 4);
 
-    Record* r = recordnew(esm_file);
-
-    hmput(test->records, 1337, r);
-
+    while (fread(type, 4, 1, esm_file)) {
+        fseek(esm_file, -4, SEEK_CUR);
+        log_info("Read type: %s", type);
+        if (strcmp(type, GROUP_TYPE) == 0) {
+            // Load group
+        } else {
+            Record* r = recordnew(esm_file, type);
+            if(r){
+              hmput(ret->records, r->ID, r);
+            }
+        }
+        break;
+    }
+    free_functionmap();
+    sdsfree(type);
     fclose(esm_file);
-    return test;
+    return ret;
 }
 void esmfree(Esm* esm)
 {
-  for(uint32_t i=0; i<hmlenu(esm->records); i++){
-    recordfree(esm->records[i].value);
-  }
-  hmfree(esm->records);
-  free(esm);
+    for (uint32_t i = 0; i < hmlenu(esm->records); i++) {
+        recordfree(esm->records[i].value);
+    }
+    hmfree(esm->records);
+    free(esm);
 }
 
-Record* recordnew(FILE* f)
+Record* recordnew(FILE* f, sds type)
 {
-    Record* rec = malloc(sizeof(Record));
+    Record* ret = NULL;
+    record_init* func = shget(record_initializers, type);
 
-    fread(&(rec->Type), sizeof(rec->Type), 1, f);
-    fread(&(rec->DataSize), sizeof(rec->DataSize), 1, f);
-    fread(&(rec->Flags), sizeof(rec->Flags), 1, f);
-    fread(&(rec->ID), sizeof(rec->ID), 1, f);
-    fread(&(rec->CreationKitRevision), sizeof(rec->CreationKitRevision), 1, f);
-    fread(&(rec->FormVersion), sizeof(rec->FormVersion), 1, f);
-    fread(&(rec->Unknown), sizeof(rec->Unknown), 1, f);
+    if(func == NULL){
+      log_warn("Record type %s not yet implemented.", type);
+      return NULL;
+    }
 
-    // dummy data read
-    // fseek(f, (long)(rec->DataSize), SEEK_CUR);
-
-    // TODO: subrecord  loading and container store
-    Subrecord s;
-
-    return rec;
+    ret = func(f);
+    return ret;
 }
 void recordfree(Record* record)
 {
