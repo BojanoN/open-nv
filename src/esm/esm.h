@@ -14,6 +14,8 @@ typedef struct __attribute__((packed)) {
     uint16_t DataSize;
 } Subrecord;
 
+DEFINE_OBJECT_TYPEDEFS(Subrecord);
+
 #define log_subrecord(subrec) (log_debug("Record %.4s: Size: %hi", (subrec)->base.Type, (subrec)->base.DataSize));
 
 typedef struct __attribute__((packed)) {

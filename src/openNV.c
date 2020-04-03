@@ -6,6 +6,36 @@
 
 #define FALLOUTNV_ESM_DEFAULT_PATH "./bin/esm/FalloutNV.esm"
 
+
+/*
+ * Record constructors/destructors
+ */
+FETCH_CONSTRUCTOR_MAP(Record);
+FETCH_DESTRUCTOR_MAP(Record);
+
+/*
+ * Subrecord constructors/destructors
+ */
+
+FETCH_CONSTRUCTOR_MAP(Subrecord);
+FETCH_DESTRUCTOR_MAP(Subrecord);
+
+void init(void){
+  INIT_CONSTRUCTOR_MAP(Record);
+  INIT_DESTRUCTOR_MAP(Record);
+
+  INIT_CONSTRUCTOR_MAP(Subrecord);
+  INIT_DESTRUCTOR_MAP(Subrecord);
+}
+
+void cleanup(void){
+  FREE_CONSTRUCTOR_MAP(Record);
+  FREE_DESTRUCTOR_MAP(Record);
+
+  FREE_CONSTRUCTOR_MAP(Subrecord);
+  FREE_DESTRUCTOR_MAP(Subrecord);
+}
+
 int main(int argc, char** argv)
 {
 #ifdef DEBUG
@@ -28,6 +58,8 @@ int main(int argc, char** argv)
         }
     }
 
+    init();
+
     log_info("loading esm file from %s", path);
 
     Esm* esm;
@@ -36,6 +68,8 @@ int main(int argc, char** argv)
     // free block
     sdsfree(path);
     esmfree(esm);
+    
+    cleanup();
     return 0;
 }
 #if 0

@@ -6,6 +6,6 @@
 
 typedef struct {
     Record base;
-    HEDR   hedr;
-    CNAM   cnam;
+    HEDR*   hedr;
+    CNAM*   cnam;
 } TES4Record;

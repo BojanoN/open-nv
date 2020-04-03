@@ -2,11 +2,9 @@
 #include "init.h"
 #include <string.h>
 
-/*
- * Record constructors/destructors
- */
 FETCH_CONSTRUCTOR_MAP(Record);
 FETCH_DESTRUCTOR_MAP(Record);
+
 
 Esm* esmnew(const sds path)
 {
@@ -19,8 +17,7 @@ Esm* esmnew(const sds path)
 
     Esm* ret     = (Esm*)malloc(sizeof(Esm));
     ret->records = NULL;
-    INIT_CONSTRUCTOR_MAP(Record);
-    sds type = sdsnewlen("init", 4);
+    sds type     = sdsnewlen("init", 4);
 
     while (fread(type, 4, 1, esm_file)) {
         fseek(esm_file, -4, SEEK_CUR);
@@ -31,11 +28,13 @@ Esm* esmnew(const sds path)
             Record* r = recordnew(esm_file, type);
             if (r) {
                 hmput(ret->records, r->ID, r);
+            } else {
+                log_fatal("Fatal error during ESM file parsing");
+                return NULL;
             }
         }
         break;
     }
-    FREE_CONSTRUCTOR_MAP(Record);
     sdsfree(type);
     fclose(esm_file);
     return ret;
@@ -64,9 +63,8 @@ Record* recordnew(FILE* f, sds type)
 }
 void recordfree(Record* record)
 {
-  //sds type = sdsnewlen(record->Type, 4);
-    //RecordDestructor* func = GET_DESTRUCTOR(Record, type);
-    //func(record);
-    free(record);
-    // TODO: free any internal containers
+    sds               type = sdsnewlen(record->Type, 4);
+    RecordDestructor* func = GET_DESTRUCTOR(Record, type);
+    func(record);
+    sdsfree(type);
 }

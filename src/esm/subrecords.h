@@ -4,12 +4,12 @@
 
 typedef struct __attribute__((packed)) {
     Subrecord base;
-    float    version;
-    uint32_t numRecords;
-    uint32_t nextObjectId;
+    float     version;
+    uint32_t  numRecords;
+    uint32_t  nextObjectId;
 } HEDR;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
     Subrecord base;
     sds       author;
 } CNAM;
