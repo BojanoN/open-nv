@@ -1,9 +1,9 @@
 #pragma once
+#include "init.h"
 #include "logc/log.h"
 #include "sds/sds.h"
 #include "util/container.h"
 #include "util/reference.h"
-#include "init.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -15,6 +15,7 @@ typedef struct __attribute__((packed)) {
 } Subrecord;
 
 DEFINE_OBJECT_TYPEDEFS(Subrecord);
+DECLARE_MAP_INITIALIZERS(Subrecord);
 
 #define log_subrecord(subrec) (log_debug("Record %.4s: Size: %hi", (subrec)->base.Type, (subrec)->base.DataSize));
 
@@ -39,22 +40,7 @@ void    recordfree(Record* record);
  * Record constructor and destructor typedef.
  */
 DEFINE_OBJECT_TYPEDEFS(Record);
-
-typedef struct {
-    uint8_t  Type[4];
-    uint32_t GroupSize;
-    uint8_t  Label[4];
-    uint32_t GroupType;
-    uint16_t Datestamp;
-    uint8_t  Unknown[6];
-    /*
-   * Data size = GroupSize - 24;
-   */
-    Record* records;
-} Group;
-
-#define GROUP_SIZE (sizeof(Group) - sizeof(Record*))
-#define GROUP_TYPE "GRUP"
+DECLARE_MAP_INITIALIZERS(Record);
 
 typedef enum {
     MASTER    = 1,
@@ -111,6 +97,88 @@ typedef enum {
     NAVMESH_GROUND = (1 << 30)
 } RecordFlags;
 
+typedef struct {
+    uint8_t  Type[4];
+    uint32_t GroupSize;
+    uint8_t  Label[4];
+    uint32_t GroupType;
+    uint16_t Datestamp;
+    uint8_t  Unknown[6];
+    /*
+   * Data size = GroupSize - 24;
+   */
+    Record* records;
+} Group;
+
+/*
+ * Enum for group types.
+ */
+typedef enum {
+    /*
+     * Contains records of type given in label.
+     */
+    TOP_LEVEL,
+    /*
+     * Contains ROAD or CELL records whose parent is a WRLD record.
+     * Parent record ID is given in the label.
+     */
+    WORLD_CHILDREN,
+    /*
+     * Label contains the cell block number.
+     */
+    INTERIOR_CELL_BLOCK,
+    /*
+     * Label contains the cell sub-block number.
+     */
+    INTERIOR_CELL_SUBBLOCK,
+    /*
+     * Label contains cell coords stored as uint8_t, (y, x)
+     */
+    EXTERIOR_CELL_BLOCK,
+    /*
+     * Label contains cell coords stored as uint8_t, (y, x)
+     */
+    EXTERIOR_CELL_SUBBLOCK,
+    /*
+     * Contains only REFR, ACRE, PGRE, PMIS or ACHR records
+     * that are children of the given CELL record.
+     * Parent record ID is given in the label.
+     */
+    CELL_CHILDREN,
+    /*
+     * Contains INFO records that are children of the given DIAL record.
+     * Parent record ID is given in the label.
+     */
+    TOPIC_CHILDREN,
+    /*
+     * The group must contain only REFR, ACRE, PGRE, PMIS or ACHR
+     * records that are children of the given CELL record.
+     * Parent record ID is given in the label.
+     */
+    CELL_PERS_CHILDREN,
+    /*
+     * Same as above.
+     */
+    CELL_TEMP_CHILDREN,
+    /*
+     * The group must contain only REFR records that are children of the given CELL record.
+     * Parent record ID is given in the label.
+     */
+    CELL_VISIBLE_DISTANT_CHILDREN
+} GroupTypes;
+
+#define GROUP_SIZE (sizeof(Group) - sizeof(Record*))
+#define GROUP_TYPE "GRUP"
+
+Group* groupnew(FILE* esm_file);
+void   groupfree(Group* group);
+
+/*
+ * Group constructor and destructor typedef.
+ */
+DEFINE_OBJECT_TYPEDEFS(Group);
+DECLARE_MAP_INITIALIZERS(Group);
+
 /*
  * Zlib compressed records
  */
@@ -123,6 +191,7 @@ typedef struct {
         uint32_t key;
         Record*  value;
     } * records;
+
 } Esm;
 
 Esm* esmnew(const sds path);

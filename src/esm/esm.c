@@ -1,10 +1,7 @@
 #include "esm.h"
 #include "init.h"
+#include "util/memutils.h"
 #include <string.h>
-
-FETCH_CONSTRUCTOR_MAP(Record);
-FETCH_DESTRUCTOR_MAP(Record);
-
 
 Esm* esmnew(const sds path)
 {
@@ -15,7 +12,8 @@ Esm* esmnew(const sds path)
         exit(1);
     }
 
-    Esm* ret     = (Esm*)malloc(sizeof(Esm));
+    SAFE_MALLOC(Esm, ret);
+
     ret->records = NULL;
     sds type     = sdsnewlen("init", 4);
 
@@ -46,25 +44,4 @@ void esmfree(Esm* esm)
     }
     hmfree(esm->records);
     free(esm);
-}
-
-Record* recordnew(FILE* f, sds type)
-{
-    Record*            ret  = NULL;
-    RecordConstructor* func = GET_CONSTRUCTOR(Record, type);
-
-    if (func == NULL) {
-        log_warn("Record type %s not yet implemented.", type);
-        return NULL;
-    }
-
-    ret = func(f);
-    return ret;
-}
-void recordfree(Record* record)
-{
-    sds               type = sdsnewlen(record->Type, 4);
-    RecordDestructor* func = GET_DESTRUCTOR(Record, type);
-    func(record);
-    sdsfree(type);
 }

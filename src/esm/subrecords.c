@@ -1,14 +1,11 @@
 #include "subrecords.h"
+#include "util/memutils.h"
 
 DECLARE_FUNCTION_MAPS(Subrecord);
 
 Subrecord* create_HEDR(FILE* esm_file)
 {
-    HEDR* ret = (HEDR*)malloc(sizeof(HEDR));
-    if (ret == NULL) {
-        log_fatal("Unable to allocate memory for HEDR!");
-        return NULL;
-    }
+    SAFE_MALLOC(HEDR, ret);
 
     fread(ret, sizeof(HEDR), 1, esm_file);
     log_subrecord(ret);
@@ -18,11 +15,7 @@ Subrecord* create_HEDR(FILE* esm_file)
 
 Subrecord* create_CNAM(FILE* esm_file)
 {
-    CNAM* ret = (CNAM*)malloc(sizeof(CNAM));
-    if (ret == NULL) {
-        log_fatal("Unable to allocate memory for CNAM!");
-        return NULL;
-    }
+    SAFE_MALLOC(CNAM, ret);
 
     fread(ret, sizeof(Subrecord), 1, esm_file);
 
@@ -33,6 +26,7 @@ Subrecord* create_CNAM(FILE* esm_file)
     free(tmp);
 
     log_subrecord(ret);
+    log_debug("Author: %s", ret->author);
 
     return (Subrecord*)ret;
 }
@@ -45,19 +39,19 @@ void free_HEDR(Subrecord* record)
 
 void free_CNAM(Subrecord* record)
 {
-  CNAM* tmp = (CNAM*)record;
-  sdsfree(tmp->author);
-  free(tmp);
+    CNAM* tmp = (CNAM*)record;
+    sdsfree(tmp->author);
+    free(tmp);
 }
 
 void Subrecord_init_constructor_map()
 {
-    shput(Subrecord_constructor_map, "HEDR", create_HEDR);
-    shput(Subrecord_constructor_map, "CNAM", create_CNAM);
+    ADD_CONSTRUCTOR(Subrecord, "HEDR", create_HEDR);
+    ADD_CONSTRUCTOR(Subrecord, "CNAM", create_CNAM);
 }
 
 void Subrecord_init_destructor_map()
 {
-    shput(Subrecord_destructor_map, "HEDR", free_HEDR);
-    shput(Subrecord_destructor_map, "CNAM", free_CNAM);
+    ADD_DESTRUCTOR(Subrecord, "HEDR", free_HEDR);
+    ADD_DESTRUCTOR(Subrecord, "CNAM", free_CNAM);
 }
