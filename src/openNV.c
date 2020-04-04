@@ -6,7 +6,6 @@
 
 #define FALLOUTNV_ESM_DEFAULT_PATH "./bin/esm/FalloutNV.esm"
 
-
 /*
  * Record constructors/destructors
  */
@@ -20,20 +19,35 @@ FETCH_DESTRUCTOR_MAP(Record);
 FETCH_CONSTRUCTOR_MAP(Subrecord);
 FETCH_DESTRUCTOR_MAP(Subrecord);
 
-void init(void){
-  INIT_CONSTRUCTOR_MAP(Record);
-  INIT_DESTRUCTOR_MAP(Record);
+/*
+ * Group constructors/destructors
+ */
 
-  INIT_CONSTRUCTOR_MAP(Subrecord);
-  INIT_DESTRUCTOR_MAP(Subrecord);
+FETCH_CONSTRUCTOR_MAP(Group);
+FETCH_DESTRUCTOR_MAP(Group);
+
+void init(void)
+{
+    INIT_CONSTRUCTOR_MAP(Record);
+    INIT_DESTRUCTOR_MAP(Record);
+
+    INIT_CONSTRUCTOR_MAP(Subrecord);
+    INIT_DESTRUCTOR_MAP(Subrecord);
+
+    INIT_CONSTRUCTOR_MAP(Group);
+    INIT_DESTRUCTOR_MAP(Group);
 }
 
-void cleanup(void){
-  FREE_CONSTRUCTOR_MAP(Record);
-  FREE_DESTRUCTOR_MAP(Record);
+void cleanup(void)
+{
+    FREE_CONSTRUCTOR_MAP(Record);
+    FREE_DESTRUCTOR_MAP(Record);
 
-  FREE_CONSTRUCTOR_MAP(Subrecord);
-  FREE_DESTRUCTOR_MAP(Subrecord);
+    FREE_CONSTRUCTOR_MAP(Subrecord);
+    FREE_DESTRUCTOR_MAP(Subrecord);
+
+    FREE_CONSTRUCTOR_MAP(Group);
+    FREE_DESTRUCTOR_MAP(Group);
 }
 
 int main(int argc, char** argv)
@@ -65,10 +79,17 @@ int main(int argc, char** argv)
     Esm* esm;
     esm = esmnew(path);
 
+    if (esm == NULL) {
+        log_fatal("Failed to initialize openNV");
+        sdsfree(path);
+        cleanup();
+        return 1;
+    }
+
     // free block
     sdsfree(path);
     esmfree(esm);
-    
+
     cleanup();
     return 0;
 }

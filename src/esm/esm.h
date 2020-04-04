@@ -107,7 +107,6 @@ typedef struct {
     /*
    * Data size = GroupSize - 24;
    */
-    Record* records;
 } Group;
 
 /*
@@ -167,7 +166,7 @@ typedef enum {
     CELL_VISIBLE_DISTANT_CHILDREN
 } GroupTypes;
 
-#define GROUP_SIZE (sizeof(Group) - sizeof(Record*))
+#define GROUP_SIZE (sizeof(Group))
 #define GROUP_TYPE "GRUP"
 
 Group* groupnew(FILE* esm_file);
@@ -178,6 +177,8 @@ void   groupfree(Group* group);
  */
 DEFINE_OBJECT_TYPEDEFS(Group);
 DECLARE_MAP_INITIALIZERS(Group);
+
+#define log_group(group) log_info("Group %.4s: Size: %u, Label: %.4s", (group)->base.Type, (group)->base.GroupSize, (group)->base.Label)
 
 /*
  * Zlib compressed records
@@ -192,6 +193,7 @@ typedef struct {
         Record*  value;
     } * records;
 
+    Group** groups;
 } Esm;
 
 Esm* esmnew(const sds path);

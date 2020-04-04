@@ -22,7 +22,7 @@ debug: CFLAGS += -DDEBUG -g
 debug: $(BUILDDIR)/$(PROJECT)
 
 leak-check: debug
-	valgrind --leak-check=full $(BUILDDIR)/$(PROJECT)
+	valgrind --leak-check=full --show-leak-kinds=all $(BUILDDIR)/$(PROJECT)
 
 $(BUILDDIR)/$(PROJECT): $(OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@

@@ -15,24 +15,45 @@ Esm* esmnew(const sds path)
     SAFE_MALLOC(Esm, ret);
 
     ret->records = NULL;
+    ret->groups  = NULL;
     sds type     = sdsnewlen("init", 4);
 
+    uint32_t cnt = 0;
     while (fread(type, 4, 1, esm_file)) {
         fseek(esm_file, -4, SEEK_CUR);
         log_info("Read type: %s", type);
+
         if (strcmp(type, GROUP_TYPE) == 0) {
-            // Load group
+            Group* g = groupnew(esm_file);
+            if (g) {
+                arrput(ret->groups, g);
+            } else {
+                log_fatal("Fatal error during ESM file parsing");
+
+                esmfree(ret);
+                sdsfree(type);
+                fclose(esm_file);
+                return NULL;
+            }
         } else {
             Record* r = recordnew(esm_file, type);
             if (r) {
                 hmput(ret->records, r->ID, r);
             } else {
                 log_fatal("Fatal error during ESM file parsing");
+
+                esmfree(ret);
+                sdsfree(type);
+                fclose(esm_file);
                 return NULL;
             }
         }
-        break;
+
+        if (cnt == 1)
+            break;
+        cnt++;
     }
+    log_info("Read %u records and groups", cnt);
     sdsfree(type);
     fclose(esm_file);
     return ret;
@@ -43,5 +64,11 @@ void esmfree(Esm* esm)
         recordfree(esm->records[i].value);
     }
     hmfree(esm->records);
+
+    for (uint32_t i = 0; i < arrlenu(esm->groups); i++) {
+        groupfree(esm->groups[i]);
+    }
+    arrfree(esm->groups);
+
     free(esm);
 }
