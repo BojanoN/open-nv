@@ -50,7 +50,8 @@ Record* init_GMST(FILE* esm_file)
 
     fread(&(record->base), RECORD_SIZE, 1, esm_file);
     //EDID
-    MALLOC_WARN(Subrecord, subrecordHead);
+    Subrecord  subrec;
+    Subrecord* subrecordHead = &subrec;
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
     record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
@@ -59,20 +60,24 @@ Record* init_GMST(FILE* esm_file)
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
     size_t dataSize = subrecordHead->DataSize;
-    char*  cstring  = malloc(dataSize);
-    fread(cstring, dataSize, 1, esm_file);
-    record->value.stringValue = sdsnewlen(cstring, dataSize);
-    free(cstring);
+
     log_subrecord_new(subrecordHead);
 
     switch ((record->editorId)[0]) {
-    case 's':
+    case 's': {
+        char* cstring = malloc(dataSize);
+        fread(cstring, dataSize, 1, esm_file);
+        record->value.stringValue = sdsnewlen(cstring, dataSize);
+        free(cstring);
         log_debug("Game setting string value: %s", record->value.stringValue);
         break;
+    }
     case 'f':
+        fread(&(record->value.floatValue), sizeof(float), 1, esm_file);
         log_debug("Game setting float value: %f", record->value.floatValue);
         break;
     default:
+        fread(&(record->value.intValue), sizeof(int32_t), 1, esm_file);
         log_debug("Game setting integer value: %d", record->value.intValue);
         break;
     }
@@ -88,7 +93,8 @@ Record* init_TXST(FILE* esm_file)
     fread(&(record->base), RECORD_SIZE, 1, esm_file);
 
     //EDID
-    MALLOC_WARN(Subrecord, subrecordHead);
+    Subrecord  subrecord;
+    Subrecord* subrecordHead = &subrecord;
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
     record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
@@ -104,13 +110,15 @@ Record* init_TXST(FILE* esm_file)
         free(objectBounds);
         log_subrecord_new(subrecordHead);
         fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+        sdsfree(type);
         type = sdsnewlen(subrecordHead->Type, 4);
     }
 
     //TX00-TX05
-    const char* optionalCstringSubrecordTypes[]        = { "TX00", "TX01", "TX02",
+    const char* optionalCstringSubrecordTypes[] = { "TX00", "TX01", "TX02",
         "TX03", "TX04", "TX05" };
-    const char* optionalCstringSubrecordDestinations[] = {
+
+    sds optionalCstringSubrecordDestinations[] = {
         record->baseImage_transparency,
         record->normalMap_specular,
         record->environmentMapMask,
@@ -119,20 +127,58 @@ Record* init_TXST(FILE* esm_file)
         record->environmentMap
     };
 
-    const char* optionalNames[] = { "Base image/Transparency",
+    const char* optionalNames[] = {
+        "Base image/Transparency",
         "Normal map/Specular",
         "Environment map mask",
         "Glow map",
         "Parallax map",
-        "Environment map" };
-
+        "Environment map"
+    };
+    /*
     for (int i = 0; i < 6; i++) {
         if (strcmp(type, optionalCstringSubrecordTypes[i]) == 0) {
             optionalCstringSubrecordDestinations[i] = init_cstring_subrecord(esm_file, subrecordHead, optionalNames[i]);
             fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            sdsfree(type);
             type = sdsnewlen(subrecordHead->Type, 4);
         } else {
             optionalCstringSubrecordDestinations[i] = NULL;
+        }
+    }*/
+    for (int i = 0; i < 6; i++) {
+        if (strcmp(type, optionalCstringSubrecordTypes[i]) == 0) {
+            sds tmp = init_cstring_subrecord(esm_file, subrecordHead, optionalNames[i]);
+            switch (i) {
+            case (0): {
+                record->baseImage_transparency = tmp;
+                break;
+            }
+
+            case (1): {
+                record->normalMap_specular = tmp;
+                break;
+            }
+            case (2): {
+                record->environmentMapMask = tmp;
+                break;
+            }
+            case (3): {
+                record->glowMap = tmp;
+                break;
+            }
+            case (4): {
+                record->parallaxMap = tmp;
+                break;
+            }
+            case (5): {
+                record->environmentMap = tmp;
+                break;
+            }
+            }
+            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            sdsfree(type);
+            type = sdsnewlen(subrecordHead->Type, 4);
         }
     }
 
@@ -141,8 +187,10 @@ Record* init_TXST(FILE* esm_file)
         constructor              = GET_CONSTRUCTOR(Subrecord, "DODT");
         DODTSubrecord* decalData = (DODTSubrecord*)constructor(esm_file);
         record->decalData        = *decalData;
+        free(decalData);
         log_subrecord_new(subrecordHead);
         fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+        sdsfree(type);
         type = sdsnewlen(subrecordHead->Type, 4);
     }
 
@@ -158,7 +206,7 @@ Record* init_TXST(FILE* esm_file)
     }
 
     log_record(&(record->base));
-
+    sdsfree(type);
     return (Record*)record;
 }
 
@@ -168,23 +216,23 @@ Record* init_GLOB(FILE* esm_file)
 
     fread(&(record->base), RECORD_SIZE, 1, esm_file);
 
-    MALLOC_WARN(Subrecord, subrecordHead);
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    Subrecord subrecordHead;
+    fread(&subrecordHead, sizeof(Subrecord), 1, esm_file);
 
-    record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    record->editorId = init_cstring_subrecord(esm_file, &subrecordHead, "Editor ID");
+    fread(&subrecordHead, sizeof(Subrecord), 1, esm_file);
 
     uint8_t fnam;
     fread(&fnam, sizeof(uint8_t), 1, esm_file);
     record->type = fnam;
-    log_subrecord_new(subrecordHead);
+    log_subrecord_new(&subrecordHead);
     log_debug("Type: %c", record->type);
 
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    fread(&subrecordHead, sizeof(Subrecord), 1, esm_file);
     uint32_t value;
     fread(&value, sizeof(uint32_t), 1, esm_file);
     record->value.longValue = value;
-    log_subrecord_new(subrecordHead);
+    log_subrecord_new(&subrecordHead);
 
     switch (fnam) {
     case 's':
@@ -248,12 +296,10 @@ Record* init_CLAS(FILE* esm_file)
     record->description = init_cstring_subrecord(esm_file, &subheader, "DESC");
 
     fread(&subheader, sizeof(Subrecord), 1, esm_file);
-    log_info("%d", subheader.DataSize);
     fread(&(record->data), sizeof(DATASubrecord), 1, esm_file);
 
     fread(&subheader, sizeof(Subrecord), 1, esm_file);
     dataStart = ftell(esm_file);
-    log_info("%d", subheader.DataSize);
     fread(&(record->attr), sizeof(ATTRSubrecord), 1, esm_file);
     assert((dataStart + subheader.DataSize) == ftell(esm_file));
 
