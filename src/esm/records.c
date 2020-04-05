@@ -55,6 +55,7 @@ Record* init_GMST(FILE* esm_file) {
   //DATA
   fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
+  size_t dataSize = subrecordHead->DataSize;
   char* cstring = malloc(dataSize);
   fread(cstring, dataSize, 1, esm_file);
   record->value.stringValue = sdsnewlen(cstring, dataSize);
@@ -183,6 +184,47 @@ Record* init_TXST(FILE* esm_file) {
   return (Record*)record;
 }
 
+Record* init_GLOB(FILE* esm_file) {
+  SAFE_MALLOC(GLOBRecord, record);
+
+  fread(&(record->base), RECORD_SIZE, 1, esm_file);
+
+  SAFE_MALLOC(Subrecord, subrecordHead);
+  fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+
+  record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
+  fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+
+  uint8_t fnam;
+  fread(&fnam, sizeof(uint8_t), 1, esm_file);
+  record->type = fnam;
+  log_subrecord_new(subrecordHead);
+  log_debug("Type: %c", record->type);
+
+  uint32_t value;
+  fread(&value, sizeof(uint32_t), 1, esm_file);
+  record->value.longValue = value;
+  log_subrecord_new(subrecordHead);
+
+  switch(fnam) {
+    case 's':
+      log_debug("Global variable short value: %d", record->value.shortValue);
+      break;
+    case 'l':
+      log_debug("Gloal variable long value: %d", record->value.longValue);
+      break;
+    case 'f':
+      log_debug("Global variable float value %f", record->value.floatValue);
+      break;
+    default:
+      log_fatal("Invalid global variable type: 0x%x", record->type);
+      break;
+  }
+
+  log_record(&(record->base));
+  return (Record*)record;
+}
+
 void free_TES4(Record* record) {
   TES4Record* tmp = (TES4Record*)record;
   SubrecordDestructor* func = GET_DESTRUCTOR(Subrecord, "HEDR");
@@ -229,16 +271,24 @@ void free_TXST(Record* record) {
   free(txst);
 }
 
+void free_GLOB(Record* record) {
+  GLOBRecord* glob_record = (GLOBRecord*)record;
+  sdsfree(glob_record->editorId);
+  free(glob_record);
+}
+
 void Record_init_constructor_map() {
   ADD_CONSTRUCTOR(Record, "TES4", init_TES4);
   ADD_CONSTRUCTOR(Record, "GMST", init_GMST);
   ADD_CONSTRUCTOR(Record, "TXST", init_TXST);
+  ADD_CONSTRUCTOR(Record, "GLOB", init_GLOB);
 }
 
 void Record_init_destructor_map() {
   ADD_DESTRUCTOR(Record, "TES4", free_TES4);
   ADD_DESTRUCTOR(Record, "GMST", free_GMST);
   ADD_DESTRUCTOR(Record, "TXST", free_TXST);
+  ADD_DESTRUCTOR(Record, "GLOB", free_GLOB);
 }
 
 Record* recordnew(FILE* f, sds type) {
