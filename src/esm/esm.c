@@ -49,7 +49,8 @@ Esm* esmnew(const sds path)
             }
         }
 
-        if (cnt == 1)
+        //na 0xA95E zavrsava grupa GMST grupa
+        if (ftell(esm_file) > 0xA95E)
             break;
         cnt++;
     }
