@@ -124,10 +124,9 @@ Record* init_TXST(FILE* esm_file)
         "Environment map mask",
         "Glow map",
         "Parallax map",
-        "Environment map" }
+        "Environment map" };
 
-    for (int i = 0; i < 6; i++)
-    {
+    for (int i = 0; i < 6; i++) {
         if (strcmp(type, optionalCstringSubrecordTypes[i]) == 0) {
             optionalCstringSubrecordDestinations[i] = init_cstring_subrecord(esm_file, subrecordHead, optionalNames);
             fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
