@@ -180,6 +180,7 @@ Record* init_GLOB(FILE* esm_file)
     log_subrecord_new(subrecordHead);
     log_debug("Type: %c", record->type);
 
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     uint32_t value;
     fread(&value, sizeof(uint32_t), 1, esm_file);
     record->value.longValue = value;
@@ -249,6 +250,10 @@ Record* init_MICN(FILE* esm_file)
     record->largeIconFilename = init_cstring_subrecord(esm_file, &subheader, "MICO");
 
     return (Record*)record;
+}
+
+Record* init_FACT(FILE* esm_file) {
+
 }
 
 void free_MICN(Record* record)
