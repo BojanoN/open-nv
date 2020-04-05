@@ -79,6 +79,10 @@ Record* init_GMST(FILE* esm_file) {
   return (Record*)record;
 }
 
+
+
+
+
 Record* init_TXST(FILE* esm_file) {
   MALLOC_WARN(TXSTRecord, record);
   fread(&(record->base), RECORD_SIZE, 1, esm_file);
@@ -88,7 +92,6 @@ Record* init_TXST(FILE* esm_file) {
   fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
   record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
-
   fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
   sds type = sdsnewlen(subrecordHead->Type, 4);
 
@@ -104,58 +107,34 @@ Record* init_TXST(FILE* esm_file) {
     type = sdsnewlen(subrecordHead->Type, 4);
   }
 
-  //TX00
-  if(strcmp(type, "TX00") == 0) {
-    record->baseImage_transparency = init_cstring_subrecord(esm_file, subrecordHead, "Base image/Transparency");
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-    type = sdsnewlen(subrecordHead->Type, 4);
-  } else {
-    record->baseImage_transparency = NULL;
-  }
+  //TX00-TX05
+  const char* optionalCstringSubrecordTypes[] = {"TX00", "TX01", "TX02",
+                                                 "TX03", "TX04", "TX05"};
+  const char* optionalCstringSubrecordDestinations[] = {
+      record->baseImage_transparency,
+      record->normalMap_specular,
+      record->environmentMapMask,
+      record->glowMap,
+      record->parallaxMap,
+      record->environmentMap};
 
-  //TX01
-  if(strcmp(type, "TX01") == 0) {
-    record->normalMap_specular = init_cstring_subrecord(esm_file, subrecordHead, "Normal map/Specular");
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-    type = sdsnewlen(subrecordHead->Type, 4);
-  } else {
-    record->normalMap_specular = NULL;
-  }
+  const char* optionalNames[] =
+  { "Base image/Transparency",
+    "Normal map/Specular",
+    "Environment map mask",
+    "Glow map",
+    "Parallax map",
+    "Environment map" }
 
-  //TX02
-  if(strcmp(type, "TX02") == 0) {
-    record->environmentMapMask = init_cstring_subrecord(esm_file, subrecordHead, "Environment map mask");
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-    type = sdsnewlen(subrecordHead->Type, 4);
-  } else {
-    record->environmentMapMask = NULL;
-  }
-
-  //TX03
-  if(strcmp(type, "TX03") == 0) {
-    record->glowMap = init_cstring_subrecord(esm_file, subrecordHead, "Glow map");
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-    type = sdsnewlen(subrecordHead->Type, 4);
-  } else {
-    record->glowMap = NULL;
-  }
-
-  //TX04
-  if(strcmp(type, "TX04") == 0) {
-    record->parallaxMap = init_cstring_subrecord(esm_file, subrecordHead, "Parallax map");
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-    type = sdsnewlen(subrecordHead->Type, 4);
-  } else {
-    record->parallaxMap = NULL;
-  }
-
-  //TX05
-  if(strcmp(type, "TX05") == 0) {
-    record->environmentMap = init_cstring_subrecord(esm_file, subrecordHead, "Environment map");
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-    type = sdsnewlen(subrecordHead->Type, 4);
-  } else {
-    record->environmentMap = NULL;
+  for (int i = 0; i < 6; i++) {
+    if (strcmp(type, optionalCstringSubrecordTypes[i]) == 0) {
+      optionalCstringSubrecordDestinations[i] =
+          init_cstring_subrecord(esm_file, subrecordHead, optionalNames);
+      fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+      type = sdsnewlen(subrecordHead->Type, 4);
+    } else {
+      optionalCstringSubrecordDestinations[i] = NULL;
+    }
   }
 
   //DODT
