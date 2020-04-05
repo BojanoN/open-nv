@@ -42,3 +42,41 @@ typedef struct __attribute__((packed)) {
   uint8_t unused[2];
   uint8_t color[4];
 } DODTSubrecord;
+
+/*
+  
+*/
+typedef struct __attribute__((packed)) {
+  formid faction;
+  int32_t modifier;
+
+  /*
+    0 - NEUTRAL
+    1 - ENEMY
+    2 - ALLY
+    3 - FRIEND
+  */  
+  uint32_t groupCombatReaction;
+} XNAMSubrecord;
+
+typedef struct __attribute__((packed)) {
+   /*
+    0x01 - hidden
+    0x02 - evil
+    0x04 - special combat
+    */
+    uint8_t flags_1;
+    /*
+    0x01 - track crime
+    0x02 - allow sell
+    */
+    uint8_t flags_2;
+    uint8_t unused[2];
+} FACT_DATASubrecord;
+
+typedef struct __attribute__((packed)) {
+  int32_t rankNumber;
+  sds  male;
+  sds female;
+  sds insignia;
+} FACT_RankSubrecords;

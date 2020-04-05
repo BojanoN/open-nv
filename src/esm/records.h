@@ -62,3 +62,18 @@ typedef struct {
         float    floatValue;
     } value;
 } GLOBRecord;
+
+/*
+    Faction
+*/
+typedef struct {
+    Record base;
+    sds editorId;
+    sds name;
+    uint32_t relationsLength;
+    XNAMSubrecord* relations;
+    FACT_DATASubrecord data;
+    float unused;
+    FACT_RankSubrecords* rank;
+    formid reputation;
+} FACTRecord;

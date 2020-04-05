@@ -68,6 +68,7 @@ Subrecord* create_DODT(FILE* esm_file)
     return (Subrecord*)subrecord;
 }
 
+
 void free_HEDR(Subrecord* record)
 {
     HEDR* tmp = (HEDR*)record;
