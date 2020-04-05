@@ -1,6 +1,6 @@
 #include "esm.h"
 
 typedef struct __attribute__((packed)) {
-    Group   base;
-    Record* records;
+    Group    base;
+    Record** records;
 } TopLevelGroup;

@@ -24,19 +24,49 @@ Group* init_TopLevel(FILE* esm_file)
 {
     MALLOC_WARN(TopLevelGroup, ret);
 
-    uint32_t read      = 0;
-    uint32_t totalRead = 0;
+    uint32_t dataSize = 0;
+    uint32_t end      = 0;
 
-    read = fread(&(ret->base), sizeof(Group), 1, esm_file);
+    fread(&(ret->base), sizeof(Group), 1, esm_file);
+    dataSize = ret->base.GroupSize - 24;
+    end      = ftell(esm_file) + dataSize;
+    sds type = sdsnewlen(ret->base.Label, 4);
+
+    RecordConstructor* func = GET_CONSTRUCTOR(Record, type);
+    sdsfree(type);
 
     log_group(ret);
+
+    if (func == NULL) {
+        free(ret);
+        return NULL;
+    }
+
+    while (ftell(esm_file) < end) {
+        Record* record = func(esm_file);
+
+        if (record) {
+            arrput(ret->records, record);
+        } else {
+            groupfree((Group*)ret);
+            return NULL;
+        }
+    }
 
     return (Group*)ret;
 }
 
 void free_TopLevel(Group* group)
 {
-    TopLevelGroup* tmp = (TopLevelGroup*)group;
+    TopLevelGroup*    tmp  = (TopLevelGroup*)group;
+    sds               type = sdsnewlen(tmp->base.Label, 4);
+    RecordDestructor* func = GET_DESTRUCTOR(Record, type);
+    sdsfree(type);
+
+    for (uint32_t i = 0; i < arrlenu(tmp->records); i++) {
+        func(tmp->records[i]);
+    }
+    arrfree(tmp->records);
     free(group);
 }
 

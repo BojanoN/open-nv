@@ -58,9 +58,10 @@ Record* init_GMST(FILE* esm_file)
     //DATA
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
-    char* cstring = malloc(subrecordHead->DataSize);
-    fread(cstring, subrecordHead->DataSize, 1, esm_file);
-    record->value.stringValue = sdsnewlen(cstring, subrecordHead->DataSize);
+    size_t dataSize = subrecordHead->DataSize;
+    char*  cstring  = malloc(dataSize);
+    fread(cstring, dataSize, 1, esm_file);
+    record->value.stringValue = sdsnewlen(cstring, dataSize);
     free(cstring);
     log_subrecord_new(subrecordHead);
 
@@ -252,7 +253,7 @@ Record* init_MICN(FILE* esm_file)
     record->largeIconFilename = init_cstring_subrecord(esm_file, &subheader, "ICON");
 
     if (record->base.DataSize == (ftell(esm_file) - dataStart)) {
-        return record;
+        return (Record*)record;
     }
 
     fread(&subheader, sizeof(Subrecord), 1, esm_file);
@@ -263,7 +264,7 @@ Record* init_MICN(FILE* esm_file)
 
 void free_MICN(Record* record)
 {
-    MICN* rec = (Record*)record;
+    MICN* rec = (MICN*)record;
 
     sdsfree(rec->largeIconFilename);
     sdsfree(rec->editorID);
