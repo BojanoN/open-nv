@@ -17,7 +17,7 @@ typedef struct __attribute__((packed)) {
 DEFINE_OBJECT_TYPEDEFS(Subrecord);
 DECLARE_MAP_INITIALIZERS(Subrecord);
 
-#define log_subrecord(subrec) (log_debug("Record %.4s: Size: %hi", (subrec)->base.Type, (subrec)->base.DataSize));
+#define log_subrecord(subrec) (log_debug("Subrecord %.4s: Size: %hi", (subrec)->base.Type, (subrec)->base.DataSize));
 
 typedef struct __attribute__((packed)) {
     uint8_t  Type[4];
