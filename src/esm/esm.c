@@ -12,7 +12,7 @@ Esm* esmnew(const sds path)
         exit(1);
     }
 
-    SAFE_MALLOC(Esm, ret);
+    MALLOC_WARN(Esm, ret);
 
     ret->records = NULL;
     ret->groups  = NULL;

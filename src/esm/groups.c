@@ -22,7 +22,7 @@ const char* groupTypeKeys[] = {
 
 Group* init_TopLevel(FILE* esm_file)
 {
-    SAFE_MALLOC(TopLevelGroup, ret);
+    MALLOC_WARN(TopLevelGroup, ret);
 
     uint32_t read      = 0;
     uint32_t totalRead = 0;
