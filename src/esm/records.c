@@ -252,9 +252,6 @@ Record* init_MICN(FILE* esm_file)
     return (Record*)record;
 }
 
-Record* init_FACT(FILE* esm_file) {
-
-}
 
 void free_MICN(Record* record)
 {
