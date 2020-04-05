@@ -238,10 +238,41 @@ void free_TXST(Record* record)
 
 Record* init_MICN(FILE* esm_file)
 {
+    MALLOC_WARN(MICN, record);
+    Subrecord subheader;
+
+    fread(&(record->base), sizeof(Record), 1, esm_file);
+
+    uint32_t dataStart = ftell(esm_file);
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    record->editorID = init_cstring_subrecord(esm_file, &subheader, "EDID");
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    record->largeIconFilename = init_cstring_subrecord(esm_file, &subheader, "ICON");
+
+    if (record->base.DataSize == (ftell(esm_file) - dataStart)) {
+        return record;
+    }
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    record->largeIconFilename = init_cstring_subrecord(esm_file, &subheader, "MICO");
+
+    return (Record*)record;
 }
 
 void free_MICN(Record* record)
 {
+    MICN* rec = (Record*)record;
+
+    sdsfree(rec->largeIconFilename);
+    sdsfree(rec->editorID);
+
+    if (rec->smallIconFilename) {
+        sdsfree(rec->smallIconFilename);
+    }
+
+    free(rec);
 }
 
 void Record_init_constructor_map()
@@ -249,6 +280,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "TES4", init_TES4);
     ADD_CONSTRUCTOR(Record, "GMST", init_GMST);
     ADD_CONSTRUCTOR(Record, "TXST", init_TXST);
+    ADD_CONSTRUCTOR(Record, "MICN", init_MICN);
 }
 
 void Record_init_destructor_map()
@@ -256,6 +288,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "TES4", free_TES4);
     ADD_DESTRUCTOR(Record, "GMST", free_GMST);
     ADD_DESTRUCTOR(Record, "TXST", free_TXST);
+    ADD_DESTRUCTOR(Record, "MICN", free_MICN);
 }
 
 Record* recordnew(FILE* f, sds type)

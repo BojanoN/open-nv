@@ -44,5 +44,8 @@ typedef struct {
  */
 
 typedef struct {
-
+    Record base;
+    sds    editorID;
+    sds    largeIconFilename;
+    sds    smallIconFilename;
 } MICN;
