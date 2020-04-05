@@ -3,7 +3,7 @@
 #include <malloc.h>
 
 #define MALLOC_WARN(type, retval)                       \
-    type* retval = (type*)malloc(sizeof(type));         \
+    type* retval = (type*)calloc(1, sizeof(type));      \
     if (retval == NULL) {                               \
         log_fatal("Cannot allocate memory for " #type); \
         return NULL;                                    \
