@@ -52,6 +52,7 @@ Esm* esmnew(const sds path)
         log_debug("Current file pointer location: 0x%05x", ftell(esm_file));
         //na 0xA95E zavrsava grupa GMST
         //na 0x21F4B zavrsava grupa TXST
+        //na 0x224FC zavrsava grupa MICN
         if (ftell(esm_file) > 0x21F4B)
             break;
         cnt++;
