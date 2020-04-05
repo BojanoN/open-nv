@@ -40,12 +40,25 @@ typedef struct {
 } TXSTRecord;
 
 /*
- * Menu Icon
+ * Menu icon
  */
-
 typedef struct {
     Record base;
     sds    editorID;
     sds    largeIconFilename;
     sds    smallIconFilename;
 } MICN;
+
+/*
+  Global variable
+*/
+typedef struct {
+    Record  base;
+    sds     editorId;
+    uint8_t type;
+    union {
+        uint16_t shortValue;
+        uint32_t longValue;
+        float    floatValue;
+    } value;
+} GLOBRecord;
