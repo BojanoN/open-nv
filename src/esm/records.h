@@ -62,3 +62,16 @@ typedef struct {
         float    floatValue;
     } value;
 } GLOBRecord;
+
+/*
+ * Class
+ */
+
+typedef struct {
+    Record        base;
+    sds           editorID;
+    sds           fullName;
+    sds           description;
+    DATASubrecord data;
+    ATTRSubrecord attr;
+} CLASRecord;
