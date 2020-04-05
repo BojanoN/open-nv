@@ -32,120 +32,164 @@ Record* init_TES4(FILE* esm_file) {
   return (Record*)ret;
 }
 
+sds init_cstring_subrecord(FILE* esm_file, uint16_t dataSize) {
+  char* cstring = malloc(dataSize);
+  fread(cstring, dataSize, 1, esm_file);
+  sds subrecord = sdsnewlen(cstring, dataSize);
+  free(cstring);
+  return subrecord;
+}
+
 Record* init_GMST(FILE* esm_file) {
-  SAFE_MALLOC(GMSTRecord, ret);
+  SAFE_MALLOC(GMSTRecord, record);
 
-  fread(&(ret->base), RECORD_SIZE, 1, esm_file);
+  fread(&(record->base), RECORD_SIZE, 1, esm_file);
+  //EDID
+  SAFE_MALLOC(Subrecord, subrecordHead);
+  fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
-  SubrecordConstructor* constructor = GET_CONSTRUCTOR(Subrecord, "EDID");
-  EDID* tmp_edid = (EDID*)constructor(esm_file);
+  record->editorId = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
+  log_subrecord_new(subrecordHead);
+  log_debug("Editor ID: %s", record->editorId);
 
-  if (tmp_edid == NULL) {
-    return NULL;
+  //DATA
+  fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+  record->value.stringValue = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
+  log_subrecord_new(subrecordHead);
+
+  switch((record->editorId)[0]) {
+    case 's':
+      log_debug("Game setting string value: %s", record->value.stringValue);
+      break;
+    case 'f':
+      log_debug("Game setting float value: %f", record->value.floatValue);
+      break;
+    default:
+      log_debug("Game setting integer value: %d", record->value.intValue);
+      break;
   }
 
-  ret->edid = tmp_edid;
+  log_record(&(record->base));
 
-  constructor = GET_CONSTRUCTOR(Subrecord, "DATA");
-  DATA* tmp_data = (DATA*)constructor(esm_file);
-
-  if (tmp_data == NULL) {
-    return NULL;
-  }
-  ret->data = tmp_data;
-
-  log_record(&(ret->base));
-
-  return (Record*)ret;
+  return (Record*)record;
 }
 
 Record* init_TXST(FILE* esm_file) {
-  SAFE_MALLOC(TXSTRecord, ret);
-  fread(&(ret->base), RECORD_SIZE, 1, esm_file);
+  SAFE_MALLOC(TXSTRecord, record);
+  fread(&(record->base), RECORD_SIZE, 1, esm_file);
 
-  SubrecordConstructor* constructor = GET_CONSTRUCTOR(Subrecord, "EDID");
-  EDID* tmp_edid = (EDID*)constructor(esm_file);
+  //EDID
+  SAFE_MALLOC(Subrecord, subrecordHead);
+  fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
-  if (tmp_edid == NULL) {
-    return NULL;
+  record->editorId = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
+  log_subrecord_new(subrecordHead);
+  log_debug("Editor ID: %s", record->editorId);
+
+  fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+  sds type = sdsnewlen(subrecordHead->Type, 4);
+
+  SubrecordConstructor* constructor = NULL;
+  //OBND
+  if(strcmp(type, "OBND") == 0) {
+    constructor = GET_CONSTRUCTOR(Subrecord, "OBND");
+    OBNDSubrecord* objectBounds = (OBNDSubrecord*)constructor(esm_file); 
+    record->objectBounds = *objectBounds;
+    free(objectBounds);
+    log_subrecord_new(subrecordHead);
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    type = sdsnewlen(subrecordHead->Type, 4);
   }
-  ret->edid = tmp_edid;
-
-  constructor = GET_CONSTRUCTOR(Subrecord, "OBND");
-  OBND* tmp_obnd = (OBND*)constructor(esm_file);
-
-  if (tmp_obnd == NULL) {
-    return NULL;
+  //TX00
+  if(strcmp(type, "TX00") == 0) {
+    record->baseImage_transparency = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
+    log_subrecord_new(subrecordHead);
+    log_debug("Base image/Transparency: %s", record->baseImage_transparency);
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    type = sdsnewlen(subrecordHead->Type, 4);
+  } else {
+    record->baseImage_transparency = NULL;
   }
-  ret->obnd = tmp_obnd;
 
-  constructor = GET_CONSTRUCTOR(Subrecord, "TX00");
-  TX00* tmp_tx00 = (TX00*)constructor(esm_file);
-
-  if (tmp_tx00 == NULL) {
-    return NULL;
+  //TX01
+  if(strcmp(type, "TX01") == 0) {
+    record->normalMap_specular = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
+    log_subrecord_new(subrecordHead);
+    log_debug("Normal map/Specular: %s", record->normalMap_specular);
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    type = sdsnewlen(subrecordHead->Type, 4);
+  } else {
+    record->normalMap_specular = NULL;
   }
-  ret->tx00 = tmp_tx00;
 
-  constructor = GET_CONSTRUCTOR(Subrecord, "TX01");
-  TX01* tmp_tx01 = (TX01*)constructor(esm_file);
-
-  if (tmp_tx01 == NULL) {
-    return NULL;
+  //TX02
+  if(strcmp(type, "TX02") == 0) {
+    record->environmentMapMask = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
+    log_subrecord_new(subrecordHead);
+    log_debug("Environment map mask: %s", record->environmentMapMask);
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    type = sdsnewlen(subrecordHead->Type, 4);
+  } else {
+    record->environmentMapMask = NULL;
   }
-  ret->tx01 = tmp_tx01;
 
-  constructor = GET_CONSTRUCTOR(Subrecord, "TX02");
-  TX02* tmp_tx02 = (TX02*)constructor(esm_file);
-
-  if (tmp_tx02 == NULL) {
-    return NULL;
+  //TX03
+  if(strcmp(type, "TX03") == 0) {
+    record->glowMap = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
+    log_subrecord_new(subrecordHead);
+    log_debug("Glow map: %s", record->glowMap);
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    type = sdsnewlen(subrecordHead->Type, 4);
+  } else {
+    record->glowMap = NULL;
   }
-  ret->tx02 = tmp_tx02;
 
-  constructor = GET_CONSTRUCTOR(Subrecord, "TX03");
-  TX03* tmp_tx03 = (TX03*)constructor(esm_file);
-
-  if (tmp_tx03 == NULL) {
-    return NULL;
+  //TX04
+  if(strcmp(type, "TX04") == 0) {
+    record->parallaxMap = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
+    log_subrecord_new(subrecordHead);
+    log_debug("Parallax map: %s", record->parallaxMap);
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    type = sdsnewlen(subrecordHead->Type, 4);
+  } else {
+    record->parallaxMap = NULL;
   }
-  ret->tx03 = tmp_tx03;
 
-  constructor = GET_CONSTRUCTOR(Subrecord, "TX04");
-  TX04* tmp_tx04 = (TX04*)constructor(esm_file);
-
-  if (tmp_tx04 == NULL) {
-    return NULL;
+  //TX05
+  if(strcmp(type, "TX05") == 0) {
+    record->environmentMap = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
+    log_subrecord_new(subrecordHead);
+    log_debug("Environment map: %s", record->environmentMap);
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    type = sdsnewlen(subrecordHead->Type, 4);
+  } else {
+    record->environmentMap = NULL;
   }
-  ret->tx04 = tmp_tx04;
 
-  constructor = GET_CONSTRUCTOR(Subrecord, "TX05");
-  TX05* tmp_tx05 = (TX05*)constructor(esm_file);
-
-  if (tmp_tx05 == NULL) {
-    return NULL;
+  //DODT
+  if(strcmp(type, "DODT") == 0) {
+    constructor = GET_CONSTRUCTOR(Subrecord, "DODT");
+    DODTSubrecord* decalData = (DODTSubrecord*)constructor(esm_file); 
+    record->decalData = *decalData;
+    log_subrecord_new(subrecordHead);
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    type = sdsnewlen(subrecordHead->Type, 4);
   }
-  ret->tx05 = tmp_tx05;
 
-  constructor = GET_CONSTRUCTOR(Subrecord, "DODT");
-  DODT* tmp_dodt = (DODT*)constructor(esm_file);
-
-  if (tmp_dodt == NULL) {
-    return NULL;
+  //DNAM
+  if(strcmp(type, "DNAM") == 0) {
+    uint16_t dnam;
+    fread(&dnam, sizeof(uint16_t), 1, esm_file);
+    record->flags = dnam;
+    log_subrecord_new(subrecordHead);
+    log_debug("Flags: 0x%04x", record->flags);
+  } else {
+    fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
   }
-  ret->dodt = tmp_dodt;
+  
+  log_record(&(record->base));
 
-  constructor = GET_CONSTRUCTOR(Subrecord, "DNAM");
-  DNAM* tmp_dnam = (DNAM*)constructor(esm_file);
-
-  if (tmp_dnam == NULL) {
-    return NULL;
-  }
-  ret->dnam = tmp_dnam;
-
-  log_record(&(ret->base));
-
-  return (Record*)ret;
+  return (Record*)record;
 }
 
 void free_TES4(Record* record) {
@@ -160,49 +204,38 @@ void free_TES4(Record* record) {
 }
 
 void free_GMST(Record* record) {
-  GMSTRecord* tmp = (GMSTRecord*)record;
-  SubrecordDestructor* destructor = GET_DESTRUCTOR(Subrecord, "EDID");
-  destructor((Subrecord*)tmp->edid);
-
-  destructor = GET_DESTRUCTOR(Subrecord, "DATA");
-  destructor((Subrecord*)tmp->data);
-
+  GMSTRecord* gmst_record = (GMSTRecord*)record;
+  if((gmst_record->editorId)[0] == 's') {
+    sdsfree(gmst_record->value.stringValue);
+  }
+  sdsfree(gmst_record->editorId);
   free(record);
 }
 
 void free_TXST(Record* record) {
-  TXSTRecord* tmp = (TXSTRecord*)record;
-  SubrecordDestructor* destructor = GET_DESTRUCTOR(Subrecord, "EDID");
-  destructor((Subrecord*)tmp->edid);
+  TXSTRecord* txst = (TXSTRecord*)record;
+  sdsfree(txst->editorId);
 
-  destructor = GET_DESTRUCTOR(Subrecord, "OBND");
-  destructor((Subrecord*)tmp->obnd);
+  if(txst->baseImage_transparency != NULL) {
+    sdsfree(txst->baseImage_transparency);
+  }
+  if(txst->normalMap_specular != NULL) {
+    sdsfree(txst->normalMap_specular);
+  }
+  if(txst->environmentMapMask != NULL) {
+    sdsfree(txst->environmentMapMask);
+  }
+  if(txst->glowMap != NULL) {
+    sdsfree(txst->glowMap);
+  }
+  if(txst->parallaxMap != NULL) {
+    sdsfree(txst->parallaxMap);
+  }
+  if(txst->environmentMap != NULL) {
+    sdsfree(txst->environmentMap);
+  }
 
-  destructor = GET_DESTRUCTOR(Subrecord, "TX00");
-  destructor((Subrecord*)tmp->tx00);
-
-  destructor = GET_DESTRUCTOR(Subrecord, "TX01");
-  destructor((Subrecord*)tmp->tx01);
-
-  destructor = GET_DESTRUCTOR(Subrecord, "TX02");
-  destructor((Subrecord*)tmp->tx02);
-
-  destructor = GET_DESTRUCTOR(Subrecord, "TX03");
-  destructor((Subrecord*)tmp->tx03);
-
-  destructor = GET_DESTRUCTOR(Subrecord, "TX04");
-  destructor((Subrecord*)tmp->tx04);
-
-  destructor = GET_DESTRUCTOR(Subrecord, "TX05");
-  destructor((Subrecord*)tmp->tx05);
-
-  destructor = GET_DESTRUCTOR(Subrecord, "DODT");
-  destructor((Subrecord*)tmp->dodt);
-
-  destructor = GET_DESTRUCTOR(Subrecord, "DNAM");
-  destructor((Subrecord*)tmp->dnam);
-
-  free(record);
+  free(txst);
 }
 
 void Record_init_constructor_map() {

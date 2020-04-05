@@ -14,8 +14,12 @@ typedef struct {
 */
 typedef struct {
   Record base;
-  EDID* edid;
-  DATA* data;
+  sds  editorId;
+  union {
+    int32_t intValue;
+    float floatValue;
+    sds   stringValue;
+  } value;
 } GMSTRecord;
 
 /*
@@ -23,14 +27,14 @@ typedef struct {
 */
 typedef struct {
   Record base;
-  EDID* edid;
-  OBND* obnd;
-  TX00* tx00;
-  TX01* tx01;
-  TX02* tx02;
-  TX03* tx03;
-  TX04* tx04;
-  TX05* tx05;
-  DODT* dodt;
-  DNAM* dnam;
+  sds  editorId;
+  OBNDSubrecord objectBounds;
+  sds baseImage_transparency;
+  sds normalMap_specular;
+  sds environmentMapMask;
+  sds glowMap;
+  sds parallaxMap;
+  sds environmentMap;
+  DODTSubrecord decalData;
+  uint16_t flags;
 } TXSTRecord;

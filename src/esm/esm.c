@@ -49,8 +49,10 @@ Esm* esmnew(const sds path)
             }
         }
 
-        //na 0xA95E zavrsava grupa GMST grupa
-        if (ftell(esm_file) > 0xA95E)
+        log_debug("Current file pointer location: 0x%05x", ftell(esm_file));
+        //na 0xA95E zavrsava grupa GMST
+        //na 0x21F4B zavrsava grupa TXST
+        if (ftell(esm_file) > 0x21F4B)
             break;
         cnt++;
     }
