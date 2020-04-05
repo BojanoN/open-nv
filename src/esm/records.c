@@ -205,28 +205,6 @@ Record* init_GLOB(FILE* esm_file)
     return (Record*)record;
 }
 
-void free_TES4(Record* record)
-{
-    TES4Record*          tmp  = (TES4Record*)record;
-    SubrecordDestructor* func = GET_DESTRUCTOR(Subrecord, "HEDR");
-    func((Subrecord*)tmp->hedr);
-
-    func = GET_DESTRUCTOR(Subrecord, "CNAM");
-    func((Subrecord*)tmp->cnam);
-
-    free(record);
-}
-
-void free_GMST(Record* record)
-{
-    GMSTRecord* gmst_record = (GMSTRecord*)record;
-    if ((gmst_record->editorId)[0] == 's') {
-        sdsfree(gmst_record->value.stringValue);
-    }
-    sdsfree(gmst_record->editorId);
-    free(record);
-}
-
 Record* init_MICN(FILE* esm_file)
 {
     MALLOC_WARN(MICN, record);
@@ -252,6 +230,57 @@ Record* init_MICN(FILE* esm_file)
     return (Record*)record;
 }
 
+Record* init_CLAS(FILE* esm_file)
+{
+    MALLOC_WARN(CLASRecord, record);
+    Subrecord subheader;
+
+    fread(&(record->base), sizeof(Record), 1, esm_file);
+    uint32_t dataStart = ftell(esm_file);
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    record->editorID = init_cstring_subrecord(esm_file, &subheader, "EDID");
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    record->fullName = init_cstring_subrecord(esm_file, &subheader, "FULL");
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    record->description = init_cstring_subrecord(esm_file, &subheader, "DESC");
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    dataStart = ftell(esm_file);
+    fread(&(record->data), sizeof(DATASubrecord), 1, esm_file);
+    assert((dataStart + subheader.DataSize) == ftell(esm_file));
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    dataStart = ftell(esm_file);
+    fread(&(record->attr), sizeof(ATTRSubrecord), 1, esm_file);
+    assert((dataStart + subheader.DataSize) == ftell(esm_file));
+
+    return (Record*)record;
+}
+
+void free_TES4(Record* record)
+{
+    TES4Record*          tmp  = (TES4Record*)record;
+    SubrecordDestructor* func = GET_DESTRUCTOR(Subrecord, "HEDR");
+    func((Subrecord*)tmp->hedr);
+
+    func = GET_DESTRUCTOR(Subrecord, "CNAM");
+    func((Subrecord*)tmp->cnam);
+
+    free(record);
+}
+
+void free_GMST(Record* record)
+{
+    GMSTRecord* gmst_record = (GMSTRecord*)record;
+    if ((gmst_record->editorId)[0] == 's') {
+        sdsfree(gmst_record->value.stringValue);
+    }
+    sdsfree(gmst_record->editorId);
+    free(record);
+}
 
 void free_MICN(Record* record)
 {
@@ -301,6 +330,17 @@ void free_GLOB(Record* record)
     free(glob_record);
 }
 
+void free_CLAS(Record* record)
+{
+    CLASRecord* clas = (CLASRecord*)record;
+
+    sdsfree(clas->editorID);
+    sdsfree(clas->description);
+    sdsfree(clas->fullName);
+
+    free(clas);
+}
+
 void Record_init_constructor_map()
 {
     ADD_CONSTRUCTOR(Record, "TES4", init_TES4);
@@ -308,6 +348,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "TXST", init_TXST);
     ADD_CONSTRUCTOR(Record, "GLOB", init_GLOB);
     ADD_CONSTRUCTOR(Record, "MICN", init_MICN);
+    ADD_CONSTRUCTOR(Record, "CLAS", init_CLAS);
 }
 
 void Record_init_destructor_map()
@@ -317,6 +358,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "TXST", free_TXST);
     ADD_DESTRUCTOR(Record, "GLOB", free_GLOB);
     ADD_DESTRUCTOR(Record, "MICN", free_MICN);
+    ADD_DESTRUCTOR(Record, "CLAS", free_CLAS);
 }
 
 Record* recordnew(FILE* f, sds type)
