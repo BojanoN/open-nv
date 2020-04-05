@@ -53,7 +53,9 @@ Esm* esmnew(const sds path)
         //na 0xA95E zavrsava grupa GMST
         //na 0x21F4B zavrsava grupa TXST
         //na 0x224FC zavrsava grupa MICN
-        if (ftell(esm_file) > 0x21F4B)
+        //na 0x25DB0 zavrsava grupa GLOB
+        //na 0x27F5D zavrsava grupa CLAS
+        if (ftell(esm_file) > 0x27F5D)
             break;
         cnt++;
     }
