@@ -32,11 +32,13 @@ Record* init_TES4(FILE* esm_file) {
   return (Record*)ret;
 }
 
-sds init_cstring_subrecord(FILE* esm_file, uint16_t dataSize) {
-  char* cstring = malloc(dataSize);
-  fread(cstring, dataSize, 1, esm_file);
-  sds subrecord = sdsnewlen(cstring, dataSize);
+sds init_cstring_subrecord(FILE* esm_file, Subrecord* subrecordHead, const char* loggingName) {
+  char* cstring = malloc(subrecordHead->DataSize);
+  fread(cstring, subrecordHead->DataSize, 1, esm_file);
+  sds subrecord = sdsnewlen(cstring, subrecordHead->DataSize);
   free(cstring);
+  log_subrecord_new(subrecordHead);
+  log_debug("%s: %s", loggingName, subrecord);
   return subrecord;
 }
 
@@ -48,13 +50,15 @@ Record* init_GMST(FILE* esm_file) {
   SAFE_MALLOC(Subrecord, subrecordHead);
   fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
-  record->editorId = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
-  log_subrecord_new(subrecordHead);
-  log_debug("Editor ID: %s", record->editorId);
+  record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
 
   //DATA
   fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-  record->value.stringValue = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
+
+  char* cstring = malloc(dataSize);
+  fread(cstring, dataSize, 1, esm_file);
+  record->value.stringValue = sdsnewlen(cstring, dataSize);
+  free(cstring);
   log_subrecord_new(subrecordHead);
 
   switch((record->editorId)[0]) {
@@ -82,9 +86,7 @@ Record* init_TXST(FILE* esm_file) {
   SAFE_MALLOC(Subrecord, subrecordHead);
   fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
-  record->editorId = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
-  log_subrecord_new(subrecordHead);
-  log_debug("Editor ID: %s", record->editorId);
+  record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
 
   fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
   sds type = sdsnewlen(subrecordHead->Type, 4);
@@ -100,11 +102,10 @@ Record* init_TXST(FILE* esm_file) {
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     type = sdsnewlen(subrecordHead->Type, 4);
   }
+
   //TX00
   if(strcmp(type, "TX00") == 0) {
-    record->baseImage_transparency = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
-    log_subrecord_new(subrecordHead);
-    log_debug("Base image/Transparency: %s", record->baseImage_transparency);
+    record->baseImage_transparency = init_cstring_subrecord(esm_file, subrecordHead, "Base image/Transparency");
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     type = sdsnewlen(subrecordHead->Type, 4);
   } else {
@@ -113,9 +114,7 @@ Record* init_TXST(FILE* esm_file) {
 
   //TX01
   if(strcmp(type, "TX01") == 0) {
-    record->normalMap_specular = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
-    log_subrecord_new(subrecordHead);
-    log_debug("Normal map/Specular: %s", record->normalMap_specular);
+    record->normalMap_specular = init_cstring_subrecord(esm_file, subrecordHead, "Normal map/Specular");
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     type = sdsnewlen(subrecordHead->Type, 4);
   } else {
@@ -124,9 +123,7 @@ Record* init_TXST(FILE* esm_file) {
 
   //TX02
   if(strcmp(type, "TX02") == 0) {
-    record->environmentMapMask = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
-    log_subrecord_new(subrecordHead);
-    log_debug("Environment map mask: %s", record->environmentMapMask);
+    record->environmentMapMask = init_cstring_subrecord(esm_file, subrecordHead, "Environment map mask");
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     type = sdsnewlen(subrecordHead->Type, 4);
   } else {
@@ -135,9 +132,7 @@ Record* init_TXST(FILE* esm_file) {
 
   //TX03
   if(strcmp(type, "TX03") == 0) {
-    record->glowMap = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
-    log_subrecord_new(subrecordHead);
-    log_debug("Glow map: %s", record->glowMap);
+    record->glowMap = init_cstring_subrecord(esm_file, subrecordHead, "Glow map");
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     type = sdsnewlen(subrecordHead->Type, 4);
   } else {
@@ -146,9 +141,7 @@ Record* init_TXST(FILE* esm_file) {
 
   //TX04
   if(strcmp(type, "TX04") == 0) {
-    record->parallaxMap = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
-    log_subrecord_new(subrecordHead);
-    log_debug("Parallax map: %s", record->parallaxMap);
+    record->parallaxMap = init_cstring_subrecord(esm_file, subrecordHead, "Parallax map");
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     type = sdsnewlen(subrecordHead->Type, 4);
   } else {
@@ -157,9 +150,7 @@ Record* init_TXST(FILE* esm_file) {
 
   //TX05
   if(strcmp(type, "TX05") == 0) {
-    record->environmentMap = init_cstring_subrecord(esm_file, subrecordHead->DataSize);
-    log_subrecord_new(subrecordHead);
-    log_debug("Environment map: %s", record->environmentMap);
+    record->environmentMap = init_cstring_subrecord(esm_file, subrecordHead, "Environment map");
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     type = sdsnewlen(subrecordHead->Type, 4);
   } else {
