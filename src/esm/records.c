@@ -128,7 +128,7 @@ Record* init_TXST(FILE* esm_file)
 
     for (int i = 0; i < 6; i++) {
         if (strcmp(type, optionalCstringSubrecordTypes[i]) == 0) {
-            optionalCstringSubrecordDestinations[i] = init_cstring_subrecord(esm_file, subrecordHead, optionalNames);
+            optionalCstringSubrecordDestinations[i] = init_cstring_subrecord(esm_file, subrecordHead, optionalNames[i]);
             fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
             type = sdsnewlen(subrecordHead->Type, 4);
         } else {
