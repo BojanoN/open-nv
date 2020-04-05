@@ -7,7 +7,7 @@ FETCH_CONSTRUCTOR_MAP(Subrecord);
 FETCH_DESTRUCTOR_MAP(Subrecord);
 
 Record* init_TES4(FILE* esm_file) {
-  SAFE_MALLOC(TES4Record, ret);
+  MALLOC_WARN(TES4Record, ret);
 
   fread(&(ret->base), RECORD_SIZE, 1, esm_file);
 
@@ -43,11 +43,11 @@ sds init_cstring_subrecord(FILE* esm_file, Subrecord* subrecordHead, const char*
 }
 
 Record* init_GMST(FILE* esm_file) {
-  SAFE_MALLOC(GMSTRecord, record);
+  MALLOC_WARN(GMSTRecord, record);
 
   fread(&(record->base), RECORD_SIZE, 1, esm_file);
   //EDID
-  SAFE_MALLOC(Subrecord, subrecordHead);
+  MALLOC_WARN(Subrecord, subrecordHead);
   fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
   record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
@@ -80,11 +80,11 @@ Record* init_GMST(FILE* esm_file) {
 }
 
 Record* init_TXST(FILE* esm_file) {
-  SAFE_MALLOC(TXSTRecord, record);
+  MALLOC_WARN(TXSTRecord, record);
   fread(&(record->base), RECORD_SIZE, 1, esm_file);
 
   //EDID
-  SAFE_MALLOC(Subrecord, subrecordHead);
+  MALLOC_WARN(Subrecord, subrecordHead);
   fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
   record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
@@ -185,11 +185,11 @@ Record* init_TXST(FILE* esm_file) {
 }
 
 Record* init_GLOB(FILE* esm_file) {
-  SAFE_MALLOC(GLOBRecord, record);
+  MALLOC_WARN(GLOBRecord, record);
 
   fread(&(record->base), RECORD_SIZE, 1, esm_file);
 
-  SAFE_MALLOC(Subrecord, subrecordHead);
+  MALLOC_WARN(Subrecord, subrecordHead);
   fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
 
   record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
