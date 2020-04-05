@@ -237,7 +237,7 @@ Record* init_CLAS(FILE* esm_file)
 
     fread(&(record->base), sizeof(Record), 1, esm_file);
     uint32_t dataStart = ftell(esm_file);
-
+    log_record(&(record->base));
     fread(&subheader, sizeof(Subrecord), 1, esm_file);
     record->editorID = init_cstring_subrecord(esm_file, &subheader, "EDID");
 
@@ -248,12 +248,12 @@ Record* init_CLAS(FILE* esm_file)
     record->description = init_cstring_subrecord(esm_file, &subheader, "DESC");
 
     fread(&subheader, sizeof(Subrecord), 1, esm_file);
-    dataStart = ftell(esm_file);
+    log_info("%d", subheader.DataSize);
     fread(&(record->data), sizeof(DATASubrecord), 1, esm_file);
-    assert((dataStart + subheader.DataSize) == ftell(esm_file));
 
     fread(&subheader, sizeof(Subrecord), 1, esm_file);
     dataStart = ftell(esm_file);
+    log_info("%d", subheader.DataSize);
     fread(&(record->attr), sizeof(ATTRSubrecord), 1, esm_file);
     assert((dataStart + subheader.DataSize) == ftell(esm_file));
 

@@ -64,6 +64,7 @@ typedef struct __attribute__((packed)) {
     uint8_t perception;
     uint8_t endurance;
     uint8_t charisma;
+    uint8_t intelligence;
     uint8_t agility;
     uint8_t luck;
 } ATTRSubrecord;
