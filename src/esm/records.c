@@ -338,28 +338,6 @@ void free_FACT(Record* record)
 {
 }
 
-void free_TES4(Record* record)
-{
-    TES4Record*          tmp  = (TES4Record*)record;
-    SubrecordDestructor* func = GET_DESTRUCTOR(Subrecord, "HEDR");
-    func((Subrecord*)tmp->hedr);
-
-    func = GET_DESTRUCTOR(Subrecord, "CNAM");
-    func((Subrecord*)tmp->cnam);
-
-    free(record);
-}
-
-void free_GMST(Record* record)
-{
-    GMSTRecord* gmst_record = (GMSTRecord*)record;
-    if ((gmst_record->editorId)[0] == 's') {
-        sdsfree(gmst_record->value.stringValue);
-    }
-    sdsfree(gmst_record->editorId);
-    free(record);
-}
-
 Record* init_MICN(FILE* esm_file)
 {
     MALLOC_WARN(MICN, record);

@@ -76,8 +76,8 @@ typedef struct {
     ATTRSubrecord attr;
 } CLASRecord;
 /*
-* Faction
-*/
+ * Faction
+ */
 typedef struct {
     Record               base;
     sds                  editorId;
@@ -89,4 +89,3 @@ typedef struct {
     FACT_RankSubrecords* rank;
     formid               reputation;
 } FACTRecord;
->>>>>>> feature/fact-record
