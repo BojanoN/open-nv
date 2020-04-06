@@ -99,19 +99,16 @@ Record* init_TXST(FILE* esm_file)
 
     record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-    sds type = sdsnewlen(subrecordHead->Type, 4);
 
     SubrecordConstructor* constructor = NULL;
     //OBND
-    if (strcmp(type, "OBND") == 0) {
+    if (strncmp(subrecordHead->Type, "OBND", 4) == 0) {
         constructor                 = GET_CONSTRUCTOR(Subrecord, "OBND");
         OBNDSubrecord* objectBounds = (OBNDSubrecord*)constructor(esm_file);
         record->objectBounds        = *objectBounds;
         free(objectBounds);
         log_subrecord_new(subrecordHead);
         fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-        sdsfree(type);
-        type = sdsnewlen(subrecordHead->Type, 4);
     }
 
     //TX00-TX05
@@ -147,7 +144,7 @@ Record* init_TXST(FILE* esm_file)
         }
     }*/
     for (int i = 0; i < 6; i++) {
-        if (strcmp(type, optionalCstringSubrecordTypes[i]) == 0) {
+        if (strncmp(subrecordHead->Type, optionalCstringSubrecordTypes[i], 4) == 0) {
             sds tmp = init_cstring_subrecord(esm_file, subrecordHead, optionalNames[i]);
             switch (i) {
             case (0): {
@@ -177,25 +174,21 @@ Record* init_TXST(FILE* esm_file)
             }
             }
             fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-            sdsfree(type);
-            type = sdsnewlen(subrecordHead->Type, 4);
         }
     }
 
     //DODT
-    if (strcmp(type, "DODT") == 0) {
+    if (strncmp(subrecordHead->Type, "DODT", 4) == 0) {
         constructor              = GET_CONSTRUCTOR(Subrecord, "DODT");
         DODTSubrecord* decalData = (DODTSubrecord*)constructor(esm_file);
         record->decalData        = *decalData;
         free(decalData);
         log_subrecord_new(subrecordHead);
         fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-        sdsfree(type);
-        type = sdsnewlen(subrecordHead->Type, 4);
     }
 
     //DNAM
-    if (strcmp(type, "DNAM") == 0) {
+    if (strncmp(subrecordHead->Type, "DNAM", 4) == 0) {
         uint16_t dnam;
         fread(&dnam, sizeof(uint16_t), 1, esm_file);
         record->flags = dnam;
@@ -206,7 +199,6 @@ Record* init_TXST(FILE* esm_file)
     }
 
     log_record(&(record->base));
-    sdsfree(type);
     return (Record*)record;
 }
 
@@ -259,6 +251,7 @@ Record* init_FACT(FILE* esm_file)
     MALLOC_WARN(FACTRecord, record);
 
     fread(&(record->base), RECORD_SIZE, 1, esm_file);
+    uint32_t   end = ftell(esm_file) + record->base.DataSize;
     Subrecord  subrec;
     Subrecord* subrecordHead = &subrec;
     log_record(&(record->base));
@@ -267,19 +260,15 @@ Record* init_FACT(FILE* esm_file)
     record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
 
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-    sds type = sdsnewlen(subrecordHead->Type, 4);
 
-    if (strcmp(type, "FULL") == 0) {
+    if (strncmp(subrecordHead->Type, "FULL", 4) == 0) {
         record->name = init_cstring_subrecord(esm_file, subrecordHead, "Name");
-        sdsfree(type);
         fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-        type = sdsnewlen(subrecordHead->Type, 4);
     }
-    if (strcmp(type, "XNAM") == 0) {
-        int           i = 0;
+    if (strncmp(subrecordHead->Type, "XNAM", 4) == 0) {
         XNAMSubrecord tmp;
 
-        while (strcmp(type, "XNAM") == 0) {
+        while (strncmp(subrecordHead->Type, "XNAM", 4) == 0) {
             log_subrecord_new(subrecordHead);
             fread(&(tmp), sizeof(XNAMSubrecord), 1, esm_file);
             arrput(record->relations, tmp);
@@ -289,10 +278,6 @@ Record* init_FACT(FILE* esm_file)
             log_debug("Modifier: %d", tmp.modifier);
             log_debug("Group combat reaction: %d", tmp.groupCombatReaction);
             fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-
-            sdsfree(type);
-            type = sdsnewlen(subrecordHead->Type, 4);
-            i++;
         }
     }
 
@@ -304,50 +289,52 @@ Record* init_FACT(FILE* esm_file)
     log_debug("Unused bytes: 0x%02x 0x%02x", record->data.unused[0], record->data.unused[1]);
 
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-    sdsfree(type);
-    type = sdsnewlen(subrecordHead->Type, 4);
 
-    // CNAM, RNAM, INAM are optional
-    if (strcmp(type, "FACT") == 0) {
-        sdsfree(type);
-        fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
-        return (Record*)record;
-    }
-
-    if (strcmp(type, "CNAM") == 0) {
-        fread(&(record->unused), sizeof(float), 1, esm_file);
-        log_subrecord_new(subrecordHead);
-        log_debug("Unused float value: %f", record->unused);
-    }
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-    sdsfree(type);
-    type = sdsnewlen(subrecordHead->Type, 4);
-    if (strcmp(type, "RNAM") == 0) {
-        FACT_RankSubrecords tmp;
-        while (strcmp(type, "RNAM") == 0) {
-
+    // CNAM, RNAM, INAM, WMI1 are optional
+    while (ftell(esm_file) < end) {
+        if (strncmp(subrecordHead->Type, "CNAM", 4) == 0) {
+            fread(&(record->unused), sizeof(float), 1, esm_file);
             log_subrecord_new(subrecordHead);
-            fread(&tmp, sizeof(uint32_t), 1, esm_file);
-            log_debug("Rank number: %d", tmp.rankNumber);
+            log_debug("Unused float value: %f", record->unused);
+        }
+        if (strncmp(subrecordHead->Type, "RNAM", 4) == 0) {
+            FACT_RankSubrecords tmp;
+            while (strncmp(subrecordHead->Type, "RNAM", 4) == 0) {
 
-            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-            tmp.male = init_cstring_subrecord(esm_file, subrecordHead, "Male");
+                log_subrecord_new(subrecordHead);
+                fread(&tmp, sizeof(uint32_t), 1, esm_file);
+                log_debug("Rank number: %d", tmp.rankNumber);
+                log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
 
-            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-            tmp.female = init_cstring_subrecord(esm_file, subrecordHead, "Female");
+                fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+                tmp.male = init_cstring_subrecord(esm_file, subrecordHead, "Male");
+                log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
 
-            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-            if (strcmp(type, "INAM") == 0) {
-                tmp.insignia = init_cstring_subrecord(esm_file, subrecordHead, "Insignia");
+                fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+                tmp.female = init_cstring_subrecord(esm_file, subrecordHead, "Female");
+                log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
+
+                fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+                if (strncmp(subrecordHead->Type, "INAM", 4) == 0) {
+                    fread(&tmp.insignia, sizeof(uint32_t), 1, esm_file);
+                    log_debug("Insignia: %u", tmp.insignia);
+                } else {
+                    fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
+                }
+
+                arrput(record->rank, tmp);
                 fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
             }
-            arrput(record->rank, tmp);
         }
-    } else {
-        fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
+        if (strncmp(subrecordHead->Type, "WMI1", 4) == 0) {
+            log_debug("%s", "WMI");
+            fread(&(record->reputation), sizeof(formid), 1, esm_file);
+        }
+        fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+        log_info("Current file pointer location: 0x%06x", ftell(esm_file));
     }
-    sdsfree(type);
 
+    fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
     return (Record*)record;
 }
 
@@ -356,6 +343,16 @@ void free_FACT(Record* record)
     FACTRecord* fact = (FACTRecord*)record;
 
     arrfree(fact->relations);
+
+    uint32_t len = arrlenu(fact->rank);
+    for (uint32_t i = 0; i < len; i++) {
+        if (fact->rank[i].male != NULL) {
+            sdsfree(fact->rank[i].male);
+        }
+        if (fact->rank[i].female != NULL) {
+            sdsfree(fact->rank[i].female);
+        }
+    }
     arrfree(fact->rank);
 
     sdsfree(fact->editorId);
@@ -529,8 +526,6 @@ Record* recordnew(FILE* f, sds type)
         log_warn("Record type %s not yet implemented.", type);
         return NULL;
     }
-
-    log_info("Current offset: %u", ftell(f));
 
     ret = func(f);
     return ret;

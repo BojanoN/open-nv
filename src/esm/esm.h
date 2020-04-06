@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 typedef struct __attribute__((packed)) {
-    uint8_t  Type[4];
+    char     Type[4];
     uint16_t DataSize;
 } Subrecord;
 

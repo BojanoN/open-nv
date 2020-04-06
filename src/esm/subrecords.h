@@ -98,8 +98,8 @@ typedef struct __attribute__((packed)) {
 } FACT_DATASubrecord;
 
 typedef struct __attribute__((packed)) {
-    int32_t rankNumber;
-    sds     male;
-    sds     female;
-    sds     insignia;
+    int32_t  rankNumber;
+    sds      male;
+    sds      female;
+    uint32_t insignia;
 } FACT_RankSubrecords;
