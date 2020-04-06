@@ -25,11 +25,11 @@ Group* init_TopLevel(FILE* esm_file)
     MALLOC_WARN(TopLevelGroup, ret);
 
     uint32_t dataSize = 0;
-    uint32_t end      = 0;
+    uint32_t groupEnd = 0;
 
     fread(&(ret->base), sizeof(Group), 1, esm_file);
     dataSize = ret->base.GroupSize - 24;
-    end      = ftell(esm_file) + dataSize;
+    groupEnd = ftell(esm_file) + dataSize;
     sds type = sdsnewlen(ret->base.Label, 4);
 
     RecordConstructor* func = GET_CONSTRUCTOR(Record, type);
@@ -39,15 +39,31 @@ Group* init_TopLevel(FILE* esm_file)
 
     if (func == NULL) {
         free(ret);
+        log_warn("Record type %s not yet implemented.", type);
         return NULL;
     }
 
-    while (ftell(esm_file) < end) {
+    uint32_t start;
+    uint32_t end;
+
+    while (ftell(esm_file) < groupEnd) {
+        start          = ftell(esm_file) + sizeof(Record);
         Record* record = func(esm_file);
+        log_info("Current file pointer location: 0x%06x", ftell(esm_file));
+        end = ftell(esm_file);
 
         if (record) {
             arrput(ret->records, record);
         } else {
+            groupfree((Group*)ret);
+            return NULL;
+        }
+
+        if ((end - start) != record->DataSize) {
+            log_fatal("Failed %.4s record parsing: DataSize mismatch.", record->Type);
+            log_fatal("Read %u bytes, expected %u bytes.", (end - start), record->DataSize);
+            log_fatal("Your esm file might be corrupted.");
+
             groupfree((Group*)ret);
             return NULL;
         }

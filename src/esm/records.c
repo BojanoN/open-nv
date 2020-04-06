@@ -267,16 +267,19 @@ Record* init_FACT(FILE* esm_file)
     record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
 
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-    record->name = init_cstring_subrecord(esm_file, subrecordHead, "Name");
-
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     sds type = sdsnewlen(subrecordHead->Type, 4);
 
+    if (strcmp(type, "FULL") == 0) {
+        record->name = init_cstring_subrecord(esm_file, subrecordHead, "Name");
+        sdsfree(type);
+        fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+        type = sdsnewlen(subrecordHead->Type, 4);
+    }
     if (strcmp(type, "XNAM") == 0) {
         int           i = 0;
         XNAMSubrecord tmp;
 
-        while (strcmp(type, "XNAM")) {
+        while (strcmp(type, "XNAM") == 0) {
             log_subrecord_new(subrecordHead);
             fread(&(tmp), sizeof(XNAMSubrecord), 1, esm_file);
             arrput(record->relations, tmp);
@@ -286,6 +289,9 @@ Record* init_FACT(FILE* esm_file)
             log_debug("Modifier: %d", tmp.modifier);
             log_debug("Group combat reaction: %d", tmp.groupCombatReaction);
             fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+
+            sdsfree(type);
+            type = sdsnewlen(subrecordHead->Type, 4);
             i++;
         }
     }
@@ -300,12 +306,19 @@ Record* init_FACT(FILE* esm_file)
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     sdsfree(type);
     type = sdsnewlen(subrecordHead->Type, 4);
+
+    // CNAM, RNAM, INAM are optional
+    if (strcmp(type, "FACT") == 0) {
+        sdsfree(type);
+        fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
+        return (Record*)record;
+    }
+
     if (strcmp(type, "CNAM") == 0) {
         fread(&(record->unused), sizeof(float), 1, esm_file);
         log_subrecord_new(subrecordHead);
         log_debug("Unused float value: %f", record->unused);
     }
-
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     sdsfree(type);
     type = sdsnewlen(subrecordHead->Type, 4);
@@ -516,6 +529,8 @@ Record* recordnew(FILE* f, sds type)
         log_warn("Record type %s not yet implemented.", type);
         return NULL;
     }
+
+    log_info("Current offset: %u", ftell(f));
 
     ret = func(f);
     return ret;
