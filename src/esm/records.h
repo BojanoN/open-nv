@@ -75,3 +75,18 @@ typedef struct {
     DATASubrecord data;
     ATTRSubrecord attr;
 } CLASRecord;
+/*
+* Faction
+*/
+typedef struct {
+    Record               base;
+    sds                  editorId;
+    sds                  name;
+    uint32_t             relationsLength;
+    XNAMSubrecord*       relations;
+    FACT_DATASubrecord   data;
+    float                unused;
+    FACT_RankSubrecords* rank;
+    formid               reputation;
+} FACTRecord;
+>>>>>>> feature/fact-record

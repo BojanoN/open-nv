@@ -253,6 +253,113 @@ Record* init_GLOB(FILE* esm_file)
     return (Record*)record;
 }
 
+Record* init_FACT(FILE* esm_file)
+{
+
+    MALLOC_WARN(FACTRecord, record);
+
+    fread(&(record->base), RECORD_SIZE, 1, esm_file);
+    MALLOC_WARN(Subrecord, subrecordHead);
+
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
+
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    record->name = init_cstring_subrecord(esm_file, subrecordHead, "Name");
+
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    sds type = sdsnewlen(subrecordHead->Type, 4);
+
+    XNAMSubrecord* xnams = NULL;
+    if (strcmp(type, "XNAM") == 0) {
+        int i = 0;
+        while (strcmp(type, "XNAM")) {
+            log_subrecord_new(subrecordHead);
+
+            xnams = realloc(xnams, (i + 1) * sizeof(XNAMSubrecord));
+            fread(&(xnams[i]), sizeof(XNAMSubrecord), 1, esm_file);
+            log_debug("Relation:");
+            log_debug("Faction: %d", (&(xnams[i]))->faction);
+            log_debug("Modifier: %d", (&(xnams[i]))->modifier);
+            log_debug("Group combat reaction: %d", (&(xnams[i]))->groupCombatReaction);
+            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            i++;
+        }
+        record->relations       = xnams;
+        record->relationsLength = i + 1;
+    }
+
+    fread(&(record->data), sizeof(FACT_DATASubrecord), 1, esm_file);
+    log_subrecord_new(subrecordHead);
+    log_debug("Data:");
+    log_debug("Flags 1: 0x%02x", record->data.flags_1);
+    log_debug("Flags 2: 0x%02x", record->data.flags_2);
+    log_debug("Unused bytes: 0x%02x 0x%02x", record->data.unused[0], record->data.unused[1]);
+
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    type = sdsnewlen(subrecordHead->Type, 4);
+    if (strcmp(type, "CNAM") == 0) {
+        fread(&(record->unused), sizeof(float), 1, esm_file);
+        log_subrecord_new(subrecordHead);
+        log_debug("Unused float value: %f", record->unused);
+    }
+
+    FACT_RankSubrecords* ranks = NULL;
+
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    type = sdsnewlen(subrecordHead->Type, 4);
+    if (strcmp(type, "RNAM") == 0) {
+        int i = 0;
+        while (strcmp(type, "RNAM") == 0) {
+
+            log_subrecord_new(subrecordHead);
+            ranks = realloc(ranks, (i + 1) * sizeof(FACT_RankSubrecords));
+            fread(&(ranks[i].rankNumber), sizeof(uint32_t), 1, esm_file);
+            log_debug("Rank number: %d", ranks->rankNumber);
+
+            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            (&(ranks[i]))->male = init_cstring_subrecord(esm_file, subrecordHead, "Male");
+
+            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            (&(ranks[i]))->female = init_cstring_subrecord(esm_file, subrecordHead, "Female");
+
+            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            if (strcmp(type, "INAM") == 0) {
+                (&(ranks[i]))->insignia = init_cstring_subrecord(esm_file, subrecordHead, "Insignia");
+                fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            }
+        }
+    } else {
+        fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
+    }
+}
+
+void free_FACT(Record* record)
+{
+}
+
+void free_TES4(Record* record)
+{
+    TES4Record*          tmp  = (TES4Record*)record;
+    SubrecordDestructor* func = GET_DESTRUCTOR(Subrecord, "HEDR");
+    func((Subrecord*)tmp->hedr);
+
+    func = GET_DESTRUCTOR(Subrecord, "CNAM");
+    func((Subrecord*)tmp->cnam);
+
+    free(record);
+}
+
+void free_GMST(Record* record)
+{
+    GMSTRecord* gmst_record = (GMSTRecord*)record;
+    if ((gmst_record->editorId)[0] == 's') {
+        sdsfree(gmst_record->value.stringValue);
+    }
+    sdsfree(gmst_record->editorId);
+    free(record);
+}
+
 Record* init_MICN(FILE* esm_file)
 {
     MALLOC_WARN(MICN, record);
