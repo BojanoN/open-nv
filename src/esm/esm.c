@@ -25,7 +25,7 @@ Esm* esmnew(const sds path)
 
         if (strcmp(type, GROUP_TYPE) == 0) {
             Group* g = groupnew(esm_file);
-            if (g) {
+            if (g != NULL) {
                 arrput(ret->groups, g);
             } else {
                 log_fatal("Fatal error during ESM file parsing");
@@ -37,7 +37,7 @@ Esm* esmnew(const sds path)
             }
         } else {
             Record* r = recordnew(esm_file, type);
-            if (r) {
+            if (r != NULL) {
                 hmput(ret->records, r->ID, r);
             } else {
                 log_fatal("Fatal error during ESM file parsing");
@@ -49,13 +49,14 @@ Esm* esmnew(const sds path)
             }
         }
 
-        log_debug("Current file pointer location: 0x%05x", ftell(esm_file));
+        log_info("Current file pointer location: 0x%05x", ftell(esm_file));
         //na 0xA95E zavrsava grupa GMST
         //na 0x21F4B zavrsava grupa TXST
         //na 0x224FC zavrsava grupa MICN
         //na 0x25DB0 zavrsava grupa GLOB
         //na 0x27F5D zavrsava grupa CLAS
-        if (ftell(esm_file) > 0x27F5D)
+        //na 0x3C22E zavrsava grupa FACT
+        if (ftell(esm_file) > 0x3C22E)
             break;
         cnt++;
     }

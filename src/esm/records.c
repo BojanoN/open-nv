@@ -117,7 +117,7 @@ Record* init_TXST(FILE* esm_file)
     //TX00-TX05
     const char* optionalCstringSubrecordTypes[] = { "TX00", "TX01", "TX02",
         "TX03", "TX04", "TX05" };
-
+    /*
     sds optionalCstringSubrecordDestinations[] = {
         record->baseImage_transparency,
         record->normalMap_specular,
@@ -126,7 +126,7 @@ Record* init_TXST(FILE* esm_file)
         record->parallaxMap,
         record->environmentMap
     };
-
+*/
     const char* optionalNames[] = {
         "Base image/Transparency",
         "Normal map/Specular",
@@ -259,7 +259,9 @@ Record* init_FACT(FILE* esm_file)
     MALLOC_WARN(FACTRecord, record);
 
     fread(&(record->base), RECORD_SIZE, 1, esm_file);
-    MALLOC_WARN(Subrecord, subrecordHead);
+    Subrecord  subrec;
+    Subrecord* subrecordHead = &subrec;
+    log_record(&(record->base));
 
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
@@ -270,23 +272,22 @@ Record* init_FACT(FILE* esm_file)
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     sds type = sdsnewlen(subrecordHead->Type, 4);
 
-    XNAMSubrecord* xnams = NULL;
     if (strcmp(type, "XNAM") == 0) {
-        int i = 0;
+        int           i = 0;
+        XNAMSubrecord tmp;
+
         while (strcmp(type, "XNAM")) {
             log_subrecord_new(subrecordHead);
+            fread(&(tmp), sizeof(XNAMSubrecord), 1, esm_file);
+            arrput(record->relations, tmp);
 
-            xnams = realloc(xnams, (i + 1) * sizeof(XNAMSubrecord));
-            fread(&(xnams[i]), sizeof(XNAMSubrecord), 1, esm_file);
             log_debug("Relation:");
-            log_debug("Faction: %d", (&(xnams[i]))->faction);
-            log_debug("Modifier: %d", (&(xnams[i]))->modifier);
-            log_debug("Group combat reaction: %d", (&(xnams[i]))->groupCombatReaction);
+            log_debug("Faction: %d", tmp.faction);
+            log_debug("Modifier: %d", tmp.modifier);
+            log_debug("Group combat reaction: %d", tmp.groupCombatReaction);
             fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
             i++;
         }
-        record->relations       = xnams;
-        record->relationsLength = i + 1;
     }
 
     fread(&(record->data), sizeof(FACT_DATASubrecord), 1, esm_file);
@@ -297,6 +298,7 @@ Record* init_FACT(FILE* esm_file)
     log_debug("Unused bytes: 0x%02x 0x%02x", record->data.unused[0], record->data.unused[1]);
 
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    sdsfree(type);
     type = sdsnewlen(subrecordHead->Type, 4);
     if (strcmp(type, "CNAM") == 0) {
         fread(&(record->unused), sizeof(float), 1, esm_file);
@@ -304,38 +306,49 @@ Record* init_FACT(FILE* esm_file)
         log_debug("Unused float value: %f", record->unused);
     }
 
-    FACT_RankSubrecords* ranks = NULL;
-
     fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    sdsfree(type);
     type = sdsnewlen(subrecordHead->Type, 4);
     if (strcmp(type, "RNAM") == 0) {
-        int i = 0;
+        FACT_RankSubrecords tmp;
         while (strcmp(type, "RNAM") == 0) {
 
             log_subrecord_new(subrecordHead);
-            ranks = realloc(ranks, (i + 1) * sizeof(FACT_RankSubrecords));
-            fread(&(ranks[i].rankNumber), sizeof(uint32_t), 1, esm_file);
-            log_debug("Rank number: %d", ranks->rankNumber);
+            fread(&tmp, sizeof(uint32_t), 1, esm_file);
+            log_debug("Rank number: %d", tmp.rankNumber);
 
             fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-            (&(ranks[i]))->male = init_cstring_subrecord(esm_file, subrecordHead, "Male");
+            tmp.male = init_cstring_subrecord(esm_file, subrecordHead, "Male");
 
             fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-            (&(ranks[i]))->female = init_cstring_subrecord(esm_file, subrecordHead, "Female");
+            tmp.female = init_cstring_subrecord(esm_file, subrecordHead, "Female");
 
             fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
             if (strcmp(type, "INAM") == 0) {
-                (&(ranks[i]))->insignia = init_cstring_subrecord(esm_file, subrecordHead, "Insignia");
+                tmp.insignia = init_cstring_subrecord(esm_file, subrecordHead, "Insignia");
                 fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
             }
+            arrput(record->rank, tmp);
         }
     } else {
         fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
     }
+    sdsfree(type);
+
+    return (Record*)record;
 }
 
 void free_FACT(Record* record)
 {
+    FACTRecord* fact = (FACTRecord*)record;
+
+    arrfree(fact->relations);
+    arrfree(fact->rank);
+
+    sdsfree(fact->editorId);
+    sdsfree(fact->name);
+
+    free(fact);
 }
 
 Record* init_MICN(FILE* esm_file)
@@ -480,6 +493,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "GLOB", init_GLOB);
     ADD_CONSTRUCTOR(Record, "MICN", init_MICN);
     ADD_CONSTRUCTOR(Record, "CLAS", init_CLAS);
+    ADD_CONSTRUCTOR(Record, "FACT", init_FACT);
 }
 
 void Record_init_destructor_map()
@@ -490,6 +504,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "GLOB", free_GLOB);
     ADD_DESTRUCTOR(Record, "MICN", free_MICN);
     ADD_DESTRUCTOR(Record, "CLAS", free_CLAS);
+    ADD_DESTRUCTOR(Record, "FACT", free_FACT);
 }
 
 Record* recordnew(FILE* f, sds type)

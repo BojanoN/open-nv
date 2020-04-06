@@ -61,13 +61,18 @@ void free_TopLevel(Group* group)
     TopLevelGroup*    tmp  = (TopLevelGroup*)group;
     sds               type = sdsnewlen(tmp->base.Label, 4);
     RecordDestructor* func = GET_DESTRUCTOR(Record, type);
+    if (func == NULL) {
+        sdsfree(type);
+        log_fatal("Destructor for type %s not found", type);
+        return;
+    }
     sdsfree(type);
-
     for (uint32_t i = 0; i < arrlenu(tmp->records); i++) {
-        func(tmp->records[i]);
+        if (tmp->records[i] != NULL)
+            func(tmp->records[i]);
     }
     arrfree(tmp->records);
-    free(group);
+    free(tmp);
 }
 
 void Group_init_constructor_map()
