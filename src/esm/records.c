@@ -281,60 +281,81 @@ Record* init_FACT(FILE* esm_file)
         }
     }
 
-    fread(&(record->data), sizeof(FACT_DATASubrecord), 1, esm_file);
+    fread(&(record->data), subrecordHead->DataSize, 1, esm_file);
     log_subrecord_new(subrecordHead);
     log_debug("Data:");
     log_debug("Flags 1: 0x%02x", record->data.flags_1);
     log_debug("Flags 2: 0x%02x", record->data.flags_2);
     log_debug("Unused bytes: 0x%02x 0x%02x", record->data.unused[0], record->data.unused[1]);
 
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-
-    // CNAM, RNAM, INAM, WMI1 are optional
-    while (ftell(esm_file) < end) {
-        if (strncmp(subrecordHead->Type, "CNAM", 4) == 0) {
-            fread(&(record->unused), sizeof(float), 1, esm_file);
-            log_subrecord_new(subrecordHead);
-            log_debug("Unused float value: %f", record->unused);
-        }
-        if (strncmp(subrecordHead->Type, "RNAM", 4) == 0) {
-            FACT_RankSubrecords tmp;
-            while (strncmp(subrecordHead->Type, "RNAM", 4) == 0) {
-
-                log_subrecord_new(subrecordHead);
-                fread(&tmp, sizeof(uint32_t), 1, esm_file);
-                log_debug("Rank number: %d", tmp.rankNumber);
-                log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
-
-                fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-                tmp.male = init_cstring_subrecord(esm_file, subrecordHead, "Male");
-                log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
-
-                fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-                tmp.female = init_cstring_subrecord(esm_file, subrecordHead, "Female");
-                log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
-
-                fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-                if (strncmp(subrecordHead->Type, "INAM", 4) == 0) {
-                    fread(&tmp.insignia, sizeof(uint32_t), 1, esm_file);
-                    log_debug("Insignia: %u", tmp.insignia);
-                } else {
-                    fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
-                }
-
-                arrput(record->rank, tmp);
-                fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-            }
-        }
-        if (strncmp(subrecordHead->Type, "WMI1", 4) == 0) {
-            log_debug("%s", "WMI");
-            fread(&(record->reputation), sizeof(formid), 1, esm_file);
-        }
-        fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-        log_info("Current file pointer location: 0x%06x", ftell(esm_file));
+    if (ftell(esm_file) >= end) {
+        return (Record*)record;
     }
 
-    fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
+    // CNAM, RNAM, INAM, WMI1 are optional
+    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    log_info("Current file pointer location: 0x%06x", ftell(esm_file));
+
+    if (strncmp(subrecordHead->Type, "CNAM", 4) == 0) {
+        fread(&(record->unused), sizeof(float), 1, esm_file);
+        log_subrecord_new(subrecordHead);
+        log_debug("Unused float value: %f", record->unused);
+        fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    }
+    if (strncmp(subrecordHead->Type, "RNAM", 4) == 0) {
+        FACT_RankSubrecords tmp;
+
+        while (strncmp(subrecordHead->Type, "RNAM", 4) == 0) {
+            tmp.male   = NULL;
+            tmp.female = NULL;
+            log_subrecord_new(subrecordHead);
+
+            fread(&tmp.rankNumber, sizeof(uint32_t), 1, esm_file);
+            log_debug("Rank number: %d", tmp.rankNumber);
+            log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
+
+            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+
+            if (strncmp(subrecordHead->Type, "MNAM", 4)) {
+                // One fucking edge case
+                if (strncmp(subrecordHead->Type, "FNAM", 4) == 0) {
+                    tmp.female = init_cstring_subrecord(esm_file, subrecordHead, "Female");
+                }
+                arrput(record->rank, tmp);
+                continue;
+            }
+
+            tmp.male = init_cstring_subrecord(esm_file, subrecordHead, "Male");
+            log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
+
+            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+
+            if (strncmp(subrecordHead->Type, "FNAM", 4)) {
+                arrput(record->rank, tmp);
+                continue;
+            }
+
+            log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
+            tmp.female = init_cstring_subrecord(esm_file, subrecordHead, "Female");
+
+            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            if (strncmp(subrecordHead->Type, "INAM", 4) == 0) {
+                fread(&tmp.insignia, sizeof(uint32_t), 1, esm_file);
+                log_debug("Insignia: %u", tmp.insignia);
+                fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            }
+
+            arrput(record->rank, tmp);
+        }
+    }
+    if (strncmp(subrecordHead->Type, "WMI1", 4) == 0) {
+        log_debug("%s", "WMI");
+        fread(&(record->reputation), sizeof(formid), 1, esm_file);
+    }
+    // Rewind to proper position
+    if (ftell(esm_file) > end) {
+        fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
+    }
     return (Record*)record;
 }
 
@@ -356,7 +377,8 @@ void free_FACT(Record* record)
     arrfree(fact->rank);
 
     sdsfree(fact->editorId);
-    sdsfree(fact->name);
+    if (fact->name)
+        sdsfree(fact->name);
 
     free(fact);
 }
