@@ -103,3 +103,36 @@ typedef struct __attribute__((packed)) {
     sds      female;
     uint32_t insignia;
 } FACT_RankSubrecords;
+
+typedef struct {
+    sds name;
+    /*
+     * FormID of a TXST record.
+     */
+    formid   newTexture;
+    uint32_t index;
+} AlternateTexture;
+
+typedef struct __attribute__((packed)) {
+    /*
+     * Array of filenames.
+     * Matches subrecords MODL, MOD2, MOD3, MOD4
+     */
+    sds* filenames;
+    /*
+     * MODB
+     */
+    uint32_t unknown;
+    /*
+     * MODT, MO2T, MO3T, MO4T
+     */
+    uint8_t** textureHashes;
+    /*
+     * MODS, MO2S, MO3S, MO4S
+     */
+    AlternateTexture* alternateTextures;
+    /*
+     * MODD, MOSD
+     */
+    uint8_t MODDFlags[2];
+} ModelDataSubrecord;

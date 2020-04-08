@@ -114,16 +114,7 @@ Record* init_TXST(FILE* esm_file)
     //TX00-TX05
     const char* optionalCstringSubrecordTypes[] = { "TX00", "TX01", "TX02",
         "TX03", "TX04", "TX05" };
-    /*
-    sds optionalCstringSubrecordDestinations[] = {
-        record->baseImage_transparency,
-        record->normalMap_specular,
-        record->environmentMapMask,
-        record->glowMap,
-        record->parallaxMap,
-        record->environmentMap
-    };
-*/
+
     const char* optionalNames[] = {
         "Base image/Transparency",
         "Normal map/Specular",
@@ -132,17 +123,6 @@ Record* init_TXST(FILE* esm_file)
         "Parallax map",
         "Environment map"
     };
-    /*
-    for (int i = 0; i < 6; i++) {
-        if (strcmp(type, optionalCstringSubrecordTypes[i]) == 0) {
-            optionalCstringSubrecordDestinations[i] = init_cstring_subrecord(esm_file, subrecordHead, optionalNames[i]);
-            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
-            sdsfree(type);
-            type = sdsnewlen(subrecordHead->Type, 4);
-        } else {
-            optionalCstringSubrecordDestinations[i] = NULL;
-        }
-    }*/
     for (int i = 0; i < 6; i++) {
         if (strncmp(subrecordHead->Type, optionalCstringSubrecordTypes[i], 4) == 0) {
             sds tmp = init_cstring_subrecord(esm_file, subrecordHead, optionalNames[i]);
@@ -436,6 +416,151 @@ Record* init_CLAS(FILE* esm_file)
     return (Record*)record;
 }
 
+/*
+ * HDPT record specific fields
+ */
+static char* modelFilenameHeaders[] = {
+    "MODL",
+    "MOD2",
+    "MOD3",
+    "MOD4"
+};
+
+static char* modelTexhashHeaders[] = {
+    "MODT",
+    "MO2T",
+    "MO3T",
+    "MO4T"
+};
+
+static char* modelAltTexHeaders[] = {
+    "MODS",
+    "MO2S",
+    "MO3S",
+    "MO4S"
+};
+
+static char* modelFGFlagsHeaders[] = {
+    "MODD",
+    "MOSD"
+};
+
+Record* init_HDPT(FILE* esm_file)
+{
+    MALLOC_WARN(HDPTRecord, record);
+    Subrecord subheader;
+
+    fread(&(record->base), sizeof(Record), 1, esm_file);
+    log_record(&(record->base));
+    uint32_t dataEnd = ftell(esm_file) + record->base.DataSize;
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    assert(strncmp(subheader.Type, "EDID", 4) == 0);
+    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    assert(strncmp(subheader.Type, "FULL", 4) == 0);
+    record->name = init_cstring_subrecord(esm_file, &subheader, "Name");
+
+    AlternateTexture altTex;
+
+    uint8_t fnameInd   = 0;
+    uint8_t texHashInd = 0;
+    uint8_t altTexInd  = 0;
+    uint8_t flagsInd   = 0;
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    while (strncmp(subheader.Type, "DATA", 4) && strncmp(subheader.Type, "HNAM", 4) && ftell(esm_file) < dataEnd) {
+        if (strncmp(subheader.Type, modelFilenameHeaders[fnameInd], 4) == 0) {
+            assert(fnameInd <= 4);
+
+            sds fname = init_cstring_subrecord(esm_file, &subheader, "Model filename");
+            arrput(record->modelData.filenames, fname);
+            fnameInd++;
+        } else if (strncmp(subheader.Type, modelTexhashHeaders[texHashInd], 4) == 0) {
+            assert(texHashInd < 4);
+
+            MALLOC_N_WARN(uint8_t, subheader.DataSize, hval);
+
+            fread(hval, sizeof(uint8_t), subheader.DataSize, esm_file);
+            arrput(record->modelData.textureHashes, hval);
+            texHashInd++;
+        } else if (strncmp(subheader.Type, modelAltTexHeaders[altTexInd], 4) == 0) {
+            assert(altTexInd < 4);
+
+            uint32_t numAltTex;
+            fread(&numAltTex, sizeof(uint32_t), 1, esm_file);
+
+            for (uint32_t i = 0; i < numAltTex; i++) {
+                uint32_t nameLen;
+                fread(&nameLen, sizeof(uint32_t), 1, esm_file);
+
+                char* cstring = malloc(nameLen);
+                fread(cstring, nameLen, 1, esm_file);
+                altTex.name = sdsnewlen(cstring, nameLen);
+                free(cstring);
+
+                fread(&(altTex.newTexture), sizeof(formid), 1, esm_file);
+                fread(&(altTex.index), sizeof(formid), 1, esm_file);
+                arrput(record->modelData.alternateTextures, altTex);
+            }
+            altTexInd++;
+
+        } else if (strncmp(subheader.Type, modelFGFlagsHeaders[flagsInd], 4) == 0) {
+            assert(flagsInd < 2);
+
+            fread(&(record->modelData.MODDFlags[flagsInd]), sizeof(uint8_t), 1, esm_file);
+            flagsInd++;
+        } else {
+            log_fatal("Something is fishy");
+            return NULL;
+        }
+        fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    };
+
+    assert(strncmp(subheader.Type, "DATA", 4) == 0);
+    fread(&(record->flag), sizeof(uint8_t), 1, esm_file);
+
+    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+
+    while (strncmp(subheader.Type, "HNAM", 4) == 0) {
+        fread(&(record->extraParts), sizeof(formid), 1, esm_file);
+        fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    }
+    fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
+
+    return (Record*)record;
+}
+
+void free_HDPT(Record* record)
+{
+    HDPTRecord* hdpt = (HDPTRecord*)record;
+
+    sdsfree(hdpt->editorID);
+    sdsfree(hdpt->name);
+
+    uint32_t len = arrlenu(hdpt->modelData.filenames);
+    for (uint32_t i = 0; i < len; i++) {
+        sdsfree(hdpt->modelData.filenames[i]);
+    }
+    arrfree(hdpt->modelData.filenames);
+
+    len = arrlenu(hdpt->modelData.textureHashes);
+    for (uint32_t i = 0; i < len; i++) {
+        free(hdpt->modelData.textureHashes[i]);
+    }
+    arrfree(hdpt->modelData.textureHashes);
+
+    len = arrlenu(hdpt->modelData.alternateTextures);
+    for (uint32_t i = 0; i < len; i++) {
+        sdsfree(hdpt->modelData.alternateTextures[i].name);
+    }
+
+    arrfree(hdpt->modelData.alternateTextures);
+
+    free(hdpt);
+}
+
 void free_TES4(Record* record)
 {
     TES4Record*          tmp  = (TES4Record*)record;
@@ -526,6 +651,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "MICN", init_MICN);
     ADD_CONSTRUCTOR(Record, "CLAS", init_CLAS);
     ADD_CONSTRUCTOR(Record, "FACT", init_FACT);
+    ADD_CONSTRUCTOR(Record, "HDPT", init_HDPT);
 }
 
 void Record_init_destructor_map()
@@ -537,6 +663,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "MICN", free_MICN);
     ADD_DESTRUCTOR(Record, "CLAS", free_CLAS);
     ADD_DESTRUCTOR(Record, "FACT", free_FACT);
+    ADD_DESTRUCTOR(Record, "HDPT", free_HDPT);
 }
 
 Record* recordnew(FILE* f, sds type)

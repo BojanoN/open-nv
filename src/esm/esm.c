@@ -56,7 +56,8 @@ Esm* esmnew(const sds path)
         //na 0x25DB0 zavrsava grupa GLOB
         //na 0x27F5D zavrsava grupa CLAS
         //na 0x3C22E zavrsava grupa FACT
-        if (ftell(esm_file) > 0x3C22E)
+        //na 0x3F003 zavrsava grupa HDPT
+        if (ftell(esm_file) > 0x3F003)
             break;
         cnt++;
     }

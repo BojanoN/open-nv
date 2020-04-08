@@ -89,3 +89,18 @@ typedef struct {
     FACT_RankSubrecords* rank;
     formid               reputation;
 } FACTRecord;
+
+/*
+ * Head part.
+ */
+typedef struct {
+    Record             base;
+    sds                editorID;
+    sds                name;
+    uint8_t            flag;
+    ModelDataSubrecord modelData;
+    /*
+     * FormID of another HDPT record
+     */
+    formid extraParts;
+} HDPTRecord;
