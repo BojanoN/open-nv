@@ -12,7 +12,7 @@ BUILDFILES := $(subst $(SOURCEDIR)/,$(BUILDDIR)/,$(FILES))
 OBJS := $(BUILDFILES:.c=.o)
 
 CC=clang
-CFLAGS := -std=c99 -DLOG_USE_COLOR -I $(SOURCEDIR) -Wall
+CFLAGS := -std=c99 -DLOG_USE_COLOR -I $(SOURCEDIR) -Wall -MD
 
 LDFLAGS= -L $(LIBDIR)
 
@@ -42,3 +42,5 @@ tests:
 clean:
 	- rm -rf $(BUILDDIR)
 	make -C $(TESTS) clean
+
+-include $(OBJS:.o=.d)

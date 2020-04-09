@@ -554,6 +554,113 @@ Record* init_RACE(FILE* esm_file)
     assert(strncmp(subheader.Type, "EDID", 4) == 0);
     record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
 
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    if (strncmp(subheader.Type, "XNAM", 4) == 0) {
+        XNAMSubrecord tmp;
+
+        while (strncmp(subheader.Type, "XNAM", 4) == 0) {
+            log_subrecord(&subheader);
+            fread(&(tmp), sizeof(XNAMSubrecord), 1, esm_file);
+            arrput(record->relations, tmp);
+
+            log_debug("Relation:");
+            log_debug("Faction: %d", tmp.faction);
+            log_debug("Modifier: %d", tmp.modifier);
+            log_debug("Group combat reaction: %d", tmp.groupCombatReaction);
+            fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+        }
+    }
+
+    uint8_t atLeastOneAgePresent = 0;
+    if (strncmp(subheader.Type, "ONAM", 4) == 0) {
+        fread(&(record->older), sizeof(formid), 1, esm_file);
+        log_subrecord(&subheader);
+        atLeastOneAgePresent = 1;
+
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    }
+    if (strncmp(subheader.Type, "YNAM", 4) == 0) {
+        fread(&(record->younger), sizeof(formid), 1, esm_file);
+        log_subrecord(&subheader);
+        atLeastOneAgePresent = 1;
+
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    }
+
+    if (!atLeastOneAgePresent) {
+        log_fatal("No YNAM or ONAM records found");
+        return NULL;
+    }
+
+    // NAM2 marker, should contain no data
+    assert(strncmp(subheader.Type, "NAM2", 4) == 0);
+    assert(subheader.DataSize == 0);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "VTCK", 4) == 0);
+    fread(&(record->voices), sizeof(RaceVoices), 1, esm_file);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "DNAM", 4) == 0);
+    fread(&(record->defaultHair), sizeof(RaceDefaultHairStyle), 1, esm_file);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "CNAM", 4) == 0);
+    fread(&(record->defaultHairColor), sizeof(RaceDefaultHairColor), 1, esm_file);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "PNAM", 4) == 0);
+    fread(&(record->faceGenMainClamp), sizeof(float), 1, esm_file);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "UNAM", 4) == 0);
+    fread(&(record->faceGenFaceClamp), sizeof(float), 1, esm_file);
+
+    // Dummy ATTR read, functionality still unknown
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "ATTR", 4) == 0);
+    fseek(esm_file, subheader.DataSize, SEEK_CUR);
+
+    // Head data marker, should contain no data
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "NAM0", 4) == 0);
+    assert(subheader.DataSize == 0);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "MNAM", 4) == 0);
+    SubrecordConstructor* modelDataCons = GET_CONSTRUCTOR(Subrecord, "MODL");
+
+    if (modelDataCons == NULL) {
+        log_fatal("Couldnt get MODL constructor");
+        return NULL;
+    }
+
+    ModelPart tmpMdl;
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+
+    while (strncmp(subheader.Type, "INDX", 4) == 0) {
+        fread(&tmpMdl.index, sizeof(uint32_t), 1, esm_file);
+
+        tmpMdl.modelData = (ModelDataSubrecord*)modelDataCons(esm_file);
+        if (tmpMdl.modelData == NULL) {
+            log_fatal("Error while parsing ModelPart");
+            return NULL;
+        }
+
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+        if (strncmp(subheader.Type, "ICON", 4) == 0) {
+            tmpMdl.largeIcon = init_cstring_subrecord(esm_file, &subheader, "Large icon filename");
+            fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+        }
+
+        if (strncmp(subheader.Type, "MICO", 4) == 0) {
+            tmpMdl.smallIcon = init_cstring_subrecord(esm_file, &subheader, "Small icon filename");
+            fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+        }
+
+        arrput(record->maleHeadParts, tmpMdl);
+    }
+
     return (Record*)record;
 }
 
