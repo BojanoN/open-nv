@@ -21,7 +21,7 @@ Esm* esmnew(const sds path)
     uint32_t cnt = 0;
     while (fread(type, 4, 1, esm_file)) {
         fseek(esm_file, -4, SEEK_CUR);
-        log_info("Read type: %s", type);
+        log_debug("Read type: %s", type);
 
         if (strcmp(type, GROUP_TYPE) == 0) {
             Group* g = groupnew(esm_file);
@@ -49,7 +49,7 @@ Esm* esmnew(const sds path)
             }
         }
 
-        log_info("Current file pointer location: 0x%06x", ftell(esm_file));
+        log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
         //na 0xA95E zavrsava grupa GMST
         //na 0x21F4B zavrsava grupa TXST
         //na 0x224FC zavrsava grupa MICN

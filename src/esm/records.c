@@ -277,7 +277,7 @@ Record* init_FACT(FILE* esm_file)
 
     // CNAM, RNAM, INAM, WMI1 are optional
     fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-    log_info("Current file pointer location: 0x%06x", ftell(esm_file));
+    log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
 
     if (strncmp(subrecordHead->Type, "CNAM", 4) == 0) {
         fread(&(record->unused), sizeof(float), 1, esm_file);

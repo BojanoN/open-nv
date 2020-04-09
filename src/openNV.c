@@ -1,8 +1,9 @@
-#include <getopt.h>
-
 #include "esm/esm.h"
 #include "logc/log.h"
 #include "sds/sds.h"
+
+#include <getopt.h>
+#include <time.h>
 
 #define FALLOUTNV_ESM_DEFAULT_PATH "./bin/esm/FalloutNV.esm"
 
@@ -76,8 +77,10 @@ int main(int argc, char** argv)
 
     log_info("loading esm file from %s", path);
 
-    Esm* esm;
-    esm = esmnew(path);
+    Esm*    esm;
+    clock_t start = clock();
+    esm           = esmnew(path);
+    clock_t end   = clock();
 
     if (esm == NULL) {
         log_fatal("Failed to initialize openNV");
@@ -85,6 +88,7 @@ int main(int argc, char** argv)
         cleanup();
         return 1;
     }
+    log_info("Loaded %s in %f miliseconds", (double)(end - start) / (CLOCKS_PER_SEC / 1000));
 
     // free block
     sdsfree(path);

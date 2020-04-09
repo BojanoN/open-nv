@@ -42,7 +42,7 @@ typedef struct __attribute__((packed)) {
 } RecordHeader;
 
 #define RECORD_SIZE     (sizeof(Record))
-#define log_record(rec) (log_info("Record %.4s: Size: %u, ID: %u", (rec)->Type, (rec)->DataSize, (rec)->ID));
+#define log_record(rec) (log_debug("Record %.4s: Size: %u, ID: %u", (rec)->Type, (rec)->DataSize, (rec)->ID));
 
 Record* recordnew(FILE* f, sds type);
 void    recordfree(Record* record);
@@ -189,7 +189,7 @@ void   groupfree(Group* group);
 DEFINE_OBJECT_TYPEDEFS(Group);
 DECLARE_MAP_INITIALIZERS(Group);
 
-#define log_group(group) log_info("Group %.4s: Size: %u, Label: %.4s", (group)->base.Type, (group)->base.GroupSize, (group)->base.Label)
+#define log_group(group) log_debug("Group %.4s: Size: %u, Label: %.4s", (group)->base.Type, (group)->base.GroupSize, (group)->base.Label)
 
 /*
  * Zlib compressed records
