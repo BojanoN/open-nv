@@ -121,3 +121,17 @@ typedef struct {
     sds                 texture;
     uint8_t             flag;
 } HAIRRecord;
+
+/*
+ * Eyes.
+ */
+typedef struct {
+    Record base;
+    sds    editorID;
+    sds    name;
+    /*
+     * This field is optional.
+     */
+    sds     texture;
+    uint8_t flag;
+} EYESRecord;

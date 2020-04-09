@@ -510,6 +510,51 @@ Record* init_HAIR(FILE* esm_file)
     return (Record*)record;
 }
 
+Record* init_EYES(FILE* esm_file)
+{
+    MALLOC_WARN(EYESRecord, record);
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
+
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "EDID", 4) == 0);
+    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FULL", 4) == 0);
+    record->name = init_cstring_subrecord(esm_file, &subheader, "Name");
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    if (strncmp(subheader.Type, "ICON", 4) == 0) {
+        record->texture = init_cstring_subrecord(esm_file, &subheader, "Texture");
+    } else {
+        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
+    }
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "DATA", 4) == 0);
+    fread(&(record->flag), sizeof(uint8_t), 1, esm_file);
+
+    return (Record*)record;
+}
+
+void free_EYES(Record* record)
+{
+    EYESRecord* eyes = (EYESRecord*)record;
+
+    sdsfree(eyes->editorID);
+    sdsfree(eyes->name);
+
+    if (eyes->texture != NULL) {
+        sdsfree(eyes->texture);
+    }
+
+    free(eyes);
+}
+
 void free_HAIR(Record* record)
 {
     HAIRRecord* hair = (HAIRRecord*)record;
@@ -631,6 +676,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "FACT", init_FACT);
     ADD_CONSTRUCTOR(Record, "HDPT", init_HDPT);
     ADD_CONSTRUCTOR(Record, "HAIR", init_HAIR);
+    ADD_CONSTRUCTOR(Record, "EYES", init_EYES);
 }
 
 void Record_init_destructor_map()
@@ -644,6 +690,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "FACT", free_FACT);
     ADD_DESTRUCTOR(Record, "HDPT", free_HDPT);
     ADD_DESTRUCTOR(Record, "HAIR", free_HAIR);
+    ADD_DESTRUCTOR(Record, "EYES", free_EYES);
 }
 
 Record* recordnew(FILE* f, sds type)

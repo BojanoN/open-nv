@@ -58,7 +58,8 @@ Esm* esmnew(const sds path)
         //na 0x3C22E zavrsava grupa FACT
         //na 0x3F003 zavrsava grupa HDPT
         //na 0x43108 zavrsava grupa HAIR
-        if (ftell(esm_file) > 0x43108)
+        //na 0x435D9 zavrsava grupa EYES
+        if (ftell(esm_file) > 0x435D9)
             break;
         cnt++;
     }

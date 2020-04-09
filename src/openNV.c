@@ -88,7 +88,7 @@ int main(int argc, char** argv)
         cleanup();
         return 1;
     }
-    log_info("Loaded %s in %f miliseconds", (double)(end - start) / (CLOCKS_PER_SEC / 1000));
+    log_info("Loaded %s in %f miliseconds", path, (double)(end - start) / (CLOCKS_PER_SEC / 1000));
 
     // free block
     sdsfree(path);

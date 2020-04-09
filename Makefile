@@ -12,10 +12,11 @@ BUILDFILES := $(subst $(SOURCEDIR)/,$(BUILDDIR)/,$(FILES))
 OBJS := $(BUILDFILES:.c=.o)
 
 CC=clang
-CFLAGS := -std=c99 -DLOG_USE_COLOR -I $(SOURCEDIR) -Wall -O2
+CFLAGS := -std=c99 -DLOG_USE_COLOR -I $(SOURCEDIR) -Wall
 
 LDFLAGS= -L $(LIBDIR)
 
+all: CFLAGS += -O2
 all: $(BUILDDIR)/$(PROJECT)
 
 debug: CFLAGS += -DDEBUG -g
