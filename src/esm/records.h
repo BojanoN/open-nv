@@ -80,6 +80,25 @@ typedef struct {
     DATASubrecord data;
     ATTRSubrecord attr;
 } CLASRecord;
+
+typedef enum {
+    BARTER,
+    BIG_GUNS,
+    ENERGY_WEAP,
+    EXPLOSIVES,
+    LOCKPICK,
+    MEDICINE,
+    MELEE_WEAP,
+    REPAIR,
+    SCIENCE,
+    GUNS,
+    SNEAK,
+    SPEECH,
+    SURVIVAL,
+    UNARMED,
+    NONE = -1
+} Skill;
+
 /*
  * Faction
  */
@@ -135,3 +154,45 @@ typedef struct {
     sds     texture;
     uint8_t flag;
 } EYESRecord;
+
+/*
+ * Race struct.
+ */
+typedef struct {
+    sds               editorID;
+    sds               description;
+    XNAMSubrecord*    relations;
+    RaceDataSubrecord raceData;
+    /*
+     * FormID of a RACE record
+     */
+    formid older;
+    formid younger;
+
+    RaceVoices           voices;
+    RaceDefaultHairStyle defaultHair;
+    RaceDefaultHairColor defaultHairColor;
+
+    float   faceGenMainClamp;
+    float   faceGenFaceClamp;
+    uint8_t unknownAttr[2];
+
+    ModelPart* maleHeadParts;
+    ModelPart* femaleHeadParts;
+    ModelPart* maleBodyParts;
+    ModelPart* femaleBodyParts;
+
+    formid* hair;
+    formid* eyes;
+    /*
+     * FaceGen data
+     */
+    uint8_t* maleFaceGenGeomSymm;
+    uint8_t* maleFaceGenGeomAsymm;
+    uint8_t* maleFaceGenTexSymm;
+    // SNAM, but use is unknown
+    uint8_t* femaleFaceGenGeomSymm;
+    uint8_t* femaleFaceGenGeomAsymm;
+    uint8_t* femaleFaceGenTexSymm;
+    // SNAM ?
+} RACERecord;

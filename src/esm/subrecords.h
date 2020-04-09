@@ -138,4 +138,96 @@ typedef struct __attribute__((packed)) {
     uint8_t MODDFlags[2];
 } ModelDataSubrecord;
 
+typedef struct __attribute__((packed)) {
+    uint8_t skill;
+    uint8_t boost;
+} SkillBoost;
+
+typedef struct __attribute__((packed)) {
+    /*
+     * FormID of a VTYP record.
+     */
+    formid maleVoice;
+    formid femaleVoice;
+} RaceVoices;
+
+typedef struct __attribute__((packed)) {
+    /*
+     * FormID of a HAIR record. Can be null.
+     */
+    formid maleDefaultHairStyle;
+    formid femaleDefaultHairStyle;
+} RaceDefaultHairStyle;
+
+typedef struct __attribute__((packed)) {
+    /*
+     * See RaceHairColorEnum
+     */
+    uint8_t maleHairColor;
+    uint8_t femaleHairColor;
+} RaceDefaultHairColor;
+
+typedef struct __attribute__((packed)) {
+    Subrecord  base;
+    SkillBoost skillBoosts[7];
+    uint8_t    padding[2];
+    float      maleHeight;
+    float      femaleHeight;
+    float      maleWeight;
+    float      femaleWeight;
+    uint32_t   flags;
+} RaceDataSubrecord;
+
+typedef struct __attribute__((packed)) {
+    /*
+     * See HeadPartIndex and BodyPartIndex enums.
+     */
+    uint32_t            index;
+    ModelDataSubrecord* modelData;
+    sds                 largeIcon;
+    sds                 smallIcon;
+} ModelPart;
+
+typedef enum {
+    PLAYABLE = 0x1,
+    CHILD    = 0x4
+} RaceFlags;
+
+typedef enum {
+    BLEACHED,
+    BROWN,
+    CHOCOLATE,
+    PLATINUM,
+    CORNSILK,
+    SUEDE,
+    PECAN,
+    AUBURN,
+    GINGER,
+    HONEY,
+    GOLD,
+    ROSEWOOD,
+    BLACK,
+    CHESTNUT,
+    STEEL,
+    CHAMPAGNE
+} RaceHairColorEnum;
+
+typedef enum {
+    HEAD,
+    EARS,
+    MOUTH,
+    TEETH_HI,
+    TEETH_LO,
+    TOUNGE,
+    LEFT_EYE,
+    RIGHT_EYE
+} HeadPartIndex;
+
+typedef enum {
+    UPPER_BODY,
+    LEFT_HAND,
+    RIGHT_HAND,
+    UPPER_BODY_TEXTURE
+} BodyPartIndex;
+
 sds init_cstring_subrecord(FILE* esm_file, SubrecordHeader* subrecordHead, const char* loggingName);

@@ -63,6 +63,15 @@ Esm* esmnew(const sds path)
             break;
         cnt++;
     }
+
+#ifdef DEBUG
+    uint32_t totalRead = ftell(esm_file);
+    uint32_t size;
+    fseek(esm_file, 0, SEEK_END);
+    size = ftell(esm_file);
+    log_info("%.3f percent of file parsed", ((double)(totalRead) / size) * 100);
+#endif
+
     log_info("Read %u records and groups", cnt);
     sdsfree(type);
     fclose(esm_file);
