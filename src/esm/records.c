@@ -9,8 +9,10 @@ FETCH_DESTRUCTOR_MAP(Subrecord);
 Record* init_TES4(FILE* esm_file)
 {
     MALLOC_WARN(TES4Record, ret);
+    RecordHeader hdr;
 
-    fread(&(ret->base), RECORD_SIZE, 1, esm_file);
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, ret);
 
     SubrecordConstructor* func  = GET_CONSTRUCTOR(Subrecord, "HEDR");
     HEDR*                 tmp_h = (HEDR*)func(esm_file);
@@ -33,7 +35,7 @@ Record* init_TES4(FILE* esm_file)
     return (Record*)ret;
 }
 
-sds init_cstring_subrecord(FILE* esm_file, Subrecord* subrecordHead, const char* loggingName)
+static sds init_cstring_subrecord(FILE* esm_file, Subrecord* subrecordHead, const char* loggingName)
 {
     char* cstring = malloc(subrecordHead->DataSize);
     fread(cstring, subrecordHead->DataSize, 1, esm_file);
@@ -47,8 +49,12 @@ sds init_cstring_subrecord(FILE* esm_file, Subrecord* subrecordHead, const char*
 Record* init_GMST(FILE* esm_file)
 {
     MALLOC_WARN(GMSTRecord, record);
+    RecordHeader hdr;
 
-    fread(&(record->base), RECORD_SIZE, 1, esm_file);
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
+    log_record(&(record->base));
+
     //EDID
     Subrecord  subrec;
     Subrecord* subrecordHead = &subrec;
@@ -82,15 +88,29 @@ Record* init_GMST(FILE* esm_file)
         break;
     }
 
-    log_record(&(record->base));
-
     return (Record*)record;
 }
+
+//TX00-TX05
+static const char* optionalCstringSubrecordTypes[] = { "TX00", "TX01", "TX02",
+    "TX03", "TX04", "TX05" };
+
+static const char* optionalNames[] = {
+    "Base image/Transparency",
+    "Normal map/Specular",
+    "Environment map mask",
+    "Glow map",
+    "Parallax map",
+    "Environment map"
+};
 
 Record* init_TXST(FILE* esm_file)
 {
     MALLOC_WARN(TXSTRecord, record);
-    fread(&(record->base), RECORD_SIZE, 1, esm_file);
+    RecordHeader hdr;
+
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
 
     //EDID
     Subrecord  subrecord;
@@ -111,18 +131,6 @@ Record* init_TXST(FILE* esm_file)
         fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
     }
 
-    //TX00-TX05
-    const char* optionalCstringSubrecordTypes[] = { "TX00", "TX01", "TX02",
-        "TX03", "TX04", "TX05" };
-
-    const char* optionalNames[] = {
-        "Base image/Transparency",
-        "Normal map/Specular",
-        "Environment map mask",
-        "Glow map",
-        "Parallax map",
-        "Environment map"
-    };
     for (int i = 0; i < 6; i++) {
         if (strncmp(subrecordHead->Type, optionalCstringSubrecordTypes[i], 4) == 0) {
             sds tmp = init_cstring_subrecord(esm_file, subrecordHead, optionalNames[i]);
@@ -185,8 +193,10 @@ Record* init_TXST(FILE* esm_file)
 Record* init_GLOB(FILE* esm_file)
 {
     MALLOC_WARN(GLOBRecord, record);
+    RecordHeader hdr;
 
-    fread(&(record->base), RECORD_SIZE, 1, esm_file);
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
 
     Subrecord subrecordHead;
     fread(&subrecordHead, sizeof(Subrecord), 1, esm_file);
@@ -230,8 +240,12 @@ Record* init_FACT(FILE* esm_file)
 
     MALLOC_WARN(FACTRecord, record);
 
-    fread(&(record->base), RECORD_SIZE, 1, esm_file);
-    uint32_t   end = ftell(esm_file) + record->base.DataSize;
+    RecordHeader hdr;
+
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
+
+    uint32_t   end = ftell(esm_file) + hdr.DataSize;
     Subrecord  subrec;
     Subrecord* subrecordHead = &subrec;
     log_record(&(record->base));
@@ -366,9 +380,11 @@ void free_FACT(Record* record)
 Record* init_MICN(FILE* esm_file)
 {
     MALLOC_WARN(MICN, record);
-    Subrecord subheader;
+    RecordHeader hdr;
+    Subrecord    subheader;
 
-    fread(&(record->base), sizeof(Record), 1, esm_file);
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
 
     uint32_t dataStart = ftell(esm_file);
 
@@ -378,7 +394,7 @@ Record* init_MICN(FILE* esm_file)
     fread(&subheader, sizeof(Subrecord), 1, esm_file);
     record->largeIconFilename = init_cstring_subrecord(esm_file, &subheader, "ICON");
 
-    if (record->base.DataSize == (ftell(esm_file) - dataStart)) {
+    if (hdr.DataSize == (ftell(esm_file) - dataStart)) {
         return (Record*)record;
     }
 
@@ -391,9 +407,12 @@ Record* init_MICN(FILE* esm_file)
 Record* init_CLAS(FILE* esm_file)
 {
     MALLOC_WARN(CLASRecord, record);
-    Subrecord subheader;
+    RecordHeader hdr;
+    Subrecord    subheader;
 
-    fread(&(record->base), sizeof(Record), 1, esm_file);
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
+
     uint32_t dataStart = ftell(esm_file);
     log_record(&(record->base));
     fread(&subheader, sizeof(Subrecord), 1, esm_file);
@@ -448,9 +467,12 @@ static char* modelFGFlagsHeaders[] = {
 Record* init_HDPT(FILE* esm_file)
 {
     MALLOC_WARN(HDPTRecord, record);
-    Subrecord subheader;
+    RecordHeader hdr;
+    Subrecord    subheader;
 
-    fread(&(record->base), sizeof(Record), 1, esm_file);
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
+
     log_record(&(record->base));
     uint32_t dataEnd = ftell(esm_file) + record->base.DataSize;
 

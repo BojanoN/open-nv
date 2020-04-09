@@ -47,7 +47,7 @@ Group* init_TopLevel(FILE* esm_file)
     uint32_t end;
 
     while (ftell(esm_file) < groupEnd) {
-        start          = ftell(esm_file) + sizeof(Record);
+        start          = ftell(esm_file) + sizeof(RecordHeader);
         Record* record = func(esm_file);
         log_info("Current file pointer location: 0x%06x", ftell(esm_file));
         end = ftell(esm_file);

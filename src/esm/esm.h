@@ -26,12 +26,19 @@ typedef struct __attribute__((packed)) {
     uint8_t  Type[4];
     uint32_t DataSize;
     uint32_t Flags;
-    uint32_t ID;
+    formid   ID;
+} Record;
+
+typedef struct __attribute__((packed)) {
+    char     Type[4];
+    uint32_t DataSize;
+    uint32_t Flags;
+    formid   ID;
     uint32_t CreationKitRevision;
     uint16_t FormVersion;
     /* ignoring this for now */
     uint16_t Unknown;
-} Record;
+} RecordHeader;
 
 #define RECORD_SIZE     (sizeof(Record))
 #define log_record(rec) (log_info("Record %.4s: Size: %u, ID: %u", (rec)->Type, (rec)->DataSize, (rec)->ID));

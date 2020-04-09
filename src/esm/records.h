@@ -3,6 +3,12 @@
 #include "esm.h"
 #include "subrecords.h"
 
+#define FILL_BASE_RECORD_INFO(header, record) \
+    record->base.ID       = header.ID;        \
+    record->base.Flags    = header.Flags;     \
+    record->base.DataSize = header.DataSize;  \
+    memcpy(record->base.Type, header.Type, 4)
+
 typedef struct {
     Record base;
     HEDR*  hedr;
