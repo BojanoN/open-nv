@@ -109,3 +109,15 @@ typedef struct {
      */
     formid extraParts;
 } HDPTRecord;
+
+/*
+ * Hair.
+ */
+typedef struct {
+    Record              base;
+    sds                 editorID;
+    sds                 name;
+    ModelDataSubrecord* modelData;
+    sds                 texture;
+    uint8_t             flag;
+} HAIRRecord;

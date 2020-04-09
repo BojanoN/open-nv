@@ -121,7 +121,7 @@ Subrecord* create_ModelData(FILE* esm_file)
 
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     AlternateTexture altTex;
-    while (strncmp(subheader.Type, "DATA", 4) && strncmp(subheader.Type, "HNAM", 4)) {
+    while (!(strncmp(subheader.Type, modelFilenameHeaders[fnameInd], 4) && strncmp(subheader.Type, modelTexhashHeaders[texHashInd], 4) && strncmp(subheader.Type, modelAltTexHeaders[altTexInd], 4) && strncmp(subheader.Type, modelFGFlagsHeaders[flagsInd], 4))) {
         if (strncmp(subheader.Type, modelFilenameHeaders[fnameInd], 4) == 0) {
             assert(fnameInd <= 4);
 

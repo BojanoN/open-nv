@@ -456,7 +456,6 @@ Record* init_HDPT(FILE* esm_file)
     }
 
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    log_info("%.4s", subheader.Type);
     assert(strncmp(subheader.Type, "DATA", 4) == 0);
     fread(&(record->flag), sizeof(uint8_t), 1, esm_file);
 
@@ -469,6 +468,61 @@ Record* init_HDPT(FILE* esm_file)
     fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
 
     return (Record*)record;
+}
+
+Record* init_HAIR(FILE* esm_file)
+{
+    MALLOC_WARN(HAIRRecord, record);
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
+
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "EDID", 4) == 0);
+    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FULL", 4) == 0);
+    record->name = init_cstring_subrecord(esm_file, &subheader, "Name");
+
+    SubrecordConstructor* func = GET_CONSTRUCTOR(Subrecord, "MODL");
+    if (func == NULL) {
+        log_fatal("Error while fetching MODL constructor");
+        sdsfree(record->editorID);
+        sdsfree(record->name);
+        free(record);
+    }
+    record->modelData = (ModelDataSubrecord*)func(esm_file);
+    if (record->modelData == NULL) {
+        return NULL;
+    }
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "ICON", 4) == 0);
+    record->texture = init_cstring_subrecord(esm_file, &subheader, "Texture");
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "DATA", 4) == 0);
+    fread(&(record->flag), sizeof(uint8_t), 1, esm_file);
+
+    return (Record*)record;
+}
+
+void free_HAIR(Record* record)
+{
+    HAIRRecord* hair = (HAIRRecord*)record;
+
+    sdsfree(hair->editorID);
+    sdsfree(hair->name);
+    sdsfree(hair->texture);
+
+    SubrecordDestructor* func = GET_DESTRUCTOR(Subrecord, "MODL");
+    func((Subrecord*)hair->modelData);
+
+    free(hair->modelData);
+    free(hair);
 }
 
 void free_HDPT(Record* record)
@@ -576,6 +630,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "CLAS", init_CLAS);
     ADD_CONSTRUCTOR(Record, "FACT", init_FACT);
     ADD_CONSTRUCTOR(Record, "HDPT", init_HDPT);
+    ADD_CONSTRUCTOR(Record, "HAIR", init_HAIR);
 }
 
 void Record_init_destructor_map()
@@ -588,6 +643,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "CLAS", free_CLAS);
     ADD_DESTRUCTOR(Record, "FACT", free_FACT);
     ADD_DESTRUCTOR(Record, "HDPT", free_HDPT);
+    ADD_DESTRUCTOR(Record, "HAIR", free_HAIR);
 }
 
 Record* recordnew(FILE* f, sds type)
