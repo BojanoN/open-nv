@@ -541,6 +541,22 @@ Record* init_EYES(FILE* esm_file)
     return (Record*)record;
 }
 
+Record* init_RACE(FILE* esm_file)
+{
+    MALLOC_WARN(RACERecord, record);
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
+
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "EDID", 4) == 0);
+    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+
+    return (Record*)record;
+}
+
 void free_EYES(Record* record)
 {
     EYESRecord* eyes = (EYESRecord*)record;

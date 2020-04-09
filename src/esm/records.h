@@ -159,7 +159,9 @@ typedef struct {
  * Race struct.
  */
 typedef struct {
+    Record            base;
     sds               editorID;
+    sds               name;
     sds               description;
     XNAMSubrecord*    relations;
     RaceDataSubrecord raceData;

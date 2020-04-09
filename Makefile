@@ -16,7 +16,7 @@ CFLAGS := -std=c99 -DLOG_USE_COLOR -I $(SOURCEDIR) -Wall
 
 LDFLAGS= -L $(LIBDIR)
 
-all: CFLAGS += -O2
+all: CFLAGS += -O2 -DNDEBUG
 all: $(BUILDDIR)/$(PROJECT)
 
 debug: CFLAGS += -DDEBUG -g
