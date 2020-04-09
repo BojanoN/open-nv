@@ -4,9 +4,8 @@
 #include "subrecords.h"
 
 #define FILL_BASE_RECORD_INFO(header, record) \
-    record->base.ID       = header.ID;        \
-    record->base.Flags    = header.Flags;     \
-    record->base.DataSize = header.DataSize;  \
+    record->base.ID    = header.ID;           \
+    record->base.Flags = header.Flags;        \
     memcpy(record->base.Type, header.Type, 4)
 
 typedef struct {
@@ -100,11 +99,11 @@ typedef struct {
  * Head part.
  */
 typedef struct {
-    Record             base;
-    sds                editorID;
-    sds                name;
-    uint8_t            flag;
-    ModelDataSubrecord modelData;
+    Record              base;
+    sds                 editorID;
+    sds                 name;
+    uint8_t             flag;
+    ModelDataSubrecord* modelData;
     /*
      * FormID of another HDPT record
      */

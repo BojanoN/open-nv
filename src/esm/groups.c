@@ -45,8 +45,13 @@ Group* init_TopLevel(FILE* esm_file)
 
     uint32_t start;
     uint32_t end;
+    uint32_t recordSize;
 
     while (ftell(esm_file) < groupEnd) {
+        fseek(esm_file, 4, SEEK_CUR);
+        fread(&recordSize, sizeof(uint32_t), 1, esm_file);
+        fseek(esm_file, -8, SEEK_CUR);
+
         start          = ftell(esm_file) + sizeof(RecordHeader);
         Record* record = func(esm_file);
         log_info("Current file pointer location: 0x%06x", ftell(esm_file));
@@ -59,9 +64,9 @@ Group* init_TopLevel(FILE* esm_file)
             return NULL;
         }
 
-        if ((end - start) != record->DataSize) {
+        if ((end - start) != recordSize) {
             log_fatal("Failed %.4s record parsing: DataSize mismatch.", record->Type);
-            log_fatal("Read %u bytes, expected %u bytes.", (end - start), record->DataSize);
+            log_fatal("Read %u bytes, expected %u bytes.", (end - start), recordSize);
             log_fatal("Your esm file might be corrupted.");
 
             groupfree((Group*)ret);

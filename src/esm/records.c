@@ -30,20 +30,9 @@ Record* init_TES4(FILE* esm_file)
     }
     ret->cnam = tmp_c;
 
-    log_record(&(ret->base));
+    log_record(&hdr);
 
     return (Record*)ret;
-}
-
-static sds init_cstring_subrecord(FILE* esm_file, Subrecord* subrecordHead, const char* loggingName)
-{
-    char* cstring = malloc(subrecordHead->DataSize);
-    fread(cstring, subrecordHead->DataSize, 1, esm_file);
-    sds subrecord = sdsnewlen(cstring, subrecordHead->DataSize);
-    free(cstring);
-    log_subrecord_new(subrecordHead);
-    log_debug("%s: %s", loggingName, subrecord);
-    return subrecord;
 }
 
 Record* init_GMST(FILE* esm_file)
@@ -53,21 +42,21 @@ Record* init_GMST(FILE* esm_file)
 
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
-    log_record(&(record->base));
+    log_record(&hdr);
 
     //EDID
-    Subrecord  subrec;
-    Subrecord* subrecordHead = &subrec;
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    SubrecordHeader  subrec;
+    SubrecordHeader* subrecordHead = &subrec;
+    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
 
     record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
 
     //DATA
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
 
     size_t dataSize = subrecordHead->DataSize;
 
-    log_subrecord_new(subrecordHead);
+    log_subrecord(subrecordHead);
 
     switch ((record->editorId)[0]) {
     case 's': {
@@ -113,12 +102,12 @@ Record* init_TXST(FILE* esm_file)
     FILL_BASE_RECORD_INFO(hdr, record);
 
     //EDID
-    Subrecord  subrecord;
-    Subrecord* subrecordHead = &subrecord;
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    SubrecordHeader  subrecord;
+    SubrecordHeader* subrecordHead = &subrecord;
+    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
 
     record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
 
     SubrecordConstructor* constructor = NULL;
     //OBND
@@ -127,8 +116,8 @@ Record* init_TXST(FILE* esm_file)
         OBNDSubrecord* objectBounds = (OBNDSubrecord*)constructor(esm_file);
         record->objectBounds        = *objectBounds;
         free(objectBounds);
-        log_subrecord_new(subrecordHead);
-        fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+        log_subrecord(subrecordHead);
+        fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
     }
 
     for (int i = 0; i < 6; i++) {
@@ -161,7 +150,7 @@ Record* init_TXST(FILE* esm_file)
                 break;
             }
             }
-            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
         }
     }
 
@@ -171,8 +160,8 @@ Record* init_TXST(FILE* esm_file)
         DODTSubrecord* decalData = (DODTSubrecord*)constructor(esm_file);
         record->decalData        = *decalData;
         free(decalData);
-        log_subrecord_new(subrecordHead);
-        fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+        log_subrecord(subrecordHead);
+        fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
     }
 
     //DNAM
@@ -180,13 +169,13 @@ Record* init_TXST(FILE* esm_file)
         uint16_t dnam;
         fread(&dnam, sizeof(uint16_t), 1, esm_file);
         record->flags = dnam;
-        log_subrecord_new(subrecordHead);
+        log_subrecord(subrecordHead);
         log_debug("Flags: 0x%04x", record->flags);
     } else {
-        fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
+        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
     }
 
-    log_record(&(record->base));
+    log_record(&hdr);
     return (Record*)record;
 }
 
@@ -198,23 +187,23 @@ Record* init_GLOB(FILE* esm_file)
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
 
-    Subrecord subrecordHead;
-    fread(&subrecordHead, sizeof(Subrecord), 1, esm_file);
+    SubrecordHeader subrecordHead;
+    fread(&subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
 
     record->editorId = init_cstring_subrecord(esm_file, &subrecordHead, "Editor ID");
-    fread(&subrecordHead, sizeof(Subrecord), 1, esm_file);
+    fread(&subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
 
     uint8_t fnam;
     fread(&fnam, sizeof(uint8_t), 1, esm_file);
     record->type = fnam;
-    log_subrecord_new(&subrecordHead);
+    log_subrecord(&subrecordHead);
     log_debug("Type: %c", record->type);
 
-    fread(&subrecordHead, sizeof(Subrecord), 1, esm_file);
+    fread(&subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
     uint32_t value;
     fread(&value, sizeof(uint32_t), 1, esm_file);
     record->value.longValue = value;
-    log_subrecord_new(&subrecordHead);
+    log_subrecord(&subrecordHead);
 
     switch (fnam) {
     case 's':
@@ -231,7 +220,7 @@ Record* init_GLOB(FILE* esm_file)
         break;
     }
 
-    log_record(&(record->base));
+    log_record(&hdr);
     return (Record*)record;
 }
 
@@ -245,25 +234,25 @@ Record* init_FACT(FILE* esm_file)
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
 
-    uint32_t   end = ftell(esm_file) + hdr.DataSize;
-    Subrecord  subrec;
-    Subrecord* subrecordHead = &subrec;
-    log_record(&(record->base));
+    uint32_t         end = ftell(esm_file) + hdr.DataSize;
+    SubrecordHeader  subrec;
+    SubrecordHeader* subrecordHead = &subrec;
+    log_record(&hdr);
 
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
     record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
 
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
 
     if (strncmp(subrecordHead->Type, "FULL", 4) == 0) {
         record->name = init_cstring_subrecord(esm_file, subrecordHead, "Name");
-        fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+        fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
     }
     if (strncmp(subrecordHead->Type, "XNAM", 4) == 0) {
         XNAMSubrecord tmp;
 
         while (strncmp(subrecordHead->Type, "XNAM", 4) == 0) {
-            log_subrecord_new(subrecordHead);
+            log_subrecord(subrecordHead);
             fread(&(tmp), sizeof(XNAMSubrecord), 1, esm_file);
             arrput(record->relations, tmp);
 
@@ -271,12 +260,12 @@ Record* init_FACT(FILE* esm_file)
             log_debug("Faction: %d", tmp.faction);
             log_debug("Modifier: %d", tmp.modifier);
             log_debug("Group combat reaction: %d", tmp.groupCombatReaction);
-            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
         }
     }
 
     fread(&(record->data), subrecordHead->DataSize, 1, esm_file);
-    log_subrecord_new(subrecordHead);
+    log_subrecord(subrecordHead);
     log_debug("Data:");
     log_debug("Flags 1: 0x%02x", record->data.flags_1);
     log_debug("Flags 2: 0x%02x", record->data.flags_2);
@@ -287,14 +276,14 @@ Record* init_FACT(FILE* esm_file)
     }
 
     // CNAM, RNAM, INAM, WMI1 are optional
-    fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
     log_info("Current file pointer location: 0x%06x", ftell(esm_file));
 
     if (strncmp(subrecordHead->Type, "CNAM", 4) == 0) {
         fread(&(record->unused), sizeof(float), 1, esm_file);
-        log_subrecord_new(subrecordHead);
+        log_subrecord(subrecordHead);
         log_debug("Unused float value: %f", record->unused);
-        fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+        fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
     }
     if (strncmp(subrecordHead->Type, "RNAM", 4) == 0) {
         FACT_RankSubrecords tmp;
@@ -302,13 +291,13 @@ Record* init_FACT(FILE* esm_file)
         while (strncmp(subrecordHead->Type, "RNAM", 4) == 0) {
             tmp.male   = NULL;
             tmp.female = NULL;
-            log_subrecord_new(subrecordHead);
+            log_subrecord(subrecordHead);
 
             fread(&tmp.rankNumber, sizeof(uint32_t), 1, esm_file);
             log_debug("Rank number: %d", tmp.rankNumber);
             log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
 
-            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
 
             if (strncmp(subrecordHead->Type, "MNAM", 4)) {
                 // One fucking edge case
@@ -322,7 +311,7 @@ Record* init_FACT(FILE* esm_file)
             tmp.male = init_cstring_subrecord(esm_file, subrecordHead, "Male");
             log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
 
-            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
 
             if (strncmp(subrecordHead->Type, "FNAM", 4)) {
                 arrput(record->rank, tmp);
@@ -332,11 +321,11 @@ Record* init_FACT(FILE* esm_file)
             log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
             tmp.female = init_cstring_subrecord(esm_file, subrecordHead, "Female");
 
-            fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+            fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
             if (strncmp(subrecordHead->Type, "INAM", 4) == 0) {
                 fread(&tmp.insignia, sizeof(uint32_t), 1, esm_file);
                 log_debug("Insignia: %u", tmp.insignia);
-                fread(subrecordHead, sizeof(Subrecord), 1, esm_file);
+                fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
             }
 
             arrput(record->rank, tmp);
@@ -348,7 +337,7 @@ Record* init_FACT(FILE* esm_file)
     }
     // Rewind to proper position
     if (ftell(esm_file) > end) {
-        fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
+        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
     }
     return (Record*)record;
 }
@@ -380,25 +369,25 @@ void free_FACT(Record* record)
 Record* init_MICN(FILE* esm_file)
 {
     MALLOC_WARN(MICN, record);
-    RecordHeader hdr;
-    Subrecord    subheader;
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
 
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
 
     uint32_t dataStart = ftell(esm_file);
 
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     record->editorID = init_cstring_subrecord(esm_file, &subheader, "EDID");
 
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     record->largeIconFilename = init_cstring_subrecord(esm_file, &subheader, "ICON");
 
     if (hdr.DataSize == (ftell(esm_file) - dataStart)) {
         return (Record*)record;
     }
 
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     record->largeIconFilename = init_cstring_subrecord(esm_file, &subheader, "MICO");
 
     return (Record*)record;
@@ -407,27 +396,27 @@ Record* init_MICN(FILE* esm_file)
 Record* init_CLAS(FILE* esm_file)
 {
     MALLOC_WARN(CLASRecord, record);
-    RecordHeader hdr;
-    Subrecord    subheader;
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
 
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
 
     uint32_t dataStart = ftell(esm_file);
-    log_record(&(record->base));
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    log_record(&hdr);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     record->editorID = init_cstring_subrecord(esm_file, &subheader, "EDID");
 
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     record->fullName = init_cstring_subrecord(esm_file, &subheader, "FULL");
 
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     record->description = init_cstring_subrecord(esm_file, &subheader, "DESC");
 
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     fread(&(record->data), sizeof(DATASubrecord), 1, esm_file);
 
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     dataStart = ftell(esm_file);
     fread(&(record->attr), sizeof(ATTRSubrecord), 1, esm_file);
     assert((dataStart + subheader.DataSize) == ftell(esm_file));
@@ -435,121 +424,49 @@ Record* init_CLAS(FILE* esm_file)
     return (Record*)record;
 }
 
-/*
- * HDPT record specific fields
- */
-static char* modelFilenameHeaders[] = {
-    "MODL",
-    "MOD2",
-    "MOD3",
-    "MOD4"
-};
-
-static char* modelTexhashHeaders[] = {
-    "MODT",
-    "MO2T",
-    "MO3T",
-    "MO4T"
-};
-
-static char* modelAltTexHeaders[] = {
-    "MODS",
-    "MO2S",
-    "MO3S",
-    "MO4S"
-};
-
-static char* modelFGFlagsHeaders[] = {
-    "MODD",
-    "MOSD"
-};
-
 Record* init_HDPT(FILE* esm_file)
 {
     MALLOC_WARN(HDPTRecord, record);
-    RecordHeader hdr;
-    Subrecord    subheader;
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
 
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
 
-    log_record(&(record->base));
-    uint32_t dataEnd = ftell(esm_file) + record->base.DataSize;
+    log_record(&hdr);
 
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     assert(strncmp(subheader.Type, "EDID", 4) == 0);
     record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
 
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     assert(strncmp(subheader.Type, "FULL", 4) == 0);
     record->name = init_cstring_subrecord(esm_file, &subheader, "Name");
 
-    AlternateTexture altTex;
+    SubrecordConstructor* func = GET_CONSTRUCTOR(Subrecord, "MODL");
+    if (func == NULL) {
+        log_fatal("Error while fetching MODL constructor");
+        sdsfree(record->editorID);
+        sdsfree(record->name);
+        free(record);
+    }
+    record->modelData = (ModelDataSubrecord*)func(esm_file);
+    if (record->modelData == NULL) {
+        return NULL;
+    }
 
-    uint8_t fnameInd   = 0;
-    uint8_t texHashInd = 0;
-    uint8_t altTexInd  = 0;
-    uint8_t flagsInd   = 0;
-
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
-    while (strncmp(subheader.Type, "DATA", 4) && strncmp(subheader.Type, "HNAM", 4) && ftell(esm_file) < dataEnd) {
-        if (strncmp(subheader.Type, modelFilenameHeaders[fnameInd], 4) == 0) {
-            assert(fnameInd <= 4);
-
-            sds fname = init_cstring_subrecord(esm_file, &subheader, "Model filename");
-            arrput(record->modelData.filenames, fname);
-            fnameInd++;
-        } else if (strncmp(subheader.Type, modelTexhashHeaders[texHashInd], 4) == 0) {
-            assert(texHashInd < 4);
-
-            MALLOC_N_WARN(uint8_t, subheader.DataSize, hval);
-
-            fread(hval, sizeof(uint8_t), subheader.DataSize, esm_file);
-            arrput(record->modelData.textureHashes, hval);
-            texHashInd++;
-        } else if (strncmp(subheader.Type, modelAltTexHeaders[altTexInd], 4) == 0) {
-            assert(altTexInd < 4);
-
-            uint32_t numAltTex;
-            fread(&numAltTex, sizeof(uint32_t), 1, esm_file);
-
-            for (uint32_t i = 0; i < numAltTex; i++) {
-                uint32_t nameLen;
-                fread(&nameLen, sizeof(uint32_t), 1, esm_file);
-
-                char* cstring = malloc(nameLen);
-                fread(cstring, nameLen, 1, esm_file);
-                altTex.name = sdsnewlen(cstring, nameLen);
-                free(cstring);
-
-                fread(&(altTex.newTexture), sizeof(formid), 1, esm_file);
-                fread(&(altTex.index), sizeof(formid), 1, esm_file);
-                arrput(record->modelData.alternateTextures, altTex);
-            }
-            altTexInd++;
-
-        } else if (strncmp(subheader.Type, modelFGFlagsHeaders[flagsInd], 4) == 0) {
-            assert(flagsInd < 2);
-
-            fread(&(record->modelData.MODDFlags[flagsInd]), sizeof(uint8_t), 1, esm_file);
-            flagsInd++;
-        } else {
-            log_fatal("Something is fishy");
-            return NULL;
-        }
-        fread(&subheader, sizeof(Subrecord), 1, esm_file);
-    };
-
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    log_info("%.4s", subheader.Type);
     assert(strncmp(subheader.Type, "DATA", 4) == 0);
     fread(&(record->flag), sizeof(uint8_t), 1, esm_file);
 
-    fread(&subheader, sizeof(Subrecord), 1, esm_file);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
 
     while (strncmp(subheader.Type, "HNAM", 4) == 0) {
         fread(&(record->extraParts), sizeof(formid), 1, esm_file);
-        fread(&subheader, sizeof(Subrecord), 1, esm_file);
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     }
-    fseek(esm_file, -sizeof(Subrecord), SEEK_CUR);
+    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
 
     return (Record*)record;
 }
@@ -561,25 +478,10 @@ void free_HDPT(Record* record)
     sdsfree(hdpt->editorID);
     sdsfree(hdpt->name);
 
-    uint32_t len = arrlenu(hdpt->modelData.filenames);
-    for (uint32_t i = 0; i < len; i++) {
-        sdsfree(hdpt->modelData.filenames[i]);
-    }
-    arrfree(hdpt->modelData.filenames);
+    SubrecordDestructor* func = GET_DESTRUCTOR(Subrecord, "MODL");
+    func((Subrecord*)hdpt->modelData);
 
-    len = arrlenu(hdpt->modelData.textureHashes);
-    for (uint32_t i = 0; i < len; i++) {
-        free(hdpt->modelData.textureHashes[i]);
-    }
-    arrfree(hdpt->modelData.textureHashes);
-
-    len = arrlenu(hdpt->modelData.alternateTextures);
-    for (uint32_t i = 0; i < len; i++) {
-        sdsfree(hdpt->modelData.alternateTextures[i].name);
-    }
-
-    arrfree(hdpt->modelData.alternateTextures);
-
+    free(hdpt->modelData);
     free(hdpt);
 }
 

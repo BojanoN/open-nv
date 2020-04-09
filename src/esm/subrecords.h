@@ -114,6 +114,7 @@ typedef struct {
 } AlternateTexture;
 
 typedef struct __attribute__((packed)) {
+    Subrecord base;
     /*
      * Array of filenames.
      * Matches subrecords MODL, MOD2, MOD3, MOD4
@@ -136,3 +137,5 @@ typedef struct __attribute__((packed)) {
      */
     uint8_t MODDFlags[2];
 } ModelDataSubrecord;
+
+sds init_cstring_subrecord(FILE* esm_file, SubrecordHeader* subrecordHead, const char* loggingName);

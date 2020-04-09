@@ -12,19 +12,20 @@
 typedef struct __attribute__((packed)) {
     char     Type[4];
     uint16_t DataSize;
+} SubrecordHeader;
+
+typedef struct {
 } Subrecord;
 
 DEFINE_OBJECT_TYPEDEFS(Subrecord);
 DECLARE_MAP_INITIALIZERS(Subrecord);
 
-#define log_subrecord(subrec)     (log_debug("Subrecord %.4s: Size: %hi", (subrec)->base.Type, (subrec)->base.DataSize));
-#define log_subrecord_new(subrec) (log_debug("Subrecord %.4s: Size: %hi", (subrec)->Type, (subrec)->DataSize));
+#define log_subrecord(subrec) (log_debug("Subrecord %.4s: Size: %hi", (subrec)->Type, (subrec)->DataSize));
 
 typedef uint32_t formid;
 
 typedef struct __attribute__((packed)) {
     uint8_t  Type[4];
-    uint32_t DataSize;
     uint32_t Flags;
     formid   ID;
 } Record;
