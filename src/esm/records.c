@@ -342,30 +342,6 @@ Record* init_FACT(FILE* esm_file)
     return (Record*)record;
 }
 
-void free_FACT(Record* record)
-{
-    FACTRecord* fact = (FACTRecord*)record;
-
-    arrfree(fact->relations);
-
-    uint32_t len = arrlenu(fact->rank);
-    for (uint32_t i = 0; i < len; i++) {
-        if (fact->rank[i].male != NULL) {
-            sdsfree(fact->rank[i].male);
-        }
-        if (fact->rank[i].female != NULL) {
-            sdsfree(fact->rank[i].female);
-        }
-    }
-    arrfree(fact->rank);
-
-    sdsfree(fact->editorId);
-    if (fact->name)
-        sdsfree(fact->name);
-
-    free(fact);
-}
-
 Record* init_MICN(FILE* esm_file)
 {
     MALLOC_WARN(MICN, record);
@@ -555,6 +531,19 @@ Record* init_RACE(FILE* esm_file)
     record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
 
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FULL", 4) == 0);
+    record->name = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "DESC", 4) == 0);
+    log_subrecord(&subheader);
+    if (subheader.DataSize > 1) {
+        record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+    } else {
+        fseek(esm_file, 1, SEEK_CUR);
+    }
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     if (strncmp(subheader.Type, "XNAM", 4) == 0) {
         XNAMSubrecord tmp;
 
@@ -571,25 +560,22 @@ Record* init_RACE(FILE* esm_file)
         }
     }
 
-    uint8_t atLeastOneAgePresent = 0;
+    assert(strncmp(subheader.Type, "DATA", 4) == 0);
+    log_subrecord(&subheader);
+    fread(&(record->raceData), sizeof(RaceDataSubrecord), 1, esm_file);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     if (strncmp(subheader.Type, "ONAM", 4) == 0) {
         fread(&(record->older), sizeof(formid), 1, esm_file);
         log_subrecord(&subheader);
-        atLeastOneAgePresent = 1;
 
         fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     }
     if (strncmp(subheader.Type, "YNAM", 4) == 0) {
         fread(&(record->younger), sizeof(formid), 1, esm_file);
         log_subrecord(&subheader);
-        atLeastOneAgePresent = 1;
 
         fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    }
-
-    if (!atLeastOneAgePresent) {
-        log_fatal("No YNAM or ONAM records found");
-        return NULL;
     }
 
     // NAM2 marker, should contain no data
@@ -599,27 +585,37 @@ Record* init_RACE(FILE* esm_file)
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     assert(strncmp(subheader.Type, "VTCK", 4) == 0);
     fread(&(record->voices), sizeof(RaceVoices), 1, esm_file);
+    log_subrecord(&subheader);
 
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "DNAM", 4) == 0);
-    fread(&(record->defaultHair), sizeof(RaceDefaultHairStyle), 1, esm_file);
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "CNAM", 4) == 0);
-    fread(&(record->defaultHairColor), sizeof(RaceDefaultHairColor), 1, esm_file);
+    // Hair style and color is optional, e.g. ghouls
+    if (strncmp(subheader.Type, "DNAM", 4) == 0) {
+        fread(&(record->defaultHair), sizeof(RaceDefaultHairStyle), 1, esm_file);
+        log_subrecord(&subheader);
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    }
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    if (strncmp(subheader.Type, "CNAM", 4) == 0) {
+        fread(&(record->defaultHairColor), sizeof(RaceDefaultHairColor), 1, esm_file);
+        log_subrecord(&subheader);
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    }
+
     assert(strncmp(subheader.Type, "PNAM", 4) == 0);
     fread(&(record->faceGenMainClamp), sizeof(float), 1, esm_file);
+    log_subrecord(&subheader);
 
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     assert(strncmp(subheader.Type, "UNAM", 4) == 0);
     fread(&(record->faceGenFaceClamp), sizeof(float), 1, esm_file);
+    log_subrecord(&subheader);
 
     // Dummy ATTR read, functionality still unknown
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     assert(strncmp(subheader.Type, "ATTR", 4) == 0);
     fseek(esm_file, subheader.DataSize, SEEK_CUR);
+    log_subrecord(&subheader);
 
     // Head data marker, should contain no data
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
@@ -628,40 +624,150 @@ Record* init_RACE(FILE* esm_file)
 
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     assert(strncmp(subheader.Type, "MNAM", 4) == 0);
-    SubrecordConstructor* modelDataCons = GET_CONSTRUCTOR(Subrecord, "MODL");
+    log_subrecord(&subheader);
+    record->maleHeadParts = init_ModelPartCollection(esm_file);
 
-    if (modelDataCons == NULL) {
-        log_fatal("Couldnt get MODL constructor");
-        return NULL;
-    }
-
-    ModelPart tmpMdl;
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FNAM", 4) == 0);
+    log_subrecord(&subheader);
+    record->femaleHeadParts = init_ModelPartCollection(esm_file);
 
-    while (strncmp(subheader.Type, "INDX", 4) == 0) {
-        fread(&tmpMdl.index, sizeof(uint32_t), 1, esm_file);
+    // Body data marker, should contain no data
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "NAM1", 4) == 0);
+    assert(subheader.DataSize == 0);
 
-        tmpMdl.modelData = (ModelDataSubrecord*)modelDataCons(esm_file);
-        if (tmpMdl.modelData == NULL) {
-            log_fatal("Error while parsing ModelPart");
-            return NULL;
-        }
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "MNAM", 4) == 0);
+    log_subrecord(&subheader);
+    record->maleBodyParts = init_ModelPartCollection(esm_file);
 
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-        if (strncmp(subheader.Type, "ICON", 4) == 0) {
-            tmpMdl.largeIcon = init_cstring_subrecord(esm_file, &subheader, "Large icon filename");
-            fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-        }
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FNAM", 4) == 0);
+    log_subrecord(&subheader);
+    record->femaleBodyParts = init_ModelPartCollection(esm_file);
 
-        if (strncmp(subheader.Type, "MICO", 4) == 0) {
-            tmpMdl.smallIcon = init_cstring_subrecord(esm_file, &subheader, "Small icon filename");
-            fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-        }
+    // Hair formids
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "HNAM", 4) == 0);
+    log_subrecord(&subheader);
+    MALLOC_N_WARN(formid, subheader.DataSize, hair);
+    fread(hair, subheader.DataSize, 1, esm_file);
+    record->hair = hair;
 
-        arrput(record->maleHeadParts, tmpMdl);
-    }
+    // Eyes formids
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "ENAM", 4) == 0);
+    log_subrecord(&subheader);
+    MALLOC_N_WARN(formid, subheader.DataSize, eyes);
+    fread(eyes, subheader.DataSize, 1, esm_file);
+    record->eyes = eyes;
+
+    // FaceGen male data marker, should contain no data
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "MNAM", 4) == 0);
+    assert(subheader.DataSize == 0);
+    log_subrecord(&subheader);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FGGS", 4) == 0);
+    log_subrecord(&subheader);
+    MALLOC_N_WARN(uint8_t, subheader.DataSize, maleSym);
+    fread(maleSym, subheader.DataSize, 1, esm_file);
+    record->maleFaceGenGeomSymm = maleSym;
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FGGA", 4) == 0);
+    log_subrecord(&subheader);
+    MALLOC_N_WARN(uint8_t, subheader.DataSize, maleAsym);
+    fread(maleAsym, subheader.DataSize, 1, esm_file);
+    record->maleFaceGenGeomAsymm = maleAsym;
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FGTS", 4) == 0);
+    log_subrecord(&subheader);
+    MALLOC_N_WARN(uint8_t, subheader.DataSize, maleTexSym);
+    fread(maleTexSym, subheader.DataSize, 1, esm_file);
+    record->maleFaceGenTexSymm = maleTexSym;
+
+    // Dummy SNAM read
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "SNAM", 4) == 0);
+    log_subrecord(&subheader);
+    fseek(esm_file, subheader.DataSize, SEEK_CUR);
+
+    // FaceGen female data marker, should contain no data
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FNAM", 4) == 0);
+    assert(subheader.DataSize == 0);
+    log_subrecord(&subheader);
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FGGS", 4) == 0);
+    log_subrecord(&subheader);
+    MALLOC_N_WARN(uint8_t, subheader.DataSize, femaleSym);
+    fread(femaleSym, subheader.DataSize, 1, esm_file);
+    record->femaleFaceGenGeomSymm = femaleSym;
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FGGA", 4) == 0);
+    log_subrecord(&subheader);
+    MALLOC_N_WARN(uint8_t, subheader.DataSize, femaleAsym);
+    fread(femaleAsym, subheader.DataSize, 1, esm_file);
+    record->femaleFaceGenGeomAsymm = femaleAsym;
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "FGTS", 4) == 0);
+    log_subrecord(&subheader);
+    MALLOC_N_WARN(uint8_t, subheader.DataSize, femaleTexSym);
+    fread(femaleTexSym, subheader.DataSize, 1, esm_file);
+    record->femaleFaceGenTexSymm = femaleTexSym;
+
+    // Dummy SNAM read
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "SNAM", 4) == 0);
+    log_subrecord(&subheader);
+    fseek(esm_file, subheader.DataSize, SEEK_CUR);
 
     return (Record*)record;
+}
+
+void free_RACE(Record* record)
+{
+    RACERecord* race = (RACERecord*)record;
+
+    sdsfree(race->editorID);
+    sdsfree(race->name);
+
+    if (race->description != NULL) {
+        sdsfree(race->description);
+    }
+
+    if (race->relations != NULL) {
+        arrfree(race->relations);
+    }
+
+    free_ModelPartCollection(race->maleBodyParts);
+    free_ModelPartCollection(race->maleHeadParts);
+    free_ModelPartCollection(race->femaleBodyParts);
+    free_ModelPartCollection(race->femaleHeadParts);
+
+    if (race->hair != NULL) {
+        free(race->hair);
+    }
+
+    if (race->eyes != NULL) {
+        free(race->eyes);
+    }
+
+    free(race->maleFaceGenGeomSymm);
+    free(race->maleFaceGenGeomAsymm);
+    free(race->maleFaceGenTexSymm);
+    free(race->femaleFaceGenGeomSymm);
+    free(race->femaleFaceGenGeomAsymm);
+    free(race->femaleFaceGenTexSymm);
+
+    free(race);
 }
 
 void free_EYES(Record* record)
@@ -678,6 +784,30 @@ void free_EYES(Record* record)
     free(eyes);
 }
 
+void free_FACT(Record* record)
+{
+    FACTRecord* fact = (FACTRecord*)record;
+
+    arrfree(fact->relations);
+
+    uint32_t len = arrlenu(fact->rank);
+    for (uint32_t i = 0; i < len; i++) {
+        if (fact->rank[i].male != NULL) {
+            sdsfree(fact->rank[i].male);
+        }
+        if (fact->rank[i].female != NULL) {
+            sdsfree(fact->rank[i].female);
+        }
+    }
+    arrfree(fact->rank);
+
+    sdsfree(fact->editorId);
+    if (fact->name)
+        sdsfree(fact->name);
+
+    free(fact);
+}
+
 void free_HAIR(Record* record)
 {
     HAIRRecord* hair = (HAIRRecord*)record;
@@ -689,7 +819,6 @@ void free_HAIR(Record* record)
     SubrecordDestructor* func = GET_DESTRUCTOR(Subrecord, "MODL");
     func((Subrecord*)hair->modelData);
 
-    free(hair->modelData);
     free(hair);
 }
 
@@ -703,7 +832,6 @@ void free_HDPT(Record* record)
     SubrecordDestructor* func = GET_DESTRUCTOR(Subrecord, "MODL");
     func((Subrecord*)hdpt->modelData);
 
-    free(hdpt->modelData);
     free(hdpt);
 }
 
@@ -800,6 +928,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "HDPT", init_HDPT);
     ADD_CONSTRUCTOR(Record, "HAIR", init_HAIR);
     ADD_CONSTRUCTOR(Record, "EYES", init_EYES);
+    ADD_CONSTRUCTOR(Record, "RACE", init_RACE);
 }
 
 void Record_init_destructor_map()
@@ -814,6 +943,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "HDPT", free_HDPT);
     ADD_DESTRUCTOR(Record, "HAIR", free_HAIR);
     ADD_DESTRUCTOR(Record, "EYES", free_EYES);
+    ADD_DESTRUCTOR(Record, "RACE", free_RACE);
 }
 
 Record* recordnew(FILE* f, sds type)

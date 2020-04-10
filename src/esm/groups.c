@@ -33,7 +33,6 @@ Group* init_TopLevel(FILE* esm_file)
     sds type = sdsnewlen(ret->base.Label, 4);
 
     RecordConstructor* func = GET_CONSTRUCTOR(Record, type);
-    sdsfree(type);
 
     log_group(ret);
 
@@ -42,6 +41,7 @@ Group* init_TopLevel(FILE* esm_file)
         log_warn("Record type %s not yet implemented.", type);
         return NULL;
     }
+    sdsfree(type);
 
     uint32_t start;
     uint32_t end;

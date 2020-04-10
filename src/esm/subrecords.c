@@ -3,16 +3,9 @@
 
 DECLARE_FUNCTION_MAPS(Subrecord);
 
-sds init_cstring_subrecord(FILE* esm_file, SubrecordHeader* subrecordHead, const char* loggingName)
-{
-    char* cstring = malloc(subrecordHead->DataSize);
-    fread(cstring, subrecordHead->DataSize, 1, esm_file);
-    sds subrecord = sdsnewlen(cstring, subrecordHead->DataSize);
-    free(cstring);
-    log_subrecord(subrecordHead);
-    log_debug("%s: %s", loggingName, subrecord);
-    return subrecord;
-}
+/*
+ * Ctors and dtors.
+ */
 
 Subrecord* create_HEDR(FILE* esm_file)
 {
@@ -126,6 +119,11 @@ Subrecord* create_ModelData(FILE* esm_file)
             assert(fnameInd <= 4);
 
             sds fname = init_cstring_subrecord(esm_file, &subheader, "Model filename");
+            if (fname == NULL) {
+                log_fatal("Error parsing model filename");
+                return NULL;
+            }
+
             arrput(modelData->filenames, fname);
             fnameInd++;
         } else if (strncmp(subheader.Type, modelTexhashHeaders[texHashInd], 4) == 0) {
@@ -193,8 +191,9 @@ void free_ModelData(Subrecord* record)
     for (uint32_t i = 0; i < len; i++) {
         sdsfree(modelData->alternateTextures[i].name);
     }
-
     arrfree(modelData->alternateTextures);
+
+    free(modelData);
 }
 
 void free_HEDR(Subrecord* record)
@@ -224,4 +223,84 @@ void Subrecord_init_destructor_map()
     ADD_DESTRUCTOR(Subrecord, "HEDR", free_HEDR);
     ADD_DESTRUCTOR(Subrecord, "CNAM", free_CNAM);
     ADD_DESTRUCTOR(Subrecord, "MODL", free_ModelData);
+}
+
+/*
+ * Specific init functions.
+ */
+
+sds init_cstring_subrecord(FILE* esm_file, SubrecordHeader* subrecordHead, const char* loggingName)
+{
+    char* cstring = malloc(subrecordHead->DataSize);
+    fread(cstring, subrecordHead->DataSize, 1, esm_file);
+    sds subrecord = sdsnewlen(cstring, subrecordHead->DataSize);
+    free(cstring);
+    log_subrecord(subrecordHead);
+    log_debug("%s: %s", loggingName, subrecord);
+    return subrecord;
+}
+
+ModelPart* init_ModelPartCollection(FILE* esm_file)
+{
+    SubrecordHeader subheader;
+    ModelPart*      retArr = NULL;
+    ModelPart       tmpMdl;
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+
+    while (strncmp(subheader.Type, "INDX", 4) == 0) {
+        tmpMdl.largeIcon = NULL;
+        tmpMdl.smallIcon = NULL;
+
+        fread(&tmpMdl.index, sizeof(uint32_t), 1, esm_file);
+        log_subrecord(&subheader);
+
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+
+        while (strncmp(subheader.Type, "INDX", 4) && strncmp(subheader.Type, "HNAM", 4) && strncmp(subheader.Type, "FNAM", 4) && strncmp(subheader.Type, "NAM1", 4)) {
+            if (strncmp(subheader.Type, "MODL", 4) == 0) {
+                fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
+                tmpMdl.modelData = (ModelDataSubrecord*)create_ModelData(esm_file);
+                if (tmpMdl.modelData == NULL) {
+                    log_fatal("Error while parsing ModelPart");
+                    return NULL;
+                }
+                fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+                log_subrecord(&subheader);
+            } else if (strncmp(subheader.Type, "ICON", 4) == 0) {
+                tmpMdl.largeIcon = init_cstring_subrecord(esm_file, &subheader, "Large icon filename");
+                fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+                log_subrecord(&subheader);
+            } else if (strncmp(subheader.Type, "MICO", 4) == 0) {
+                tmpMdl.smallIcon = init_cstring_subrecord(esm_file, &subheader, "Small icon filename");
+                fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+                log_subrecord(&subheader);
+            } else {
+                log_fatal("Something is fishy");
+                return NULL;
+            }
+        }
+        arrput(retArr, tmpMdl);
+    }
+
+    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
+
+    return retArr;
+}
+
+void free_ModelPartCollection(ModelPart* collection)
+{
+    uint32_t len = arrlenu(collection);
+
+    for (uint32_t i = 0; i < len; i++) {
+        ModelPart tmp = collection[i];
+
+        if (tmp.largeIcon != NULL) {
+            sdsfree(tmp.largeIcon);
+        }
+        if (tmp.largeIcon != NULL) {
+            sdsfree(tmp.smallIcon);
+        }
+        free_ModelData((Subrecord*)tmp.modelData);
+    }
+    arrfree(collection);
 }

@@ -179,6 +179,7 @@ typedef struct __attribute__((packed)) {
 } RaceDataSubrecord;
 
 typedef struct __attribute__((packed)) {
+    Subrecord base;
     /*
      * See HeadPartIndex and BodyPartIndex enums.
      */
@@ -230,4 +231,6 @@ typedef enum {
     UPPER_BODY_TEXTURE
 } BodyPartIndex;
 
-sds init_cstring_subrecord(FILE* esm_file, SubrecordHeader* subrecordHead, const char* loggingName);
+sds        init_cstring_subrecord(FILE* esm_file, SubrecordHeader* subrecordHead, const char* loggingName);
+ModelPart* init_ModelPartCollection(FILE* esm_file);
+void       free_ModelPartCollection(ModelPart* collection);
