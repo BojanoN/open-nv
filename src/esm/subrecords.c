@@ -124,7 +124,9 @@ Subrecord* create_ModelData(FILE* esm_file)
                 return NULL;
             }
 
-            arrput(modelData->filenames, fname);
+            //arrput(modelData->filenames, fname);
+            //assert(modelData->filenames[arrlenu(modelData->filenames) + 1] == NULL);
+            modelData->filenames[fnameInd] = fname;
             fnameInd++;
         } else if (strncmp(subheader.Type, modelTexhashHeaders[texHashInd], 4) == 0) {
             assert(texHashInd < 4);
@@ -166,6 +168,7 @@ Subrecord* create_ModelData(FILE* esm_file)
         }
         fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     }
+    modelData->noFname = fnameInd;
     fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
 
     return (Subrecord*)modelData;
@@ -175,13 +178,15 @@ void free_ModelData(Subrecord* record)
 {
     ModelDataSubrecord* modelData = (ModelDataSubrecord*)record;
 
-    uint32_t len = arrlenu(modelData->filenames);
-    for (uint32_t i = 0; i < len; i++) {
-        sdsfree(modelData->filenames[i]);
+    for (uint32_t i = 0; i < modelData->noFname; i++) {
+        if (modelData->filenames[i] != NULL)
+            sdsfree(modelData->filenames[i]);
+        else
+            break;
     }
-    arrfree(modelData->filenames);
+    //    arrfree(modelData->filenames);
 
-    len = arrlenu(modelData->textureHashes);
+    uint32_t len = arrlenu(modelData->textureHashes);
     for (uint32_t i = 0; i < len; i++) {
         free(modelData->textureHashes[i]);
     }
@@ -250,7 +255,7 @@ ModelPart* init_ModelPartCollection(FILE* esm_file)
     while (strncmp(subheader.Type, "INDX", 4) == 0) {
         tmpMdl.largeIcon = NULL;
         tmpMdl.smallIcon = NULL;
-
+        tmpMdl.modelData = NULL;
         fread(&tmpMdl.index, sizeof(uint32_t), 1, esm_file);
         log_subrecord(&subheader);
 
@@ -300,7 +305,9 @@ void free_ModelPartCollection(ModelPart* collection)
         if (tmp.largeIcon != NULL) {
             sdsfree(tmp.smallIcon);
         }
-        free_ModelData((Subrecord*)tmp.modelData);
+        if (tmp.modelData != NULL) {
+            free_ModelData((Subrecord*)tmp.modelData);
+        }
     }
     arrfree(collection);
 }

@@ -736,9 +736,6 @@ void free_RACE(Record* record)
 {
     RACERecord* race = (RACERecord*)record;
 
-    sdsfree(race->editorID);
-    sdsfree(race->name);
-
     if (race->description != NULL) {
         sdsfree(race->description);
     }
@@ -766,6 +763,9 @@ void free_RACE(Record* record)
     free(race->femaleFaceGenGeomSymm);
     free(race->femaleFaceGenGeomAsymm);
     free(race->femaleFaceGenTexSymm);
+
+    sdsfree(race->editorID);
+    sdsfree(race->name);
 
     free(race);
 }

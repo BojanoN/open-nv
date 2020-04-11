@@ -119,7 +119,8 @@ typedef struct __attribute__((packed)) {
      * Array of filenames.
      * Matches subrecords MODL, MOD2, MOD3, MOD4
      */
-    sds* filenames;
+    sds     filenames[4];
+    uint8_t noFname;
     /*
      * MODB
      */
