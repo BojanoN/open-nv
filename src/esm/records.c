@@ -732,242 +732,274 @@ Record* init_RACE(FILE* esm_file)
     return (Record*)record;
 }
 
-Record* init_SOUN(FILE* esm_file) {
-  MALLOC_WARN(SOUNRecord, record);
-  RecordHeader hdr;
-  SubrecordHeader subheader;
+Record* init_SOUN(FILE* esm_file)
+{
+    MALLOC_WARN(SOUNRecord, record);
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
 
-  fread(&hdr, sizeof(RecordHeader), 1, esm_file);
-  FILL_BASE_RECORD_INFO(hdr, record);
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
 
-  int readCounter = 0;
-  uint32_t  end = ftell(esm_file) + hdr.DataSize;
+    int      readCounter = 0;
+    uint32_t end         = ftell(esm_file) + hdr.DataSize;
 
-  log_record(&hdr);
-
-  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-  assert(strncmp(subheader.Type, "EDID", 4) == 0);
-  record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
-
-
-  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-
-  if(strncmp(subheader.Type, "OBND", 4) == 0) {
-    log_subrecord(&subheader);
-    readCounter =
-      fread(&(record->objectBounds), sizeof(OBNDSubrecord), 1, esm_file);
-    assert(readCounter == 1);
-    log_OBND(&(record->objectBounds));
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-  } else {
-    record->objectBounds.x1 = 0;
-    record->objectBounds.y1 = 0;
-    record->objectBounds.z1 = 0;
-    record->objectBounds.x2 = 0;
-    record->objectBounds.y2 = 0;
-    record->objectBounds.z2 = 0;    
-  }
-
-  if(strncmp(subheader.Type, "FNAM", 4) == 0) {
-    log_subrecord(&subheader);
-    record->soundFilename =
-        init_cstring_subrecord(esm_file, &subheader, "Sound filename");
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-  } else {
-    record->soundFilename = NULL;
-  }
-
-
-  if(strncmp(subheader.Type, "RNAM", 4) == 0) {
-    log_subrecord(&subheader);
-    readCounter =
-        fread(&(record->randomChangePercentage), sizeof(uint8_t), 1, esm_file);
-    assert(readCounter == 1);
-    log_debug("Random change percentage: %d", record->randomChangePercentage);
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-  } else {
-    record->randomChangePercentage = 0;
-  }
-
-
-  if(strncmp(subheader.Type, "SNDD", 4) == 0) {
-    log_subrecord(&subheader);
-    readCounter = fread(&(record->soundData), sizeof(SoundData), 1, esm_file);
-    assert(readCounter == 1);
-    log_SNDD(&(record->soundData));
-
-  } else {
-    assert(strncmp(subheader.Type, "SNDX", 4) == 0);
-    log_subrecord(&subheader);
-    readCounter = fread(&(record->soundData), sizeof(SoundEx), 1, esm_file);
-    assert(readCounter == 1);
-
-    record->soundData.attenuationPoints[0] = 0;
-    record->soundData.attenuationPoints[1] = 0;
-    record->soundData.attenuationPoints[2] = 0;
-    record->soundData.attenuationPoints[3] = 0;
-    record->soundData.attenuationPoints[4] = 0;
-    record->soundData.reverbAttenuationControl = 0;
-    record->soundData.priority = 0;
-    record->soundData.x = 0;
-    record->soundData.y = 0;
-
-    if(ftell(esm_file) >= end) {
-        log_SNDD(&(record->soundData));
-        return (Record*) record;
-    }
+    log_record(&hdr);
 
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    if(strncmp(subheader.Type, "ANAM", 4) == 0) {
+    assert(strncmp(subheader.Type, "EDID", 4) == 0);
+    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+
+    if (strncmp(subheader.Type, "OBND", 4) == 0) {
         log_subrecord(&subheader);
-        readCounter = fread(&(record->soundData.attenuationPoints), sizeof(int16_t), 5, esm_file);
-        assert(readCounter == 5);
-        if(ftell(esm_file) >= end) {
-            log_SNDD(&(record->soundData));
-            return (Record*) record;
-        }
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    }
-
-    if(strncmp(subheader.Type, "GNAM", 4) == 0) {
-        log_subrecord(&subheader);
-        readCounter = fread(&(record->soundData.reverbAttenuationControl), sizeof(int16_t), 1, esm_file);
+        readCounter = fread(&(record->objectBounds), sizeof(OBNDSubrecord), 1, esm_file);
         assert(readCounter == 1);
-        if(ftell(esm_file) >= end) {
-            log_SNDD(&(record->soundData));
-            return (Record*) record;
-        }
+        log_OBND(&(record->objectBounds));
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    } else {
+        record->objectBounds.x1 = 0;
+        record->objectBounds.y1 = 0;
+        record->objectBounds.z1 = 0;
+        record->objectBounds.x2 = 0;
+        record->objectBounds.y2 = 0;
+        record->objectBounds.z2 = 0;
     }
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    log_subrecord(&subheader);
-    assert(strncmp(subheader.Type, "HNAM", 4) == 0);
-    readCounter = fread(&(record->soundData.priority), sizeof(int32_t), 1, esm_file);
-    assert(readCounter == 1);
+    if (strncmp(subheader.Type, "FNAM", 4) == 0) {
+        log_subrecord(&subheader);
+        record->soundFilename = init_cstring_subrecord(esm_file, &subheader, "Sound filename");
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    } else {
+        record->soundFilename = NULL;
+    }
 
-    log_SNDD(&(record->soundData));
-  }
+    if (strncmp(subheader.Type, "RNAM", 4) == 0) {
+        log_subrecord(&subheader);
+        readCounter = fread(&(record->randomChangePercentage), sizeof(uint8_t), 1, esm_file);
+        assert(readCounter == 1);
+        log_debug("Random change percentage: %d", record->randomChangePercentage);
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    } else {
+        record->randomChangePercentage = 0;
+    }
 
-  return (Record*)record;
+    if (strncmp(subheader.Type, "SNDD", 4) == 0) {
+        log_subrecord(&subheader);
+        readCounter = fread(&(record->soundData), sizeof(SoundData), 1, esm_file);
+        assert(readCounter == 1);
+        log_SNDD(&(record->soundData));
+
+    } else {
+        assert(strncmp(subheader.Type, "SNDX", 4) == 0);
+        log_subrecord(&subheader);
+        readCounter = fread(&(record->soundData), sizeof(SoundEx), 1, esm_file);
+        assert(readCounter == 1);
+
+        record->soundData.attenuationPoints[0]     = 0;
+        record->soundData.attenuationPoints[1]     = 0;
+        record->soundData.attenuationPoints[2]     = 0;
+        record->soundData.attenuationPoints[3]     = 0;
+        record->soundData.attenuationPoints[4]     = 0;
+        record->soundData.reverbAttenuationControl = 0;
+        record->soundData.priority                 = 0;
+        record->soundData.x                        = 0;
+        record->soundData.y                        = 0;
+
+        if (ftell(esm_file) >= end) {
+            log_SNDD(&(record->soundData));
+            return (Record*)record;
+        }
+
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+        if (strncmp(subheader.Type, "ANAM", 4) == 0) {
+            log_subrecord(&subheader);
+            readCounter = fread(&(record->soundData.attenuationPoints), sizeof(int16_t), 5, esm_file);
+            assert(readCounter == 5);
+            if (ftell(esm_file) >= end) {
+                log_SNDD(&(record->soundData));
+                return (Record*)record;
+            }
+            fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+        }
+
+        if (strncmp(subheader.Type, "GNAM", 4) == 0) {
+            log_subrecord(&subheader);
+            readCounter = fread(&(record->soundData.reverbAttenuationControl), sizeof(int16_t), 1, esm_file);
+            assert(readCounter == 1);
+            if (ftell(esm_file) >= end) {
+                log_SNDD(&(record->soundData));
+                return (Record*)record;
+            }
+        }
+
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+        log_subrecord(&subheader);
+        assert(strncmp(subheader.Type, "HNAM", 4) == 0);
+        readCounter = fread(&(record->soundData.priority), sizeof(int32_t), 1, esm_file);
+        assert(readCounter == 1);
+
+        log_SNDD(&(record->soundData));
+    }
+
+    return (Record*)record;
 }
-
 
 #define ASCP_NAM_SUBHEADER(subrecordName, value, type, subheader, esm_file, \
-                           logging_format)                                  \
-  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);                  \
-  log_subrecord(&subheader);                                                \
-  assert(strncmp(subheader.Type, subrecordName, 4) == 0);                   \
-  readCounter = fread(&(value), sizeof(type), 1, esm_file);                \
-  assert(readCounter == 1);                                                 \
-  log_debug(logging_format, value);
+    logging_format)                                                         \
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);                \
+    log_subrecord(&subheader);                                              \
+    assert(strncmp(subheader.Type, subrecordName, 4) == 0);                 \
+    readCounter = fread(&(value), sizeof(type), 1, esm_file);               \
+    assert(readCounter == 1);                                               \
+    log_debug(logging_format, value);
 
-Record* init_ASPC(FILE* esm_file) {
-  MALLOC_WARN(ASPCRecord, record);
-  RecordHeader hdr;
-  SubrecordHeader subheader;
+Record* init_ASPC(FILE* esm_file)
+{
+    MALLOC_WARN(ASPCRecord, record);
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
 
-  fread(&hdr, sizeof(RecordHeader), 1, esm_file);
-  FILL_BASE_RECORD_INFO(hdr, record);
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
 
-  int readCounter = 0;
+    int readCounter = 0;
 
-  log_record(&hdr);
+    log_record(&hdr);
 
-  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-  assert(strncmp(subheader.Type, "EDID", 4) == 0);
-  record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "EDID", 4) == 0);
+    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
 
-  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
 
-  assert(strncmp(subheader.Type, "OBND", 4) == 0);
-  log_subrecord(&subheader);
-  readCounter =
-      fread(&(record->objectBounds), sizeof(OBNDSubrecord), 1, esm_file);
-  assert(readCounter == 1);
-  log_OBND(&(record->objectBounds));
+    assert(strncmp(subheader.Type, "OBND", 4) == 0);
+    log_subrecord(&subheader);
+    readCounter = fread(&(record->objectBounds), sizeof(OBNDSubrecord), 1, esm_file);
+    assert(readCounter == 1);
+    log_OBND(&(record->objectBounds));
 
-  ASCP_NAM_SUBHEADER("SNAM", record->dawn_default, formid, subheader, esm_file, "Dawn: %d");
-  ASCP_NAM_SUBHEADER("SNAM", record->afternoon, formid, subheader, esm_file, "Afternoon: %d");
-  ASCP_NAM_SUBHEADER("SNAM", record->dusk, formid, subheader, esm_file, "Dusk: %d");
-  ASCP_NAM_SUBHEADER("SNAM", record->night, formid, subheader, esm_file, "Night: %d");
-  ASCP_NAM_SUBHEADER("SNAM", record->walla, formid, subheader, esm_file, "Walla: %d");
-  ASCP_NAM_SUBHEADER("WNAM", record->wallaTriggerCount, uint32_t, subheader, esm_file, "Walla trigger count: %d");
+    ASCP_NAM_SUBHEADER("SNAM", record->dawn_default, formid, subheader, esm_file, "Dawn: %d");
+    ASCP_NAM_SUBHEADER("SNAM", record->afternoon, formid, subheader, esm_file, "Afternoon: %d");
+    ASCP_NAM_SUBHEADER("SNAM", record->dusk, formid, subheader, esm_file, "Dusk: %d");
+    ASCP_NAM_SUBHEADER("SNAM", record->night, formid, subheader, esm_file, "Night: %d");
+    ASCP_NAM_SUBHEADER("SNAM", record->walla, formid, subheader, esm_file, "Walla: %d");
+    ASCP_NAM_SUBHEADER("WNAM", record->wallaTriggerCount, uint32_t, subheader, esm_file, "Walla trigger count: %d");
 
-  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);                 
-  if (strncmp(subheader.Type, "RDAT", 4) == 0) {                    
-    readCounter = fread(&(record->regionSound), sizeof(formid), 1, esm_file);              \
-    assert(readCounter == 1);                                              
-  } else {                                                                 
-    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                              
-    record->regionSound = 0;                                                             \
-  }                                                                        
-  log_debug("Use sound from region: %d", record->regionSound);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    if (strncmp(subheader.Type, "RDAT", 4) == 0) {
+        readCounter = fread(&(record->regionSound), sizeof(formid), 1, esm_file);
+        assert(readCounter == 1);
+    } else {
+        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
+        record->regionSound = 0;
+    }
+    log_debug("Use sound from region: %d", record->regionSound);
 
-  ASCP_NAM_SUBHEADER("ANAM", record->environmentType, uint32_t, subheader, esm_file, "Environment type: %d");
-  ASCP_NAM_SUBHEADER("INAM", record->isInterior, uint32_t, subheader, esm_file, "Is interior: %d");
+    ASCP_NAM_SUBHEADER("ANAM", record->environmentType, uint32_t, subheader, esm_file, "Environment type: %d");
+    ASCP_NAM_SUBHEADER("INAM", record->isInterior, uint32_t, subheader, esm_file, "Is interior: %d");
 
-  return (Record*)record;
+    return (Record*)record;
 }
 
-#define MGEF_OPTIONAL_CSTRING_RECORD(subrecordName, value, subheader,   \
-                                     esm_file, logging_name)            \
-  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);              \
-  if (strncmp(subheader.Type, subrecordName, 4) == 0) {                 \
-    value = init_cstring_subrecord(esm_file, &subheader, logging_name); \
-  } else {                                                              \
-    value = NULL;                                                       \
-    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                \
-  }
+#define MGEF_OPTIONAL_CSTRING_RECORD(subrecordName, value, subheader,       \
+    esm_file, logging_name)                                                 \
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);                \
+    if (strncmp(subheader.Type, subrecordName, 4) == 0) {                   \
+        value = init_cstring_subrecord(esm_file, &subheader, logging_name); \
+    } else {                                                                \
+        value = NULL;                                                       \
+        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                \
+    }
 
 #define MGEF_CSTRING_RECORD(subrecordName, value, subheader, esm_file, \
-                            logging_name)                            \
-  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);             \
-  assert(strncmp(subheader.Type, subrecordName, 4) == 0);              \
-  value = init_cstring_subrecord(esm_file, &subheader, logging_name);
+    logging_name)                                                      \
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);           \
+    assert(strncmp(subheader.Type, subrecordName, 4) == 0);            \
+    value = init_cstring_subrecord(esm_file, &subheader, logging_name);
 
-Record* init_MGEF(FILE* esm_file) {
-  MALLOC_WARN(MGEFRecord, record);
-  RecordHeader hdr;
-  SubrecordHeader subheader;
+Record* init_MGEF(FILE* esm_file)
+{
+    MALLOC_WARN(MGEFRecord, record);
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
 
-  fread(&hdr, sizeof(RecordHeader), 1, esm_file);
-  FILL_BASE_RECORD_INFO(hdr, record);
-  log_record(&hdr);
-  int readCounter = 0;
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
+    log_record(&hdr);
+    int readCounter = 0;
 
-  MGEF_CSTRING_RECORD("EDID", record->editorID, subheader, esm_file,
-                      "Editor ID");
-  MGEF_OPTIONAL_CSTRING_RECORD("FULL", record->name, subheader, esm_file, "Name");
-  MGEF_CSTRING_RECORD("DESC", record->description, subheader, esm_file,
-                      "Description");
-  MGEF_OPTIONAL_CSTRING_RECORD("ICON", record->largeIconFilename, subheader, esm_file,
-                      "Large icon filename");
-  MGEF_OPTIONAL_CSTRING_RECORD("MICO", record->smallIconFilename, subheader, esm_file,
-                      "Small icon filename");
+    MGEF_CSTRING_RECORD("EDID", record->editorID, subheader, esm_file,
+        "Editor ID");
+    MGEF_OPTIONAL_CSTRING_RECORD("FULL", record->name, subheader, esm_file, "Name");
+    MGEF_CSTRING_RECORD("DESC", record->description, subheader, esm_file,
+        "Description");
+    MGEF_OPTIONAL_CSTRING_RECORD("ICON", record->largeIconFilename, subheader, esm_file,
+        "Large icon filename");
+    MGEF_OPTIONAL_CSTRING_RECORD("MICO", record->smallIconFilename, subheader, esm_file,
+        "Small icon filename");
 
-  SubrecordConstructor* func = GET_CONSTRUCTOR(Subrecord, "MODL");
-  if (func == NULL) {
-    log_fatal("Error while fetching MODL constructor");
-    sdsfree(record->editorID);
-    sdsfree(record->name);
-    free(record);
-  }
-  record->modelData = (ModelDataSubrecord*)func(esm_file);
-  if (record->modelData == NULL) {
-    return NULL;
-  }
+    SubrecordConstructor* func = GET_CONSTRUCTOR(Subrecord, "MODL");
+    if (func == NULL) {
+        log_fatal("Error while fetching MODL constructor");
+        sdsfree(record->editorID);
+        sdsfree(record->name);
+        free(record);
+    }
+    record->modelData = (ModelDataSubrecord*)func(esm_file);
+    if (record->modelData == NULL) {
+        return NULL;
+    }
 
-  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-  assert(strncmp(subheader.Type, "DATA", 4) == 0);
-  readCounter =
-      fread(&(record->magicEffectData), sizeof(MagicEffectData), 1, esm_file);
-  assert(readCounter == 1);
-  log_MagicEffectData(&(record->magicEffectData));
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    assert(strncmp(subheader.Type, "DATA", 4) == 0);
+    readCounter = fread(&(record->magicEffectData), sizeof(MagicEffectData), 1, esm_file);
+    assert(readCounter == 1);
+    log_MagicEffectData(&(record->magicEffectData));
 
-  return (Record*)record;
+    return (Record*)record;
 }
 
-void free_MGEF(Record* record) {
+Record* init_LTEX(FILE* esm_file)
+{
+    MALLOC_WARN(LTEXRecord, record);
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
+
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
+
+    log_record(&hdr);
+
+    CSTRING_RECORD("EDID", record->editorID, subheader, esm_file, "Editor id");
+    OPTIONAL_CSTRING_RECORD("ICON", record->largeIcon, subheader, esm_file, "Editor id");
+    OPTIONAL_CSTRING_RECORD("MICO", record->smallIcon, subheader, esm_file, "Editor id");
+    GENERIC_RECORD("TNAM", formid, record->texture, subheader, esm_file);
+    GENERIC_RECORD("SNAM", HavokData, record->havok, subheader, esm_file);
+    GENERIC_RECORD_COLLECTION("GRAS", formid, record->grass, subheader, esm_file);
+
+    return (Record*)record;
+}
+
+void free_LTEX(Record* record)
+{
+    LTEXRecord* ltex = (LTEXRecord*)record;
+
+    sdsfree(ltex->editorID);
+
+    if (ltex->largeIcon != NULL) {
+        sdsfree(ltex->largeIcon);
+    }
+    if (ltex->smallIcon != NULL) {
+        sdsfree(ltex->smallIcon);
+    }
+
+    arrfree(ltex->grass);
+}
+
+void free_MGEF(Record* record)
+{
     MGEFRecord* magicEffect = (MGEFRecord*)record;
     sdsfree(magicEffect->editorID);
     sdsfree(magicEffect->name);
@@ -979,17 +1011,18 @@ void free_MGEF(Record* record) {
     free(magicEffect);
 }
 
-void free_ASPC(Record* record) {
+void free_ASPC(Record* record)
+{
     ASPCRecord* acousticSpace = (ASPCRecord*)record;
     sdsfree(acousticSpace->editorID);
 }
 
-
-void free_SOUN(Record* record) {
+void free_SOUN(Record* record)
+{
     SOUNRecord* sound = (SOUNRecord*)record;
 
     sdsfree(sound->editorID);
-    if(sound->soundFilename != NULL) {
+    if (sound->soundFilename != NULL) {
         sdsfree(sound->soundFilename);
     }
 
@@ -1196,6 +1229,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "SOUN", init_SOUN);
     ADD_CONSTRUCTOR(Record, "ASPC", init_ASPC);
     ADD_CONSTRUCTOR(Record, "MGEF", init_MGEF);
+    ADD_CONSTRUCTOR(Record, "LTEX", init_LTEX);
 }
 
 void Record_init_destructor_map()
@@ -1214,6 +1248,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "SOUN", free_SOUN);
     ADD_DESTRUCTOR(Record, "ASPC", free_ASPC);
     ADD_DESTRUCTOR(Record, "MGEF", free_MGEF);
+    ADD_DESTRUCTOR(Record, "LTEX", free_LTEX);
 }
 
 Record* recordnew(FILE* f, sds type)
