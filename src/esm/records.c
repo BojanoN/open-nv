@@ -851,6 +851,71 @@ Record* init_SOUN(FILE* esm_file) {
   return (Record*)record;
 }
 
+
+#define ASCP_NAM_SUBHEADER(subrecordName, value, type, subheader, esm_file, \
+                           logging_format)                                  \
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);                  \
+  log_subrecord(&subheader);                                                \
+  assert(strncmp(subheader.Type, subrecordName, 4) == 0);                   \
+  readCounter = fread(&(value), sizeof(type), 1, esm_file);                \
+  assert(readCounter == 1);                                                 \
+  log_debug(logging_format, value);
+
+Record* init_ASPC(FILE* esm_file) {
+  MALLOC_WARN(ASPCRecord, record);
+  RecordHeader hdr;
+  SubrecordHeader subheader;
+
+  fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+  FILL_BASE_RECORD_INFO(hdr, record);
+
+  int readCounter = 0;
+  //uint32_t end = ftell(esm_file) + hdr.DataSize;
+
+  log_record(&hdr);
+
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+  assert(strncmp(subheader.Type, "EDID", 4) == 0);
+  record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+
+  assert(strncmp(subheader.Type, "OBND", 4) == 0);
+  log_subrecord(&subheader);
+  readCounter =
+      fread(&(record->objectBounds), sizeof(OBNDSubrecord), 1, esm_file);
+  assert(readCounter == 1);
+  log_OBND(&(record->objectBounds));
+
+  ASCP_NAM_SUBHEADER("SNAM", record->dawn_default, formid, subheader, esm_file, "Dawn: %d");
+  ASCP_NAM_SUBHEADER("SNAM", record->afternoon, formid, subheader, esm_file, "Afternoon: %d");
+  ASCP_NAM_SUBHEADER("SNAM", record->dusk, formid, subheader, esm_file, "Dusk: %d");
+  ASCP_NAM_SUBHEADER("SNAM", record->night, formid, subheader, esm_file, "Night: %d");
+  ASCP_NAM_SUBHEADER("SNAM", record->walla, formid, subheader, esm_file, "Walla: %d");
+  ASCP_NAM_SUBHEADER("WNAM", record->wallaTriggerCount, uint32_t, subheader, esm_file, "Walla trigger count: %d");
+
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);                 
+  if (strncmp(subheader.Type, "RDAT", 4) == 0) {                    
+    readCounter = fread(&(record->regionSound), sizeof(formid), 1, esm_file);              \
+    assert(readCounter == 1);                                              
+  } else {                                                                 
+    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                              
+    record->regionSound = 0;                                                             \
+  }                                                                        
+  log_debug("Use sound from region: %d", record->regionSound);
+
+  ASCP_NAM_SUBHEADER("ANAM", record->environmentType, uint32_t, subheader, esm_file, "Environment type: %d");
+  ASCP_NAM_SUBHEADER("INAM", record->isInterior, uint32_t, subheader, esm_file, "Is interior: %d");
+
+  return (Record*)record;
+}
+
+void free_ASPC(Record* record) {
+    ASPCRecord* acousticSpace = (ASPCRecord*)record;
+    sdsfree(acousticSpace->editorID);
+}
+
+
 void free_SOUN(Record* record) {
     SOUNRecord* sound = (SOUNRecord*)record;
 
@@ -1060,6 +1125,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "EYES", init_EYES);
     ADD_CONSTRUCTOR(Record, "RACE", init_RACE);
     ADD_CONSTRUCTOR(Record, "SOUN", init_SOUN);
+    ADD_CONSTRUCTOR(Record, "ASPC", init_ASPC);
 }
 
 void Record_init_destructor_map()
@@ -1076,6 +1142,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "EYES", free_EYES);
     ADD_DESTRUCTOR(Record, "RACE", free_RACE);
     ADD_DESTRUCTOR(Record, "SOUN", free_SOUN);
+    ADD_DESTRUCTOR(Record, "ASPC", free_ASPC);
 }
 
 Record* recordnew(FILE* f, sds type)
