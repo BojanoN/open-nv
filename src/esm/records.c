@@ -975,9 +975,10 @@ Record* init_LTEX(FILE* esm_file)
     CSTRING_RECORD("EDID", record->editorID, subheader, esm_file, "Editor id");
     OPTIONAL_CSTRING_RECORD("ICON", record->largeIcon, subheader, esm_file, "Editor id");
     OPTIONAL_CSTRING_RECORD("MICO", record->smallIcon, subheader, esm_file, "Editor id");
-    GENERIC_RECORD("TNAM", formid, record->texture, subheader, esm_file);
-    GENERIC_RECORD("SNAM", HavokData, record->havok, subheader, esm_file);
-    GENERIC_RECORD_COLLECTION("GRAS", formid, record->grass, subheader, esm_file);
+    OPTIONAL_GENERIC_RECORD("TNAM", formid, record->texture, subheader, esm_file);
+    GENERIC_RECORD("HNAM", HavokData, record->havok, subheader, esm_file);
+    GENERIC_RECORD("SNAM", uint8_t, record->textureSpecularExponent, subheader, esm_file);
+    GENERIC_RECORD_COLLECTION("GNAM", formid, record->grass, subheader, esm_file);
 
     return (Record*)record;
 }
@@ -996,6 +997,7 @@ void free_LTEX(Record* record)
     }
 
     arrfree(ltex->grass);
+    free(ltex);
 }
 
 void free_MGEF(Record* record)

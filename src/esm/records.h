@@ -30,6 +30,15 @@
     fread(&(value), sizeof(type), 1, esm_file);                         \
     log_subrecord(&subheader);
 
+#define OPTIONAL_GENERIC_RECORD(subrecordName, type, value, subheader, esm_file) \
+    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);                   \
+    if (strncmp(subheader.Type, (subrecordName), 4) == 0) {                      \
+        fread(&(value), sizeof(type), 1, esm_file);                              \
+        log_subrecord(&subheader);                                               \
+    } else {                                                                     \
+        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                     \
+    }
+
 #define GENERIC_RECORD_COLLECTION(subrecordName, type, array, subheader, esm_file) \
     fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);                     \
     while (strncmp((subheader).Type, (subrecordName), 4) == 0) {                   \
@@ -38,6 +47,7 @@
         fread(&(tmp), sizeof(type), 1, esm_file);                                  \
         log_subrecord(&subheader);                                                 \
         arrput((array), tmp);                                                      \
+        fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);                 \
     }                                                                              \
     fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR)
 
