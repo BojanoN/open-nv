@@ -198,3 +198,15 @@ typedef struct {
     uint8_t* femaleFaceGenTexSymm;
     // SNAM ?
 } RACERecord;
+
+/*
+    Sound
+*/
+typedef struct {
+    Record base;
+    sds editorID;
+    OBNDSubrecord objectBounds;
+    sds soundFilename;
+    uint8_t randomChangePercentage;
+    SoundData soundData;
+} SOUNRecord;

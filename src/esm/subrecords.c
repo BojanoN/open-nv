@@ -36,11 +36,7 @@ Subrecord* create_CNAM(FILE* esm_file)
     return (Subrecord*)ret;
 }
 
-Subrecord* create_OBND(FILE* esm_file)
-{
-    MALLOC_WARN(OBNDSubrecord, subrecord);
-
-    fread(subrecord, sizeof(OBNDSubrecord), 1, esm_file);
+void log_OBND(OBNDSubrecord* subrecord) {
     log_debug("Object bounds:");
     log_debug("X 1: %d", subrecord->x1);
     log_debug("Y 1: %d", subrecord->y1);
@@ -48,8 +44,45 @@ Subrecord* create_OBND(FILE* esm_file)
     log_debug("X 2: %d", subrecord->x2);
     log_debug("Y 2: %d", subrecord->y2);
     log_debug("Z 2: %d", subrecord->z2);
+}
 
-    return (Subrecord*)subrecord;
+void log_SNDD(SoundData* subrecord) {
+  log_debug("Sound data:");
+  log_debug("Minimum attenuation distance: 5x%d",
+            subrecord->minimumAttenuationDistance);
+  log_debug("Maximum attenuation distance: 100x%d",
+            subrecord->maximumAttenuationDistance);
+  log_debug("Frequency adjustment percentage: %d",
+            subrecord->frequencyAdjustmentPercentage);
+  log_debug("Unused value: %d", subrecord->unused);
+  log_debug("Flags: 0x%08x", subrecord->flags);
+  log_debug("Static attenuation cdB: %d", subrecord->staticAttenuationCdB);
+  log_debug("Stop time: %d", subrecord->stopTime);
+  log_debug("Start time: %d", subrecord->startTime);
+  log_debug("Attenuation points: %d, %d, %d, %d, %d",
+            subrecord->attenuationPoints[0], subrecord->attenuationPoints[1],
+            subrecord->attenuationPoints[2], subrecord->attenuationPoints[3],
+            subrecord->attenuationPoints[4]);
+  log_debug("Reverb Attenuation Control: %d",
+            subrecord->reverbAttenuationControl);
+  log_debug("Priority: %d", subrecord->priority);
+  log_debug("X: %d", subrecord->x);
+  log_debug("Y: %d", subrecord->y);
+}
+
+Subrecord* create_OBND(FILE* esm_file) {
+  MALLOC_WARN(OBNDSubrecord, subrecord);
+
+  fread(subrecord, sizeof(OBNDSubrecord), 1, esm_file);
+  log_debug("Object bounds:");
+  log_debug("X 1: %d", subrecord->x1);
+  log_debug("Y 1: %d", subrecord->y1);
+  log_debug("Z 1: %d", subrecord->z1);
+  log_debug("X 2: %d", subrecord->x2);
+  log_debug("Y 2: %d", subrecord->y2);
+  log_debug("Z 2: %d", subrecord->z2);
+
+  return (Subrecord*)subrecord;
 }
 
 Subrecord* create_DODT(FILE* esm_file)

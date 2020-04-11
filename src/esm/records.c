@@ -732,6 +732,136 @@ Record* init_RACE(FILE* esm_file)
     return (Record*)record;
 }
 
+Record* init_SOUN(FILE* esm_file) {
+  MALLOC_WARN(SOUNRecord, record);
+  RecordHeader hdr;
+  SubrecordHeader subheader;
+
+  fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+  FILL_BASE_RECORD_INFO(hdr, record);
+
+  int readCounter = 0;
+  uint32_t  end = ftell(esm_file) + hdr.DataSize;
+
+  log_record(&hdr);
+
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+  assert(strncmp(subheader.Type, "EDID", 4) == 0);
+  record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+
+
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+
+  if(strncmp(subheader.Type, "OBND", 4) == 0) {
+    log_subrecord(&subheader);
+    readCounter =
+      fread(&(record->objectBounds), sizeof(OBNDSubrecord), 1, esm_file);
+    assert(readCounter == 1);
+    log_OBND(&(record->objectBounds));
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+  } else {
+    record->objectBounds.x1 = 0;
+    record->objectBounds.y1 = 0;
+    record->objectBounds.z1 = 0;
+    record->objectBounds.x2 = 0;
+    record->objectBounds.y2 = 0;
+    record->objectBounds.z2 = 0;    
+  }
+
+  if(strncmp(subheader.Type, "FNAM", 4) == 0) {
+    log_subrecord(&subheader);
+    record->soundFilename =
+        init_cstring_subrecord(esm_file, &subheader, "Sound filename");
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+  } else {
+    record->soundFilename = NULL;
+  }
+
+
+  if(strncmp(subheader.Type, "RNAM", 4) == 0) {
+    log_subrecord(&subheader);
+    readCounter =
+        fread(&(record->randomChangePercentage), sizeof(uint8_t), 1, esm_file);
+    assert(readCounter == 1);
+    log_debug("Random change percentage: %d", record->randomChangePercentage);
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+  } else {
+    record->randomChangePercentage = 0;
+  }
+
+
+  if(strncmp(subheader.Type, "SNDD", 4) == 0) {
+    log_subrecord(&subheader);
+    readCounter = fread(&(record->soundData), sizeof(SoundData), 1, esm_file);
+    assert(readCounter == 1);
+    log_SNDD(&(record->soundData));
+
+  } else {
+    assert(strncmp(subheader.Type, "SNDX", 4) == 0);
+    log_subrecord(&subheader);
+    readCounter = fread(&(record->soundData), sizeof(SoundEx), 1, esm_file);
+    assert(readCounter == 1);
+
+    record->soundData.attenuationPoints[0] = 0;
+    record->soundData.attenuationPoints[1] = 0;
+    record->soundData.attenuationPoints[2] = 0;
+    record->soundData.attenuationPoints[3] = 0;
+    record->soundData.attenuationPoints[4] = 0;
+    record->soundData.reverbAttenuationControl = 0;
+    record->soundData.priority = 0;
+    record->soundData.x = 0;
+    record->soundData.y = 0;
+
+    if(ftell(esm_file) >= end) {
+        log_SNDD(&(record->soundData));
+        return (Record*) record;
+    }
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    if(strncmp(subheader.Type, "ANAM", 4) == 0) {
+        log_subrecord(&subheader);
+        readCounter = fread(&(record->soundData.attenuationPoints), sizeof(int16_t), 5, esm_file);
+        assert(readCounter == 5);
+        if(ftell(esm_file) >= end) {
+            log_SNDD(&(record->soundData));
+            return (Record*) record;
+        }
+        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    }
+
+    if(strncmp(subheader.Type, "GNAM", 4) == 0) {
+        log_subrecord(&subheader);
+        readCounter = fread(&(record->soundData.reverbAttenuationControl), sizeof(int16_t), 1, esm_file);
+        assert(readCounter == 1);
+        if(ftell(esm_file) >= end) {
+            log_SNDD(&(record->soundData));
+            return (Record*) record;
+        }
+    }
+
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    log_subrecord(&subheader);
+    assert(strncmp(subheader.Type, "HNAM", 4) == 0);
+    readCounter = fread(&(record->soundData.priority), sizeof(int32_t), 1, esm_file);
+    assert(readCounter == 1);
+
+    log_SNDD(&(record->soundData));
+  }
+
+  return (Record*)record;
+}
+
+void free_SOUN(Record* record) {
+    SOUNRecord* sound = (SOUNRecord*)record;
+
+    sdsfree(sound->editorID);
+    if(sound->soundFilename != NULL) {
+        sdsfree(sound->soundFilename);
+    }
+
+    free(sound);
+}
+
 void free_RACE(Record* record)
 {
     RACERecord* race = (RACERecord*)record;
@@ -929,6 +1059,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "HAIR", init_HAIR);
     ADD_CONSTRUCTOR(Record, "EYES", init_EYES);
     ADD_CONSTRUCTOR(Record, "RACE", init_RACE);
+    ADD_CONSTRUCTOR(Record, "SOUN", init_SOUN);
 }
 
 void Record_init_destructor_map()
@@ -944,6 +1075,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "HAIR", free_HAIR);
     ADD_DESTRUCTOR(Record, "EYES", free_EYES);
     ADD_DESTRUCTOR(Record, "RACE", free_RACE);
+    ADD_DESTRUCTOR(Record, "SOUN", free_SOUN);
 }
 
 Record* recordnew(FILE* f, sds type)
