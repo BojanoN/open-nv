@@ -62,7 +62,8 @@ Esm* esmnew(const sds path)
         //na 0x5f528 zavrsava grupa RACE
         //na 0xDA255 zavrsava grupa SOUN
         //na 0xDE72E zavrsava grupa ASPC
-        if (ftell(esm_file) > 0xDE72E)
+        //nn 0xE9ED9 zavrsava grupa MGEF
+        if (ftell(esm_file) > 0xE9ED9)
             break;
         cnt++;
     }

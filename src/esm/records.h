@@ -82,20 +82,20 @@ typedef struct {
 } CLASRecord;
 
 typedef enum {
-    BARTER,
-    BIG_GUNS,
-    ENERGY_WEAP,
-    EXPLOSIVES,
-    LOCKPICK,
-    MEDICINE,
-    MELEE_WEAP,
-    REPAIR,
-    SCIENCE,
-    GUNS,
-    SNEAK,
-    SPEECH,
-    SURVIVAL,
-    UNARMED,
+    BARTER_SKILL,
+    BIG_GUNS_SKILL,
+    ENERGY_WEAP_SKILL,
+    EXPLOSIVES_SKILL,
+    LOCKPICK_SKILL,
+    MEDICINE_SKILL,
+    MELEE_WEAP_SKILL,
+    REPAIR_SKILL,
+    SCIENCE_SKILL,
+    GUNS_SKILL,
+    SNEAK_SKILL,
+    SPEECH_SKILL,
+    SURVIVAL_SKILL,
+    UNARMED_SKILL,
     NONE = -1
 } Skill;
 
@@ -279,3 +279,18 @@ typedef struct {
     */
     uint32_t isInterior;
 } ASPCRecord;
+
+
+/*
+    Magic effect
+*/
+typedef struct {
+    Record base;
+    sds editorID;
+    sds name;
+    sds description;
+    sds largeIconFilename;
+    sds smallIconFilename;
+    ModelDataSubrecord* modelData;
+    MagicEffectData magicEffectData;
+} MGEFRecord;

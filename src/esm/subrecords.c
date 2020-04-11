@@ -70,6 +70,29 @@ void log_SNDD(SoundData* subrecord) {
   log_debug("Y: %d", subrecord->y);
 }
 
+void log_MagicEffectData(MagicEffectData* subrecord) {
+    log_debug("Magic effect data:");
+    log_debug("Flags: %08x", subrecord->flags);
+    log_debug("Base cost (unused): %f", subrecord->baseCost);
+    log_debug("Associated item: %d", subrecord->associatedItem);
+    log_debug("Magic school (unused): %d", subrecord->magicSchool);
+    log_debug("Resistance type: %d", subrecord->resistanceType);
+    log_debug("Unknown value: 0x%04x", subrecord->unused_1);
+    log_debug("Unused bytes: 0x%02x 0x%02x", subrecord->unused_2[0], subrecord->unused_2[1]);
+    log_debug("Light: %d", subrecord->light);
+    log_debug("Projectile speed: %f", subrecord->projectileSpeed);
+    log_debug("Effect shader: %d", subrecord->effectShader);
+    log_debug("Object display shader: %d", subrecord->objectDisplayShader);
+    log_debug("Effect sound: %d", subrecord->effectSound);
+    log_debug("Bold sound: %d", subrecord->boldSound);
+    log_debug("Hit sound: %d", subrecord->hitSound);
+    log_debug("Area sound: %d", subrecord->areaSound);
+    log_debug("Constant effect enchantment factor (unused): %f", subrecord->constantEffectEnchantmentFactor);
+    log_debug("Constant effect barter factor (unused): %f", subrecord->constantEffectBarterFactor);
+    log_debug("Archtype: %u", subrecord->archtype);
+    log_debug("Actor value: %d", subrecord->actorValue);
+}
+
 Subrecord* create_OBND(FILE* esm_file) {
   MALLOC_WARN(OBNDSubrecord, subrecord);
 

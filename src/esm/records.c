@@ -870,7 +870,6 @@ Record* init_ASPC(FILE* esm_file) {
   FILL_BASE_RECORD_INFO(hdr, record);
 
   int readCounter = 0;
-  //uint32_t end = ftell(esm_file) + hdr.DataSize;
 
   log_record(&hdr);
 
@@ -908,6 +907,76 @@ Record* init_ASPC(FILE* esm_file) {
   ASCP_NAM_SUBHEADER("INAM", record->isInterior, uint32_t, subheader, esm_file, "Is interior: %d");
 
   return (Record*)record;
+}
+
+#define MGEF_OPTIONAL_CSTRING_RECORD(subrecordName, value, subheader,   \
+                                     esm_file, logging_name)            \
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);              \
+  if (strncmp(subheader.Type, subrecordName, 4) == 0) {                 \
+    value = init_cstring_subrecord(esm_file, &subheader, logging_name); \
+  } else {                                                              \
+    value = NULL;                                                       \
+    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                \
+  }
+
+#define MGEF_CSTRING_RECORD(subrecordName, value, subheader, esm_file, \
+                            logging_name)                            \
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);             \
+  assert(strncmp(subheader.Type, subrecordName, 4) == 0);              \
+  value = init_cstring_subrecord(esm_file, &subheader, logging_name);
+
+Record* init_MGEF(FILE* esm_file) {
+  MALLOC_WARN(MGEFRecord, record);
+  RecordHeader hdr;
+  SubrecordHeader subheader;
+
+  fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+  FILL_BASE_RECORD_INFO(hdr, record);
+  log_record(&hdr);
+  int readCounter = 0;
+
+  MGEF_CSTRING_RECORD("EDID", record->editorID, subheader, esm_file,
+                      "Editor ID");
+  MGEF_OPTIONAL_CSTRING_RECORD("FULL", record->name, subheader, esm_file, "Name");
+  MGEF_CSTRING_RECORD("DESC", record->description, subheader, esm_file,
+                      "Description");
+  MGEF_OPTIONAL_CSTRING_RECORD("ICON", record->largeIconFilename, subheader, esm_file,
+                      "Large icon filename");
+  MGEF_OPTIONAL_CSTRING_RECORD("MICO", record->smallIconFilename, subheader, esm_file,
+                      "Small icon filename");
+
+  SubrecordConstructor* func = GET_CONSTRUCTOR(Subrecord, "MODL");
+  if (func == NULL) {
+    log_fatal("Error while fetching MODL constructor");
+    sdsfree(record->editorID);
+    sdsfree(record->name);
+    free(record);
+  }
+  record->modelData = (ModelDataSubrecord*)func(esm_file);
+  if (record->modelData == NULL) {
+    return NULL;
+  }
+
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+  assert(strncmp(subheader.Type, "DATA", 4) == 0);
+  readCounter =
+      fread(&(record->magicEffectData), sizeof(MagicEffectData), 1, esm_file);
+  assert(readCounter == 1);
+  log_MagicEffectData(&(record->magicEffectData));
+
+  return (Record*)record;
+}
+
+void free_MGEF(Record* record) {
+    MGEFRecord* magicEffect = (MGEFRecord*)record;
+    sdsfree(magicEffect->editorID);
+    sdsfree(magicEffect->name);
+    sdsfree(magicEffect->description);
+    sdsfree(magicEffect->largeIconFilename);
+    sdsfree(magicEffect->smallIconFilename);
+    SubrecordDestructor* func = GET_DESTRUCTOR(Subrecord, "MODL");
+    func((Subrecord*)magicEffect->modelData);
+    free(magicEffect);
 }
 
 void free_ASPC(Record* record) {
@@ -1126,6 +1195,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "RACE", init_RACE);
     ADD_CONSTRUCTOR(Record, "SOUN", init_SOUN);
     ADD_CONSTRUCTOR(Record, "ASPC", init_ASPC);
+    ADD_CONSTRUCTOR(Record, "MGEF", init_MGEF);
 }
 
 void Record_init_destructor_map()
@@ -1143,6 +1213,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "RACE", free_RACE);
     ADD_DESTRUCTOR(Record, "SOUN", free_SOUN);
     ADD_DESTRUCTOR(Record, "ASPC", free_ASPC);
+    ADD_DESTRUCTOR(Record, "MGEF", free_MGEF);
 }
 
 Record* recordnew(FILE* f, sds type)
