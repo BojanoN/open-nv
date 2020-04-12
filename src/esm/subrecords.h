@@ -233,19 +233,19 @@ typedef enum {
 } BodyPartIndex;
 
 typedef enum {
-    RANDOM_FREQUENCY_SHIFT = 0x1,
-    PLAY_AT_RANDOM = 0x2,
-    ENVIRONMENT_IGNORED = 0x4,
-    RANDOM_LOCATION = 0x8,
-    LOOP = 0x10,
-    MENU_SOUND = 0x20,
-    TWO_DIMENSIONAL = 0x40,
-    THREE_SIXTY_LFE = 0x80,
-    DIALOGUE_SOUND = 0x100,
-    ENVELOPE_FAST = 0x200,
-    ENVELOPE_SLOW = 0x400,
-    TWO_DIMENSIONAL_RADIUS = 0x800,
-    MUTE_WHEN_SUBMERGED = 0x1000,
+    RANDOM_FREQUENCY_SHIFT   = 0x1,
+    PLAY_AT_RANDOM           = 0x2,
+    ENVIRONMENT_IGNORED      = 0x4,
+    RANDOM_LOCATION          = 0x8,
+    LOOP                     = 0x10,
+    MENU_SOUND               = 0x20,
+    TWO_DIMENSIONAL          = 0x40,
+    THREE_SIXTY_LFE          = 0x80,
+    DIALOGUE_SOUND           = 0x100,
+    ENVELOPE_FAST            = 0x200,
+    ENVELOPE_SLOW            = 0x400,
+    TWO_DIMENSIONAL_RADIUS   = 0x800,
+    MUTE_WHEN_SUBMERGED      = 0x1000,
     START_AT_RANDOM_POSITION = 0x2000
 } SoundFlags;
 
@@ -253,33 +253,33 @@ typedef enum {
     SNDX
 */
 typedef struct {
-    uint8_t minimumAttenuationDistance; //multiply by 5
-    uint8_t maximumAttenuationDistance; //multiply by 100
-    int8_t frequencyAdjustmentPercentage;
-    uint8_t unused;
+    uint8_t  minimumAttenuationDistance; //multiply by 5
+    uint8_t  maximumAttenuationDistance; //multiply by 100
+    int8_t   frequencyAdjustmentPercentage;
+    uint8_t  unused;
     uint32_t flags;
-    int16_t staticAttenuationCDB;
-    uint8_t stopTime;
-    uint8_t startTime;
+    int16_t  staticAttenuationCDB;
+    uint8_t  stopTime;
+    uint8_t  startTime;
 } SoundEx;
 
 /*
     SNDD
 */
 typedef struct {
-    uint8_t minimumAttenuationDistance; //multiply by 5
-    uint8_t maximumAttenuationDistance; //multiply by 100
-    int8_t frequencyAdjustmentPercentage;
-    uint8_t unused;
+    uint8_t  minimumAttenuationDistance; //multiply by 5
+    uint8_t  maximumAttenuationDistance; //multiply by 100
+    int8_t   frequencyAdjustmentPercentage;
+    uint8_t  unused;
     uint32_t flags;
-    int16_t staticAttenuationCdB;
-    uint8_t stopTime;
-    uint8_t startTime;
-    int16_t attenuationPoints[5];
-    int16_t reverbAttenuationControl;
-    int32_t priority;
-    int32_t x;
-    int32_t y;
+    int16_t  staticAttenuationCdB;
+    uint8_t  stopTime;
+    uint8_t  startTime;
+    int16_t  attenuationPoints[5];
+    int16_t  reverbAttenuationControl;
+    int32_t  priority;
+    int32_t  x;
+    int32_t  y;
 } SoundData;
 
 typedef enum {
@@ -444,25 +444,25 @@ typedef struct {
         See MagicEffectDataFlags enum
     */
     uint32_t flags;
-    float baseCost; //unused
-    formid associatedItem;
-    int32_t magicSchool; //always -1
+    float    baseCost; //unused
+    formid   associatedItem;
+    int32_t  magicSchool; //always -1
     /*
         see ActorValue enum
     */
-    int32_t resistanceType;
+    int32_t  resistanceType;
     uint16_t unused_1;
-    uint8_t unused_2[2];
-    formid light; //LIGH
-    float projectileSpeed;
-    formid effectShader; //EFSH
-    formid objectDisplayShader; //EFSH
-    formid effectSound; //SOUN
-    formid boldSound; //SOUN
-    formid hitSound; //SOUN
-    formid areaSound; //SOUN
-    float constantEffectEnchantmentFactor; //unused
-    float constantEffectBarterFactor; //unused
+    uint8_t  unused_2[2];
+    formid   light; //LIGH
+    float    projectileSpeed;
+    formid   effectShader; //EFSH
+    formid   objectDisplayShader; //EFSH
+    formid   effectSound; //SOUN
+    formid   boldSound; //SOUN
+    formid   hitSound; //SOUN
+    formid   areaSound; //SOUN
+    float    constantEffectEnchantmentFactor; //unused
+    float    constantEffectBarterFactor; //unused
     /*
         see MagicEffectArchtype enum
     */
@@ -473,10 +473,9 @@ typedef struct {
     int32_t actorValue;
 } MagicEffectData;
 
-
 typedef enum {
     OBJECT_SCRIPT = 0x000,
-    QUEST_SCRIPT = 0x010,
+    QUEST_SCRIPT  = 0x010,
     EFFECT_SCRIPT = 0x100
 } ScriptHeaderType;
 
@@ -485,7 +484,7 @@ typedef enum {
 } ScriptHeaderFlags;
 
 typedef struct __attribute__((packed)) {
-    uint8_t unusedBytes[4];
+    uint8_t  unusedBytes[4];
     uint32_t refCount;
     uint32_t compiledSize;
     uint32_t variableCount;
@@ -505,14 +504,14 @@ typedef enum {
 
 typedef struct __attribute__((packed)) {
     uint32_t index;
-    uint8_t unusedBytes_1[12];
-    uint8_t flags;
-    uint8_t unusedBytes_2[7];
+    uint8_t  unusedBytes_1[12];
+    uint8_t  flags;
+    uint8_t  unusedBytes_2[7];
 } LocalVariableData;
 
 typedef struct __attribute__((packed)) {
     LocalVariableData data;
-    sds name;
+    sds               name;
 } LocalVariable;
 
 typedef enum {
@@ -524,9 +523,15 @@ typedef struct __attribute__((packed)) {
     ReferenceType type;
     union {
         uint32_t variableReference;
-        formid objectReference;
+        formid   objectReference;
     } referenceValue;
 } ScriptReference;
+
+typedef struct __attribute__((packed)) {
+    uint8_t materialType;
+    uint8_t friction;
+    uint8_t restitution;
+} HavokData;
 
 sds        init_cstring_subrecord(FILE* esm_file, SubrecordHeader* subrecordHead, const char* loggingName);
 ModelPart* init_ModelPartCollection(FILE* esm_file);

@@ -8,6 +8,49 @@
     record->base.Flags = header.Flags;        \
     memcpy(record->base.Type, header.Type, 4)
 
+#define OPTIONAL_CSTRING_RECORD(subrecordName, value, subheader,                \
+    esm_file, logging_name)                                                     \
+    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);                  \
+    if (strncmp(subheader.Type, (subrecordName), 4) == 0) {                     \
+        (value) = init_cstring_subrecord(esm_file, &(subheader), logging_name); \
+    } else {                                                                    \
+        (value) = NULL;                                                         \
+        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                    \
+    }
+
+#define CSTRING_RECORD(subrecordName, value, subheader, esm_file, \
+    logging_name)                                                 \
+    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);    \
+    assert(strncmp((subheader).Type, (subrecordName), 4) == 0);   \
+    (value) = init_cstring_subrecord(esm_file, &(subheader), logging_name)
+
+#define GENERIC_RECORD(subrecordName, type, value, subheader, esm_file) \
+    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);          \
+    assert(strncmp((subheader).Type, (subrecordName), 4) == 0);         \
+    fread(&(value), sizeof(type), 1, esm_file);                         \
+    log_subrecord(&subheader);
+
+#define OPTIONAL_GENERIC_RECORD(subrecordName, type, value, subheader, esm_file) \
+    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);                   \
+    if (strncmp(subheader.Type, (subrecordName), 4) == 0) {                      \
+        fread(&(value), sizeof(type), 1, esm_file);                              \
+        log_subrecord(&subheader);                                               \
+    } else {                                                                     \
+        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                     \
+    }
+
+#define GENERIC_RECORD_COLLECTION(subrecordName, type, array, subheader, esm_file) \
+    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);                     \
+    while (strncmp((subheader).Type, (subrecordName), 4) == 0) {                   \
+        type tmp;                                                                  \
+        assert(strncmp((subheader).Type, (subrecordName), 4) == 0);                \
+        fread(&(tmp), sizeof(type), 1, esm_file);                                  \
+        log_subrecord(&subheader);                                                 \
+        arrput((array), tmp);                                                      \
+        fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);                 \
+    }                                                                              \
+    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR)
+
 typedef struct {
     Record base;
     HEDR*  hedr;
@@ -203,12 +246,12 @@ typedef struct {
     Sound
 */
 typedef struct {
-    Record base;
-    sds editorID;
+    Record        base;
+    sds           editorID;
     OBNDSubrecord objectBounds;
-    sds soundFilename;
-    uint8_t randomChangePercentage;
-    SoundData soundData;
+    sds           soundFilename;
+    uint8_t       randomChangePercentage;
+    SoundData     soundData;
 } SOUNRecord;
 
 /*
@@ -252,7 +295,7 @@ typedef enum {
     Part of ASPC
 */
 typedef enum {
-    NO = 0,
+    NO  = 0,
     YES = 1
 } IsInterior;
 
@@ -260,16 +303,16 @@ typedef enum {
     Acoustic space
 */
 typedef struct {
-    Record base;
-    sds editorID;
+    Record        base;
+    sds           editorID;
     OBNDSubrecord objectBounds;
-    formid dawn_default; //SOUN
-    formid afternoon; //SOUN
-    formid dusk; //SOUN
-    formid night; //SOUN
-    formid walla; //SOUN
-    uint32_t wallaTriggerCount;
-    formid regionSound; //REGN
+    formid        dawn_default; //SOUN
+    formid        afternoon; //SOUN
+    formid        dusk; //SOUN
+    formid        night; //SOUN
+    formid        walla; //SOUN
+    uint32_t      wallaTriggerCount;
+    formid        regionSound; //REGN
     /*
         see EnvironmentType enum
     */
@@ -280,32 +323,43 @@ typedef struct {
     uint32_t isInterior;
 } ASPCRecord;
 
-
 /*
     Magic effect
 */
 typedef struct {
-    Record base;
-    sds editorID;
-    sds name;
-    sds description;
-    sds largeIconFilename;
-    sds smallIconFilename;
+    Record              base;
+    sds                 editorID;
+    sds                 name;
+    sds                 description;
+    sds                 largeIconFilename;
+    sds                 smallIconFilename;
     ModelDataSubrecord* modelData;
-    MagicEffectData magicEffectData;
+    MagicEffectData     magicEffectData;
 } MGEFRecord;
-
-
 
 /*
     Script
 */
 typedef struct {
-    Record base;
-    sds editorID;
-    ScriptHeader scriptHeader;
-    uint8_t* compiledSource;
-    char* scriptSource;
-    LocalVariable* localVariables;
+    Record           base;
+    sds              editorID;
+    ScriptHeader     scriptHeader;
+    uint8_t*         compiledSource;
+    char*            scriptSource;
+    LocalVariable*   localVariables;
     ScriptReference* references;
 } SCPTRecord;
+
+typedef struct {
+    Record base;
+    sds    editorID;
+    sds    largeIcon;
+    sds    smallIcon;
+    // TXST
+    formid    texture;
+    HavokData havok;
+    uint8_t   textureSpecularExponent;
+    // GRAS
+    formid* grass;
+
+} LTEXRecord;
