@@ -38,174 +38,86 @@ Record* init_TES4(FILE* esm_file)
 Record* init_GMST(FILE* esm_file)
 {
     MALLOC_WARN(GMSTRecord, record);
-    RecordHeader hdr;
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
 
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
+
+    uint32_t dataStart = ftell(esm_file);
     log_record(&hdr);
 
-    //EDID
-    SubrecordHeader  subrec;
-    SubrecordHeader* subrecordHead = &subrec;
-    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
+    uint32_t end         = ftell(esm_file) + hdr.DataSize;
+    int      readCounter = 0;
+    
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file, "Editor id");
 
-    record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
-
-    //DATA
-    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-
-    size_t dataSize = subrecordHead->DataSize;
-
-    log_subrecord(subrecordHead);
-
-    switch ((record->editorId)[0]) {
+    switch ((record->editorID)[0]) {
     case 's': {
-        char* cstring = malloc(dataSize);
-        fread(cstring, dataSize, 1, esm_file);
-        record->value.stringValue = sdsnewlen(cstring, dataSize);
-        free(cstring);
-        log_debug("Game setting string value: %s", record->value.stringValue);
+        SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "DATA", record->value.stringValue, subheader, esm_file, "Game setting string value:");
         break;
     }
     case 'f':
-        fread(&(record->value.floatValue), sizeof(float), 1, esm_file);
-        log_debug("Game setting float value: %f", record->value.floatValue);
+        SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "DATA", float, record->value.floatValue, subheader, esm_file, "Game setting float value: %f");       
         break;
     default:
-        fread(&(record->value.intValue), sizeof(int32_t), 1, esm_file);
-        log_debug("Game setting integer value: %d", record->value.intValue);
+        SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "DATA", int32_t, record->value.intValue, subheader, esm_file, "Game setting integer value: %f");    
         break;
     }
 
     return (Record*)record;
 }
 
-//TX00-TX05
-static const char* optionalCstringSubrecordTypes[] = { "TX00", "TX01", "TX02",
-    "TX03", "TX04", "TX05" };
-
-static const char* optionalNames[] = {
-    "Base image/Transparency",
-    "Normal map/Specular",
-    "Environment map mask",
-    "Glow map",
-    "Parallax map",
-    "Environment map"
-};
-
 Record* init_TXST(FILE* esm_file)
 {
     MALLOC_WARN(TXSTRecord, record);
-    RecordHeader hdr;
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
 
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
 
-    //EDID
-    SubrecordHeader  subrecord;
-    SubrecordHeader* subrecordHead = &subrecord;
-    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-
-    record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
-    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-
-    SubrecordConstructor* constructor = NULL;
-    //OBND
-    if (strncmp(subrecordHead->Type, "OBND", 4) == 0) {
-        constructor                 = GET_CONSTRUCTOR(Subrecord, "OBND");
-        OBNDSubrecord* objectBounds = (OBNDSubrecord*)constructor(esm_file);
-        record->objectBounds        = *objectBounds;
-        free(objectBounds);
-        log_subrecord(subrecordHead);
-        fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-    }
-
-    for (int i = 0; i < 6; i++) {
-        if (strncmp(subrecordHead->Type, optionalCstringSubrecordTypes[i], 4) == 0) {
-            sds tmp = init_cstring_subrecord(esm_file, subrecordHead, optionalNames[i]);
-            switch (i) {
-            case (0): {
-                record->baseImage_transparency = tmp;
-                break;
-            }
-
-            case (1): {
-                record->normalMap_specular = tmp;
-                break;
-            }
-            case (2): {
-                record->environmentMapMask = tmp;
-                break;
-            }
-            case (3): {
-                record->glowMap = tmp;
-                break;
-            }
-            case (4): {
-                record->parallaxMap = tmp;
-                break;
-            }
-            case (5): {
-                record->environmentMap = tmp;
-                break;
-            }
-            }
-            fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-        }
-    }
-
-    //DODT
-    if (strncmp(subrecordHead->Type, "DODT", 4) == 0) {
-        constructor              = GET_CONSTRUCTOR(Subrecord, "DODT");
-        DODTSubrecord* decalData = (DODTSubrecord*)constructor(esm_file);
-        record->decalData        = *decalData;
-        free(decalData);
-        log_subrecord(subrecordHead);
-        fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-    }
-
-    //DNAM
-    if (strncmp(subrecordHead->Type, "DNAM", 4) == 0) {
-        uint16_t dnam;
-        fread(&dnam, sizeof(uint16_t), 1, esm_file);
-        record->flags = dnam;
-        log_subrecord(subrecordHead);
-        log_debug("Flags: 0x%04x", record->flags);
-    } else {
-        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
-    }
-
+    uint32_t dataStart = ftell(esm_file);
     log_record(&hdr);
+
+    uint32_t end         = ftell(esm_file) + hdr.DataSize;
+    int      readCounter = 0;
+
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_STRUCT_SUBRECORD, "OBND", ObjectBounds,
+                               record->objectBounds, subheader, esm_file);
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "TX00", record->baseImage_transparency, subheader, esm_file, "Base image/Transparency");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "TX01", record->normalMap_specular, subheader, esm_file, "Normal map/Specular");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "TX02", record->environmentMapMask , subheader, esm_file,  "Environment map mask");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "TX03", record->glowMap, subheader, esm_file, "Glow map");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "TX04", record->parallaxMap, subheader, esm_file, "Parallax map");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "TX05", record->environmentMap, subheader, esm_file, "Environment map");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_STRUCT_SUBRECORD, "DODT", DecalData,
+                               record->decalData, subheader, esm_file);
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_MAIN_SUBRECORD, "DNAM", uint16_t, record->flags, subheader, esm_file, "Flags: 0x%04x");
+
     return (Record*)record;
 }
 
 Record* init_GLOB(FILE* esm_file)
 {
     MALLOC_WARN(GLOBRecord, record);
-    RecordHeader hdr;
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
 
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
 
-    SubrecordHeader subrecordHead;
-    fread(&subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
+    uint32_t dataStart = ftell(esm_file);
+    log_record(&hdr);
 
-    record->editorId = init_cstring_subrecord(esm_file, &subrecordHead, "Editor ID");
-    fread(&subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
+    uint32_t end         = ftell(esm_file) + hdr.DataSize;
+    int      readCounter = 0;
 
-    uint8_t fnam;
-    fread(&fnam, sizeof(uint8_t), 1, esm_file);
-    record->type = fnam;
-    log_subrecord(&subrecordHead);
-    log_debug("Type: %c", record->type);
-
-    fread(&subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-    uint32_t value;
-    fread(&value, sizeof(uint32_t), 1, esm_file);
-    record->value.longValue = value;
-    log_subrecord(&subrecordHead);
-
-    switch (fnam) {
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "FNAM", uint8_t, record->type, subreader, esm_file, "Type: %c");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "FLTV", uint32_t, record->value.longValue, subreader, esm_file, "Value: 0x%08x");
+    switch (record->type) {
     case 's':
         log_debug("Global variable short value: %d", record->value.shortValue);
         break;
@@ -219,132 +131,12 @@ Record* init_GLOB(FILE* esm_file)
         log_fatal("Invalid global variable type: 0x%x", record->type);
         break;
     }
-
-    log_record(&hdr);
     return (Record*)record;
 }
 
 Record* init_FACT(FILE* esm_file)
 {
-
     MALLOC_WARN(FACTRecord, record);
-
-    RecordHeader hdr;
-
-    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
-    FILL_BASE_RECORD_INFO(hdr, record);
-
-    uint32_t         end = ftell(esm_file) + hdr.DataSize;
-    SubrecordHeader  subrec;
-    SubrecordHeader* subrecordHead = &subrec;
-    log_record(&hdr);
-
-    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-    record->editorId = init_cstring_subrecord(esm_file, subrecordHead, "Editor ID");
-
-    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-
-    if (strncmp(subrecordHead->Type, "FULL", 4) == 0) {
-        record->name = init_cstring_subrecord(esm_file, subrecordHead, "Name");
-        fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-    }
-    if (strncmp(subrecordHead->Type, "XNAM", 4) == 0) {
-        XNAMSubrecord tmp;
-
-        while (strncmp(subrecordHead->Type, "XNAM", 4) == 0) {
-            log_subrecord(subrecordHead);
-            fread(&(tmp), sizeof(XNAMSubrecord), 1, esm_file);
-            arrput(record->relations, tmp);
-
-            log_debug("Relation:");
-            log_debug("Faction: %d", tmp.faction);
-            log_debug("Modifier: %d", tmp.modifier);
-            log_debug("Group combat reaction: %d", tmp.groupCombatReaction);
-            fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-        }
-    }
-
-    fread(&(record->data), subrecordHead->DataSize, 1, esm_file);
-    log_subrecord(subrecordHead);
-    log_debug("Data:");
-    log_debug("Flags 1: 0x%02x", record->data.flags_1);
-    log_debug("Flags 2: 0x%02x", record->data.flags_2);
-    log_debug("Unused bytes: 0x%02x 0x%02x", record->data.unused[0], record->data.unused[1]);
-
-    if (ftell(esm_file) >= end) {
-        return (Record*)record;
-    }
-
-    // CNAM, RNAM, INAM, WMI1 are optional
-    fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-    log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
-
-    if (strncmp(subrecordHead->Type, "CNAM", 4) == 0) {
-        fread(&(record->unused), sizeof(float), 1, esm_file);
-        log_subrecord(subrecordHead);
-        log_debug("Unused float value: %f", record->unused);
-        fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-    }
-    if (strncmp(subrecordHead->Type, "RNAM", 4) == 0) {
-        FACT_RankSubrecords tmp;
-
-        while (strncmp(subrecordHead->Type, "RNAM", 4) == 0) {
-            tmp.male   = NULL;
-            tmp.female = NULL;
-            log_subrecord(subrecordHead);
-
-            fread(&tmp.rankNumber, sizeof(uint32_t), 1, esm_file);
-            log_debug("Rank number: %d", tmp.rankNumber);
-            log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
-
-            fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-
-            if (strncmp(subrecordHead->Type, "MNAM", 4)) {
-                // One fucking edge case
-                if (strncmp(subrecordHead->Type, "FNAM", 4) == 0) {
-                    tmp.female = init_cstring_subrecord(esm_file, subrecordHead, "Female");
-                }
-                arrput(record->rank, tmp);
-                continue;
-            }
-
-            tmp.male = init_cstring_subrecord(esm_file, subrecordHead, "Male");
-            log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
-
-            fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-
-            if (strncmp(subrecordHead->Type, "FNAM", 4)) {
-                arrput(record->rank, tmp);
-                continue;
-            }
-
-            log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
-            tmp.female = init_cstring_subrecord(esm_file, subrecordHead, "Female");
-
-            fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-            if (strncmp(subrecordHead->Type, "INAM", 4) == 0) {
-                fread(&tmp.insignia, sizeof(uint32_t), 1, esm_file);
-                log_debug("Insignia: %u", tmp.insignia);
-                fread(subrecordHead, sizeof(SubrecordHeader), 1, esm_file);
-            }
-
-            arrput(record->rank, tmp);
-        }
-    }
-    if (strncmp(subrecordHead->Type, "WMI1", 4) == 0) {
-        log_debug("%s", "WMI");
-        fread(&(record->reputation), sizeof(formid), 1, esm_file);
-    }
-    // Rewind to proper position
-    if (ftell(esm_file) > end) {
-        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
-    }
-    return (Record*)record;
-}
-
-Record* init_MICN(FILE* esm_file)
-{
-    MALLOC_WARN(MICN, record);
     RecordHeader    hdr;
     SubrecordHeader subheader;
 
@@ -352,20 +144,103 @@ Record* init_MICN(FILE* esm_file)
     FILL_BASE_RECORD_INFO(hdr, record);
 
     uint32_t dataStart = ftell(esm_file);
+    log_record(&hdr);
 
+    uint32_t end         = ftell(esm_file) + hdr.DataSize;
+    int      readCounter = 0;
+
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID,
+                               subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "FULL", record->name,
+                               subheader, esm_file, "Name");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_SUBRECORD_COLLECTION, "XNAM",
+                               FactionRaceEx, record->relations, subheader,
+                               esm_file);
+
+
+    //What the fuck
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    record->editorID = init_cstring_subrecord(esm_file, &subheader, "EDID");
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    record->largeIconFilename = init_cstring_subrecord(esm_file, &subheader, "ICON");
-
-    if (hdr.DataSize == (ftell(esm_file) - dataStart)) {
+    assert(strncmp(subheader.Type, "DATA", 4) == 0);
+    if(subheader.DataSize == 1) {
+        fread(&(record->data), 1, 1, esm_file);
+        record->data.flags_2 = 0;
+    } else {
+        fread(&(record->data), sizeof(FactionData), 1, esm_file);         
+    }                  
+    log_subrecord(&subheader);
+    log_FactionData(&(record->data));
+    /*SUBRECORD_WITH_HEADER_READ(STRUCT_SUBRECORD, "DATA", FactionData,
+                               record->data, subheader, esm_file);
+    */
+    if (ftell(esm_file) >= end) {
         return (Record*)record;
     }
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    record->largeIconFilename = init_cstring_subrecord(esm_file, &subheader, "MICO");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_MAIN_SUBRECORD, "CNAM", float, record->unused, subheader, esm_file, "Unused value: %f");
 
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+    if (strncmp(subheader.Type, "RNAM", 4) == 0) {
+        FactionRank currentFactRank;
+
+        while (strncmp(subheader.Type, "RNAM", 4) == 0) {
+            currentFactRank.male   = NULL;
+            currentFactRank.female = NULL;
+            currentFactRank.insignia = 0;
+            MAIN_SUBRECORD("RNAM", int32_t, currentFactRank.rankNumber, subheader, esm_file, "Rank number: %d");
+            if (ftell(esm_file) >= end) {
+                arrput(record->ranks, currentFactRank);
+                return (Record*)record;
+            }
+            SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "MNAM", currentFactRank.male, subheader, esm_file, "Male");
+            if (ftell(esm_file) >= end) {
+                arrput(record->ranks, currentFactRank);
+                return (Record*)record;
+            }
+            SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "FNAM", currentFactRank.female, subheader, esm_file, "Female");
+            if (ftell(esm_file) >= end) {
+                arrput(record->ranks, currentFactRank);
+                return (Record*)record;
+            }
+            SUBRECORD_WITH_HEADER_READ(OPTIONAL_MAIN_SUBRECORD, "INAM", uint32_t, currentFactRank.insignia, subheader, esm_file, "Insignia: %u");
+            arrput(record->ranks, currentFactRank);
+
+            fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+        }
+        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
+
+    } else {
+        assert((strncmp("MNAM", subheader.Type, 4)) != 0 && (strncmp("FNAM", subheader.Type, 4)) != 0 && (strncmp("INAM", subheader.Type, 4)) != 0);
+        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
+    }
+
+    if (ftell(esm_file) >= end) {
+        return (Record*)record;
+    }
+
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_MAIN_SUBRECORD, "WMI1", formid, record->reputation, subheader, esm_file, "Reputation: %d");
+    assert(ftell(esm_file) == end);
+
+    return (Record*)record;
+}
+
+Record* init_MICN(FILE* esm_file)
+{
+    MALLOC_WARN(MICNRecord, record);
+    RecordHeader    hdr;
+    SubrecordHeader subheader;
+
+    fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+    FILL_BASE_RECORD_INFO(hdr, record);
+
+    uint32_t dataStart = ftell(esm_file);
+    log_record(&hdr);
+
+    uint32_t end         = ftell(esm_file) + hdr.DataSize;
+    int      readCounter = 0;
+
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "ICON", record->largeIconFilename, subheader, esm_file, "Large icon filename");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "MICO", record->smallIconFilename, subheader, esm_file, "Small icon filename");
     return (Record*)record;
 }
 
@@ -380,23 +255,19 @@ Record* init_CLAS(FILE* esm_file)
 
     uint32_t dataStart = ftell(esm_file);
     log_record(&hdr);
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    record->editorID = init_cstring_subrecord(esm_file, &subheader, "EDID");
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    record->fullName = init_cstring_subrecord(esm_file, &subheader, "FULL");
+    uint32_t end         = ftell(esm_file) + hdr.DataSize;
+    int      readCounter = 0;
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    record->description = init_cstring_subrecord(esm_file, &subheader, "DESC");
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    fread(&(record->data), sizeof(DATASubrecord), 1, esm_file);
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    dataStart = ftell(esm_file);
-    fread(&(record->attr), sizeof(ATTRSubrecord), 1, esm_file);
-    assert((dataStart + subheader.DataSize) == ftell(esm_file));
-
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "FULL", record->name, subheader, esm_file, "Name");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "DESC", record->description, subheader, esm_file, "Description");
+    SUBRECORD_WITH_HEADER_READ(STRUCT_SUBRECORD, "DATA",
+        ClassData, record->data, subheader,
+        esm_file);
+    SUBRECORD_WITH_HEADER_READ(STRUCT_SUBRECORD, "ATTR",
+        ClassAttributes, record->attributes, subheader,
+        esm_file);
     return (Record*)record;
 }
 
@@ -411,13 +282,11 @@ Record* init_HDPT(FILE* esm_file)
 
     log_record(&hdr);
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "EDID", 4) == 0);
-    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+    uint32_t end         = ftell(esm_file) + hdr.DataSize;
+    int      readCounter = 0;
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "FULL", 4) == 0);
-    record->name = init_cstring_subrecord(esm_file, &subheader, "Name");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "FULL", record->name, subheader, esm_file, "Name");
 
     SubrecordConstructor* func = GET_CONSTRUCTOR(Subrecord, "MODL");
     if (func == NULL) {
@@ -431,17 +300,8 @@ Record* init_HDPT(FILE* esm_file)
         return NULL;
     }
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "DATA", 4) == 0);
-    fread(&(record->flag), sizeof(uint8_t), 1, esm_file);
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-
-    while (strncmp(subheader.Type, "HNAM", 4) == 0) {
-        fread(&(record->extraParts), sizeof(formid), 1, esm_file);
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    }
-    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "DATA", uint8_t, record->flag, subreader, esm_file, "Flag: 0x%02x");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_MAIN_SUBRECORD_COLLECTION, "HNAM", formid, record->extraParts, subheader, esm_file, "Extra part: %d");
 
     return (Record*)record;
 }
@@ -455,13 +315,11 @@ Record* init_HAIR(FILE* esm_file)
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "EDID", 4) == 0);
-    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+    uint32_t end         = ftell(esm_file) + hdr.DataSize;
+    int      readCounter = 0;
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "FULL", 4) == 0);
-    record->name = init_cstring_subrecord(esm_file, &subheader, "Name");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "FULL", record->name, subheader, esm_file, "Name");
 
     SubrecordConstructor* func = GET_CONSTRUCTOR(Subrecord, "MODL");
     if (func == NULL) {
@@ -475,13 +333,8 @@ Record* init_HAIR(FILE* esm_file)
         return NULL;
     }
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "ICON", 4) == 0);
-    record->texture = init_cstring_subrecord(esm_file, &subheader, "Texture");
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "DATA", 4) == 0);
-    fread(&(record->flag), sizeof(uint8_t), 1, esm_file);
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "ICON", record->texture, subheader, esm_file, "Texture");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "DATA", uint8_t, record->flag, subreader, esm_file, "Flag: 0x%02x");
 
     return (Record*)record;
 }
@@ -495,24 +348,13 @@ Record* init_EYES(FILE* esm_file)
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "EDID", 4) == 0);
-    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+    uint32_t end         = ftell(esm_file) + hdr.DataSize;
+    int      readCounter = 0;
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "FULL", 4) == 0);
-    record->name = init_cstring_subrecord(esm_file, &subheader, "Name");
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    if (strncmp(subheader.Type, "ICON", 4) == 0) {
-        record->texture = init_cstring_subrecord(esm_file, &subheader, "Texture");
-    } else {
-        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
-    }
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "DATA", 4) == 0);
-    fread(&(record->flag), sizeof(uint8_t), 1, esm_file);
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "FULL", record->name, subheader, esm_file, "Name");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "ICON", record->texture, subheader, esm_file, "Texture");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "DATA", uint8_t, record->flag, subreader, esm_file, "Flag: 0x%02x");
 
     return (Record*)record;
 }
@@ -525,102 +367,33 @@ Record* init_RACE(FILE* esm_file)
 
     fread(&hdr, sizeof(RecordHeader), 1, esm_file);
     FILL_BASE_RECORD_INFO(hdr, record);
+    log_record(&hdr);
+    uint32_t end         = ftell(esm_file) + hdr.DataSize;
+    int      readCounter = 0;
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "EDID", 4) == 0);
-    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "FULL", 4) == 0);
-    record->name = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "DESC", 4) == 0);
-    log_subrecord(&subheader);
-    if (subheader.DataSize > 1) {
-        record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
-    } else {
-        fseek(esm_file, 1, SEEK_CUR);
-    }
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    if (strncmp(subheader.Type, "XNAM", 4) == 0) {
-        XNAMSubrecord tmp;
-
-        while (strncmp(subheader.Type, "XNAM", 4) == 0) {
-            log_subrecord(&subheader);
-            fread(&(tmp), sizeof(XNAMSubrecord), 1, esm_file);
-            arrput(record->relations, tmp);
-
-            log_debug("Relation:");
-            log_debug("Faction: %d", tmp.faction);
-            log_debug("Modifier: %d", tmp.modifier);
-            log_debug("Group combat reaction: %d", tmp.groupCombatReaction);
-            fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-        }
-    }
-
-    assert(strncmp(subheader.Type, "DATA", 4) == 0);
-    log_subrecord(&subheader);
-    fread(&(record->raceData), sizeof(RaceDataSubrecord), 1, esm_file);
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    if (strncmp(subheader.Type, "ONAM", 4) == 0) {
-        fread(&(record->older), sizeof(formid), 1, esm_file);
-        log_subrecord(&subheader);
-
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    }
-    if (strncmp(subheader.Type, "YNAM", 4) == 0) {
-        fread(&(record->younger), sizeof(formid), 1, esm_file);
-        log_subrecord(&subheader);
-
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    }
-
-    // NAM2 marker, should contain no data
-    assert(strncmp(subheader.Type, "NAM2", 4) == 0);
-    assert(subheader.DataSize == 0);
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "VTCK", 4) == 0);
-    fread(&(record->voices), sizeof(RaceVoices), 1, esm_file);
-    log_subrecord(&subheader);
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-
-    // Hair style and color is optional, e.g. ghouls
-    if (strncmp(subheader.Type, "DNAM", 4) == 0) {
-        fread(&(record->defaultHair), sizeof(RaceDefaultHairStyle), 1, esm_file);
-        log_subrecord(&subheader);
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    }
-
-    if (strncmp(subheader.Type, "CNAM", 4) == 0) {
-        fread(&(record->defaultHairColor), sizeof(RaceDefaultHairColor), 1, esm_file);
-        log_subrecord(&subheader);
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    }
-
-    assert(strncmp(subheader.Type, "PNAM", 4) == 0);
-    fread(&(record->faceGenMainClamp), sizeof(float), 1, esm_file);
-    log_subrecord(&subheader);
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "UNAM", 4) == 0);
-    fread(&(record->faceGenFaceClamp), sizeof(float), 1, esm_file);
-    log_subrecord(&subheader);
-
-    // Dummy ATTR read, functionality still unknown
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "ATTR", 4) == 0);
-    fseek(esm_file, subheader.DataSize, SEEK_CUR);
-    log_subrecord(&subheader);
-
-    // Head data marker, should contain no data
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "NAM0", 4) == 0);
-    assert(subheader.DataSize == 0);
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "FULL", record->name, subheader, esm_file, "Name");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "DESC", record->description, subheader, esm_file, "Description");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_SUBRECORD_COLLECTION, "XNAM", FactionRaceEx, record->relations, subheader, esm_file);
+    SUBRECORD_WITH_HEADER_READ(STRUCT_SUBRECORD, "DATA",
+        RaceData, record->raceData, subheader,
+        esm_file);
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_MAIN_SUBRECORD, "ONAM", formid, record->older, subheader, esm_file, "Older: %d");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_MAIN_SUBRECORD, "YNAM", formid, record->younger, subheader, esm_file, "Younger: %d");
+    SUBRECORD_WITH_HEADER_READ(MARKER_SUBRECORD, "NAM2", subheader);
+    SUBRECORD_WITH_HEADER_READ(STRUCT_SUBRECORD, "VTCK",
+        RaceVoices, record->voices, subheader,
+        esm_file);
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_STRUCT_SUBRECORD, "DNAM",
+        RaceDefaultHairStyle, record->defaultHair, subheader,
+        esm_file);
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_STRUCT_SUBRECORD, "CNAM",
+        RaceDefaultHairColor, record->defaultHairColor, subheader,
+        esm_file);
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "PNAM", float, record->faceGenMainClamp, subreader, esm_file, "FaceGen main clamp: %d");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "UNAM", float, record->faceGenFaceClamp, subreader, esm_file, "FaceGen face clamp: %f");
+    SUBRECORD_WITH_HEADER_READ(DUMMY_SUBRECORD, "ATTR", subheader);
+    SUBRECORD_WITH_HEADER_READ(MARKER_SUBRECORD, "NAM0", subheader);
 
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     assert(strncmp(subheader.Type, "MNAM", 4) == 0);
@@ -632,10 +405,7 @@ Record* init_RACE(FILE* esm_file)
     log_subrecord(&subheader);
     record->femaleHeadParts = init_ModelPartCollection(esm_file);
 
-    // Body data marker, should contain no data
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "NAM1", 4) == 0);
-    assert(subheader.DataSize == 0);
+    SUBRECORD_WITH_HEADER_READ(MARKER_SUBRECORD, "NAM1", subheader);
 
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
     assert(strncmp(subheader.Type, "MNAM", 4) == 0);
@@ -647,87 +417,18 @@ Record* init_RACE(FILE* esm_file)
     log_subrecord(&subheader);
     record->femaleBodyParts = init_ModelPartCollection(esm_file);
 
-    // Hair formids
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "HNAM", 4) == 0);
-    log_subrecord(&subheader);
-    MALLOC_N_WARN(formid, subheader.DataSize, hair);
-    fread(hair, subheader.DataSize, 1, esm_file);
-    record->hair = hair;
-
-    // Eyes formids
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "ENAM", 4) == 0);
-    log_subrecord(&subheader);
-    MALLOC_N_WARN(formid, subheader.DataSize, eyes);
-    fread(eyes, subheader.DataSize, 1, esm_file);
-    record->eyes = eyes;
-
-    // FaceGen male data marker, should contain no data
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "MNAM", 4) == 0);
-    assert(subheader.DataSize == 0);
-    log_subrecord(&subheader);
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "FGGS", 4) == 0);
-    log_subrecord(&subheader);
-    MALLOC_N_WARN(uint8_t, subheader.DataSize, maleSym);
-    fread(maleSym, subheader.DataSize, 1, esm_file);
-    record->maleFaceGenGeomSymm = maleSym;
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "FGGA", 4) == 0);
-    log_subrecord(&subheader);
-    MALLOC_N_WARN(uint8_t, subheader.DataSize, maleAsym);
-    fread(maleAsym, subheader.DataSize, 1, esm_file);
-    record->maleFaceGenGeomAsymm = maleAsym;
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "FGTS", 4) == 0);
-    log_subrecord(&subheader);
-    MALLOC_N_WARN(uint8_t, subheader.DataSize, maleTexSym);
-    fread(maleTexSym, subheader.DataSize, 1, esm_file);
-    record->maleFaceGenTexSymm = maleTexSym;
-
-    // Dummy SNAM read
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "SNAM", 4) == 0);
-    log_subrecord(&subheader);
-    fseek(esm_file, subheader.DataSize, SEEK_CUR);
-
-    // FaceGen female data marker, should contain no data
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "FNAM", 4) == 0);
-    assert(subheader.DataSize == 0);
-    log_subrecord(&subheader);
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "FGGS", 4) == 0);
-    log_subrecord(&subheader);
-    MALLOC_N_WARN(uint8_t, subheader.DataSize, femaleSym);
-    fread(femaleSym, subheader.DataSize, 1, esm_file);
-    record->femaleFaceGenGeomSymm = femaleSym;
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "FGGA", 4) == 0);
-    log_subrecord(&subheader);
-    MALLOC_N_WARN(uint8_t, subheader.DataSize, femaleAsym);
-    fread(femaleAsym, subheader.DataSize, 1, esm_file);
-    record->femaleFaceGenGeomAsymm = femaleAsym;
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "FGTS", 4) == 0);
-    log_subrecord(&subheader);
-    MALLOC_N_WARN(uint8_t, subheader.DataSize, femaleTexSym);
-    fread(femaleTexSym, subheader.DataSize, 1, esm_file);
-    record->femaleFaceGenTexSymm = femaleTexSym;
-
-    // Dummy SNAM read
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "SNAM", 4) == 0);
-    log_subrecord(&subheader);
-    fseek(esm_file, subheader.DataSize, SEEK_CUR);
+    SUBRECORD_WITH_HEADER_READ(ARRAY_SUBRECORD, "HNAM", formid, record->hair, subheader, esm_file, "%d", "Hair");
+    SUBRECORD_WITH_HEADER_READ(ARRAY_SUBRECORD, "ENAM", formid, record->eyes, subheader, esm_file, "%d", "Eyes");
+    SUBRECORD_WITH_HEADER_READ(MARKER_SUBRECORD, "MNAM", subheader);
+    SUBRECORD_WITH_HEADER_READ(ARRAY_SUBRECORD, "FGGS", uint8_t, record->maleFaceGenGeomSymm, subheader, esm_file, "%d", "Male FaceGen geometry (symmetric)");
+    SUBRECORD_WITH_HEADER_READ(ARRAY_SUBRECORD, "FGGA", uint8_t, record->maleFaceGenGeomAsymm, subheader, esm_file, "%d", "Male FaceGen geometry (asymmetric)");
+    SUBRECORD_WITH_HEADER_READ(ARRAY_SUBRECORD, "FGTS", uint8_t, record->maleFaceGenTexSymm, subheader, esm_file, "%d", "Male FaceGen texture (symmetric)");
+    SUBRECORD_WITH_HEADER_READ(DUMMY_SUBRECORD, "SNAM", subheader);
+    SUBRECORD_WITH_HEADER_READ(MARKER_SUBRECORD, "FNAM", subheader);
+    SUBRECORD_WITH_HEADER_READ(ARRAY_SUBRECORD, "FGGS", uint8_t, record->femaleFaceGenGeomSymm, subheader, esm_file, "%d", "Female FaceGen geometry (symmetric)");
+    SUBRECORD_WITH_HEADER_READ(ARRAY_SUBRECORD, "FGGA", uint8_t, record->femaleFaceGenGeomAsymm, subheader, esm_file, "%d", "Female FaceGen geometry (asymmetric)");
+    SUBRECORD_WITH_HEADER_READ(ARRAY_SUBRECORD, "FGTS", uint8_t, record->femaleFaceGenTexSymm, subheader, esm_file, "%d", "Female FaceGen texture (symmetric)");
+    SUBRECORD_WITH_HEADER_READ(DUMMY_SUBRECORD, "SNAM", subheader);
 
     return (Record*)record;
 }
@@ -746,114 +447,46 @@ Record* init_SOUN(FILE* esm_file)
 
     log_record(&hdr);
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "EDID", 4) == 0);
-    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID,
+                               subheader, esm_file, "Editor ID");
+
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_STRUCT_SUBRECORD, "OBND", ObjectBounds,
+                               record->objectBounds, subheader, esm_file);
+
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "FNAM",
+                               record->soundFilename, subheader, esm_file, "Sound filename");
+
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_MAIN_SUBRECORD, "RNAM", uint8_t,
+                               record->objectBounds, subheader, esm_file, "Random change percentage: %d");
 
     fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-
-    if (strncmp(subheader.Type, "OBND", 4) == 0) {
-        log_subrecord(&subheader);
-        readCounter = fread(&(record->objectBounds), sizeof(OBNDSubrecord), 1, esm_file);
-        assert(readCounter == 1);
-        log_OBND(&(record->objectBounds));
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    } else {
-        record->objectBounds.x1 = 0;
-        record->objectBounds.y1 = 0;
-        record->objectBounds.z1 = 0;
-        record->objectBounds.x2 = 0;
-        record->objectBounds.y2 = 0;
-        record->objectBounds.z2 = 0;
-    }
-
-    if (strncmp(subheader.Type, "FNAM", 4) == 0) {
-        log_subrecord(&subheader);
-        record->soundFilename = init_cstring_subrecord(esm_file, &subheader, "Sound filename");
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    } else {
-        record->soundFilename = NULL;
-    }
-
-    if (strncmp(subheader.Type, "RNAM", 4) == 0) {
-        log_subrecord(&subheader);
-        readCounter = fread(&(record->randomChangePercentage), sizeof(uint8_t), 1, esm_file);
-        assert(readCounter == 1);
-        log_debug("Random change percentage: %d", record->randomChangePercentage);
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    } else {
-        record->randomChangePercentage = 0;
-    }
-
-    if (strncmp(subheader.Type, "SNDD", 4) == 0) {
-        log_subrecord(&subheader);
-        readCounter = fread(&(record->soundData), sizeof(SoundData), 1, esm_file);
-        assert(readCounter == 1);
-        log_SNDD(&(record->soundData));
+    if (strncmp(subheader.Type, "SNDD", 4) == 0) {  
+        STRUCT_SUBRECORD("SNDD", SoundData, record->soundData, subheader, esm_file);
 
     } else {
-        assert(strncmp(subheader.Type, "SNDX", 4) == 0);
-        log_subrecord(&subheader);
-        readCounter = fread(&(record->soundData), sizeof(SoundEx), 1, esm_file);
-        assert(readCounter == 1);
-
-        record->soundData.attenuationPoints[0]     = 0;
-        record->soundData.attenuationPoints[1]     = 0;
-        record->soundData.attenuationPoints[2]     = 0;
-        record->soundData.attenuationPoints[3]     = 0;
-        record->soundData.attenuationPoints[4]     = 0;
-        record->soundData.reverbAttenuationControl = 0;
-        record->soundData.priority                 = 0;
-        record->soundData.x                        = 0;
-        record->soundData.y                        = 0;
+        STRUCT_SUBRECORD("SNDX", SoundEx, record->soundData, subheader, esm_file);
 
         if (ftell(esm_file) >= end) {
-            log_SNDD(&(record->soundData));
             return (Record*)record;
         }
 
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-        if (strncmp(subheader.Type, "ANAM", 4) == 0) {
-            log_subrecord(&subheader);
-            readCounter = fread(&(record->soundData.attenuationPoints), sizeof(int16_t), 5, esm_file);
-            assert(readCounter == 5);
-            if (ftell(esm_file) >= end) {
-                log_SNDD(&(record->soundData));
+        SUBRECORD_WITH_HEADER_READ(FIXED_LENGTH_ARRAY_SUBRECORD, "ANAM", int16_t, 5, record->soundData.attenuationPoints, subheader, esm_file, "%d", "Attenuation point");
+        if (ftell(esm_file) >= end) {
                 return (Record*)record;
             }
-            fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-        }
 
-        if (strncmp(subheader.Type, "GNAM", 4) == 0) {
-            log_subrecord(&subheader);
-            readCounter = fread(&(record->soundData.reverbAttenuationControl), sizeof(int16_t), 1, esm_file);
-            assert(readCounter == 1);
-            if (ftell(esm_file) >= end) {
-                log_SNDD(&(record->soundData));
+        SUBRECORD_WITH_HEADER_READ(OPTIONAL_MAIN_SUBRECORD, "GNAM", int16_t,
+                               record->soundData.reverbAttenuationControl, subheader, esm_file, "Reverb attenuation control: %d");
+        if (ftell(esm_file) >= end) {
                 return (Record*)record;
             }
-        }
 
-        fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-        log_subrecord(&subheader);
-        assert(strncmp(subheader.Type, "HNAM", 4) == 0);
-        readCounter = fread(&(record->soundData.priority), sizeof(int32_t), 1, esm_file);
-        assert(readCounter == 1);
-
-        log_SNDD(&(record->soundData));
+        SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "HNAM", int32_t,
+                               record->soundData.priority, subheader, esm_file, "Priority: %d");     
     }
 
     return (Record*)record;
 }
-
-#define ASCP_NAM_SUBHEADER(subrecordName, value, type, subheader, esm_file, \
-    logging_format)                                                         \
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);                \
-    log_subrecord(&subheader);                                              \
-    assert(strncmp(subheader.Type, subrecordName, 4) == 0);                 \
-    readCounter = fread(&(value), sizeof(type), 1, esm_file);               \
-    assert(readCounter == 1);                                               \
-    log_debug(logging_format, value);
 
 Record* init_ASPC(FILE* esm_file)
 {
@@ -865,59 +498,39 @@ Record* init_ASPC(FILE* esm_file)
     FILL_BASE_RECORD_INFO(hdr, record);
 
     int readCounter = 0;
-
     log_record(&hdr);
 
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "EDID", 4) == 0);
-    record->editorID = init_cstring_subrecord(esm_file, &subheader, "Editor ID");
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-
-    assert(strncmp(subheader.Type, "OBND", 4) == 0);
-    log_subrecord(&subheader);
-    readCounter = fread(&(record->objectBounds), sizeof(OBNDSubrecord), 1, esm_file);
-    assert(readCounter == 1);
-    log_OBND(&(record->objectBounds));
-
-    ASCP_NAM_SUBHEADER("SNAM", record->dawn_default, formid, subheader, esm_file, "Dawn: %d");
-    ASCP_NAM_SUBHEADER("SNAM", record->afternoon, formid, subheader, esm_file, "Afternoon: %d");
-    ASCP_NAM_SUBHEADER("SNAM", record->dusk, formid, subheader, esm_file, "Dusk: %d");
-    ASCP_NAM_SUBHEADER("SNAM", record->night, formid, subheader, esm_file, "Night: %d");
-    ASCP_NAM_SUBHEADER("SNAM", record->walla, formid, subheader, esm_file, "Walla: %d");
-    ASCP_NAM_SUBHEADER("WNAM", record->wallaTriggerCount, uint32_t, subheader, esm_file, "Walla trigger count: %d");
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    if (strncmp(subheader.Type, "RDAT", 4) == 0) {
-        readCounter = fread(&(record->regionSound), sizeof(formid), 1, esm_file);
-        assert(readCounter == 1);
-    } else {
-        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);
-        record->regionSound = 0;
-    }
-    log_debug("Use sound from region: %d", record->regionSound);
-
-    ASCP_NAM_SUBHEADER("ANAM", record->environmentType, uint32_t, subheader, esm_file, "Environment type: %d");
-    ASCP_NAM_SUBHEADER("INAM", record->isInterior, uint32_t, subheader, esm_file, "Is interior: %d");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID,
+                               subheader, esm_file, "Editor ID");
+    SUBRECORD_WITH_HEADER_READ(STRUCT_SUBRECORD, "OBND", ObjectBounds,
+                               record->objectBounds, subheader, esm_file);
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "SNAM", formid,
+                               record->dawn_default, subheader, esm_file,
+                               "Dawn: %d");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "SNAM", formid,
+                               record->afternoon, subheader, esm_file,
+                               "Afternoon: %d");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "SNAM", formid, record->dusk,
+                               subheader, esm_file, "Dusk: %d");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "SNAM", formid, record->night,
+                               subheader, esm_file, "Night: %d");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "SNAM", formid, record->walla,
+                               subheader, esm_file, "Walla: %d");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "WNAM", uint32_t,
+                               record->wallaTriggerCount, subheader, esm_file,
+                               "Walla trigger count: %d");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_MAIN_SUBRECORD, "RDAT", formid,
+                               record->regionSound, subheader, esm_file,
+                               "Use sound from region: %d");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "ANAM", uint32_t,
+                               record->environmentType, subheader, esm_file,
+                               "Environment type: %d");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "INAM", uint32_t,
+                               record->isInterior, subheader, esm_file,
+                               "Is interior: %d");
 
     return (Record*)record;
 }
-
-#define MGEF_OPTIONAL_CSTRING_RECORD(subrecordName, value, subheader,       \
-    esm_file, logging_name)                                                 \
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);                \
-    if (strncmp(subheader.Type, subrecordName, 4) == 0) {                   \
-        value = init_cstring_subrecord(esm_file, &subheader, logging_name); \
-    } else {                                                                \
-        value = NULL;                                                       \
-        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                \
-    }
-
-#define MGEF_CSTRING_RECORD(subrecordName, value, subheader, esm_file, \
-    logging_name)                                                      \
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);           \
-    assert(strncmp(subheader.Type, subrecordName, 4) == 0);            \
-    value = init_cstring_subrecord(esm_file, &subheader, logging_name);
 
 Record* init_MGEF(FILE* esm_file)
 {
@@ -930,14 +543,14 @@ Record* init_MGEF(FILE* esm_file)
     log_record(&hdr);
     int readCounter = 0;
 
-    MGEF_CSTRING_RECORD("EDID", record->editorID, subheader, esm_file,
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file,
         "Editor ID");
-    MGEF_OPTIONAL_CSTRING_RECORD("FULL", record->name, subheader, esm_file, "Name");
-    MGEF_CSTRING_RECORD("DESC", record->description, subheader, esm_file,
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "FULL", record->name, subheader, esm_file, "Name");
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "DESC", record->description, subheader, esm_file,
         "Description");
-    MGEF_OPTIONAL_CSTRING_RECORD("ICON", record->largeIconFilename, subheader, esm_file,
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD,"ICON", record->largeIconFilename, subheader, esm_file,
         "Large icon filename");
-    MGEF_OPTIONAL_CSTRING_RECORD("MICO", record->smallIconFilename, subheader, esm_file,
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "MICO", record->smallIconFilename, subheader, esm_file,
         "Small icon filename");
 
     SubrecordConstructor* func = GET_CONSTRUCTOR(Subrecord, "MODL");
@@ -951,47 +564,10 @@ Record* init_MGEF(FILE* esm_file)
     if (record->modelData == NULL) {
         return NULL;
     }
-
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
-    assert(strncmp(subheader.Type, "DATA", 4) == 0);
-    readCounter = fread(&(record->magicEffectData), sizeof(MagicEffectData), 1, esm_file);
-    assert(readCounter == 1);
-    log_MagicEffectData(&(record->magicEffectData));
+    SUBRECORD_WITH_HEADER_READ(STRUCT_SUBRECORD, "DATA", MagicEffectData, record->magicEffectData, subheader, esm_file);
 
     return (Record*)record;
 }
-
-#define SCPT_SUBRECORD_WITH_HEADER(INNER_MACRO, ...)         \
-    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file); \
-    INNER_MACRO(__VA_ARGS__);
-
-#define SCPT_STRUCT_SUBRECORD(subrecordName, value, type, subheader, esm_file) \
-    assert(strncmp(subheader.Type, subrecordName, 4) == 0);                    \
-    log_subrecord(&subheader);                                                 \
-    readCounter = fread(&(value), sizeof(type), 1, esm_file);                  \
-    assert(readCounter == 1);                                                  \
-    log_##type(&(value));
-
-#define SCPT_ARRAY_SUBRECORD(subrecordName, value, type, subheader, esm_file, \
-    logging_format, logging_name)                                             \
-    assert(strncmp(subheader.Type, subrecordName, 4) == 0);                   \
-    log_subrecord(&subheader);                                                \
-    MALLOC_N_WARN_BARE(type, subheader.DataSize, value);                      \
-    {                                                                         \
-        int length  = subheader.DataSize / sizeof(type);                      \
-        readCounter = fread(value, sizeof(type), length, esm_file);           \
-        assert(readCounter == length);                                        \
-    }
-
-// log_array(type, value, length, logging_format, logging_name);
-
-#define SCPT_MAIN_SUBRECORD(subrecordName, value, type, subheader, esm_file, \
-    logging_format)                                                          \
-    assert(strncmp(subheader.Type, subrecordName, 4) == 0);                  \
-    log_subrecord(&subheader);                                               \
-    readCounter = fread(&(value), sizeof(type), 1, esm_file);                \
-    assert(readCounter == 1);                                                \
-    log_debug(logging_format, value);
 
 Record* init_SCPT(FILE* esm_file)
 {
@@ -1005,20 +581,16 @@ Record* init_SCPT(FILE* esm_file)
     uint32_t end         = ftell(esm_file) + hdr.DataSize;
     int      readCounter = 0;
 
-    MGEF_CSTRING_RECORD("EDID", record->editorID, subheader, esm_file,
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file,
         "Editor ID");
-    SCPT_SUBRECORD_WITH_HEADER(SCPT_STRUCT_SUBRECORD, "SCHR",
-        record->scriptHeader, ScriptHeader, subheader,
+    SUBRECORD_WITH_HEADER_READ(STRUCT_SUBRECORD, "SCHR",
+        ScriptHeader, record->scriptHeader, subheader,
         esm_file);
-    SCPT_SUBRECORD_WITH_HEADER(SCPT_ARRAY_SUBRECORD, "SCDA",
-        record->compiledSource, uint8_t, subheader,
+    log_ScriptHeader(&(record->scriptHeader));
+    SUBRECORD_WITH_HEADER_READ(ARRAY_SUBRECORD, "SCDA",
+        uint8_t, record->compiledSource, subheader,
         esm_file, "0x%02x ", "Compiled source");
-
-    SCPT_SUBRECORD_WITH_HEADER(SCPT_ARRAY_SUBRECORD, "SCTX", record->scriptSource,
-        char, subheader, esm_file, "%c", "Source");
-
-    record->localVariables = NULL;
-    record->references     = NULL;
+    SUBRECORD_WITH_HEADER_READ(ARRAY_SUBRECORD, "SCTX", char, record->scriptSource, subheader, esm_file, "%c", "Source");
 
     if (ftell(esm_file) >= end) {
         return (Record*)record;
@@ -1028,8 +600,8 @@ Record* init_SCPT(FILE* esm_file)
     while (strncmp("SLSD", subheader.Type, 4) == 0) {
         LocalVariable currentLocalVariable;
         log_debug("Local variable:");
-        SCPT_STRUCT_SUBRECORD("SLSD", currentLocalVariable.data, LocalVariableData, subheader, esm_file);
-        MGEF_CSTRING_RECORD("SCVR", currentLocalVariable.name, subheader, esm_file, "Local variable name:");
+        STRUCT_SUBRECORD("SLSD", LocalVariableData, currentLocalVariable.data, subheader, esm_file);
+        SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "SCVR", currentLocalVariable.name, subheader, esm_file, "Local variable name");
         arrput(record->localVariables, currentLocalVariable);
 
         if (ftell(esm_file) >= end) {
@@ -1041,12 +613,14 @@ Record* init_SCPT(FILE* esm_file)
     while ((strncmp("SCRO", subheader.Type, 4) == 0) || (strncmp("SCRV", subheader.Type, 4) == 0)) {
         ScriptReference reference;
         log_subrecord(&subheader);
-        readCounter = fread(&reference, sizeof(uint32_t), 1, esm_file);
+        readCounter = fread(&(reference.referenceValue), sizeof(uint32_t), 1, esm_file);
         assert(readCounter == 1);
         if ((strncmp("SCRV", subheader.Type, 4) == 0)) {
             reference.type = VARIABLE_REFERENCE;
+            log_debug("Variable reference: %d", reference.referenceValue.variableReference);
         } else {
             reference.type = OBJECT_REFERENCE;
+            log_debug("Object reference: %d", reference.referenceValue.objectReference);
         }
         arrput(record->references, reference);
 
@@ -1084,13 +658,13 @@ Record* init_LTEX(FILE* esm_file)
 
     log_record(&hdr);
 
-    CSTRING_RECORD("EDID", record->editorID, subheader, esm_file, "Editor id");
-    OPTIONAL_CSTRING_RECORD("ICON", record->largeIcon, subheader, esm_file, "Editor id");
-    OPTIONAL_CSTRING_RECORD("MICO", record->smallIcon, subheader, esm_file, "Editor id");
-    OPTIONAL_GENERIC_RECORD("TNAM", formid, record->texture, subheader, esm_file);
-    GENERIC_RECORD("HNAM", HavokData, record->havok, subheader, esm_file);
-    GENERIC_RECORD("SNAM", uint8_t, record->textureSpecularExponent, subheader, esm_file);
-    GENERIC_RECORD_COLLECTION("GNAM", formid, record->grass, subheader, esm_file);
+    SUBRECORD_WITH_HEADER_READ(CSTRING_SUBRECORD, "EDID", record->editorID, subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "ICON", record->largeIcon, subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_CSTRING_SUBRECORD, "MICO", record->smallIcon, subheader, esm_file, "Editor id");
+    SUBRECORD_WITH_HEADER_READ(OPTIONAL_MAIN_SUBRECORD, "TNAM", formid, record->texture, subheader, esm_file, "Texture: %d");
+    SUBRECORD_WITH_HEADER_READ(STRUCT_SUBRECORD, "HNAM", HavokData, record->havok, subheader, esm_file);
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD, "SNAM", uint8_t, record->textureSpecularExponent, subheader, esm_file, "Texture Specular Exponent: %d");
+    SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD_COLLECTION, "GNAM", formid, record->grass, subheader, esm_file, "Grass: %d");
 
     return (Record*)record;
 }
@@ -1202,18 +776,18 @@ void free_FACT(Record* record)
 
     arrfree(fact->relations);
 
-    uint32_t len = arrlenu(fact->rank);
+    uint32_t len = arrlenu(fact->ranks);
     for (uint32_t i = 0; i < len; i++) {
-        if (fact->rank[i].male != NULL) {
-            sdsfree(fact->rank[i].male);
+        if (fact->ranks[i].male != NULL) {
+            sdsfree(fact->ranks[i].male);
         }
-        if (fact->rank[i].female != NULL) {
-            sdsfree(fact->rank[i].female);
+        if (fact->ranks[i].female != NULL) {
+            sdsfree(fact->ranks[i].female);
         }
     }
-    arrfree(fact->rank);
+    arrfree(fact->ranks);
 
-    sdsfree(fact->editorId);
+    sdsfree(fact->editorID);
     if (fact->name)
         sdsfree(fact->name);
 
@@ -1243,6 +817,7 @@ void free_HDPT(Record* record)
 
     SubrecordDestructor* func = GET_DESTRUCTOR(Subrecord, "MODL");
     func((Subrecord*)hdpt->modelData);
+    arrfree(hdpt->extraParts);
 
     free(hdpt);
 }
@@ -1262,16 +837,16 @@ void free_TES4(Record* record)
 void free_GMST(Record* record)
 {
     GMSTRecord* gmst_record = (GMSTRecord*)record;
-    if ((gmst_record->editorId)[0] == 's') {
+    if ((gmst_record->editorID)[0] == 's') {
         sdsfree(gmst_record->value.stringValue);
     }
-    sdsfree(gmst_record->editorId);
+    sdsfree(gmst_record->editorID);
     free(record);
 }
 
 void free_MICN(Record* record)
 {
-    MICN* rec = (MICN*)record;
+    MICNRecord* rec = (MICNRecord*)record;
 
     sdsfree(rec->largeIconFilename);
     sdsfree(rec->editorID);
@@ -1286,7 +861,7 @@ void free_MICN(Record* record)
 void free_TXST(Record* record)
 {
     TXSTRecord* txst = (TXSTRecord*)record;
-    sdsfree(txst->editorId);
+    sdsfree(txst->editorID);
 
     if (txst->baseImage_transparency != NULL) {
         sdsfree(txst->baseImage_transparency);
@@ -1313,7 +888,7 @@ void free_TXST(Record* record)
 void free_GLOB(Record* record)
 {
     GLOBRecord* glob_record = (GLOBRecord*)record;
-    sdsfree(glob_record->editorId);
+    sdsfree(glob_record->editorID);
     free(glob_record);
 }
 
@@ -1323,7 +898,7 @@ void free_CLAS(Record* record)
 
     sdsfree(clas->editorID);
     sdsfree(clas->description);
-    sdsfree(clas->fullName);
+    sdsfree(clas->name);
 
     free(clas);
 }

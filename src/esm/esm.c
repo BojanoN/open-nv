@@ -63,6 +63,7 @@ Esm* esmnew(const sds path)
         //na 0xDA255 zavrsava grupa SOUN
         //na 0xDE72E zavrsava grupa ASPC
         //na 0xE9ED9 zavrsava grupa MGEF
+        //na 0x54CC6A zavrsava grupa SCPT
         //na 0x54e8be zavrsava grupa LTEX
         if (ftell(esm_file) > 0x54e8be)
             break;

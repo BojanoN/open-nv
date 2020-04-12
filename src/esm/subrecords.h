@@ -14,9 +14,7 @@ typedef struct __attribute__((packed)) {
     sds       author;
 } CNAM;
 
-/*
-  Object bounds
-*/
+
 typedef struct __attribute__((packed)) {
     int16_t x1;
     int16_t y1;
@@ -24,8 +22,7 @@ typedef struct __attribute__((packed)) {
     int16_t x2;
     int16_t y2;
     int16_t z2;
-} OBNDSubrecord;
-
+} ObjectBounds;
 /*
   Decal data
 */
@@ -41,7 +38,7 @@ typedef struct __attribute__((packed)) {
     uint8_t flags;
     uint8_t unused[2];
     uint8_t color[4];
-} DODTSubrecord;
+} DecalData;
 
 /*
  * NPC stats
@@ -54,7 +51,7 @@ typedef struct __attribute__((packed)) {
     int8_t   teaches;
     uint8_t  maxTrainingLevel;
     uint8_t  unused[2];
-} DATASubrecord;
+} ClassData;
 
 /*
  * Attributes
@@ -67,7 +64,7 @@ typedef struct __attribute__((packed)) {
     uint8_t intelligence;
     uint8_t agility;
     uint8_t luck;
-} ATTRSubrecord;
+} ClassAttributes;
 
 typedef struct __attribute__((packed)) {
     formid  faction;
@@ -80,7 +77,7 @@ typedef struct __attribute__((packed)) {
     3 - FRIEND
   */
     uint32_t groupCombatReaction;
-} XNAMSubrecord;
+} FactionRaceEx;
 
 typedef struct __attribute__((packed)) {
     /*
@@ -95,14 +92,14 @@ typedef struct __attribute__((packed)) {
     */
     uint8_t flags_2;
     uint8_t unused[2];
-} FACT_DATASubrecord;
+} FactionData;
 
 typedef struct __attribute__((packed)) {
     int32_t  rankNumber;
     sds      male;
     sds      female;
     uint32_t insignia;
-} FACT_RankSubrecords;
+} FactionRank;
 
 typedef struct {
     sds name;
@@ -148,28 +145,27 @@ typedef struct __attribute__((packed)) {
     /*
      * FormID of a VTYP record.
      */
-    formid maleVoice;
-    formid femaleVoice;
+    formid male;
+    formid female;
 } RaceVoices;
 
 typedef struct __attribute__((packed)) {
     /*
      * FormID of a HAIR record. Can be null.
      */
-    formid maleDefaultHairStyle;
-    formid femaleDefaultHairStyle;
+    formid male;
+    formid female;
 } RaceDefaultHairStyle;
 
 typedef struct __attribute__((packed)) {
     /*
      * See RaceHairColorEnum
      */
-    uint8_t maleHairColor;
-    uint8_t femaleHairColor;
+    uint8_t male;
+    uint8_t female;
 } RaceDefaultHairColor;
 
 typedef struct __attribute__((packed)) {
-    Subrecord  base;
     SkillBoost skillBoosts[7];
     uint8_t    padding[2];
     float      maleHeight;
@@ -177,7 +173,7 @@ typedef struct __attribute__((packed)) {
     float      maleWeight;
     float      femaleWeight;
     uint32_t   flags;
-} RaceDataSubrecord;
+} RaceData;
 
 typedef struct __attribute__((packed)) {
     Subrecord base;
@@ -258,7 +254,7 @@ typedef struct {
     int8_t   frequencyAdjustmentPercentage;
     uint8_t  unused;
     uint32_t flags;
-    int16_t  staticAttenuationCDB;
+    int16_t  staticAttenuationCdB;
     uint8_t  stopTime;
     uint8_t  startTime;
 } SoundEx;
@@ -537,8 +533,20 @@ sds        init_cstring_subrecord(FILE* esm_file, SubrecordHeader* subrecordHead
 ModelPart* init_ModelPartCollection(FILE* esm_file);
 void       free_ModelPartCollection(ModelPart* collection);
 
-void log_OBND(OBNDSubrecord*);
+void log_ObjectBounds(ObjectBounds*);
+void log_DecalData(DecalData*);
+void log_FactionRaceEx(FactionRaceEx*);
+void log_FactionData(FactionData*);
+void log_ClassData(ClassData*);
+void log_ClassAttributes(ClassAttributes*);
+void log_RaceData(RaceData* subrecord);
+void log_RaceVoices(RaceVoices* voices);
+void log_RaceDefaultHairStyle(RaceDefaultHairStyle* subrecord);
+void log_RaceDefaultHairColor(RaceDefaultHairColor* subrecord);
 void log_SNDD(SoundData*);
+void log_SoundData(SoundData*);
+void log_SoundEx(SoundData*);
 void log_MagicEffectData(MagicEffectData*);
 void log_ScriptHeader(ScriptHeader*);
 void log_LocalVariableData(LocalVariableData*);
+void log_HavokData(HavokData*);

@@ -4,52 +4,142 @@
 #include "subrecords.h"
 
 #define FILL_BASE_RECORD_INFO(header, record) \
-    record->base.ID    = header.ID;           \
-    record->base.Flags = header.Flags;        \
-    memcpy(record->base.Type, header.Type, 4)
+  record->base.ID = header.ID;                \
+  record->base.Flags = header.Flags;          \
+  memcpy(record->base.Type, header.Type, 4)
 
-#define OPTIONAL_CSTRING_RECORD(subrecordName, value, subheader,                \
-    esm_file, logging_name)                                                     \
-    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);                  \
-    if (strncmp(subheader.Type, (subrecordName), 4) == 0) {                     \
-        (value) = init_cstring_subrecord(esm_file, &(subheader), logging_name); \
-    } else {                                                                    \
-        (value) = NULL;                                                         \
-        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                    \
-    }
+#define SUBRECORD_WITH_HEADER_READ(INNER_MACRO, ...)       \
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file); \
+  INNER_MACRO(__VA_ARGS__);
 
-#define CSTRING_RECORD(subrecordName, value, subheader, esm_file, \
-    logging_name)                                                 \
-    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);    \
-    assert(strncmp((subheader).Type, (subrecordName), 4) == 0);   \
-    (value) = init_cstring_subrecord(esm_file, &(subheader), logging_name)
+#define OPTIONAL_CSTRING_SUBRECORD(subrecordName, value, subheader, esm_file, \
+                                   logging_name)                              \
+  if (strncmp(subheader.Type, (subrecordName), 4) == 0) {                     \
+    (value) = init_cstring_subrecord(esm_file, &(subheader), logging_name);   \
+  } else {                                                                    \
+    (value) = NULL;                                                           \
+    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                      \
+  }
 
-#define GENERIC_RECORD(subrecordName, type, value, subheader, esm_file) \
-    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);          \
-    assert(strncmp((subheader).Type, (subrecordName), 4) == 0);         \
-    fread(&(value), sizeof(type), 1, esm_file);                         \
-    log_subrecord(&subheader);
+#define CSTRING_SUBRECORD(subrecordName, value, subheader, esm_file, \
+                          logging_name)                              \
+  assert(strncmp((subheader).Type, (subrecordName), 4) == 0);        \
+  (value) = init_cstring_subrecord(esm_file, &(subheader), logging_name)
 
-#define OPTIONAL_GENERIC_RECORD(subrecordName, type, value, subheader, esm_file) \
-    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);                   \
-    if (strncmp(subheader.Type, (subrecordName), 4) == 0) {                      \
-        fread(&(value), sizeof(type), 1, esm_file);                              \
-        log_subrecord(&subheader);                                               \
-    } else {                                                                     \
-        fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                     \
-    }
+#define GENERIC_SUBRECORD(subrecordName, type, value, subheader, esm_file) \
+  assert(strncmp((subheader).Type, (subrecordName), 4) == 0);              \
+  fread(&(value), sizeof(type), 1, esm_file);                              \
+  log_subrecord(&subheader)
 
-#define GENERIC_RECORD_COLLECTION(subrecordName, type, array, subheader, esm_file) \
-    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);                     \
-    while (strncmp((subheader).Type, (subrecordName), 4) == 0) {                   \
-        type tmp;                                                                  \
-        assert(strncmp((subheader).Type, (subrecordName), 4) == 0);                \
-        fread(&(tmp), sizeof(type), 1, esm_file);                                  \
-        log_subrecord(&subheader);                                                 \
-        arrput((array), tmp);                                                      \
-        fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);                 \
-    }                                                                              \
-    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR)
+#define OPTIONAL_MAIN_SUBRECORD(subrecordName, type, value, subheader, \
+                                   esm_file, logging_format_string)                              \
+  if (strncmp(subheader.Type, (subrecordName), 4) == 0) {                 \
+    fread(&(value), sizeof(type), 1, esm_file);                           \
+    log_subrecord(&subheader);                                            \
+    log_debug(logging_format_string, value);\
+  } else {                                                                \
+    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                  \
+  }
+
+#define OPTIONAL_STRUCT_SUBRECORD(subrecordName, type, value, subheader, \
+                                   esm_file)                              \
+  if (strncmp(subheader.Type, (subrecordName), 4) == 0) {                 \
+    fread(&(value), sizeof(type), 1, esm_file);                           \
+    log_subrecord(&subheader);                                            \
+    log_##type(&value);\
+  } else {                                                                \
+    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                  \
+  }
+
+#define MAIN_SUBRECORD(subrecordName, type, value, subhreader, esm_file, logging_format_string) \
+  GENERIC_SUBRECORD(subrecordName, type, value, subheader, esm_file); \
+  log_debug(logging_format_string, value)
+
+#define STRUCT_SUBRECORD(subrecordName, type, value, subhreader, esm_file) \
+  GENERIC_SUBRECORD(subrecordName, type, value, subheader, esm_file); \
+  log_##type(&value)
+
+#define GENERIC_SUBRECORD(subrecordName, type, value, subheader, esm_file) \
+  assert(strncmp((subheader).Type, (subrecordName), 4) == 0);              \
+  fread(&(value), sizeof(type), 1, esm_file);                              \
+  log_subrecord(&subheader)
+
+#define MAIN_SUBRECORD_COLLECTION(subrecordName, type, array, subheader, \
+                                  esm_file, logging_format_string)                              \
+  while (strncmp((subheader).Type, (subrecordName), 4) == 0) {           \
+    type tmp;                                                            \
+    assert(strncmp((subheader).Type, (subrecordName), 4) == 0);          \
+    fread(&(tmp), sizeof(type), 1, esm_file);                            \
+    log_subrecord(&subheader);                                           \
+    arrput((array), tmp);                                                \
+    log_debug(logging_format_string, tmp);                               \
+    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);           \
+  }                                                                      \
+  fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR)
+
+#define STRUCT_SUBRECORD_COLLECTION(subrecordName, type, array, subheader, \
+                                    esm_file)                              \
+  while (strncmp((subheader).Type, (subrecordName), 4) == 0) {             \
+    type tmp;                                                              \
+    assert(strncmp((subheader).Type, (subrecordName), 4) == 0);            \
+    fread(&(tmp), sizeof(type), 1, esm_file);                              \
+    log_subrecord(&subheader);                                             \
+    arrput((array), tmp);                                                  \
+    log_##type(&(tmp));                                                     \
+    fread(&(subheader), sizeof(SubrecordHeader), 1, esm_file);             \
+  }                                                                        \
+  fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR)
+
+#define ARRAY_SUBRECORD(subrecordName, type, value, subheader, esm_file, \
+                        logging_format, logging_name)                    \
+  assert(strncmp(subheader.Type, subrecordName, 4) == 0);                \
+  log_subrecord(&subheader);                                             \
+  MALLOC_N_WARN_BARE(type, subheader.DataSize, value);                   \
+  {                                                                      \
+    int length = subheader.DataSize / sizeof(type);                      \
+    readCounter = fread(value, sizeof(type), length, esm_file);          \
+    assert(readCounter == length);                                       \
+  }
+
+#define OPTIONAL_MAIN_SUBRECORD_COLLECTION(subrecordName, type, array, \
+                                           subheader, esm_file, logging_format_string)        \
+  if (strncmp(subheader.Type, (subrecordName), 4) == 0) {              \
+    MAIN_SUBRECORD_COLLECTION(subrecordName, type, array, subheader,   \
+                              esm_file, logging_format_string);                               \
+  } else {                                                             \
+    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);               \
+  }
+
+#define OPTIONAL_SUBRECORD_COLLECTION(subrecordName, type, array, subheader, \
+                                      esm_file)                              \
+  if (strncmp(subheader.Type, (subrecordName), 4) == 0) {                    \
+    STRUCT_SUBRECORD_COLLECTION(subrecordName, type, array, subheader,       \
+                                esm_file);                                    \
+  } else {                                                                   \
+    fseek(esm_file, -sizeof(SubrecordHeader), SEEK_CUR);                     \
+  }
+
+#define FIXED_LENGTH_ARRAY_SUBRECORD(subrecordName, type, length, value,    \
+                                     subheader, esm_file, logging_format,   \
+                                     logging_name)                          \
+  assert(strncmp(subheader.Type, subrecordName, 4) == 0);                   \
+  log_subrecord(&subheader);                                                \
+  readCounter = fread(&(value), sizeof(type), \
+                      length, esm_file);                                    \
+  assert(readCounter == length)
+
+#define MARKER_SUBRECORD(subrecordName, subheader)        \
+  assert(strncmp(subheader.Type, subrecordName, 4) == 0); \
+  assert(subheader.DataSize == 0)
+
+#define DUMMY_SUBRECORD(subrecordName, subheader)         \
+  assert(strncmp(subheader.Type, subrecordName, 4) == 0); \
+  log_subrecord(&subheader);                              \
+  fseek(esm_file, subheader.DataSize, SEEK_CUR)
+/*
+    TODO: multiple type collection?
+*/
+
 
 typedef struct {
     Record base;
@@ -62,7 +152,7 @@ typedef struct {
 */
 typedef struct {
     Record base;
-    sds    editorId;
+    sds    editorID;
     union {
         int32_t intValue;
         float   floatValue;
@@ -75,15 +165,15 @@ typedef struct {
 */
 typedef struct {
     Record        base;
-    sds           editorId;
-    OBNDSubrecord objectBounds;
+    sds           editorID;
+    ObjectBounds objectBounds;
     sds           baseImage_transparency;
     sds           normalMap_specular;
     sds           environmentMapMask;
     sds           glowMap;
     sds           parallaxMap;
     sds           environmentMap;
-    DODTSubrecord decalData;
+    DecalData decalData;
     uint16_t      flags;
 } TXSTRecord;
 
@@ -95,14 +185,14 @@ typedef struct {
     sds    editorID;
     sds    largeIconFilename;
     sds    smallIconFilename;
-} MICN;
+} MICNRecord;
 
 /*
   Global variable
 */
 typedef struct {
     Record  base;
-    sds     editorId;
+    sds     editorID;
     uint8_t type;
     union {
         uint16_t shortValue;
@@ -116,12 +206,12 @@ typedef struct {
  */
 
 typedef struct {
-    Record        base;
-    sds           editorID;
-    sds           fullName;
-    sds           description;
-    DATASubrecord data;
-    ATTRSubrecord attr;
+  Record base;
+  sds editorID;
+  sds name;
+  sds description;
+  ClassData data;
+  ClassAttributes attributes;
 } CLASRecord;
 
 typedef enum {
@@ -147,14 +237,14 @@ typedef enum {
  */
 typedef struct {
     Record               base;
-    sds                  editorId;
+    sds                  editorID;
     sds                  name;
     uint32_t             relationsLength;
-    XNAMSubrecord*       relations;
-    FACT_DATASubrecord   data;
+    FactionRaceEx*       relations;
+    FactionData   data;
     float                unused;
-    FACT_RankSubrecords* rank;
-    formid               reputation;
+    FactionRank* ranks;
+    formid               reputation; //REPU
 } FACTRecord;
 
 /*
@@ -169,7 +259,7 @@ typedef struct {
     /*
      * FormID of another HDPT record
      */
-    formid extraParts;
+    formid* extraParts;
 } HDPTRecord;
 
 /*
@@ -206,8 +296,8 @@ typedef struct {
     sds               editorID;
     sds               name;
     sds               description;
-    XNAMSubrecord*    relations;
-    RaceDataSubrecord raceData;
+    FactionRaceEx*    relations;
+    RaceData raceData;
     /*
      * FormID of a RACE record
      */
@@ -248,7 +338,7 @@ typedef struct {
 typedef struct {
     Record        base;
     sds           editorID;
-    OBNDSubrecord objectBounds;
+    ObjectBounds objectBounds;
     sds           soundFilename;
     uint8_t       randomChangePercentage;
     SoundData     soundData;
@@ -305,7 +395,7 @@ typedef enum {
 typedef struct {
     Record        base;
     sds           editorID;
-    OBNDSubrecord objectBounds;
+    ObjectBounds objectBounds;
     formid        dawn_default; //SOUN
     formid        afternoon; //SOUN
     formid        dusk; //SOUN

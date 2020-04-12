@@ -36,7 +36,7 @@ Subrecord* create_CNAM(FILE* esm_file)
     return (Subrecord*)ret;
 }
 
-void log_OBND(OBNDSubrecord* subrecord) {
+void log_ObjectBounds(ObjectBounds* subrecord) {
     log_debug("Object bounds:");
     log_debug("X 1: %d", subrecord->x1);
     log_debug("Y 1: %d", subrecord->y1);
@@ -44,6 +44,100 @@ void log_OBND(OBNDSubrecord* subrecord) {
     log_debug("X 2: %d", subrecord->x2);
     log_debug("Y 2: %d", subrecord->y2);
     log_debug("Z 2: %d", subrecord->z2);
+}
+
+void log_OBND(ObjectBounds* subrecord) {
+    log_debug("Object bounds:");
+    log_debug("X 1: %d", subrecord->x1);
+    log_debug("Y 1: %d", subrecord->y1);
+    log_debug("Z 1: %d", subrecord->z1);
+    log_debug("X 2: %d", subrecord->x2);
+    log_debug("Y 2: %d", subrecord->y2);
+    log_debug("Z 2: %d", subrecord->z2);
+}
+
+
+void log_DecalData(DecalData* subrecord) {
+    log_debug("Decal data:");
+    log_debug("Min width: %f", subrecord->minWidth);
+    log_debug("Max width: %f", subrecord->maxWidth);
+    log_debug("Min height: %f", subrecord->minHeight);
+    log_debug("Max height: %f", subrecord->maxHeight);
+    log_debug("Depth: %f", subrecord->depth);
+    log_debug("Shininess: %f", subrecord->shininess);
+    log_debug("Parallax scale: %f", subrecord->parallaxScale);
+    log_debug("Parallax passes: %d", subrecord->parallaxPasses);
+    log_debug("Flags: 0x%02x", subrecord->flags);
+    log_debug("Unused bytes: 0x%02x 0x%02x", subrecord->unused[0], subrecord->unused[1]);
+    log_debug("Color: 0x%02x 0x%02x 0x%02x 0x%02x", subrecord->color[0], subrecord->color[1], subrecord->color[2], subrecord->color[3]);
+}
+
+void log_FactionRaceEx(FactionRaceEx* subrecord) {
+    log_debug("Relation:");
+    log_debug("Faction: %d", subrecord->faction);
+    log_debug("Modifier: %d", subrecord->modifier);
+    log_debug("Group combat reaction: %d", subrecord->groupCombatReaction);
+}
+
+void log_ClassData(ClassData* data) {
+    log_debug("Class data:");
+    for(int i = 0; i < 4; i++) {
+        log_debug("Tag skill %d: %d", i, data->tagSkills[i]);
+    }
+    log_debug("Flags: 0x%08x", data->flags);
+    log_debug("Services: 0x%08x", data->services);
+    log_debug("Teaches: %d", data->teaches);
+    log_debug("Maxmimum training level: %d", data->maxTrainingLevel);
+    log_debug("Unused values: 0x%02x 0x%02x", data->unused[0], data->unused[1]);
+}
+
+void log_ClassAttributes(ClassAttributes* attr) {
+    log_debug("Class attributes:");
+    log_debug("Strength: %d", attr->strength);
+    log_debug("Perception: %d", attr->perception);
+    log_debug("Endurance: %d", attr->endurance);
+    log_debug("Charisma: %d", attr->charisma);
+    log_debug("Intelligence: %d", attr->intelligence);
+    log_debug("Agility: %d", attr->agility);
+    log_debug("Luck: %d", attr->luck);
+}
+
+void log_FactionData(FactionData* data) {
+    log_debug("Faction data:");
+    log_debug("Flags 1: 0x%02x", data->flags_1);
+    log_debug("Flags 2: 0x%02x", data->flags_2);
+    log_debug("Unused values: 0x%02x 0x%02x", data->unused[0], data->unused[1]);
+}
+
+void log_RaceData(RaceData* subrecord) {
+    log_debug("Race data:");
+    for(int i = 0; i < 7; i++) {
+        log_debug("Skill boost %d: Skill: %d, Boost: %d", i, subrecord->skillBoosts[i].skill, subrecord->skillBoosts[i].boost);
+    }
+    log_debug("Unused: 0x%02x 0x%02x", subrecord->padding[0], subrecord->padding[1]);
+    log_debug("Male height: %f", subrecord->maleHeight);
+    log_debug("Female height: %f", subrecord->femaleHeight);
+    log_debug("Male weight: %f", subrecord->maleWeight);
+    log_debug("Female weight: %f", subrecord->femaleWeight);
+    log_debug("Flags: 0x%08x", subrecord->flags);
+}
+
+void log_RaceVoices(RaceVoices* voices) {
+    log_debug("Race voices:");
+    log_debug("Male voice: %d", voices->male);
+    log_debug("Female voice: %d", voices->female);
+}
+
+void log_RaceDefaultHairStyle(RaceDefaultHairStyle* subrecord) {
+    log_debug("Default hair style:");
+    log_debug("Male default hair style: %d", subrecord->male);
+    log_debug("Female default hair style: %d", subrecord->female);
+}
+
+void log_RaceDefaultHairColor(RaceDefaultHairColor* subrecord) {
+    log_debug("Default hair color:");
+    log_debug("Male default hair color: %d", subrecord->male);
+    log_debug("Female default hair color: %d", subrecord->female);
 }
 
 void log_SNDD(SoundData* subrecord) {
@@ -68,6 +162,45 @@ void log_SNDD(SoundData* subrecord) {
   log_debug("Priority: %d", subrecord->priority);
   log_debug("X: %d", subrecord->x);
   log_debug("Y: %d", subrecord->y);
+}
+
+void log_SoundData(SoundData* subrecord) {
+  log_debug("Sound data:");
+  log_debug("Minimum attenuation distance: 5x%d",
+            subrecord->minimumAttenuationDistance);
+  log_debug("Maximum attenuation distance: 100x%d",
+            subrecord->maximumAttenuationDistance);
+  log_debug("Frequency adjustment percentage: %d",
+            subrecord->frequencyAdjustmentPercentage);
+  log_debug("Unused value: %d", subrecord->unused);
+  log_debug("Flags: 0x%08x", subrecord->flags);
+  log_debug("Static attenuation cdB: %d", subrecord->staticAttenuationCdB);
+  log_debug("Stop time: %d", subrecord->stopTime);
+  log_debug("Start time: %d", subrecord->startTime);
+  log_debug("Attenuation points: %d, %d, %d, %d, %d",
+            subrecord->attenuationPoints[0], subrecord->attenuationPoints[1],
+            subrecord->attenuationPoints[2], subrecord->attenuationPoints[3],
+            subrecord->attenuationPoints[4]);
+  log_debug("Reverb Attenuation Control: %d",
+            subrecord->reverbAttenuationControl);
+  log_debug("Priority: %d", subrecord->priority);
+  log_debug("X: %d", subrecord->x);
+  log_debug("Y: %d", subrecord->y);
+}
+
+void log_SoundEx(SoundData* subrecord) {
+  log_debug("Sound data:");
+  log_debug("Minimum attenuation distance: 5x%d",
+            subrecord->minimumAttenuationDistance);
+  log_debug("Maximum attenuation distance: 100x%d",
+            subrecord->maximumAttenuationDistance);
+  log_debug("Frequency adjustment percentage: %d",
+            subrecord->frequencyAdjustmentPercentage);
+  log_debug("Unused value: %d", subrecord->unused);
+  log_debug("Flags: 0x%08x", subrecord->flags);
+  log_debug("Static attenuation cdB: %d", subrecord->staticAttenuationCdB);
+  log_debug("Stop time: %d", subrecord->stopTime);
+  log_debug("Start time: %d", subrecord->startTime);
 }
 
 void log_MagicEffectData(MagicEffectData* subrecord) {
@@ -108,10 +241,17 @@ void log_LocalVariableData(LocalVariableData* subrecord) {
     log_debug("Flags: 0x%02x", subrecord->flags);
 }
 
-Subrecord* create_OBND(FILE* esm_file) {
-  MALLOC_WARN(OBNDSubrecord, subrecord);
+void log_HavokData(HavokData* subrecord) {
+    log_debug("Havok data:");
+    log_debug("Material type: %d", subrecord->materialType);
+    log_debug("Friction: %d", subrecord->friction);
+    log_debug("Restitution: %d", subrecord->restitution);
+}
 
-  fread(subrecord, sizeof(OBNDSubrecord), 1, esm_file);
+Subrecord* create_OBND(FILE* esm_file) {
+  MALLOC_WARN(ObjectBounds, subrecord);
+
+  fread(subrecord, sizeof(ObjectBounds), 1, esm_file);
   log_debug("Object bounds:");
   log_debug("X 1: %d", subrecord->x1);
   log_debug("Y 1: %d", subrecord->y1);
@@ -123,26 +263,6 @@ Subrecord* create_OBND(FILE* esm_file) {
   return (Subrecord*)subrecord;
 }
 
-Subrecord* create_DODT(FILE* esm_file)
-{
-    MALLOC_WARN(DODTSubrecord, subrecord);
-
-    fread(subrecord, sizeof(DODTSubrecord), 1, esm_file);
-    log_debug("Decal data:");
-    log_debug("Min width: %f", subrecord->minWidth);
-    log_debug("Max width: %f", subrecord->maxWidth);
-    log_debug("Min height: %f", subrecord->minHeight);
-    log_debug("Max height: %f", subrecord->maxHeight);
-    log_debug("Depth: %f", subrecord->depth);
-    log_debug("Shininess: %f", subrecord->shininess);
-    log_debug("Parallax scale: %f", subrecord->parallaxScale);
-    log_debug("Parallax passes: %d", subrecord->parallaxPasses);
-    log_debug("Flags: 0x%02x", subrecord->flags);
-    log_debug("Unused bytes: 0x%02x 0x%02x", subrecord->unused[0], subrecord->unused[1]);
-    log_debug("Color: 0x%02x 0x%02x 0x%02x 0x%02x", subrecord->color[0], subrecord->color[1], subrecord->color[2], subrecord->color[3]);
-
-    return (Subrecord*)subrecord;
-}
 
 /*
  * HDPT record specific fields
@@ -290,7 +410,6 @@ void Subrecord_init_constructor_map()
     ADD_CONSTRUCTOR(Subrecord, "HEDR", create_HEDR);
     ADD_CONSTRUCTOR(Subrecord, "CNAM", create_CNAM);
     ADD_CONSTRUCTOR(Subrecord, "OBND", create_OBND);
-    ADD_CONSTRUCTOR(Subrecord, "DODT", create_DODT);
     ADD_CONSTRUCTOR(Subrecord, "MODL", create_ModelData);
 }
 
