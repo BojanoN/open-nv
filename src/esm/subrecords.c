@@ -93,6 +93,21 @@ void log_MagicEffectData(MagicEffectData* subrecord) {
     log_debug("Actor value: %d", subrecord->actorValue);
 }
 
+void log_ScriptHeader(ScriptHeader* subrecord) {
+    log_debug("Script header:");
+    log_debug("Ref count: %u", subrecord->refCount);
+    log_debug("CompiledSize: %u", subrecord->compiledSize);
+    log_debug("Variable count: %u", subrecord->variableCount);
+    log_debug("Type: 0x%04x", subrecord->type);
+    log_debug("Flags: 0x%04x", subrecord->flags);
+}   
+
+
+void log_LocalVariableData(LocalVariableData* subrecord) {
+    log_debug("Index: %d", subrecord->index);
+    log_debug("Flags: 0x%02x", subrecord->flags);
+}
+
 Subrecord* create_OBND(FILE* esm_file) {
   MALLOC_WARN(OBNDSubrecord, subrecord);
 

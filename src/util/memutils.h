@@ -15,3 +15,10 @@
         log_fatal("Cannot allocate memory for " #type); \
         return NULL;                                    \
     }
+
+#define MALLOC_N_WARN_BARE(type, n, retval)         \
+  retval = malloc((n) * sizeof(type));                    \
+  if (retval == NULL) {                             \
+    log_fatal("Cannot allocate memory for " #type); \
+    return NULL;                                    \
+  }

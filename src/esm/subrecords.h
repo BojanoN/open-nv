@@ -473,6 +473,61 @@ typedef struct {
     int32_t actorValue;
 } MagicEffectData;
 
+
+typedef enum {
+    OBJECT_SCRIPT = 0x000,
+    QUEST_SCRIPT = 0x010,
+    EFFECT_SCRIPT = 0x100
+} ScriptHeaderType;
+
+typedef enum {
+    SCRIPT_ENABLED = 1
+} ScriptHeaderFlags;
+
+typedef struct __attribute__((packed)) {
+    uint8_t unusedBytes[4];
+    uint32_t refCount;
+    uint32_t compiledSize;
+    uint32_t variableCount;
+    /*
+        see ScriptHeaderType enum
+    */
+    uint16_t type;
+    /*
+        see ScriptHeaderFlags enum
+    */
+    uint16_t flags;
+} ScriptHeader;
+
+typedef enum {
+    IS_LONG_OR_SHORT = 1
+} LocalVariableDataFlags;
+
+typedef struct __attribute__((packed)) {
+    uint32_t index;
+    uint8_t unusedBytes_1[12];
+    uint8_t flags;
+    uint8_t unusedBytes_2[7];
+} LocalVariableData;
+
+typedef struct __attribute__((packed)) {
+    LocalVariableData data;
+    sds name;
+} LocalVariable;
+
+typedef enum {
+    VARIABLE_REFERENCE,
+    OBJECT_REFERENCE
+} ReferenceType;
+
+typedef struct __attribute__((packed)) {
+    ReferenceType type;
+    union {
+        uint32_t variableReference;
+        formid objectReference;
+    } referenceValue;
+} ScriptReference;
+
 sds        init_cstring_subrecord(FILE* esm_file, SubrecordHeader* subrecordHead, const char* loggingName);
 ModelPart* init_ModelPartCollection(FILE* esm_file);
 void       free_ModelPartCollection(ModelPart* collection);
@@ -480,3 +535,5 @@ void       free_ModelPartCollection(ModelPart* collection);
 void log_OBND(OBNDSubrecord*);
 void log_SNDD(SoundData*);
 void log_MagicEffectData(MagicEffectData*);
+void log_ScriptHeader(ScriptHeader*);
+void log_LocalVariableData(LocalVariableData*);

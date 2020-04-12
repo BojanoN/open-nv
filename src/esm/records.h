@@ -294,3 +294,18 @@ typedef struct {
     ModelDataSubrecord* modelData;
     MagicEffectData magicEffectData;
 } MGEFRecord;
+
+
+
+/*
+    Script
+*/
+typedef struct {
+    Record base;
+    sds editorID;
+    ScriptHeader scriptHeader;
+    uint8_t* compiledSource;
+    char* scriptSource;
+    LocalVariable* localVariables;
+    ScriptReference* references;
+} SCPTRecord;

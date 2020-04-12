@@ -967,6 +967,116 @@ Record* init_MGEF(FILE* esm_file) {
   return (Record*)record;
 }
 
+#define SCPT_SUBRECORD_WITH_HEADER(INNER_MACRO, ...) \
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);   \
+  INNER_MACRO(__VA_ARGS__);
+
+#define SCPT_STRUCT_SUBRECORD(subrecordName, value, type, subheader, esm_file) \
+  assert(strncmp(subheader.Type, subrecordName, 4) == 0);                      \
+  log_subrecord(&subheader);                                                   \
+  readCounter = fread(&(value), sizeof(type), 1, esm_file);                    \
+  assert(readCounter == 1);                                                    \
+  log_##type(&(value));
+
+#define SCPT_ARRAY_SUBRECORD(subrecordName, value, type, subheader, esm_file, \
+                             logging_format, logging_name)                    \
+  assert(strncmp(subheader.Type, subrecordName, 4) == 0);                     \
+  log_subrecord(&subheader);                                                  \
+  MALLOC_N_WARN_BARE(type, subheader.DataSize, value);                      \
+  {                                                                           \
+    int length = subheader.DataSize / sizeof(type);                           \
+    readCounter = fread(value, sizeof(type), length, esm_file);            \
+    assert(readCounter == length);                                            \
+  }
+
+// log_array(type, value, length, logging_format, logging_name);
+
+#define SCPT_MAIN_SUBRECORD(subrecordName, value, type, subheader, esm_file, \
+                           logging_format)                                  \
+  assert(strncmp(subheader.Type, subrecordName, 4) == 0);                   \
+  log_subrecord(&subheader);                                                \
+  readCounter = fread(&(value), sizeof(type), 1, esm_file);                 \
+  assert(readCounter == 1);                                                  \
+  log_debug(logging_format, value);
+
+Record* init_SCPT(FILE* esm_file) {
+  MALLOC_WARN(SCPTRecord, record);
+  RecordHeader hdr;
+  SubrecordHeader subheader;
+
+  fread(&hdr, sizeof(RecordHeader), 1, esm_file);
+  FILL_BASE_RECORD_INFO(hdr, record);
+  log_record(&hdr);
+  uint32_t  end = ftell(esm_file) + hdr.DataSize;
+  int readCounter = 0;
+
+  MGEF_CSTRING_RECORD("EDID", record->editorID, subheader, esm_file,
+                      "Editor ID");
+  SCPT_SUBRECORD_WITH_HEADER(SCPT_STRUCT_SUBRECORD, "SCHR",
+                             record->scriptHeader, ScriptHeader, subheader,
+                             esm_file);
+  SCPT_SUBRECORD_WITH_HEADER(SCPT_ARRAY_SUBRECORD, "SCDA",
+                             record->compiledSource, uint8_t, subheader,
+                             esm_file, "0x%02x ", "Compiled source");
+
+  SCPT_SUBRECORD_WITH_HEADER(SCPT_ARRAY_SUBRECORD, "SCTX", record->scriptSource,
+                             char, subheader, esm_file, "%c", "Source");
+
+  record->localVariables = NULL;
+  record->references = NULL;
+
+  if(ftell(esm_file) >= end) {  
+    return (Record*)record;
+  }
+
+  fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+  while(strncmp("SLSD", subheader.Type, 4) == 0) {
+    LocalVariable currentLocalVariable;
+    log_debug("Local variable:");
+    SCPT_STRUCT_SUBRECORD("SLSD", currentLocalVariable.data, LocalVariableData, subheader, esm_file);
+    MGEF_CSTRING_RECORD("SCVR", currentLocalVariable.name, subheader, esm_file, "Local variable name:");
+    arrput(record->localVariables, currentLocalVariable);
+    
+    if(ftell(esm_file) >= end) {    
+        return (Record*)record;
+    }
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+  }
+
+  while((strncmp("SCRO", subheader.Type, 4) == 0) || (strncmp("SCRV", subheader.Type, 4) == 0)) {
+    ScriptReference reference;
+    log_subrecord(&subheader);
+    readCounter = fread(&reference, sizeof(uint32_t), 1, esm_file);
+    assert(readCounter == 1); 
+    if((strncmp("SCRV", subheader.Type, 4) == 0)) {
+        reference.type = VARIABLE_REFERENCE;
+    } else {
+        reference.type = OBJECT_REFERENCE;
+    }
+    arrput(record->references, reference);
+
+    if(ftell(esm_file) >= end) {    
+        return (Record*)record;
+    }
+    fread(&subheader, sizeof(SubrecordHeader), 1, esm_file);
+  }
+
+  return (Record*)record;
+}
+
+void free_SCPT(Record* record) {
+    SCPTRecord* script = (SCPTRecord*)record;
+    sdsfree(script->editorID);
+    free(script->compiledSource);
+    free(script->scriptSource);
+    for (int i=0; i < arrlen(script->localVariables); ++i) {
+        sdsfree(script->localVariables[i].name);
+    }
+    arrfree(script->localVariables);
+    arrfree(script->references);
+    free(script);
+}
+
 void free_MGEF(Record* record) {
     MGEFRecord* magicEffect = (MGEFRecord*)record;
     sdsfree(magicEffect->editorID);
@@ -982,6 +1092,7 @@ void free_MGEF(Record* record) {
 void free_ASPC(Record* record) {
     ASPCRecord* acousticSpace = (ASPCRecord*)record;
     sdsfree(acousticSpace->editorID);
+    free(acousticSpace);
 }
 
 
@@ -1196,6 +1307,7 @@ void Record_init_constructor_map()
     ADD_CONSTRUCTOR(Record, "SOUN", init_SOUN);
     ADD_CONSTRUCTOR(Record, "ASPC", init_ASPC);
     ADD_CONSTRUCTOR(Record, "MGEF", init_MGEF);
+    ADD_CONSTRUCTOR(Record, "SCPT", init_SCPT);
 }
 
 void Record_init_destructor_map()
@@ -1214,6 +1326,7 @@ void Record_init_destructor_map()
     ADD_DESTRUCTOR(Record, "SOUN", free_SOUN);
     ADD_DESTRUCTOR(Record, "ASPC", free_ASPC);
     ADD_DESTRUCTOR(Record, "MGEF", free_MGEF);
+    ADD_DESTRUCTOR(Record, "SCPT", free_SCPT);
 }
 
 Record* recordnew(FILE* f, sds type)

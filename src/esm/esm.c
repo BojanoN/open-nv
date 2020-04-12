@@ -50,20 +50,21 @@ Esm* esmnew(const sds path)
         }
 
         log_debug("Current file pointer location: 0x%06x", ftell(esm_file));
-        //na 0xA95E zavrsava grupa GMST
-        //na 0x21F4B zavrsava grupa TXST
-        //na 0x224FC zavrsava grupa MICN
-        //na 0x25DB0 zavrsava grupa GLOB
-        //na 0x27F5D zavrsava grupa CLAS
-        //na 0x3C22E zavrsava grupa FACT
-        //na 0x3F003 zavrsava grupa HDPT
-        //na 0x43108 zavrsava grupa HAIR
-        //na 0x435D9 zavrsava grupa EYES
-        //na 0x5f528 zavrsava grupa RACE
-        //na 0xDA255 zavrsava grupa SOUN
-        //na 0xDE72E zavrsava grupa ASPC
-        //nn 0xE9ED9 zavrsava grupa MGEF
-        if (ftell(esm_file) > 0xE9ED9)
+        //na 0x0A95E zavrsava grupa GMST
+        //na 0x021F4B zavrsava grupa TXST
+        //na 0x0224FC zavrsava grupa MICN
+        //na 0x025DB0 zavrsava grupa GLOB
+        //na 0x027F5D zavrsava grupa CLAS
+        //na 0x03C22E zavrsava grupa FACT
+        //na 0x03F003 zavrsava grupa HDPT
+        //na 0x043108 zavrsava grupa HAIR
+        //na 0x0435D9 zavrsava grupa EYES
+        //na 0x05f528 zavrsava grupa RACE
+        //na 0x0DA255 zavrsava grupa SOUN
+        //na 0x0DE72E zavrsava grupa ASPC
+        //na 0x0E9ED9 zavrsava grupa MGEF
+        //na 0x54CC6A zavrsava grupa SCPT
+        if (ftell(esm_file) >= 0x54CC66)
             break;
         cnt++;
     }
