@@ -1,18 +1,18 @@
 PROJECT=openNV
 
-DIRS := ./src/util ./src/esm ./src/util ./src/sds ./src/logc ./src
-SOURCEDIR = ./src
+DIRS := ./src/cpp/esm ./src/cpp
+SOURCEDIR = ./src/cpp
 BUILDDIR = ./build
 LIBDIR = ./lib
 TESTS := ./src/tests
 
 
-FILES := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.c))
+FILES := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
 BUILDFILES := $(subst $(SOURCEDIR)/,$(BUILDDIR)/,$(FILES)) 
-OBJS := $(BUILDFILES:.c=.o)
+OBJS := $(BUILDFILES:.cpp=.o)
 
-CC=clang
-CFLAGS := --std=c99  -DLOG_USE_COLOR -I $(SOURCEDIR) -Wall -MD
+CC=clang++
+CFLAGS := --std=c++11  -DLOG_USE_COLOR -I $(SOURCEDIR) -Wall -MD
 
 LDFLAGS= -L $(LIBDIR)
 
@@ -28,11 +28,11 @@ leak-check: debug
 $(BUILDDIR)/$(PROJECT): $(OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
-$(BUILDDIR)/%.o: $(SOURCEDIR)/%.c
+$(BUILDDIR)/%.o: $(SOURCEDIR)/%.cpp
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/%.o: $(TESTS)/%.c
+$(BUILDDIR)/%.o: $(TESTS)/%.cpp
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
