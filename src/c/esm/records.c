@@ -598,20 +598,6 @@ Record* init_SCPT(FILE* esm_file)
     return (Record*)record;
 }
 
-void free_SCPT(Record* record)
-{
-    SCPTRecord* script = (SCPTRecord*)record;
-    sdsfree(script->editorID);
-    free(script->compiledSource);
-    free(script->scriptSource);
-    for (int i = 0; i < arrlen(script->localVariables); ++i) {
-        sdsfree(script->localVariables[i].name);
-    }
-    arrfree(script->localVariables);
-    arrfree(script->references);
-    free(script);
-}
-
 Record* init_LTEX(FILE* esm_file)
 {
     MALLOC_WARN(LTEXRecord, record);
@@ -632,6 +618,20 @@ Record* init_LTEX(FILE* esm_file)
     SUBRECORD_WITH_HEADER_READ(MAIN_SUBRECORD_COLLECTION, "GNAM", formid, record->grass, subheader, esm_file, "Grass: %d");
 
     return (Record*)record;
+}
+
+void free_SCPT(Record* record)
+{
+    SCPTRecord* script = (SCPTRecord*)record;
+    sdsfree(script->editorID);
+    free(script->compiledSource);
+    free(script->scriptSource);
+    for (int i = 0; i < arrlen(script->localVariables); ++i) {
+        sdsfree(script->localVariables[i].name);
+    }
+    arrfree(script->localVariables);
+    arrfree(script->references);
+    free(script);
 }
 
 void free_LTEX(Record* record)

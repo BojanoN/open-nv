@@ -14,7 +14,6 @@ typedef struct __attribute__((packed)) {
     sds       author;
 } CNAM;
 
-
 typedef struct __attribute__((packed)) {
     int16_t x1;
     int16_t y1;
@@ -528,6 +527,31 @@ typedef struct __attribute__((packed)) {
     uint8_t friction;
     uint8_t restitution;
 } HavokData;
+
+typedef struct __attribute__((packed)) {
+    uint32_t type;
+    uint8_t  unused[8];
+    uint8_t  flags;
+    uint8_t  padding[3];
+} ENCH_enit;
+
+typedef struct __attribute__((packed)) {
+    uint32_t magnitude;
+    uint32_t area;
+    uint32_t duration;
+    uint32_t type;
+    uint32_t actorValues;
+} ENCH_efit;
+
+typedef struct __attribute__((packed)) {
+    uint8_t type;
+    uint8_t unused[3];
+    union {
+        formid comparisonFormid;
+        float  comparisonFloat;
+    };
+
+} CTDA;
 
 sds        init_cstring_subrecord(FILE* esm_file, SubrecordHeader* subrecordHead, const char* loggingName);
 ModelPart* init_ModelPartCollection(FILE* esm_file);
