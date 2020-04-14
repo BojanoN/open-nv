@@ -1,6 +1,6 @@
 PROJECT=openNV
 
-DIRS := ./src/cpp/esm ./src/cpp
+DIRS := ./src/cpp/esm ./src/cpp ./src/cpp/logc
 SOURCEDIR = ./src/cpp
 BUILDDIR = ./build
 LIBDIR = ./lib
@@ -12,7 +12,7 @@ BUILDFILES := $(subst $(SOURCEDIR)/,$(BUILDDIR)/,$(FILES))
 OBJS := $(BUILDFILES:.cpp=.o)
 
 CC=clang++
-CFLAGS := --std=c++11  -DLOG_USE_COLOR -I $(SOURCEDIR) -Wall -MD
+CFLAGS := --std=c++17  -DLOG_USE_COLOR -I $(SOURCEDIR) -Wall -MD
 
 LDFLAGS= -L $(LIBDIR)
 

@@ -2,6 +2,6 @@
 #include "types.hpp"
 
 typedef struct __attribute__((packed)) {
-    char     Type[4];
+    uint32_t Type;
     uint16_t DataSize;
 } SubrecordHeader;
