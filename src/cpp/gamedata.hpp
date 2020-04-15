@@ -1,13 +1,14 @@
+#pragma once
+#include "esm/types.hpp"
+#include "esm/reader.hpp"
 #include <string>
 #include <unordered_map>
 #include <sstream>
-#include "esm/types.hpp"
-#include "esm/esm.hpp"
 
 namespace GameWorld {
 
 class GameDataBase {
-
+public:
   virtual void load(ESM::ESMReader& reader) = 0;
 };
 
@@ -19,10 +20,11 @@ class GameData : public GameDataBase {
   void raiseError(formid id) const;
 
  public:
-  // std::string getType();
+
   virtual void load(ESM::ESMReader& reader);
   const T& get(formid id) const;
   void insert(T& data);
+
 };
 
 template <class T>

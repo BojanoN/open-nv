@@ -5,7 +5,9 @@ typedef uint32_t formid;
 
 namespace ESM {
 
-enum class ESMType {
+enum ESMType : uint32_t {
+    NO_ENTRY = 0,
+
     ACHR = 0x52484341,
     ACRE = 0x45524341,
     ACTI = 0x49544341,
@@ -123,16 +125,24 @@ enum class ESMType {
     MOD2 = 0x32444f4d,
     MOD3 = 0x33444f4d,
     MOD4 = 0x34444f4d,
+    MODB = 0x42444f4d,
+    MODT = 0x54444f4d,
+    MO2T = 0x54324f4d,
+    MO3T = 0x54334f4d,
+    MO4T = 0x54344f4d,
+    MODS = 0x53444f4d,                                                                                               
+    MO2S = 0x53324f4d,                                                                                               
+    MO3S = 0x53334f4d,
+    MO4S = 0x53344f4d,
+    MODD = 0x44444f4d,
+    MOSD = 0x44534f4d,
+
     FULL = 0x4c4c5546,
     DESC = 0x43534544,
     ICON = 0x4e4f4349,
     ATTR = 0x52545441,
 
-};
 
-union ESMName {
-    uint8_t  charArray[4];
-    uint32_t intValue;
 };
 
 };

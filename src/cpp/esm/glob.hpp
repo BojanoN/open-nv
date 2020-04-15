@@ -1,5 +1,7 @@
+#pragma once
 #include "reader.hpp"
 #include "record.hpp"
+#include <variant>
 
 namespace ESM {
 

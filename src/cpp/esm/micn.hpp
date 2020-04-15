@@ -1,3 +1,4 @@
+#pragma once
 #include "reader.hpp"
 #include "record.hpp"
 

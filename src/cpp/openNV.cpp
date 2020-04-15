@@ -1,5 +1,5 @@
-#include "esm/esm.hpp"
 #include "logc/log.h"
+#include "gameworld.hpp"
 #include <getopt.h>
 #include <time.h>
 
@@ -27,13 +27,11 @@ int main(int argc, char** argv)
         }
     }
 
-    ESM::ESM* esm;
-    clock_t   start = clock();
-    esm             = new ESM::ESM(path);
-    clock_t end     = clock();
+    GameWorld::GameWorld world;
+    ESM::ESMReader reader(path);
+    world.load(reader);
 
-    log_info("Loaded %s in %f miliseconds", path.c_str(), (double)(end - start) / (CLOCKS_PER_SEC / 1000));
+    //log_info("Loaded %s in %f miliseconds", path.c_str(), (double)(end - start) / (CLOCKS_PER_SEC / 1000));
 
-    delete esm;
     return 0;
 }

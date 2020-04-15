@@ -2,6 +2,8 @@
 
 #include <cstdio>
 #include <string>
+#include <sstream>
+#include <ostream>
 
 #include "record.hpp"
 #include "subrecord.hpp"
@@ -32,11 +34,12 @@ public:
     bool hasMoreRecordsInGroup() { return std::ftell(this->file) < endOfGroup; }
     bool hasMoreBytes() { return std::ftell(this->file) < fileSize; };
     void skipRecord();
+    void skipGroup();
 
     RecordHeader&    getCurrentRecord();
     SubrecordHeader& getCurrentSubrecord();
-    ESMName          getCurrentRecordType();
-    ESMName          subrecordType();
+    uint32_t          recordType();
+    uint32_t          subrecordType();
 
     uint16_t subrecordSize() { return currentSubrecordHead.dataSize; };
 
@@ -47,32 +50,27 @@ public:
 
     void checkSubrecordHeader(ESMType type);
 
-    ESMType peekNextType();
-
-    template <typename T>
-    void readGeneric(T* dest);
+    uint32_t peekNextType();
 
     std::string getFileName() { return this->fileName; };
 
     template <typename T>
     void readSubrecord(T& subrecValue);
 
-    template <typename T>
-    void readArraySubrecord(T* array);
+    void readStringSubrecord(std::string& subrecString);
 
     template <typename T>
-    void readRawData(T& value);
+    void readArraySubrecord(std::vector<T>& array);
+
+    template <typename T>
+    int readRawData(T& value);
 
     template <typename T>
     int readRawArray(T* array, ssize_t length);
 
-    /*
-    std::string readCstring();
-    int32_t readInt32();
-    //uint32_t readUInt32();
-    uint16_t readUInt16();
-    float readFloat32()
-    */
+    template <typename T>
+    void readFixedArraySubrecord(T* array);
+
 
 private:
     std::FILE*  file;
@@ -91,4 +89,66 @@ private:
     RecordHeader    currentRecordHead;
     SubrecordHeader currentSubrecordHead;
 };
+
+
+template <typename T>
+void ESMReader::readSubrecord(T& subrecValue)
+{
+    int actual = std::fread(&subrecValue, sizeof(T), 1, this->file);
+    if (actual != currentSubrecordHead.dataSize) {
+        std::stringstream s;
+        s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
+        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
+        throw std::runtime_error(s.str());
+    }
+}
+
+template <typename T>
+int ESMReader::readRawData(T& value)
+{
+    return std::fread(&value, sizeof(T), 1, this->file);
+}
+
+template <typename T>
+int ESMReader::readRawArray(T* array, ssize_t length)
+{
+    return std::fread(array, sizeof(T), length, this->file);
+}
+
+template <typename T>
+void ESMReader::readArraySubrecord(std::vector<T>& array)
+{
+    array.resize(currentSubrecordHead.dataSize / sizeof(T));
+    int actual = std::fread(&array[0], sizeof(T), currentSubrecordHead.dataSize / sizeof(T), this->file);
+    if (actual != currentSubrecordHead.dataSize) {
+        std::stringstream s;
+        s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
+        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
+        throw std::runtime_error(s.str());
+    }
+}
+
+template <typename T>
+void ESMReader::readFixedArraySubrecord(T* array) {
+    int actual = std::fread(array, sizeof(T), currentSubrecordHead.dataSize / sizeof(T), this->file);
+    if (actual != currentSubrecordHead.dataSize) {
+        std::stringstream s;
+        s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
+        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
+        throw std::runtime_error(s.str());
+    }
+}
+
+
+void ESMReader::readStringSubrecord(std::string& subrecString) {
+    subrecString.resize(currentSubrecordHead.dataSize);
+    int actual = std::fread(&subrecString[0], sizeof(char), currentSubrecordHead.dataSize / sizeof(char), this->file);
+    if (actual != currentSubrecordHead.dataSize) {
+        std::stringstream s;
+        s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
+        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
+        throw std::runtime_error(s.str());
+    }
+}
+
 }

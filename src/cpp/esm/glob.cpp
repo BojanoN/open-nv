@@ -1,18 +1,18 @@
-#include "gmst.hpp"
+/*#include "gmst.hpp"
 
 namespace ESM {
 
 void GameSetting::load(ESMReader& reader) {
 	reader.readNextSubrecordHeader();
-	reader.checkSubrecordHeader(ESMType.EDID);
+	reader.checkSubrecordHeader(ESM::Names.EDID);
 	reader.readArraySubrecord<char>(editorId.c_str());
 
 	reader.readNextSubrecordHeader();
-	reader.checkSubrecordHeader(ESMType.FNAM);
+	reader.checkSubrecordHeader(ESM::Names.FNAM);
 	reader.readSubrecord<uint8_t>(type);
 
 	reader.readNextSubrecordHeader();
-	reader.checkSubrecordHeader(ESMType.FLTV);
+	reader.checkSubrecordHeader(ESM::Names.FLTV);
 	switch(type) {
 		case 's':
 			value = reader.readSubrecord<int16_t>(value);
@@ -26,4 +26,4 @@ void GameSetting::load(ESMReader& reader) {
 	}
 }
 
-};
+};*/

@@ -1,40 +1,39 @@
 #include "structs.hpp"
 
-static ESMType  filenameType[]    = { ESMType::MODL, ESMType::MOD2, ESMType::MOD3, ESMType::MOD4 };
-static uint32_t unusedType[]      = { ESMType.MODB, 0, 0, 0 };
-static uint32_t hashesType[]      = { ESMType.MODT, ESMType.MO2T, ESMType.MO3T, ESMType.MO4T };
-static uint32_t altTexturesType[] = { ESMType.MODS, ESMType.MO2S, ESMType.MO3S, ESMType.MO4S };
-static uint32_t flagType[]        = { ESMType.MODD, 0, ESMType.MOSD, 0 };
+namespace ESM {
 
 void ModelData::load(ESMReader& reader, ModelData& modelData, int index, ESMType nextSubheader)
 {
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(filenameType[index]);
-    reader.readArraySubrecord<char>(modelData.filename.c_str())
+    reader.readStringSubrecord(modelData.filename);
 
-        while (reader.subrecordType().intValue != nextSubheader)
+        while (reader.subrecordType() != nextSubheader)
     {
         reader.readNextSubrecordHeader();
 
-        if (unusedType[index] && reader.subrecordType().intValue == unusedType[index]) {
-            reader.readArraySubrecord<uint8_t>(modelData.unused);
+        if (unusedType[index] && reader.subrecordType() == unusedType[index]) {
+            reader.readFixedArraySubrecord(modelData.unused);
 
-        } else if (reader.subrecordType().intValue == hashesType[index]) {
+        } else if (reader.subrecordType() == hashesType[index]) {
             //benis
 
-        } else if (reader.subrecordType().intValue == altTexturesType[index]) {
-            reader.readRawData<uint32_t>(modelData.alternateTextureCount);
+        } else if (reader.subrecordType() == altTexturesType[index]) {
+            reader.readRawData(modelData.alternateTextureCount);
             for (int i = 0; i < modelData.alternateTextureCount; i++) {
-                modelData.alternateTextures.push_back(new AlternateTexture);
+                AlternateTexture tex;
+                modelData.alternateTextures.push_back(tex);
                 AlternateTexture& currentTex = modelData.alternateTextures.back();
-                reader.readRawData<uint32_t>(currentTex.nameLength);
-                reader.readRawArray<char>(currentTex.name, currentTex.nameLength);
-                reader.readRawData<formid>(currentTex.newTexture);
-                reader.readRawData<int32_t>(currentTex.index);
+                reader.readRawData(currentTex.nameLength);
+                reader.readRawArray(currentTex.name, currentTex.nameLength);
+                reader.readRawData(currentTex.newTexture);
+                reader.readRawData(currentTex.index);
             }
 
-        } else if (flagType[index] && reader.subrecordType().intValue == flagType[index]) {
-            reader.readSubrecord<uint8_t>(modelData.FaceGenModelFlags);
+        } else if (flagType[index] && reader.subrecordType() == flagType[index]) {
+            reader.readSubrecord(modelData.FaceGenModelFlags);
         }
     }
 }
+
+};

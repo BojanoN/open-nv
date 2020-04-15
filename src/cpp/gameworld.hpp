@@ -1,11 +1,11 @@
 #pragma once
-#include "esm/esm.hpp"
 #include "esm/records.hpp"
+#include "esm/types.hpp"
 #include "gamedata.hpp"
+#include "esm/reader.hpp"
 
-namespace ESM {
-class ESMReader;
-};
+#include <unordered_map>
+#include <sstream>
 
 namespace GameWorld {
 
@@ -113,13 +113,13 @@ class GameWorld {
   // GameData<ESM::World>
 
   std::unordered_map<uint32_t, GameDataBase*> dataStores;
-  GameDataBase& getDataStoreForType(ESM::ESMName type);
+  GameDataBase* getDataStore(uint32_t type);
 
-  void GameWorld::initializeGameDataStores();
+  void initDataStoreMap();
 
  public:
   GameWorld() {
-    initializeGameDataStores();
+    initDataStoreMap();
   }
 
   inline const GameData<ESM::MenuIcon>& getMenuIcons() const {
@@ -134,22 +134,4 @@ class GameWorld {
 };
 
 
-GameDataBase& getDataStoreForType(ESM::ESMName type) {
-	std::unordered_map<uint32_t, GameDataBase*>::iterator it = dataStores.find(type.intValue);
-	if(it == dataStores.end()) {
-		std::stringstream s;
-    for(int i = 0; i < 4; i++) {
-      s << type.charArray[i];
-    }
-		s << " record type not implemented!\n";
-		throw std::runtime_error(s.str());
-	}
-	return *(it->second);
-}
-
 };
-
-
-void GameWorld::initializeGameDataStores() {
-  dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESMType.GMST, gameSettings));
-}

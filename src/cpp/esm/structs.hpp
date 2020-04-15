@@ -1,13 +1,15 @@
 #pragma once
 
+#include "reader.hpp"
+#include "types.hpp"
+
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#include "types.hpp"
+#include <sstream>
 
 namespace ESM {
-class ESMReader;
+
 
 struct ObjectBounds {
     int16_t x1;
@@ -49,7 +51,13 @@ struct ModelData {
     std::vector<AlternateTexture> alternateTextures;
     uint8_t                       FaceGenModelFlags;
 
-    static void load(ESMReader& reader, ModelData& modelData, int index);
+    const static constexpr ESMType filenameType[]    = { ESMType::MODL, ESMType::MOD2, ESMType::MOD3, ESMType::MOD4 };
+    const static constexpr ESMType unusedType[]      = { ESMType::MODB, ESMType::NO_ENTRY, ESMType::NO_ENTRY, ESMType::NO_ENTRY };
+    const static constexpr ESMType hashesType[]      = { ESMType::MODT, ESMType::MO2T, ESMType::MO3T, ESMType::MO4T };
+    const static constexpr ESMType altTexturesType[] = { ESMType::MODS, ESMType::MO2S, ESMType::MO3S, ESMType::MO4S };
+    const static constexpr ESMType flagType[]        = { ESMType::MODD, ESMType::NO_ENTRY, ESMType::MOSD, ESMType::NO_ENTRY };
+
+    static void load(ESMReader& reader, ModelData& modelData, int index, ESMType nextSubheader);
 };
 
 }
