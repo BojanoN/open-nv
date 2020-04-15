@@ -5,7 +5,7 @@ typedef uint32_t formid;
 
 namespace ESM {
 
-enum class RecordName {
+enum class ESMType {
     ACHR = 0x52484341,
     ACRE = 0x45524341,
     ACTI = 0x49544341,
@@ -115,11 +115,15 @@ enum class RecordName {
     WATR = 0x52544157,
     WEAP = 0x50414557,
     WRLD = 0x444c5257,
-    WTHR = 0x52485457
+    WTHR = 0x52485457,
+
+    EDID = 0x44494445,
+    DATA = 0x41544144
 };
 
-enum class SubrecordNames {
-
+union ESMName {
+    uint8_t charArray[4];
+    uint32_t intValue;
 };
 
 };

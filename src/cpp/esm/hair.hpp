@@ -1,13 +1,17 @@
 #include "reader.hpp"
 #include "record.hpp"
+#include "structs.hpp"
 
 namespace ESM {
 
-struct MenuIcon : public Record {
+
+struct Hair : public Record {
 
 	std::string editorId;
-	std::string largeIconFilename;
-	std::string smallIconFilename;
+	std::string name;
+	ModelData modelData;
+	std::string texture;
+	uint8_t flags;
 
 	virtual void load(ESMReader& reader);
 };

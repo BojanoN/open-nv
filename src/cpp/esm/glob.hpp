@@ -3,11 +3,11 @@
 
 namespace ESM {
 
-struct MenuIcon : public Record {
+struct GlobalVariable : public Record {
 
 	std::string editorId;
-	std::string largeIconFilename;
-	std::string smallIconFilename;
+	uint8_t type;
+	std::variant<int16_t, int32_t, float> value;
 
 	virtual void load(ESMReader& reader);
 };

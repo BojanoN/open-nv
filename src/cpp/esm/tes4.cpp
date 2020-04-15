@@ -1,7 +1,10 @@
 #include "tes4.hpp"
 
-using namespace ESM;
+namespace ESM {
 
-void Records::TES4::load(ESMReader& reader)
+void TES4::load(ESMReader& reader)
 {
+
 }
+
+};

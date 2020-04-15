@@ -6,15 +6,21 @@
 
 namespace GameWorld {
 
+class GameDataBase {
+
+  virtual void load(ESM::ESMReader& reader) = 0;
+};
+
+
 template <class T>
-class GameData {
+class GameData : public GameDataBase {
  private:
   std::unordered_map<formid, T*> dataMap;
   void raiseError(formid id) const;
 
  public:
   // std::string getType();
-  void load(ESM::ESMReader& reader);
+  virtual void load(ESM::ESMReader& reader);
   const T& get(formid id) const;
   void insert(T& data);
 };

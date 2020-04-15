@@ -2,6 +2,6 @@
 #include "types.hpp"
 
 typedef struct __attribute__((packed)) {
-    uint32_t Type;
-    uint16_t DataSize;
+    ESMName type;
+    uint16_t dataSize;
 } SubrecordHeader;

@@ -10,7 +10,7 @@ namespace ESM {
 
 class ESMReader {
 public:
-    ESMReader(std::string& path)
+    ESMReader(std::string& path) : fileName{path}
     {
 
         this->file = std::fopen(path.c_str(), "rb");
@@ -27,32 +27,66 @@ public:
     };
     ~ESMReader() {};
 
-    bool hasMoreSubrecords() { return this->recordLeft > 0; };
-    bool hasMoreRecords() { return this->fileLeft > 0; };
+    bool hasMoreSubrecords() { return std::ftell(this->file) < endOfRecord; };
+    bool hasMoreRecordsInGroup() {return std::ftell(this->file) < endOfGroup; }
+    bool hasMoreBytes() { return std::ftell(this->file) < fileSize; };
     void skipRecord();
 
     RecordHeader&    getCurrentRecord();
     SubrecordHeader& getCurrentSubrecord();
-    uint32_t         getCurrentRecordType();
-    uint32_t         getCurrentSubrecordType();
+    ESMName         getCurrentRecordType();
+    ESMName         subrecordType();
 
-    void readNextSubrecord();
-    void readNextRecord();
+    uint16_t subrecordSize() {return currentSubrecordHead.dataSize};
 
-    uint32_t peekNextType();
+    void readNextSubrecordHeader();
+    void readNextRecordHeader();
+    void readNextGroupHeader();
+    void readNextHeader();
+
+    void checkSubrecordHeader(ESMType type);
+
+    ESMName peekNextType();
 
     template <typename T>
     void readGeneric(T* dest);
 
-    std::string* readCstringSubrecord();
+    std::string getFileName() {return this->fileName};
+
+    template <typename T>
+    void readSubrecord(T& subrecValue);
+
+    template <typename T>
+    void readArraySubrecord(T* array);
+
+    template <typename T>
+    void readRawData(T& value);
+
+    template <typename T>
+    int readRawArray(T* array, ssize_t length);
+
+    /*
+    std::string readCstring();
+    int32_t readInt32();
+    //uint32_t readUInt32();
+    uint16_t readUInt16();
+    float readFloat32()
+    */
 
 private:
-    FILE*   file;
+    std::FILE*   file;
     ssize_t fileSize;
+    std::string fileName;
 
     ssize_t fileLeft;
     ssize_t recordLeft;
+    ssize_t groupLeft;
 
+    ssize_t endOfRecord;
+    ssize_t endOfGroup;
+    ssize_t endOfSubrecord;
+
+    GroupHeader currentGroupHead;
     RecordHeader    currentRecordHead;
     SubrecordHeader currentSubrecordHead;
 };

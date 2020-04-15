@@ -4,15 +4,11 @@
 #include "record.hpp"
 #include <iostream>
 
-namespace ESM::Records {
+namespace ESM {
 
 struct TES4 : public Record {
 public:
-    TES4(ESMReader& reader)
-        : Record(reader)
-    {
-        std::cout << "BENIS\n";
-    };
+	
     ~TES4() {};
     void load(ESMReader& reader);
 };
