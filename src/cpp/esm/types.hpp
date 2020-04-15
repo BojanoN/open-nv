@@ -137,6 +137,17 @@ enum ESMType : uint32_t {
     MODD = 0x44444f4d,
     MOSD = 0x44534f4d,
 
+    OBND = 0x444e424f,
+    TX00 = 0x30305854,
+    TX01 = 0x31305854,
+    TX02 = 0x32305854,
+    TX03 = 0x33305854,
+    TX04 = 0x34305854,
+    TX05 = 0x35305854,
+    DODT = 0x54444f44,
+    DNAM = 0x4d414e44,
+    
+
     FULL = 0x4c4c5546,
     DESC = 0x43534544,
     ICON = 0x4e4f4349,

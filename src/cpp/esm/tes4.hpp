@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 
 #include "reader.hpp"
 #include "record.hpp"
@@ -13,3 +13,4 @@ public:
     void load(ESMReader& reader);
 };
 }
+*/

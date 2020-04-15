@@ -1,4 +1,4 @@
-#include "structs.hpp"
+/*#include "structs.hpp"
 
 namespace ESM {
 
@@ -36,4 +36,4 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index, ESMType
     }
 }
 
-};
+};*/

@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #include "reader.hpp"
 #include "record.hpp"
 #include <variant>
@@ -15,4 +15,4 @@ struct GlobalVariable : public Record {
 };
 
 
-};
+};*/

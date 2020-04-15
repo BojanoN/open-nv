@@ -45,7 +45,14 @@ void GameData<T>::insert(T& record) {
 template <class T>
 void GameData<T>::load(ESM::ESMReader& reader) {
   T record;
-  record.load(reader);
+  try {
+    record.load(reader);
+  } catch (std::runtime_error e) {
+    std::stringstream s;
+    s << "Cannot read record with formid " << record.id << "!\n";
+    s << e.what() << '\n';
+    throw std::runtime_error(s.str());
+  }
   this->insert(record);
 }
 

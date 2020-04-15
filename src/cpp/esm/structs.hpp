@@ -20,6 +20,8 @@ struct ObjectBounds {
     int16_t z2;
 };
 
+};
+/*
 struct Attributes {
     uint8_t strength;
     uint8_t perception;
@@ -60,4 +62,4 @@ struct ModelData {
     static void load(ESMReader& reader, ModelData& modelData, int index, ESMType nextSubheader);
 };
 
-}
+}*/

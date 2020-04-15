@@ -6,14 +6,15 @@
 
 #include <unordered_map>
 #include <sstream>
+#include <iostream>
 
 namespace GameWorld {
 
 class GameWorld {
-  GameData<ESM::MenuIcon> menuIcons;
+  //GameData<ESM::MenuIcon> menuIcons;
   // TODO: sve ostalo
-  GameData<ESM::GameSetting> gameSettings;
-  // GameData<ESM::TextureSet> textureSets;
+  //GameData<ESM::GameSetting> gameSettings;
+  GameData<ESM::TextureSet> textureSets;
   // GameData<ESM::GlobalVariable> globalVariables;
   // GameData<ESM::Class> classes;
   // GameData<ESM::Faction> factions;
@@ -122,14 +123,7 @@ class GameWorld {
     initDataStoreMap();
   }
 
-  inline const GameData<ESM::MenuIcon>& getMenuIcons() const {
-    return menuIcons;
-  }
-
   void load(ESM::ESMReader& reader);
-
-  // temporary
-  void insert(ESM::MenuIcon& menuIcon) { menuIcons.insert(menuIcon); }
 
 };
 

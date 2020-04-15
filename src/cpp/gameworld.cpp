@@ -1,4 +1,5 @@
 #include "gameworld.hpp"
+#include "esm/utils.hpp"
 
 namespace GameWorld {
 
@@ -24,25 +25,36 @@ void GameWorld::load(ESM::ESMReader& reader) {
 		while(reader.hasMoreRecordsInGroup()) {
 
 			reader.readNextRecordHeader();
-			auto dataStore = getDataStore(reader.recordType());
-			dataStore->load(reader);
+			GameDataBase* dataStore;
+			try {
+				dataStore = getDataStore(reader.recordType());
+			} catch (std::runtime_error e) {
+				std::cerr << e.what();
+				reader.skipGroup();
+				break;
+			}
+
+			try {
+				dataStore->load(reader);
+			} catch (std::runtime_error e) {
+				std::cerr << e.what();
+				reader.skipRecord();
+			}
+			
 		}
 	}
 
 }
 
 void GameWorld::initDataStoreMap() {
-  dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::GMST, &gameSettings));
+  dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::TXST, &textureSets));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type) {
 	std::unordered_map<uint32_t, GameDataBase*>::iterator it = dataStores.find(type);
 	if(it == dataStores.end()) {
 		std::stringstream s;
-    for(int i = 0; i < 4; i++) {
-      s << type;
-    }
-		s << " record type not implemented!\n";
+      s << ESM::Util::typeValueToName(type) << " record type not implemented!\n";
 		throw std::runtime_error(s.str());
 	}
 	return it->second;

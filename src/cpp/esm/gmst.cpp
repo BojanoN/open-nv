@@ -1,25 +1,28 @@
-/*#include "gmst.hpp"
+#include "gmst.hpp"
 
 namespace ESM {
 
 void GameSetting::load(ESMReader& reader) {
 	reader.readNextSubrecordHeader();
-	reader.checkSubrecordHeader(ESM::Names.EDID);
-	reader.readArraySubrecord<char>(editorId.c_str());
+	reader.checkSubrecordHeader(ESMType::EDID);
+	reader.readStringSubrecord(editorId);
 
 	reader.readNextSubrecordHeader();
-	reader.checkSubrecordHeader(ESM::Names.DATA);
-	switch(editorId[0]) {
+	reader.checkSubrecordHeader(ESMType::DATA);
+	/*switch(editorId[0]) {
 		case 's':
-			value = reader.readArraySubrecord<char>(value.c_str());
+			value = "";
+			reader.readStringSubrecord(value);
 			break;
 		case 'f':
-			value = reader.readSubrecord<float>(value);
+			value = 0.f;
+			reader.readSubrecord(value);
 			break;
 		default:
-			value = reader.readSubrecord<int32_t>(value);
+			value = 0;
+			reader.readSubrecord(value);
 			break;
-	}
+	}*/
 }
 
-};*/
+};

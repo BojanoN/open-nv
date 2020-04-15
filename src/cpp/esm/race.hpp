@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #include "reader.hpp"
 #include "record.hpp"
 #include "structs.hpp"
@@ -83,4 +83,4 @@ struct Race : public Record {
 };
 
 
-};
+};*/

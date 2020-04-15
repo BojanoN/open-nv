@@ -1,12 +1,16 @@
-#pragma once
+#ifndef __ESM_READER
+#define __ESM_READER
+
+#include "record.hpp"
+#include "utils.hpp"
 
 #include <cstdio>
 #include <string>
 #include <sstream>
 #include <ostream>
-
-#include "record.hpp"
-#include "subrecord.hpp"
+#include <vector>
+#include <cassert>
+#include <iomanip>
 
 namespace ESM {
 
@@ -95,10 +99,10 @@ template <typename T>
 void ESMReader::readSubrecord(T& subrecValue)
 {
     int actual = std::fread(&subrecValue, sizeof(T), 1, this->file);
-    if (actual != currentSubrecordHead.dataSize) {
+    if (actual != 1) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
-        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::ftell(this->file) << '\n';
         throw std::runtime_error(s.str());
     }
 }
@@ -123,7 +127,7 @@ void ESMReader::readArraySubrecord(std::vector<T>& array)
     if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
-        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::ftell(this->file) << '\n';
         throw std::runtime_error(s.str());
     }
 }
@@ -134,21 +138,11 @@ void ESMReader::readFixedArraySubrecord(T* array) {
     if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
-        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
-        throw std::runtime_error(s.str());
-    }
-}
-
-
-void ESMReader::readStringSubrecord(std::string& subrecString) {
-    subrecString.resize(currentSubrecordHead.dataSize);
-    int actual = std::fread(&subrecString[0], sizeof(char), currentSubrecordHead.dataSize / sizeof(char), this->file);
-    if (actual != currentSubrecordHead.dataSize) {
-        std::stringstream s;
-        s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
-        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::ftell(this->file) << '\n';
         throw std::runtime_error(s.str());
     }
 }
 
 }
+
+#endif //__ESM_READER

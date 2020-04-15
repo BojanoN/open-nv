@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 namespace ESM {
 class Group {
 public:
@@ -6,3 +6,4 @@ public:
     ~Group() {};
 };
 };
+*/

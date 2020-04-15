@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #include <cstdint>
 #include <string>
 
@@ -43,4 +43,4 @@ struct Class : public Record {
     virtual void load(ESMReader& reader);
 };
 
-};
+};*/

@@ -1,45 +1,46 @@
-/*#include "gmst.cpp"
+#include "txst.hpp"
 
 namespace ESM {
 
 void TextureSet::load(ESMReader& reader) {
   reader.readNextSubrecordHeader();
-  reader.checkSubrecordHeader(ESM::Names.EDID);
-  reader.readArraySubrecord<char>(editorId.c_str());
+  reader.checkSubrecordHeader(ESMType::EDID);
+  reader.readStringSubrecord(editorId);
 
-  reader.readNextSubrecordHeader();
-  reader.checkSubrecordHeader(ESM::Names.OBND);
-  reader.readSubrecord<ObjectBounds>(objectBounds);
-
-  while (reader.subrecordType().intValue != ESM::Names.DNAM) {
+  while (reader.subrecordType() != ESMType::DNAM) {
     reader.readNextSubrecordHeader();
-    switch (reader.subrecordType().intValue) {
-      case ESM::Names.TX00:
-        reader.readArraySubrecord<char>(baseImage_transparency.c_str());
+    switch (reader.subrecordType()) {
+      case ESMType::OBND:
+        reader.readSubrecord(objectBounds);
+      case ESMType::TX00:
+        reader.readStringSubrecord(baseImage_transparency);
         break;
-      case ESM::Names.TX01:
-        reader.readArraySubrecord<char>(normalMap_specular.c_str());
+      case ESMType::TX01:
+        reader.readStringSubrecord(normalMap_specular);
         break;
-      case ESM::Names.TX02:
-        reader.readArraySubrecord<char>(environmentMapMask.c_str());
+      case ESMType::TX02:
+        reader.readStringSubrecord(environmentMapMask);
         break;
-      case ESM::Names.TX03:
-        reader.readArraySubrecord<char>(glowMap.c_str());
+      case ESMType::TX03:
+        reader.readStringSubrecord(glowMap);
         break;
-      case ESM::Names.TX04:
-        reader.readArraySubrecord<char>(parallaxMap.c_str());
+      case ESMType::TX04:
+        reader.readStringSubrecord(parallaxMap);
         break;
-      case ESM::Names.TX05:
-        reader.readArraySubrecord<char>(environmentMap.c_str());
+      case ESMType::TX05:
+        reader.readStringSubrecord(environmentMap);
         break;
-      case ESM::Names.DODT:
-        reader.readSubrecord<DecalData>(decalData);
+      case ESMType::DODT:
+        reader.readSubrecord(decalData);
         break;
       default:
         break;
     }
   }
 
-  reader.checkSubrecordHeader(ESM::Names.DNAM);
-  reader.readSubrecord<uint16_t>(flags);
-};*/
+  reader.checkSubrecordHeader(ESMType::DNAM);
+  reader.readSubrecord(flags);
+
+}
+
+};
