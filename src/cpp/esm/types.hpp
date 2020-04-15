@@ -118,11 +118,20 @@ enum class ESMType {
     WTHR = 0x52485457,
 
     EDID = 0x44494445,
-    DATA = 0x41544144
+    DATA = 0x41544144,
+    MODL = 0x4c444f4d,
+    MOD2 = 0x32444f4d,
+    MOD3 = 0x33444f4d,
+    MOD4 = 0x34444f4d,
+    FULL = 0x4c4c5546,
+    DESC = 0x43534544,
+    ICON = 0x4e4f4349,
+    ATTR = 0x52545441,
+
 };
 
 union ESMName {
-    uint8_t charArray[4];
+    uint8_t  charArray[4];
     uint32_t intValue;
 };
 

@@ -7,7 +7,7 @@ namespace ESM {
 class ESMReader;
 
 struct __attribute__((packed)) RecordHeader {
-    ESMName type;
+    ESMName  type;
     uint32_t dataSize;
     uint32_t flags;
     formid   id;
@@ -31,9 +31,9 @@ struct Record {
 struct GroupHeader {
     uint32_t type;
     uint32_t groupSize;
-    uint8_t label[4];
-    int32_t groupType;
+    uint8_t  label[4];
+    int32_t  groupType;
     uint16_t stamp;
-    uint8_t unknown[6];
+    uint8_t  unknown[6];
 };
-
+}

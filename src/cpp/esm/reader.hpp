@@ -1,16 +1,17 @@
 #pragma once
 
-#include "record.hpp"
-#include "subrecord.hpp"
 #include <cstdio>
 #include <string>
-#include <unordered_map>
+
+#include "record.hpp"
+#include "subrecord.hpp"
 
 namespace ESM {
 
 class ESMReader {
 public:
-    ESMReader(std::string& path) : fileName{path}
+    ESMReader(std::string& path)
+        : fileName { path }
     {
 
         this->file = std::fopen(path.c_str(), "rb");
@@ -28,16 +29,16 @@ public:
     ~ESMReader() {};
 
     bool hasMoreSubrecords() { return std::ftell(this->file) < endOfRecord; };
-    bool hasMoreRecordsInGroup() {return std::ftell(this->file) < endOfGroup; }
+    bool hasMoreRecordsInGroup() { return std::ftell(this->file) < endOfGroup; }
     bool hasMoreBytes() { return std::ftell(this->file) < fileSize; };
     void skipRecord();
 
     RecordHeader&    getCurrentRecord();
     SubrecordHeader& getCurrentSubrecord();
-    ESMName         getCurrentRecordType();
-    ESMName         subrecordType();
+    ESMName          getCurrentRecordType();
+    ESMName          subrecordType();
 
-    uint16_t subrecordSize() {return currentSubrecordHead.dataSize};
+    uint16_t subrecordSize() { return currentSubrecordHead.dataSize; };
 
     void readNextSubrecordHeader();
     void readNextRecordHeader();
@@ -46,12 +47,12 @@ public:
 
     void checkSubrecordHeader(ESMType type);
 
-    ESMName peekNextType();
+    ESMType peekNextType();
 
     template <typename T>
     void readGeneric(T* dest);
 
-    std::string getFileName() {return this->fileName};
+    std::string getFileName() { return this->fileName; };
 
     template <typename T>
     void readSubrecord(T& subrecValue);
@@ -74,8 +75,8 @@ public:
     */
 
 private:
-    std::FILE*   file;
-    ssize_t fileSize;
+    std::FILE*  file;
+    ssize_t     fileSize;
     std::string fileName;
 
     ssize_t fileLeft;
@@ -86,7 +87,7 @@ private:
     ssize_t endOfGroup;
     ssize_t endOfSubrecord;
 
-    GroupHeader currentGroupHead;
+    GroupHeader     currentGroupHead;
     RecordHeader    currentRecordHead;
     SubrecordHeader currentSubrecordHead;
 };

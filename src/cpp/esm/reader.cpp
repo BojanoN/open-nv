@@ -9,14 +9,14 @@ SubrecordHeader& ESMReader::getCurrentSubrecord() { return currentSubrecordHead;
 uint32_t ESMReader::getCurrentRecordType() { return this->currentRecordHead.Type; };
 uint32_t ESMReader::getCurrentSubrecordType() { return this->currentSubrecordHead.Type; };
 
-ESMName ESMReader::peekNextType()
+ESMType ESMReader::peekNextType()
 {
-    if(std::ftell(this->file) != endOfSubrecord) {
+    if (std::ftell(this->file) != endOfSubrecord) {
         std::stringstream s;
         s << "Cannot peek when not at end of subrecord.\n";
-        s << currentRecordHead.type << " at " << std::ftell(this->file) << '\n'; 
+        s << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
     }
-    uint32_t ret;
+    ESMType ret;
 
     std::fread(&ret, sizeof(uint32_t), 1, this->file);
     std::fseek(this->file, -sizeof(uint32_t), SEEK_CUR);
@@ -30,26 +30,29 @@ void ESMReader::readNextRecordHeader()
     this->endOfRecord = std::ftell(this->file) + currentRecordHead.dataSize;
 }
 
-void ESMReader::readNextGroupHeader() {
+void ESMReader::readNextGroupHeader()
+{
     std::fread(&(this->currentGroupHead), sizeof(GroupHeader), 1, this->file);
     this->endOfGroup = std::ftell(this->file) + currentGroupHead.groupSize - 24;
 }
 
 void ESMReader::readNextSubrecordHeader()
 {
-    if(std::ftell(this->file) == endOfRecord) {
+    if (std::ftell(this->file) == endOfRecord) {
         std::stringstream s;
-        s << "Unexpected end of record " << currentRecordHead.type << " at " << std::ftell(this->file) << '\n'; 
+        s << "Unexpected end of record " << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
     }
     std::fread(&(this->currentSubrecordHead), sizeof(SubrecordHeader), 1, this->file);
     this->endOfSubecord = std::ftell(this->file) + currentSubrecordHead.dataSize;
 }
 
-void ESMReader::skipRecord() {
+void ESMReader::skipRecord()
+{
     std::fseek(this->file, endOfRecord, SEEK_SET);
 }
 
-void ESMReader::skipGroup() {
+void ESMReader::skipGroup()
+{
     std::fseek(this->file, endOfGroup, SEEK_SET);
 }
 
@@ -63,35 +66,39 @@ std::string ESMReader::readCstring() {
     return s;
 }*/
 
-template<typename T>
-void ESMReader::readSubrecord(T& subrecValue) {
+template <typename T>
+void ESMReader::readSubrecord(T& subrecValue)
+{
     int actual = std::fread(&subrecValue, sizeof(T), 1, this->file);
-    if(actual != currentSubrecordHead.dataSize) {
+    if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << acual << " bytes,\n";
-        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this-file) << '\n'; 
+        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this - file) << '\n';
         throw std::runtime_error(s.str());
     }
 }
 
-template<typename T>
-int ESMReader::readRawData(T& value) {
+template <typename T>
+int ESMReader::readRawData(T& value)
+{
     return std::fread(&value, sizeof(T), 1, this->file);
 }
 
 template <typename T>
-void readArraySubrecord(T* subrecPtr) {
+void readArraySubrecord(T* subrecPtr)
+{
     int actual = std::fread(subrecPtr, sizeof(T), currentSubrecordHead.dataSize / sizeof(T), this->file);
-    if(actual != currentSubrecordHead.dataSize) {
+    if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << acual << " bytes,\n";
-        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this-file) << '\n'; 
+        s << " in subrecord " << currentSubrecordHead.type << ", in record " << currentRecordHead.type << " at " << std::ftell(this - file) << '\n';
         throw std::runtime_error(s.str());
     }
 }
 
 template <typename T>
-int readRawArray(T* array, ssize_t length) {
+int readRawArray(T* array, ssize_t length)
+{
     return std::fread(array, sizeof(T), length, this->file);
 }
 
@@ -124,11 +131,12 @@ float ESMReader::readFloat32() {
     return f;
 }*/
 
-void ESMReader::checkSubrecordHeader(ESMType type) {
-    if(currentSubrecordHead.type.intValue != type.intValue) {
+void ESMReader::checkSubrecordHeader(ESMType type)
+{
+    if (currentSubrecordHead.type.intValue != type.intValue) {
         std::stringstream s;
         s << "Expected subrecord type " << type[0]
-            << type[1] << type [2] << type [3];
+          << type[1] << type[2] << type[3];
         s << " at record type " << currentRecordHead.type;
         s << ", id " << currentRecordHead.id << "at " << std::ftell(this->file) << '\n';
         throw std::runtime_error(s.str());
