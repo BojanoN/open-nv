@@ -1,9 +1,11 @@
 #pragma once
-#include "reader.hpp"
 #include "record.hpp"
 #include "structs.hpp"
+#include <string>
+#include <cstdint>
 
 namespace ESM {
+
 
 struct DecalData {
 	float minWidth;
@@ -19,6 +21,7 @@ struct DecalData {
 	uint8_t color[4];
 };
 
+
 struct TextureSet : public Record {
 
 	std::string editorId;
@@ -32,8 +35,8 @@ struct TextureSet : public Record {
 	DecalData decalData;
 	uint16_t flags;
 
-
-	virtual void load(ESMReader& reader);
+	TextureSet(ESMReader&);
+	//virtual void load(ESMReader& reader);
 };
 
 

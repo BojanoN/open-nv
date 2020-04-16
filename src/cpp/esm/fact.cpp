@@ -1,70 +1,71 @@
-/*#include "fact.hpp"
+#include "fact.hpp"
 
 namespace ESM {
 
-struct FactionRank {
-	int32_t rankNumber;
-	std::string male;
-	std::string female;
-	std::string insignia;
-};
-
 void Faction::loadRankCollection(ESMReader& reader) {
-	while(reader.hasMoreSubrecords() && reader.subrecordType().intValue != ESM::Names.WMI1) {
-		switch(reader.subrecordType().intValue) {
-			case ESM::Names.RNAM:
-				ranks.push_back(new FactionRank);
-				reader.readSubrecord<int32_t>(ranks.back().rankNumber);
+	bool first = true;
+	while(reader.hasMoreSubrecords() && reader.subrecordType() != ESMType::WMI1) {
+		if(first) {
+			first = false;
+		} else {
+			reader.readNextSubrecordHeader();
+		}
+		
+		switch(reader.subrecordType()) {
+			case ESMType::RNAM:
+				ranks.emplace_back();
+				reader.readSubrecord(ranks.back().rankNumber);
 				break;
-			case ESM::Names.MNAM:
-				reader.readArraySubrecord<char>(ranks.back().male.c_str());
+			case ESMType::MNAM:
+				reader.readStringSubrecord(ranks.back().male);
 				break;
-			case ESM::Names.FNAM:
-				reader.readArraySubrecord<char>(ranks.back().female.c_str());
+			case ESMType::FNAM:
+				reader.readStringSubrecord(ranks.back().female);
 				break;
-			case ESM::Names.INAM:
-				reader.readArraySubrecord<char>(ranks.back().insignia.c_str());
+			case ESMType::INAM:
+				reader.readStringSubrecord(ranks.back().insignia);
 				break;
 		}
-		reader.readNextSubrecordHeader();
 	}
 }
 
 
-void Faction::load(ESMReader& reader) {
+Faction::Faction(ESMReader& reader) : Record(reader) {
 	reader.readNextSubrecordHeader();
-	reader.checkSubrecordHeader(ESM::Names.EDID);
-	reader.readArraySubrecord<char>(editorId.c_str());
+	reader.checkSubrecordHeader(ESMType::EDID);
+	reader.readStringSubrecord(editorId);
 
 	while(reader.hasMoreSubrecords()) {
 		reader.readNextSubrecordHeader();
-		switch(reader.subrecordType().intValue) {
+		switch(reader.subrecordType()) {
 
-			case ESM::Names.FULL:
-				reader.readArraySubrecord<char>(name.c_str());
+			case ESMType::FULL:
+				reader.readStringSubrecord(name);
 				break;
-			case ESM::Names.XNAM:
-				relations.push_back(new FactRaceRelation);
-				reader.readSubrecord<FactRaceRelation>(relations.back());
+			case ESMType::XNAM:
+				relations.emplace_back();
+				reader.readSubrecord(relations.back());
 				break;
-			case ESM::Names.DATA:
-				reader.readSubrecord<FactionData>(factionData);
+			case ESMType::DATA:
+				reader.readSubrecord(factionData);
 				break;
-			case ESM::Names.CNAM:
-				reader.readSubrecord<float>(unused);
+			case ESMType::CNAM:
+				reader.readSubrecord(unused);
 				break;
-			case ESM::Names.RNAM:
+			case ESMType::RNAM:
 				loadRankCollection(reader);
 				break;
-			case ESM::Names.WM1:
-				reader.readSubrecord<formid>(reputation);
+			case ESMType::WMI1:
+				reader.readSubrecord(reputation);
 				break;
 			default:
-				throw std::runtime_error;
+				std::stringstream s;
+				s << "Invalid subrecord type " << Util::typeValueToName(reader.subrecordType());
+				reader.reportError(s.str());
 		}
 	}
 
 
 }
 
-};*/
+};

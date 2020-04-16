@@ -1,8 +1,8 @@
-/*#pragma once
+#pragma once
+#include "record.hpp"
+
 #include <cstdint>
 #include <string>
-
-#include "record.hpp"
 
 namespace ESM {
 
@@ -40,7 +40,7 @@ struct Class : public Record {
     ClassData   classData;
     Attributes  attributes;
 
-    virtual void load(ESMReader& reader);
+    Class(ESMReader& reader);
 };
 
-};*/
+};

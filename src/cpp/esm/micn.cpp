@@ -1,17 +1,21 @@
-/*#include "gmst.cpp"
+#include "micn.hpp"
 
 namespace ESM {
 
-void MenuIcon::load(ESMReader& reader) {
+MenuIcon::MenuIcon(ESMReader& reader) : Record(reader) {
   reader.readNextSubrecordHeader();
-  reader.checkSubrecordHeader(ESM::Names.EDID);
-  reader.readArraySubrecord<char>(editorId.c_str());
+  reader.checkSubrecordHeader(ESMType::EDID);
+  reader.readStringSubrecord(editorId);
 
   reader.readNextSubrecordHeader();
-  reader.checkSubrecordHeader(ESM::Names.ICON);
-  reader.readArraySubrecord<char>(largeIconFilename.c_str());
+  reader.checkSubrecordHeader(ESMType::ICON);
+  reader.readStringSubrecord(largeIconFilename);
 
-  reader.readNextSubrecordHeader();
-  reader.checkSubrecordHeader(ESM::Names.MICO);
-  reader.readArraySubrecord<char>(smallIconFilename.c_str());
-};*/
+  if(reader.hasMoreSubrecords()) {
+  	reader.readNextSubrecordHeader();
+  	reader.checkSubrecordHeader(ESMType::MICO);
+  	reader.readStringSubrecord(smallIconFilename);
+  }
+}
+
+};

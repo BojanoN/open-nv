@@ -1,32 +1,30 @@
-/*#include "clas.hpp"
-#include "reader.hpp"
-#include "record.hpp"
+#include "clas.hpp"
 
 namespace ESM {
 
-void Class::load(ESMReader& reader)
+Class::Class(ESMReader& reader) : Record(reader)
 {
     
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::EDID);
-    //reader.readArraySubrecord<char>(editorId.c_str());
+    reader.readStringSubrecord(editorId);
 
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::FULL);
-   //reader.readArraySubrecord<char>(name.c_str());
+    reader.readStringSubrecord(name);
 
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::DESC);
-    //reader.readArraySubrecord<char>(description.c_str());
+    reader.readStringSubrecord(description);
 
-    while (reader.subrecordType().intValue != ESMType::DATA) {
+    while (reader.subrecordType() != ESMType::DATA) {
         reader.readNextSubrecordHeader();
-        switch (reader.subrecordType().intValue) {
+        switch (reader.subrecordType()) {
         case ESMType::ICON:
-            reader.readArraySubrecord<char>(largeIconFilename);
+            reader.readStringSubrecord(largeIconFilename);
             break;
         case ESMType::MICO:
-            reader.readArraySubrecord<char>(smallIconFilename);
+            reader.readStringSubrecord(smallIconFilename);
             break;
         default:
             break;
@@ -34,12 +32,12 @@ void Class::load(ESMReader& reader)
     }
 
     reader.checkSubrecordHeader(ESMType::DATA);
-    reader.readSubrecord<ClassData>(classData);
+    reader.readSubrecord(classData);
 
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::ATTR);
-    reader.readSubrecord<Attributes>(attributes);
+    reader.readSubrecord(attributes);
     
 }
 
-};*/
+};

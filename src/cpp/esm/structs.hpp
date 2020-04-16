@@ -30,14 +30,14 @@ struct Attributes {
     uint8_t intelligence;
     uint8_t agillity;
     uint8_t luck;
-};
+};*/
 
 struct FactRaceRelation {
     formid   faction;
     int32_t  modifier;
     uint32_t groupCombatReaction;
 };
-
+/*
 struct AlternateTexture {
     uint32_t nameLength;
     char*    name;

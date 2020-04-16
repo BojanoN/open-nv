@@ -1,8 +1,10 @@
-/*#pragma once
-#include "reader.hpp"
+#pragma once
 #include "record.hpp"
+#include <string>
 
 namespace ESM {
+
+class ESMReader;
 
 struct MenuIcon : public Record {
 
@@ -10,8 +12,8 @@ struct MenuIcon : public Record {
 	std::string largeIconFilename;
 	std::string smallIconFilename;
 
-	virtual void load(ESMReader& reader);
+	MenuIcon(ESMReader& reader);
 };
 
 
-};*/
+};

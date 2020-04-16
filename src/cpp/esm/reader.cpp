@@ -1,5 +1,4 @@
 #include "reader.hpp"
-#include "records.hpp"
 
 namespace ESM {
 
@@ -8,8 +7,12 @@ SubrecordHeader& ESMReader::getCurrentSubrecord() {
   return currentSubrecordHead;
 };
 
-uint32_t ESMReader::recordType() { return this->currentRecordHead.type; };
-uint32_t ESMReader::subrecordType() { return this->currentSubrecordHead.type; };
+uint32_t ESMReader::recordType() { return this->currentRecordHead.type; }
+uint32_t ESMReader::subrecordType() { return this->currentSubrecordHead.type; }
+uint32_t ESMReader::groupLabel() { return currentGroupHead.label; }
+int32_t  ESMReader::groupType() { return currentGroupHead.groupType; }
+uint32_t ESMReader::recordFlags() { return currentRecordHead.flags; }
+uint32_t ESMReader::recordId() { return currentRecordHead.id; }
 
 uint32_t ESMReader::peekNextType() {
   if (std::ftell(this->file) != endOfSubrecord) {
@@ -56,7 +59,7 @@ void ESMReader::checkSubrecordHeader(ESMType type) {
     s << "Expected subrecord type " << Util::typeValueToName(type);
     s << " at record type " << Util::typeValueToName(currentRecordHead.type);
     s << ", formid " << currentRecordHead.id << " at 0x" << std::hex
-      << std::setfill('0') << std::setw(8) << std::ftell(this->file) << '\n';
+      << std::setfill('0') << std::setw(8) << std::ftell(this->file) - sizeof(SubrecordHeader) << '\n';
     throw std::runtime_error(s.str());
   }
 }
@@ -75,4 +78,12 @@ void ESMReader::readStringSubrecord(std::string& subrecString) {
     throw std::runtime_error(s.str());
   }
 }
+
+void ESMReader::reportError(std::string err) {
+  //std::stringstream s(err, std::ios_base::out | std::ios_base::app);
+  std::cerr << err;
+  std::cerr << " in record type " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << std::setw(8) << std::setfill('0') << std::ftell(this->file);
+  throw std::runtime_error("");
+}
+
 };

@@ -1,9 +1,13 @@
-/*#pragma once
-#include "reader.hpp"
+#pragma once
 #include "record.hpp"
 #include "structs.hpp"
 
+#include <sstream>
+
 namespace ESM {
+
+
+class ESMReader;
 
 struct FactionData {
 	uint8_t flags1;
@@ -25,12 +29,15 @@ struct Faction : public Record {
 	std::string name;
 	std::vector<FactRaceRelation> relations;
 	FactionData factionData;
-	float32 unused; //?
+	float unused; //?
 	std::vector<FactionRank> ranks;
 	formid reputation;
 
-	virtual void load(ESMReader& reader);
+	Faction(ESMReader& reader);
+
+private:
+	void loadRankCollection(ESMReader& reader);
 };
 
 
-};*/
+};

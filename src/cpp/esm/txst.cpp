@@ -2,16 +2,18 @@
 
 namespace ESM {
 
-void TextureSet::load(ESMReader& reader) {
+//void TextureSet::load(ESMReader& reader) {
+TextureSet::TextureSet(ESMReader& reader) : Record(reader) {
   reader.readNextSubrecordHeader();
   reader.checkSubrecordHeader(ESMType::EDID);
   reader.readStringSubrecord(editorId);
 
-  while (reader.subrecordType() != ESMType::DNAM) {
+  while (reader.hasMoreSubrecords()) {
     reader.readNextSubrecordHeader();
     switch (reader.subrecordType()) {
       case ESMType::OBND:
         reader.readSubrecord(objectBounds);
+        break;
       case ESMType::TX00:
         reader.readStringSubrecord(baseImage_transparency);
         break;
@@ -33,13 +35,15 @@ void TextureSet::load(ESMReader& reader) {
       case ESMType::DODT:
         reader.readSubrecord(decalData);
         break;
-      default:
+      case ESMType::DNAM:
+        reader.readSubrecord(flags);
         break;
+      default:
+        std::stringstream s;
+        s << "Invalid subrecord type " << Util::typeValueToName(reader.subrecordType()) << '\n';
+        throw std::runtime_error(s.str());
     }
   }
-
-  reader.checkSubrecordHeader(ESMType::DNAM);
-  reader.readSubrecord(flags);
 
 }
 

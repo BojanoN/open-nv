@@ -11,13 +11,13 @@
 namespace GameWorld {
 
 class GameWorld {
-  //GameData<ESM::MenuIcon> menuIcons;
   // TODO: sve ostalo
   //GameData<ESM::GameSetting> gameSettings;
   GameData<ESM::TextureSet> textureSets;
+  GameData<ESM::MenuIcon> menuIcons;
   // GameData<ESM::GlobalVariable> globalVariables;
-  // GameData<ESM::Class> classes;
-  // GameData<ESM::Faction> factions;
+  GameData<ESM::Class> classes;
+  GameData<ESM::Faction> factions;
   // GameData<ESM::HeadPart> headParts;
   // GameData<ESM::Hair> hairs;
   // GameData<ESM::Eyes> eyes;

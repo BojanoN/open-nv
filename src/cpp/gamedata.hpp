@@ -4,12 +4,14 @@
 #include <string>
 #include <unordered_map>
 #include <sstream>
+#include <cassert>
 
 namespace GameWorld {
 
 class GameDataBase {
 public:
   virtual void load(ESM::ESMReader& reader) = 0;
+  virtual ssize_t size() = 0;
 };
 
 
@@ -20,7 +22,7 @@ class GameData : public GameDataBase {
   void raiseError(formid id) const;
 
  public:
-
+  virtual ssize_t size() { return dataMap.size(); }
   virtual void load(ESM::ESMReader& reader);
   const T& get(formid id) const;
   void insert(T& data);
@@ -44,16 +46,16 @@ void GameData<T>::insert(T& record) {
 
 template <class T>
 void GameData<T>::load(ESM::ESMReader& reader) {
-  T record;
   try {
-    record.load(reader);
+    T record(reader);
+    this->insert(record);
+    assert(dataMap.find(record.id) != dataMap.end());
   } catch (std::runtime_error e) {
     std::stringstream s;
-    s << "Cannot read record with formid " << record.id << "!\n";
+    s << "Cannot read record!\n";
     s << e.what() << '\n';
     throw std::runtime_error(s.str());
   }
-  this->insert(record);
 }
 
 template <class T>

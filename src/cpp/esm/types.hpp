@@ -147,11 +147,22 @@ enum ESMType : uint32_t {
     DODT = 0x54444f44,
     DNAM = 0x4d414e44,
     
+    MICO = 0x4f43494d,
 
     FULL = 0x4c4c5546,
     DESC = 0x43534544,
     ICON = 0x4e4f4349,
     ATTR = 0x52545441,
+
+    RNAM = 0x4d414e52,
+    MNAM = 0x4d414e4d,
+    FNAM = 0x4d414e46,
+    INAM = 0x4d414e49,
+    XNAM = 0x4d414e58,
+    CNAM = 0x4d414e43,
+    WMI1 = 0x31494d57,
+
+
 
 
 };
