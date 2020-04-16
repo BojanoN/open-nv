@@ -78,7 +78,7 @@ void ESMReader::readStringSubrecord(std::string& subrecString)
     int actual = std::fread(&subrecString[0], sizeof(char),
         currentSubrecordHead.dataSize / sizeof(char), this->file);
     if (actual != currentSubrecordHead.dataSize) {
-        log_fatal("Expected to read size %u, actually read %u bytes");
+        log_fatal("Expected to read size %u, actually read %u bytes", currentSubrecordHead.dataSize, actual);
         log_fatal("In subrecord %s", Util::typeValueToName(this->currentSubrecordHead.type).c_str());
         log_fatal("At record type %s, formid %u at 0x%06x",
             Util::typeValueToName(this->currentRecordHead.type).c_str(),
@@ -92,6 +92,23 @@ void ESMReader::readStringSubrecord(std::string& subrecString)
 void ESMReader::rewind(ssize_t size)
 {
     std::fseek(this->file, -size, SEEK_CUR);
+}
+
+void ESMReader::readFixedSizeString(std::string& dest, size_t size)
+{
+    dest.resize(size);
+    int actual = std::fread(&dest[0], sizeof(char),
+        size, this->file);
+    if (actual != size) {
+        log_fatal("Expected to read size %u, actually read %u bytes", size, actual);
+        log_fatal("In subrecord %s", Util::typeValueToName(this->currentSubrecordHead.type).c_str());
+        log_fatal("At record type %s, formid %u at 0x%06x",
+            Util::typeValueToName(this->currentRecordHead.type).c_str(),
+            this->currentRecordHead.id,
+            std::ftell(this->file));
+
+        throw std::runtime_error("Read mismatch!");
+    }
 }
 
 void ESMReader::reportError(std::string err)

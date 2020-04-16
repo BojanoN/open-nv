@@ -86,7 +86,10 @@ public:
     template <typename T>
     void readFixedArraySubrecord(T* array);
 
-    void reportError(std::string err);
+    void readFixedSizeString(std::string& dest, size_t size);
+
+    void
+    reportError(std::string err);
 
 private:
     std::FILE*  file;

@@ -21,6 +21,7 @@ void Faction::loadRankCollection(ESMReader& reader)
             reader.readSubrecord(ranks.back().insignia);
             break;
         }
+
         reader.readNextSubrecordHeader();
     }
     reader.rewind(sizeof(SubrecordHeader));

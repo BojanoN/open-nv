@@ -118,7 +118,7 @@ enum ESMType : uint32_t {
     WEAP = 0x50414557,
     WRLD = 0x444c5257,
     WTHR = 0x52485457,
-
+    //subrecs
     EDID = 0x44494445,
     DATA = 0x41544144,
     MODL = 0x4c444f4d,
@@ -130,8 +130,8 @@ enum ESMType : uint32_t {
     MO2T = 0x54324f4d,
     MO3T = 0x54334f4d,
     MO4T = 0x54344f4d,
-    MODS = 0x53444f4d,                                                                                               
-    MO2S = 0x53324f4d,                                                                                               
+    MODS = 0x53444f4d,
+    MO2S = 0x53324f4d,
     MO3S = 0x53334f4d,
     MO4S = 0x53344f4d,
     MODD = 0x44444f4d,
@@ -146,7 +146,7 @@ enum ESMType : uint32_t {
     TX05 = 0x35305854,
     DODT = 0x54444f44,
     DNAM = 0x4d414e44,
-    
+
     MICO = 0x4f43494d,
 
     FULL = 0x4c4c5546,
@@ -161,9 +161,7 @@ enum ESMType : uint32_t {
     XNAM = 0x4d414e58,
     CNAM = 0x4d414e43,
     WMI1 = 0x31494d57,
-
-
-
+    HNAM = 0x4d414e48,
 
 };
 

@@ -1,7 +1,8 @@
 #pragma once
-#include "tes4.hpp"
-#include "gmst.hpp"
-#include "txst.hpp"
-#include "micn.hpp"
 #include "clas.hpp"
 #include "fact.hpp"
+#include "gmst.hpp"
+#include "hdpt.hpp"
+#include "micn.hpp"
+#include "tes4.hpp"
+#include "txst.hpp"

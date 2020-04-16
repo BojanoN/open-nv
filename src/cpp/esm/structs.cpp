@@ -1,6 +1,12 @@
-/*#include "structs.hpp"
+#include "structs.hpp"
 
 namespace ESM {
+
+const static constexpr ESMType filenameType[]    = { ESMType::MODL, ESMType::MOD2, ESMType::MOD3, ESMType::MOD4 };
+const static constexpr ESMType unusedType[]      = { ESMType::MODB, ESMType::NO_ENTRY, ESMType::NO_ENTRY, ESMType::NO_ENTRY };
+const static constexpr ESMType hashesType[]      = { ESMType::MODT, ESMType::MO2T, ESMType::MO3T, ESMType::MO4T };
+const static constexpr ESMType altTexturesType[] = { ESMType::MODS, ESMType::MO2S, ESMType::MO3S, ESMType::MO4S };
+const static constexpr ESMType flagType[]        = { ESMType::MODD, ESMType::NO_ENTRY, ESMType::MOSD, ESMType::NO_ENTRY };
 
 void ModelData::load(ESMReader& reader, ModelData& modelData, int index, ESMType nextSubheader)
 {
@@ -8,8 +14,7 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index, ESMType
     reader.checkSubrecordHeader(filenameType[index]);
     reader.readStringSubrecord(modelData.filename);
 
-        while (reader.subrecordType() != nextSubheader)
-    {
+    while (reader.subrecordType() != nextSubheader) {
         reader.readNextSubrecordHeader();
 
         if (unusedType[index] && reader.subrecordType() == unusedType[index]) {
@@ -21,11 +26,11 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index, ESMType
         } else if (reader.subrecordType() == altTexturesType[index]) {
             reader.readRawData(modelData.alternateTextureCount);
             for (int i = 0; i < modelData.alternateTextureCount; i++) {
-                AlternateTexture tex;
-                modelData.alternateTextures.push_back(tex);
+                modelData.alternateTextures.emplace_back();
                 AlternateTexture& currentTex = modelData.alternateTextures.back();
                 reader.readRawData(currentTex.nameLength);
-                reader.readRawArray(currentTex.name, currentTex.nameLength);
+                currentTex.name.resize(currentTex.nameLength);
+                reader.readFixedSizeString(currentTex.name, currentTex.nameLength);
                 reader.readRawData(currentTex.newTexture);
                 reader.readRawData(currentTex.index);
             }
@@ -36,4 +41,4 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index, ESMType
     }
 }
 
-};*/
+};
