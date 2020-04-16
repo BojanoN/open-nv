@@ -1,16 +1,16 @@
 #pragma once
 
-#include "utils.hpp"
-#include "types.hpp"
 #include "headers.hpp"
+#include "types.hpp"
+#include "utils.hpp"
 
-#include <cstdio>
-#include <string>
-#include <sstream>
-#include <iostream>
-#include <vector>
 #include <cassert>
+#include <cstdio>
 #include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace ESM {
 
@@ -32,7 +32,11 @@ public:
 
         std::fseek(this->file, 0, SEEK_SET);
     };
-    ~ESMReader() {};
+    ~ESMReader()
+    {
+        if (this->file)
+            std::fclose(this->file);
+    };
 
     bool hasMoreSubrecords() { return std::ftell(this->file) < endOfRecord; }
     bool hasMoreRecordsInGroup() { return std::ftell(this->file) < endOfGroup; }
@@ -42,13 +46,13 @@ public:
 
     RecordHeader&    getCurrentRecord();
     SubrecordHeader& getCurrentSubrecord();
-    uint32_t          recordType();
-    uint32_t          subrecordType();
-    uint32_t groupLabel();
-    int32_t groupType();
+    uint32_t         recordType();
+    uint32_t         subrecordType();
+    uint32_t         groupLabel();
+    int32_t          groupType();
 
     uint32_t recordFlags();
-    formid recordId();
+    formid   recordId();
 
     uint16_t subrecordSize() { return currentSubrecordHead.dataSize; }
 
@@ -100,7 +104,6 @@ private:
     SubrecordHeader currentSubrecordHead;
 };
 
-
 template <typename T>
 void ESMReader::readSubrecord(T& subrecValue)
 {
@@ -140,7 +143,8 @@ void ESMReader::readArraySubrecord(std::vector<T>& array)
 }
 
 template <typename T>
-void ESMReader::readFixedArraySubrecord(T* array) {
+void ESMReader::readFixedArraySubrecord(T* array)
+{
     int actual = std::fread(array, sizeof(T), currentSubrecordHead.dataSize / sizeof(T), this->file);
     if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;

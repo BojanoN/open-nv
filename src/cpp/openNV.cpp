@@ -1,5 +1,5 @@
-#include "logc/log.h"
 #include "gameworld.hpp"
+#include "util/logger.hpp"
 #include <getopt.h>
 #include <time.h>
 
@@ -9,9 +9,9 @@ int main(int argc, char** argv)
 {
 
 #ifdef DEBUG
-    log_set_level(LOG_DEBUG);
+    Logger::setLevel(Logger::LOG_DEBUG);
 #else
-    log_set_level(LOG_INFO);
+    Logger::setLevel(Logger::LOG_INFO);
 #endif
 
     int         c;
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     }
 
     GameWorld::GameWorld world;
-    ESM::ESMReader reader(path);
+    ESM::ESMReader       reader(path);
     world.load(reader);
 
     //log_info("Loaded %s in %f miliseconds", path.c_str(), (double)(end - start) / (CLOCKS_PER_SEC / 1000));
