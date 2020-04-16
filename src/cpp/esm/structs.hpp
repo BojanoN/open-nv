@@ -47,9 +47,10 @@ struct ModelData {
     std::string filename;
     uint8_t     unused[4];
     //benis
-    uint32_t                      alternateTextureCount;
-    std::vector<AlternateTexture> alternateTextures;
-    uint8_t                       FaceGenModelFlags;
+    uint32_t                          alternateTextureCount;
+    std::vector<std::vector<uint8_t>> textureHashes;
+    std::vector<AlternateTexture>     alternateTextures;
+    uint8_t                           FaceGenModelFlags;
 
     static void load(ESMReader& reader, ModelData& modelData, int index, ESMType nextSubheader);
 };

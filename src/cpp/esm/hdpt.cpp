@@ -3,6 +3,7 @@
 namespace ESM {
 
 HeadPart::HeadPart(ESMReader& reader)
+    : Record(reader)
 {
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::EDID);

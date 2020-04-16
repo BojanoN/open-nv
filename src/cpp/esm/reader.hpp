@@ -66,6 +66,7 @@ public:
 
     uint32_t peekNextType();
     void     rewind(ssize_t size);
+    uint32_t getCurrentPosition();
 
     std::string getFileName() { return this->fileName; };
 

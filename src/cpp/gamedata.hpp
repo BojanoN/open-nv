@@ -43,12 +43,15 @@ const T& GameData<T>::get(formid id) const
 template <class T>
 void GameData<T>::insert(T& record)
 {
-    dataMap.insert(std::pair<formid, T*>(record.id, &record));
+    log_info("Inserting record %u", record.id);
+    auto it = dataMap.insert(std::pair<formid, T*>(record.id, &record));
+    assert(it.second);
 }
 
 template <class T>
 void GameData<T>::load(ESM::ESMReader& reader)
 {
+    log_debug("Fpointer before load 0x%x", reader.getCurrentPosition());
     try {
         T record(reader);
         this->insert(record);
@@ -59,6 +62,7 @@ void GameData<T>::load(ESM::ESMReader& reader)
         log_fatal(e.what());
         throw std::runtime_error(e.what());
     }
+    log_debug("Fpointer after load 0x%x", reader.getCurrentPosition());
 }
 
 template <class T>

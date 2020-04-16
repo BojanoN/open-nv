@@ -111,6 +111,14 @@ void ESMReader::readFixedSizeString(std::string& dest, size_t size)
     }
 }
 
+uint32_t ESMReader::getCurrentPosition()
+{
+    if (this->file) {
+        return std::ftell(this->file);
+    } else {
+        throw std::runtime_error("File has not been opened yet!");
+    }
+}
 void ESMReader::reportError(std::string err)
 {
     //std::stringstream s(err, std::ios_base::out | std::ios_base::app);

@@ -21,7 +21,11 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index, ESMType
             reader.readFixedArraySubrecord(modelData.unused);
 
         } else if (reader.subrecordType() == hashesType[index]) {
-            //benis
+            uint32_t size = reader.getCurrentSubrecord().dataSize;
+            modelData.textureHashes.emplace_back();
+            modelData.textureHashes.back().resize(size);
+
+            reader.readRawArray(&modelData.textureHashes.back()[0], size);
 
         } else if (reader.subrecordType() == altTexturesType[index]) {
             reader.readRawData(modelData.alternateTextureCount);
@@ -39,6 +43,7 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index, ESMType
             reader.readSubrecord(modelData.FaceGenModelFlags);
         }
     }
+    reader.rewind(sizeof(SubrecordHeader));
 }
 
 };
