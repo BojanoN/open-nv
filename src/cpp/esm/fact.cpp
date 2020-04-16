@@ -4,13 +4,7 @@ namespace ESM {
 
 void Faction::loadRankCollection(ESMReader& reader)
 {
-    bool first = true;
     while (reader.hasMoreSubrecords() && reader.subrecordType() != ESMType::WMI1) {
-        if (first) {
-            first = false;
-        } else {
-            reader.readNextSubrecordHeader();
-        }
 
         switch (reader.subrecordType()) {
         case ESMType::RNAM:
@@ -24,10 +18,12 @@ void Faction::loadRankCollection(ESMReader& reader)
             reader.readStringSubrecord(ranks.back().female);
             break;
         case ESMType::INAM:
-            reader.readStringSubrecord(ranks.back().insignia);
+            reader.readSubrecord(ranks.back().insignia);
             break;
         }
+        reader.readNextSubrecordHeader();
     }
+    reader.rewind(sizeof(SubrecordHeader));
 }
 
 Faction::Faction(ESMReader& reader)
@@ -48,9 +44,14 @@ Faction::Faction(ESMReader& reader)
             relations.emplace_back();
             reader.readSubrecord(relations.back());
             break;
-        case ESMType::DATA:
-            reader.readSubrecord(factionData);
+        case ESMType::DATA: {
+            if (reader.getCurrentSubrecord().dataSize == 1) {
+                reader.readSubrecord(factionData.flags1);
+            } else {
+                reader.readSubrecord(factionData);
+            }
             break;
+        }
         case ESMType::CNAM:
             reader.readSubrecord(unused);
             break;

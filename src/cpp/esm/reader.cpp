@@ -18,15 +18,16 @@ uint32_t ESMReader::recordId() { return currentRecordHead.id; }
 
 uint32_t ESMReader::peekNextType()
 {
+    uint32_t ret;
+
     if (std::ftell(this->file) != endOfSubrecord) {
+
         log_warn("Cannot peek when not at end of subrecord");
         log_warn("%.4s at 0x%06x", currentRecordHead.type, std::ftell(this->file));
     }
-    uint32_t ret;
 
     std::fread(&ret, sizeof(uint32_t), 1, this->file);
     std::fseek(this->file, -sizeof(uint32_t), SEEK_CUR);
-
     return ret;
 }
 
@@ -88,12 +89,18 @@ void ESMReader::readStringSubrecord(std::string& subrecString)
     }
 }
 
+void ESMReader::rewind(ssize_t size)
+{
+    std::fseek(this->file, -size, SEEK_CUR);
+}
+
 void ESMReader::reportError(std::string err)
 {
     //std::stringstream s(err, std::ios_base::out | std::ios_base::app);
-    std::cerr << err;
-    std::cerr << " in record type " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << std::setw(8) << std::setfill('0') << std::ftell(this->file);
-    throw std::runtime_error("");
+    //std::cerr << err;
+    //  s << " in record type " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << std::ftell(this->file);
+    log_fatal("Error encountered at 0x%06x", std::ftell(this->file));
+    throw std::runtime_error("Error");
 }
 
 };

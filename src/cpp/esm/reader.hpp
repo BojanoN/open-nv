@@ -65,6 +65,7 @@ public:
     void checkSubrecordHeader(ESMType type);
 
     uint32_t peekNextType();
+    void     rewind(ssize_t size);
 
     std::string getFileName() { return this->fileName; };
 
@@ -113,7 +114,7 @@ void ESMReader::readSubrecord(T& subrecValue)
     if (actual != sizeof(T)) {
         std::stringstream s;
         s << "Expected to read " << sizeof(T) << " bytes, actually read " << actual << " bytes,\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::ftell(this->file) << '\n';
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << std::ftell(this->file);
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }
@@ -139,7 +140,7 @@ void ESMReader::readArraySubrecord(std::vector<T>& array)
     if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::ftell(this->file) << '\n';
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << std::ftell(this->file);
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }
@@ -152,8 +153,9 @@ void ESMReader::readFixedArraySubrecord(T* array)
     if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::ftell(this->file) << '\n';
-        throw std::runtime_error(s.str());
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << std::ftell(this->file);
+        log_fatal(s.str().c_str());
+        throw std::runtime_error("Read mismatch!");
     }
 }
 

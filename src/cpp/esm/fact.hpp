@@ -6,38 +6,35 @@
 
 namespace ESM {
 
-
 class ESMReader;
 
 struct FactionData {
-	uint8_t flags1;
-	uint8_t flags2;
-	uint8_t unused[2];
+    uint8_t flags1;
+    uint8_t flags2;
+    uint8_t unused[2];
 };
 
 struct FactionRank {
-	int32_t rankNumber;
-	std::string male;
-	std::string female;
-	std::string insignia;
+    int32_t     rankNumber;
+    std::string male;
+    std::string female;
+    uint32_t    insignia;
 };
-
 
 struct Faction : public Record {
 
-	std::string editorId;
-	std::string name;
-	std::vector<FactRaceRelation> relations;
-	FactionData factionData;
-	float unused; //?
-	std::vector<FactionRank> ranks;
-	formid reputation;
+    std::string                   editorId;
+    std::string                   name;
+    std::vector<FactRaceRelation> relations;
+    FactionData                   factionData;
+    float                         unused; //?
+    std::vector<FactionRank>      ranks;
+    formid                        reputation;
 
-	Faction(ESMReader& reader);
+    Faction(ESMReader& reader);
 
 private:
-	void loadRankCollection(ESMReader& reader);
+    void loadRankCollection(ESMReader& reader);
 };
-
 
 };
