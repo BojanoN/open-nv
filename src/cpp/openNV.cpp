@@ -1,5 +1,5 @@
 #include "gameworld.hpp"
-#include "util/logger.hpp"
+#include "logc/log.h"
 #include <getopt.h>
 #include <time.h>
 
@@ -9,9 +9,9 @@ int main(int argc, char** argv)
 {
 
 #ifdef DEBUG
-    Logger::setLevel(Logger::LOG_DEBUG);
+    log_set_level(LOG_DEBUG);
 #else
-    Logger::setLevel(Logger::LOG_INFO);
+    log_set_level(LOG_INFO);
 #endif
 
     int         c;

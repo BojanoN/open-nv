@@ -1,5 +1,5 @@
 #include "reader.hpp"
-#include "util/logger.hpp"
+#include "logc/log.h"
 
 namespace ESM {
 
@@ -19,9 +19,8 @@ uint32_t ESMReader::recordId() { return currentRecordHead.id; }
 uint32_t ESMReader::peekNextType()
 {
     if (std::ftell(this->file) != endOfSubrecord) {
-        std::stringstream s;
-        s << "Cannot peek when not at end of subrecord.\n";
-        s << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
+        log_warn("Cannot peek when not at end of subrecord");
+        log_warn("%.4s at 0x%06x", currentRecordHead.type, std::ftell(this->file));
     }
     uint32_t ret;
 
@@ -33,8 +32,6 @@ uint32_t ESMReader::peekNextType()
 
 void ESMReader::readNextRecordHeader()
 {
-    Logger::debug("BENIS");
-
     std::fread(&(this->currentRecordHead), sizeof(RecordHeader), 1, this->file);
     this->endOfRecord = std::ftell(this->file) + currentRecordHead.dataSize;
 }
@@ -64,12 +61,13 @@ void ESMReader::skipGroup() { std::fseek(this->file, endOfGroup, SEEK_SET); }
 void ESMReader::checkSubrecordHeader(ESMType type)
 {
     if (currentSubrecordHead.type != type) {
-        std::stringstream s;
-        s << "Expected subrecord type " << Util::typeValueToName(type);
-        s << " at record type " << Util::typeValueToName(currentRecordHead.type);
-        s << ", formid " << currentRecordHead.id << " at 0x" << std::hex
-          << std::setfill('0') << std::setw(8) << std::ftell(this->file) - sizeof(SubrecordHeader) << '\n';
-        throw std::runtime_error(s.str());
+        log_fatal("Expected subrecord type %s at record type %s, formid %u at 0x%06x",
+            Util::typeValueToName(type).c_str(),
+            Util::typeValueToName(currentRecordHead.type).c_str(),
+            currentRecordHead.id,
+            (std::ftell(this->file) - sizeof(SubrecordHeader)));
+
+        throw std::runtime_error("Subrecord type mismatch!");
     }
 }
 
@@ -79,12 +77,14 @@ void ESMReader::readStringSubrecord(std::string& subrecString)
     int actual = std::fread(&subrecString[0], sizeof(char),
         currentSubrecordHead.dataSize / sizeof(char), this->file);
     if (actual != currentSubrecordHead.dataSize) {
-        std::stringstream s;
-        s << "Expected to read size " << currentSubrecordHead.dataSize
-          << ", actually read " << actual << " bytes,\n";
-        s << " in subrecord " << currentSubrecordHead.type << ", in record "
-          << currentRecordHead.type << " at " << std::ftell(this->file) << '\n';
-        throw std::runtime_error(s.str());
+        log_fatal("Expected to read size %u, actually read %u bytes");
+        log_fatal("In subrecord %s", Util::typeValueToName(this->currentSubrecordHead.type).c_str());
+        log_fatal("At record type %s, formid %u at 0x%06x",
+            Util::typeValueToName(this->currentRecordHead.type).c_str(),
+            this->currentRecordHead.id,
+            std::ftell(this->file));
+
+        throw std::runtime_error("Read mismatch!");
     }
 }
 

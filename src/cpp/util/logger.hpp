@@ -39,7 +39,7 @@ void error(Args... args)
 template <class... Args>
 void fatal(Args... args)
 {
-    log_fatal(args...);
+    log_log(LOG_FATAL, __FILE__, __LINE__, args...);
 };
 
 void setLevel(int level);

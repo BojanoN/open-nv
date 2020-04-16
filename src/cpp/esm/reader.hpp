@@ -1,6 +1,7 @@
 #pragma once
 
 #include "headers.hpp"
+#include "logc/log.h"
 #include "types.hpp"
 #include "utils.hpp"
 
@@ -113,7 +114,8 @@ void ESMReader::readSubrecord(T& subrecValue)
         std::stringstream s;
         s << "Expected to read " << sizeof(T) << " bytes, actually read " << actual << " bytes,\n";
         s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::ftell(this->file) << '\n';
-        throw std::runtime_error(s.str());
+        log_fatal(s.str().c_str());
+        throw std::runtime_error("Read mismatch!");
     }
 }
 
@@ -138,7 +140,8 @@ void ESMReader::readArraySubrecord(std::vector<T>& array)
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
         s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::ftell(this->file) << '\n';
-        throw std::runtime_error(s.str());
+        log_fatal(s.str().c_str());
+        throw std::runtime_error("Read mismatch!");
     }
 }
 
