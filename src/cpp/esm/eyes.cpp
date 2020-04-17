@@ -1,24 +1,27 @@
-/*#include "eyes.hpp"
+#include "eyes.hpp"
+#include "reader.hpp"
+#include "types.hpp"
 
 namespace ESM {
 
-void Eyes::load(ESMReader& reader)
+Eyes::Eyes(ESMReader& reader)
+    : Record(reader)
 {
     reader.readNextSubrecordHeader();
-    reader.checkSubrecordHeader(Names.EDID);
-    //reader.readArraySubrecord<char>(editorId.c_str());
+    reader.checkSubrecordHeader(ESMType::EDID);
+    reader.readStringSubrecord(editorId);
 
     reader.readNextSubrecordHeader();
-    reader.checkSubrecordHeader(Names.FULL);
-    //reader.readArraySubrecord<char>(name.c_str());
+    reader.checkSubrecordHeader(ESMType::FULL);
+    reader.readStringSubrecord(name);
 
-    reader.readNextSubrecordHeader();
-    if (reader.subrecordType().intValue == Names.ICON) {
-        //reader.readArraySubrecord<char>(texture.c_str());
+    if (reader.peekNextType() == ESMType::ICON) {
         reader.readNextSubrecordHeader();
+        reader.readStringSubrecord(texture);
     }
 
-    reader.checkSubrecordHeader(Names.DATA);
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::DATA);
     reader.readSubrecord(flags);
 };
-}*/
+}

@@ -63,6 +63,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::FACT, &factions));
     dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::HDPT, &headParts));
     dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::HAIR, &hairs));
+    dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::EYES, &eyes));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

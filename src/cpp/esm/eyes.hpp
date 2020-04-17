@@ -1,21 +1,20 @@
-/*#pragma once
+#pragma once
 
-#include "reader.hpp"
 #include "record.hpp"
 #include "structs.hpp"
 
 namespace ESM {
 
+class ESMReader;
 
 struct Eyes : public Record {
 
-	std::string editorId;
-	std::string name;
-	std::string texture;
-	uint8_t flags;
+    std::string editorId;
+    std::string name;
+    std::string texture;
+    uint8_t     flags;
 
-	virtual void load(ESMReader& reader);
+    Eyes(ESMReader& reader);
 };
 
-
-};*/
+}

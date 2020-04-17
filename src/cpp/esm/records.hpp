@@ -1,5 +1,6 @@
 #pragma once
 #include "clas.hpp"
+#include "eyes.hpp"
 #include "fact.hpp"
 #include "gmst.hpp"
 #include "hair.hpp"
