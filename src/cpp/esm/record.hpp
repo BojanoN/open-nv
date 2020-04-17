@@ -10,7 +10,7 @@ struct Record {
 
     Record() {};
     Record(ESMReader& reader)
-        : type { reader.recordType() }
+        : recordType { reader.recordType() }
         , recordFlags { reader.recordFlags() }
         , id { reader.recordId() }
     {
