@@ -6,6 +6,8 @@
 #include <cassert>
 #include <sstream>
 #include <string>
+#include <utility>
+#include <memory>
 #include <unordered_map>
 
 namespace GameWorld {
@@ -14,11 +16,13 @@ class GameDataBase {
 public:
     virtual void    load(ESM::ESMReader& reader) = 0;
     virtual ssize_t size()                       = 0;
+    virtual ~GameDataBase() {}
 };
 
 template <class T>
 class GameData : public GameDataBase {
 private:
+    //std::unordered_map<formid, std::shared_ptr<T>> dataMap;
     std::unordered_map<formid, T*> dataMap;
     void                           raiseError(formid id) const;
 
@@ -27,12 +31,21 @@ public:
     virtual void    load(ESM::ESMReader& reader);
     const T&        get(formid id) const;
     void            insert(T* data);
+    virtual ~GameData();
 };
+
+
+template <class T>
+GameData<T>::~GameData() {
+    for(auto&& it = dataMap.begin(); it != dataMap.end(); it++) {
+        delete it->second;
+    }
+}
 
 template <class T>
 const T& GameData<T>::get(formid id) const
 {
-    typename std::unordered_map<formid, T*>::const_iterator it = dataMap.find(id);
+    typename std::unordered_map<formid, std::shared_ptr<T>>::const_iterator it = dataMap.find(id);
 
     if (it == dataMap.end()) {
         raiseError(id);
@@ -44,7 +57,7 @@ template <class T>
 void GameData<T>::insert(T* record)
 {
     log_info("Inserting record %u", record->id);
-    auto it = dataMap.insert(std::pair<formid, T*>(record->id, record));
+    auto it = dataMap.insert(std::make_pair(record->id, record));
     assert(it.second);
 }
 
