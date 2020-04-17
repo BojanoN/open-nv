@@ -1,25 +1,31 @@
-/*#include "hdpt.hpp"
+#include "hair.hpp"
+#include "hdpt.hpp"
+#include "reader.hpp"
 
 namespace ESM {
 
-void Hair::load(ESMReader& reader) {
-	reader.readNextSubrecordHeader();
-	reader.checkSubrecordHeader(ESM::Names.EDID);
-	reader.readArraySubrecord<char>(editorId.c_str());
+Hair::Hair(ESMReader& reader)
+    : Record(reader)
+{
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::EDID);
+    reader.readStringSubrecord(editorId);
 
-	reader.readNextSubrecordHeader();
-	reader.checkSubrecordHeader(ESM::Names.FULL);
-	reader.readArraySubrecord<char>(name.c_str());
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::FULL);
+    reader.readStringSubrecord(name);
 
-	if(reader.peekNextType().intValue == ESM::Names.MODL) {
-		ModelData.load(reader, modelData, 0, ESM::Names.DATA);
-	}
+    if (reader.peekNextType() == ESMType::MODL) {
+        ModelData::load(reader, modelData, 0, ESMType::ICON);
+    }
 
-	reader.readNextSubrecordHeader();
-	reader.checkSubrecordHeader(ESM::Names.ICON);
-	reader.readArraySubrecord<char>(texture.c_str());
-
-	reader.readNextSubrecordHeader();
-	reader.checkSubrecordHeader(ESM::Names.DATA);
-	reader.readSubrecord<uint8_t>(flags);
-};*/
+    reader.readNextSubrecordHeader();
+    if (reader.getCurrentSubrecord().type == ESMType::ICON) {
+        reader.checkSubrecordHeader(ESMType::ICON);
+        reader.readStringSubrecord(texture);
+    }
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::DATA);
+    reader.readSubrecord<uint8_t>(flags);
+};
+}

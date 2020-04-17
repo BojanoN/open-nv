@@ -19,7 +19,7 @@ class GameWorld {
     GameData<ESM::Class>    classes;
     GameData<ESM::Faction>  factions;
     GameData<ESM::HeadPart> headParts;
-    // GameData<ESM::Hair> hairs;
+    GameData<ESM::Hair>     hairs;
     // GameData<ESM::Eyes> eyes;
     // GameData<ESM::Race> races;
     // GameData<ESM::Sound> sounds;
