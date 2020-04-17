@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <variant>
 
 namespace ESM {
 
@@ -53,6 +54,42 @@ struct ModelData {
     uint8_t                           FaceGenModelFlags;
 
     static void load(ESMReader& reader, ModelData& modelData, int index, ESMType nextSubheader);
+};
+
+struct EffectData {
+    uint32_t magnitude;
+    uint32_t area;
+    uint32_t duration;
+    uint32_t type;
+    int32_t actorValue;
+};
+
+struct Condition {
+    uint8_t type;
+    uint8_t unused[3];
+    std::variant<formid, float> comparisonVal;
+    uint32_t functionIndex;
+    uint32_t firstParameter;
+    uint32_t secondParameter;
+    uint32_t runOn;
+    formid reference;
+};
+
+struct ConditionNullReference {
+    uint8_t type;
+    uint8_t unused[3];
+    std::variant<formid, float> comparisonVal;
+    uint32_t functionIndex;
+    uint32_t firstParameter;
+    uint32_t secondParameter;
+    uint32_t runOn;
+};
+
+
+struct Effect {
+    formid baseEffect;
+    EffectData data;
+    Condition condition;
 };
 
 };

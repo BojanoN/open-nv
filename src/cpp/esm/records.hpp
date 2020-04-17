@@ -8,3 +8,4 @@
 #include "tes4.hpp"
 #include "txst.hpp"
 #include "glob.hpp"
+#include "ench.hpp"

@@ -68,7 +68,7 @@ void GameData<T>::load(ESM::ESMReader& reader)
         T* record = new T(reader);
         this->insert(record);
         assert(dataMap.find(record->id) != dataMap.end());
-    } catch (std::runtime_error e) {
+    } catch (std::runtime_error& e) {
         std::stringstream s;
         log_fatal("Cannot read record!");
         log_fatal(e.what());

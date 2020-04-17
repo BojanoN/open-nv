@@ -2,6 +2,8 @@
 #include "esm/utils.hpp"
 #include "logc/log.h"
 
+#include <cstring>
+
 namespace GameWorld {
 
 void GameWorld::load(ESM::ESMReader& reader)
@@ -24,25 +26,25 @@ void GameWorld::load(ESM::ESMReader& reader)
 
     while (reader.hasMoreBytes()) {
         reader.readNextGroupHeader();
-        int counter = 0;
         while (reader.hasMoreRecordsInGroup()) {
 
             reader.readNextRecordHeader();
             GameDataBase* dataStore;
             try {
                 dataStore = getDataStore(reader.recordType());
-            } catch (std::runtime_error e) {
+            } catch (std::runtime_error& e) {
                 log_error(e.what());
+                if(std::strlen(e.what()) == 0) {
+                    std::cout << "hi\n";
+                }
                 reader.skipGroup();
                 break;
             }
 
             try {
                 dataStore->load(reader);
-                counter++;
-            } catch (std::runtime_error e) {
+            } catch (std::runtime_error& e) {
                 log_error(e.what());
-
                 reader.skipRecord();
             }
         }
@@ -50,7 +52,7 @@ void GameWorld::load(ESM::ESMReader& reader)
         try {
             dataStore = getDataStore(reader.recordType());
             log_info("Read a total of %u records of type %s", dataStore->size(), ESM::Util::typeValueToName(reader.recordType()).c_str());
-        } catch (std::runtime_error e) {
+        } catch (std::runtime_error& e) {
         }
     }
 }
@@ -65,6 +67,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::FACT, &factions));
     dataStores.insert(std::make_pair(ESM::ESMType::HDPT, &headParts));
     dataStores.insert(std::make_pair(ESM::ESMType::HAIR, &hairs));
+    dataStores.insert(std::make_pair(ESM::ESMType::ENCH, &objectEffects));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

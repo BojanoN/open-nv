@@ -28,7 +28,7 @@ class GameWorld {
     // GameData<ESM::MagicEffect> magicEffects;
     // GameData<ESM::Script> scripts;
     // GameData<ESM::LandscapeTexture> landscapeTextures;
-    // GameData<ESM::ObjectEffect> objectEffects;
+    GameData<ESM::ObjectEffect> objectEffects;
     // GameData<ESM::ActorEffect> actorEffects;
     // GameData<ESM::Activator> activators;
     // GameData<ESM::TalkingActivator> talkingActivators;
