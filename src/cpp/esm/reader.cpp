@@ -125,7 +125,7 @@ void ESMReader::reportError(std::string err)
     //std::cerr << err;
     //  s << " in record type " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << std::ftell(this->file);
     log_fatal("Error encountered at 0x%06x", std::ftell(this->file));
-    throw std::runtime_error("Error");
+    throw std::runtime_error(err);
 }
 
 };

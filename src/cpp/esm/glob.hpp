@@ -1,7 +1,8 @@
-/*#pragma once
+#pragma once
 #include "reader.hpp"
 #include "record.hpp"
 #include <variant>
+#include <sstream>
 
 namespace ESM {
 
@@ -9,10 +10,12 @@ struct GlobalVariable : public Record {
 
 	std::string editorId;
 	uint8_t type;
-	std::variant<int16_t, int32_t, float> value;
+	std::variant<int32_t, int16_t, float> value;
 
-	virtual void load(ESMReader& reader);
+	//All short variables are 4 bytes in the file for some reason
+
+	GlobalVariable(ESMReader& reader);
 };
 
 
-};*/
+};

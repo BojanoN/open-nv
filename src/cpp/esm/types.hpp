@@ -162,6 +162,7 @@ enum ESMType : uint32_t {
     CNAM = 0x4d414e43,
     WMI1 = 0x31494d57,
     HNAM = 0x4d414e48,
+    FLTV = 0x56544c46
 
 };
 

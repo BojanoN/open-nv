@@ -55,7 +55,7 @@ const T& GameData<T>::get(formid id) const
 template <class T>
 void GameData<T>::insert(T* record)
 {
-    log_info("Inserting record %u", record->id);
+    log_debug("Inserting record %u", record->id);
     auto it = dataMap.insert(std::make_pair(record->id, record));
     assert(it.second);
 }
