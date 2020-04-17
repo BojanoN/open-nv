@@ -26,7 +26,7 @@ public:
     virtual ssize_t size() { return dataMap.size(); }
     virtual void    load(ESM::ESMReader& reader);
     const T&        get(formid id) const;
-    void            insert(T& data);
+    void            insert(T* data);
 };
 
 template <class T>
@@ -41,10 +41,10 @@ const T& GameData<T>::get(formid id) const
 }
 
 template <class T>
-void GameData<T>::insert(T& record)
+void GameData<T>::insert(T* record)
 {
-    log_info("Inserting record %u", record.id);
-    auto it = dataMap.insert(std::pair<formid, T*>(record.id, &record));
+    log_info("Inserting record %u", record->id);
+    auto it = dataMap.insert(std::pair<formid, T*>(record->id, record));
     assert(it.second);
 }
 
@@ -53,9 +53,9 @@ void GameData<T>::load(ESM::ESMReader& reader)
 {
     log_debug("Fpointer before load 0x%x", reader.getCurrentPosition());
     try {
-        T record(reader);
+        T* record = new T(reader);
         this->insert(record);
-        assert(dataMap.find(record.id) != dataMap.end());
+        assert(dataMap.find(record->id) != dataMap.end());
     } catch (std::runtime_error e) {
         std::stringstream s;
         log_fatal("Cannot read record!");

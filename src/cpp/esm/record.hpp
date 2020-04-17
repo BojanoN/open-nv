@@ -4,7 +4,7 @@
 namespace ESM {
 
 struct Record {
-    uint32_t type;
+    uint32_t recordType;
     uint32_t recordFlags;
     formid   id;
 
