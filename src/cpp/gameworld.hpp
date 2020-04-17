@@ -29,10 +29,10 @@ class GameWorld {
     // GameData<ESM::Script> scripts;
     // GameData<ESM::LandscapeTexture> landscapeTextures;
     GameData<ESM::ObjectEffect> objectEffects;
-    // GameData<ESM::ActorEffect> actorEffects;
-    // GameData<ESM::Activator> activators;
-    // GameData<ESM::TalkingActivator> talkingActivators;
-    // GameData<ESM::Terminal> terminals;
+    GameData<ESM::ActorEffect> actorEffects;
+    GameData<ESM::Activator> activators;
+    GameData<ESM::TalkingActivator> talkingActivators;
+    GameData<ESM::Terminal> terminals;
     // GameData<ESM::Armor> armors;
     // GameData<ESM::Book> books;
     // GameData<ESM::Container> containers;

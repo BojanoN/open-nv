@@ -59,6 +59,8 @@ void ESMReader::skipRecord() { std::fseek(this->file, endOfRecord, SEEK_SET); }
 
 void ESMReader::skipGroup() { std::fseek(this->file, endOfGroup, SEEK_SET); }
 
+void ESMReader::skipSubrecord() { std::fseek(this->file, endOfSubrecord, SEEK_SET); }
+
 void ESMReader::checkSubrecordHeader(ESMType type)
 {
     if (currentSubrecordHead.type != type) {

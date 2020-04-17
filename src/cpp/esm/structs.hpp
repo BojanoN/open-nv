@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <variant>
+#include <unordered_set>
 
 namespace ESM {
 
@@ -53,7 +54,7 @@ struct ModelData {
     std::vector<AlternateTexture>     alternateTextures;
     uint8_t                           FaceGenModelFlags;
 
-    static void load(ESMReader& reader, ModelData& modelData, int index, ESMType nextSubheader);
+    static void load(ESMReader& reader, ModelData& modelData, int index, std::unordered_set<ESMType>&  nextSubheaders);
 };
 
 struct EffectData {
@@ -65,6 +66,16 @@ struct EffectData {
 };
 
 struct Condition {
+    struct ConditionNullReference {
+        uint8_t type;
+        uint8_t unused[3];
+        std::variant<formid, float> comparisonVal;
+        uint32_t functionIndex;
+        uint32_t firstParameter;
+        uint32_t secondParameter;
+        uint32_t runOn;
+    };
+
     uint8_t type;
     uint8_t unused[3];
     std::variant<formid, float> comparisonVal;
@@ -73,16 +84,8 @@ struct Condition {
     uint32_t secondParameter;
     uint32_t runOn;
     formid reference;
-};
 
-struct ConditionNullReference {
-    uint8_t type;
-    uint8_t unused[3];
-    std::variant<formid, float> comparisonVal;
-    uint32_t functionIndex;
-    uint32_t firstParameter;
-    uint32_t secondParameter;
-    uint32_t runOn;
+    static void load(ESMReader& reader, Condition& condition);
 };
 
 
@@ -90,6 +93,37 @@ struct Effect {
     formid baseEffect;
     EffectData data;
     Condition condition;
+};
+
+struct DestructionHeader {
+    int32_t health;
+    uint8_t count;
+    uint8_t flags;
+    uint8_t unused[2];
+};
+
+struct DestructionStageData {
+    uint8_t healthPercentage;
+    uint8_t index;
+    uint8_t damageStage;
+    uint8_t flags;
+    int32_t selfDamagePerSecond;
+    formid explosion;
+    formid debris;
+    int32_t debrisCount;
+};
+
+struct DestructionStage {
+    DestructionStageData stageData;
+    std::string modelFilename;
+    std::vector<uint8_t> textureHashes;
+};
+
+struct DestructionData {
+    DestructionHeader header;
+    std::vector<DestructionStage> stages;
+    static void load(ESMReader& reader, DestructionData& destData, std::unordered_set<ESMType>&  nextSubheaders);
+
 };
 
 };

@@ -1,9 +1,8 @@
-#include "ench.hpp"
+#include "spel.hpp"
 
 namespace ESM {
 
-ObjectEffect::ObjectEffect(ESMReader& reader) : Record(reader) {
-	
+ActorEffect::ActorEffect(ESMReader& reader) : Record(reader) {
 	reader.readNextSubrecordHeader();
 	reader.checkSubrecordHeader(ESMType::EDID);
 	reader.readStringSubrecord(editorId);
@@ -14,11 +13,11 @@ ObjectEffect::ObjectEffect(ESMReader& reader) : Record(reader) {
 		reader.readNextSubrecordHeader();
 	}
 
-	reader.checkSubrecordHeader(ESMType::ENIT);
+	reader.checkSubrecordHeader(ESMType::SPIT);
 	reader.readSubrecord(data);
 
 	if(!reader.hasMoreSubrecords()) {
-		reader.reportError("At least one effect must be specified for an ENCH record.");
+		reader.reportError("At least one effect must be specified for an SPEL record.");
 	}
 	while(reader.hasMoreSubrecords()) {
 		reader.readNextSubrecordHeader();

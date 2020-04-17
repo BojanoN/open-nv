@@ -15,11 +15,13 @@ Hair::Hair(ESMReader& reader)
     reader.checkSubrecordHeader(ESMType::FULL);
     reader.readStringSubrecord(name);
 
-    if (reader.peekNextType() == ESMType::MODL) {
-        ModelData::load(reader, modelData, 0, ESMType::ICON);
+    reader.readNextSubrecordHeader();
+    if (reader.subrecordType() == ESMType::MODL) {
+        std::unordered_set<ESMType> next{ESMType::ICON};
+        ModelData::load(reader, modelData, 0, next);
+        reader.readNextSubrecordHeader();
     }
 
-    reader.readNextSubrecordHeader();
     if (reader.getCurrentSubrecord().type == ESMType::ICON) {
         reader.checkSubrecordHeader(ESMType::ICON);
         reader.readStringSubrecord(texture);

@@ -34,9 +34,6 @@ void GameWorld::load(ESM::ESMReader& reader)
                 dataStore = getDataStore(reader.recordType());
             } catch (std::runtime_error& e) {
                 log_error(e.what());
-                if(std::strlen(e.what()) == 0) {
-                    std::cout << "hi\n";
-                }
                 reader.skipGroup();
                 break;
             }
@@ -68,6 +65,10 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::HDPT, &headParts));
     dataStores.insert(std::make_pair(ESM::ESMType::HAIR, &hairs));
     dataStores.insert(std::make_pair(ESM::ESMType::ENCH, &objectEffects));
+    dataStores.insert(std::make_pair(ESM::ESMType::SPEL, &actorEffects));
+    dataStores.insert(std::make_pair(ESM::ESMType::ACTI, &activators));
+    dataStores.insert(std::make_pair(ESM::ESMType::TACT, &talkingActivators));
+    dataStores.insert(std::make_pair(ESM::ESMType::TERM, &terminals));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

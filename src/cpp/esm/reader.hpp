@@ -44,6 +44,7 @@ public:
     bool hasMoreBytes() { return std::ftell(this->file) < fileSize; }
     void skipRecord();
     void skipGroup();
+    void skipSubrecord();
 
     RecordHeader&    getCurrentRecord();
     SubrecordHeader& getCurrentSubrecord();

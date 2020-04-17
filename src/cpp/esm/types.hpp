@@ -154,6 +154,14 @@ enum ESMType : uint32_t {
     ICON = 0x4e4f4349,
     ATTR = 0x52545441,
 
+    SCHR = 0x52484353,
+    SCDS = 0x53444353,
+    SCTX = 0x58544353,
+    SCRO = 0x4f524353,
+    SCRV = 0x56524353,
+    SLSD = 0x44534c53,
+    SCVR = 0x52564353,
+
     RNAM = 0x4d414e52,
     MNAM = 0x4d414e4d,
     FNAM = 0x4d414e46,
@@ -167,6 +175,27 @@ enum ESMType : uint32_t {
     EFID = 0x44494645,
     EFIT = 0x54494645,
     CTDA = 0x41445443,
+
+    SCRI = 0x49524353,
+    SNAM = 0x4d414e53,
+    VNAM = 0x4d414e56,
+    WNAM = 0x4d414e57,                                                                                    
+    XATO = 0x4f544158, 
+
+    DEST = 0x54534544,                                                                                    
+    DSTD = 0x44545344,                                                                                    
+    DMDL = 0x4c444d44,                                                                                    
+    DMDT = 0x54444d44,                                                                                    
+    DSTF = 0x46545344,  
+
+    PNAM = 0x4d414e50,
+    ITXT = 0x54585449,
+    ANAM = 0x4d414e41,
+    TNAM = 0x4d414e54,
+    SCDA = 0x41444353,
+
+
+    SPIT = 0x54495053
     
 
 };

@@ -13,11 +13,13 @@ HeadPart::HeadPart(ESMReader& reader)
     reader.checkSubrecordHeader(ESMType::FULL);
     reader.readStringSubrecord(this->name);
 
-    if (reader.peekNextType() == ESMType::MODL) {
-        ModelData::load(reader, modelData, 0, ESMType::DATA);
+    reader.readNextSubrecordHeader();
+    if (reader.subrecordType() == ESMType::MODL) {
+        std::unordered_set<ESMType> next{ESMType::DATA};
+        ModelData::load(reader, modelData, 0, next);
+        reader.readNextSubrecordHeader();
     }
 
-    reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::DATA);
     reader.readSubrecord(flags);
 

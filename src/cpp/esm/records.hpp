@@ -9,3 +9,7 @@
 #include "txst.hpp"
 #include "glob.hpp"
 #include "ench.hpp"
+#include "spel.hpp"
+#include "acti.hpp"
+#include "tact.hpp"
+#include "term.hpp"
