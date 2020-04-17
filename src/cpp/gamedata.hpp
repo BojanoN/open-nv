@@ -7,7 +7,6 @@
 #include <sstream>
 #include <string>
 #include <utility>
-#include <memory>
 #include <unordered_map>
 
 namespace GameWorld {
@@ -45,7 +44,7 @@ GameData<T>::~GameData() {
 template <class T>
 const T& GameData<T>::get(formid id) const
 {
-    typename std::unordered_map<formid, std::shared_ptr<T>>::const_iterator it = dataMap.find(id);
+    typename std::unordered_map<formid, T*>::const_iterator it = dataMap.find(id);
 
     if (it == dataMap.end()) {
         raiseError(id);
