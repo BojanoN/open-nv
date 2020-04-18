@@ -114,8 +114,7 @@ private:
 template <typename T>
 void ESMReader::readSubrecord(T& subrecValue)
 {
-    int actual = std::fread(&subrecValue, currentSubrecordHead.dataSize, 1, this->file);
-    actual *= currentSubrecordHead.dataSize;
+    int actual = std::fread(&subrecValue, 1, currentSubrecordHead.dataSize, this->file);
     if (actual != sizeof(T)) {
         std::stringstream s;
         s << "Expected to read " << sizeof(T) << " bytes, actually read " << actual << " bytes,\n";
@@ -154,7 +153,7 @@ void ESMReader::readArraySubrecord(std::vector<T>& array)
 template <typename T>
 void ESMReader::readFixedArraySubrecord(T* array)
 {
-    int actual = std::fread(array, sizeof(T), currentSubrecordHead.dataSize / sizeof(T), this->file);
+    int actual = std::fread(array, 1, currentSubrecordHead.dataSize, this->file);
     if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";

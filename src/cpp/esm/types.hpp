@@ -205,9 +205,11 @@ enum ESMType : uint32_t {
     ANAM = 0x4d414e41,
     TNAM = 0x4d414e54,
     SCDA = 0x41444353,
-
-    SPIT = 0x54495053
-
+    SPIT = 0x54495053,
+    SNDD = 0x44444e53,
+    SNDX = 0x58444e53,
+    GNAM = 0x4d414e47,
+    RDAT = 0x54414452,
 };
 
 };

@@ -56,12 +56,6 @@ void GameWorld::load(ESM::ESMReader& reader)
 
 void GameWorld::initDataStoreMap()
 {
-    dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::TXST, &textureSets));
-    dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::MICN, &menuIcons));
-    dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::CLAS, &classes));
-    dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::FACT, &factions));
-    dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::HDPT, &headParts));
-    dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::HAIR, &hairs));
     dataStores.insert(std::make_pair(ESM::ESMType::GMST, &gameSettings));
     dataStores.insert(std::make_pair(ESM::ESMType::TXST, &textureSets));
     dataStores.insert(std::make_pair(ESM::ESMType::GLOB, &globalVariables));
@@ -77,6 +71,10 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::TERM, &terminals));
     dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::EYES, &eyes));
     dataStores.insert(std::pair<uint32_t, GameDataBase*>(ESM::ESMType::RACE, &races));
+    dataStores.insert(std::make_pair(ESM::ESMType::SOUN, &sounds));
+    dataStores.insert(std::make_pair(ESM::ESMType::ASPC, &acousticSpaces));
+    dataStores.insert(std::make_pair(ESM::ESMType::MGEF, &magicEffects));
+    dataStores.insert(std::make_pair(ESM::ESMType::LTEX, &landscapeTextures));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

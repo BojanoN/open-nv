@@ -7,6 +7,48 @@ namespace ESM {
 
 class ESMReader;
 
+enum RaceFlags : uint32_t {
+    PLAYABLE = 0x1,
+    CHILD    = 0x4
+};
+
+enum RaceHairColorEnum : uint8_t {
+    BLEACHED,
+    BROWN,
+    CHOCOLATE,
+    PLATINUM,
+    CORNSILK,
+    SUEDE,
+    PECAN,
+    AUBURN,
+    GINGER,
+    HONEY,
+    GOLD,
+    ROSEWOOD,
+    BLACK,
+    CHESTNUT,
+    STEEL,
+    CHAMPAGNE
+};
+
+enum HeadPartIndex : uint32_t {
+    HEAD,
+    EARS,
+    MOUTH,
+    TEETH_HI,
+    TEETH_LO,
+    TOUNGE,
+    LEFT_EYE,
+    RIGHT_EYE
+};
+
+enum BodyPartIndex : uint32_t {
+    UPPER_BODY,
+    LEFT_HAND,
+    RIGHT_HAND,
+    UPPER_BODY_TEXTURE
+};
+
 struct SkillBoost {
     int8_t skill;
     int8_t boost;

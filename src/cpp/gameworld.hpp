@@ -13,26 +13,26 @@ namespace GameWorld {
 
 class GameWorld {
     // TODO: sve ostalo
-    GameData<ESM::GameSetting> gameSettings;
-    GameData<ESM::TextureSet> textureSets;
-    GameData<ESM::MenuIcon>   menuIcons;
+    GameData<ESM::GameSetting>    gameSettings;
+    GameData<ESM::TextureSet>     textureSets;
+    GameData<ESM::MenuIcon>       menuIcons;
     GameData<ESM::GlobalVariable> globalVariables;
-    GameData<ESM::Class>    classes;
-    GameData<ESM::Faction>  factions;
-    GameData<ESM::HeadPart> headParts;
-    GameData<ESM::Hair>     hairs;
-    GameData<ESM::Eyes>     eyes;
-    GameData<ESM::Race>     races;
-    // GameData<ESM::Sound> sounds;
-    // GameData<ESM::AcousticSpace> acousticSpaces;
-    // GameData<ESM::MagicEffect> magicEffects;
+    GameData<ESM::Class>          classes;
+    GameData<ESM::Faction>        factions;
+    GameData<ESM::HeadPart>       headParts;
+    GameData<ESM::Hair>           hairs;
+    GameData<ESM::Eyes>           eyes;
+    GameData<ESM::Race>           races;
+    GameData<ESM::Sound>          sounds;
+    GameData<ESM::AcousticSpace>  acousticSpaces;
+    GameData<ESM::MagicEffect>    magicEffects;
     // GameData<ESM::Script> scripts;
-    // GameData<ESM::LandscapeTexture> landscapeTextures;
-    GameData<ESM::ObjectEffect> objectEffects;
-    GameData<ESM::ActorEffect> actorEffects;
-    GameData<ESM::Activator> activators;
+    GameData<ESM::LandscapeTexture> landscapeTextures;
+    GameData<ESM::ObjectEffect>     objectEffects;
+    GameData<ESM::ActorEffect>      actorEffects;
+    GameData<ESM::Activator>        activators;
     GameData<ESM::TalkingActivator> talkingActivators;
-    GameData<ESM::Terminal> terminals;
+    GameData<ESM::Terminal>         terminals;
     // GameData<ESM::Armor> armors;
     // GameData<ESM::Book> books;
     // GameData<ESM::Container> containers;

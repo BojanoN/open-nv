@@ -6,8 +6,8 @@
 #include <cassert>
 #include <sstream>
 #include <string>
-#include <utility>
 #include <unordered_map>
+#include <utility>
 
 namespace GameWorld {
 
@@ -33,10 +33,10 @@ public:
     virtual ~GameData();
 };
 
-
 template <class T>
-GameData<T>::~GameData() {
-    for(auto&& it = dataMap.begin(); it != dataMap.end(); it++) {
+GameData<T>::~GameData()
+{
+    for (auto&& it = dataMap.begin(); it != dataMap.end(); it++) {
         delete it->second;
     }
 }
@@ -55,7 +55,6 @@ const T& GameData<T>::get(formid id) const
 template <class T>
 void GameData<T>::insert(T* record)
 {
-    log_debug("Inserting record %u", record->id);
     auto it = dataMap.insert(std::make_pair(record->id, record));
     assert(it.second);
 }
