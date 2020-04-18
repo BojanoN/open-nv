@@ -21,7 +21,7 @@ class GameWorld {
     GameData<ESM::HeadPart> headParts;
     GameData<ESM::Hair>     hairs;
     GameData<ESM::Eyes>     eyes;
-    // GameData<ESM::Race> races;
+    GameData<ESM::Race>     races;
     // GameData<ESM::Sound> sounds;
     // GameData<ESM::AcousticSpace> acousticSpaces;
     // GameData<ESM::MagicEffect> magicEffects;

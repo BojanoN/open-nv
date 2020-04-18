@@ -6,5 +6,6 @@
 #include "hair.hpp"
 #include "hdpt.hpp"
 #include "micn.hpp"
+#include "race.hpp"
 #include "tes4.hpp"
 #include "txst.hpp"

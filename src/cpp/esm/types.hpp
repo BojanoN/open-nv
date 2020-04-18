@@ -162,7 +162,12 @@ enum ESMType : uint32_t {
     CNAM = 0x4d414e43,
     WMI1 = 0x31494d57,
     HNAM = 0x4d414e48,
-
+    ONAM = 0x4d414e4f,
+    YNAM = 0x4d414e59,
+    VTCK = 0x4b435456,
+    NAM2 = 0x324d414e,
+    PNAM = 0x4d414e50,
+    UNAM = 0x4d414e55,
 };
 
 };
