@@ -23,7 +23,8 @@ uint32_t ESMReader::peekNextType()
     if (std::ftell(this->file) != endOfSubrecord) {
 
         log_warn("Cannot peek when not at end of subrecord");
-        log_warn("%.4s at 0x%06x", currentRecordHead.type, std::ftell(this->file));
+        log_warn("At 0x%06x", std::ftell(this->file));
+        log_warn("%.4s", currentRecordHead.type);
     }
 
     std::fread(&ret, sizeof(uint32_t), 1, this->file);

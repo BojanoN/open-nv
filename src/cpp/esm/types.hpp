@@ -206,7 +206,19 @@ enum ESMType : uint32_t {
     TNAM = 0x4d414e54,
     SCDA = 0x41444353,
 
-    SPIT = 0x54495053
+    SPIT = 0x54495053,
+
+    EITM = 0x4d544945,
+    BMDT = 0x54444d42,
+    ICO2 = 0x324f4349,
+    MIC2 = 0x3243494d,
+    BMCT = 0x54434d42,
+    REPL = 0x4c504552,
+    BIPL = 0x4c504942,
+    ETYP = 0x50595445,
+    ZNAM = 0x4d414e5a,
+    BNAM = 0x4d414e42,
+
 
 };
 

@@ -15,3 +15,4 @@
 #include "acti.hpp"
 #include "tact.hpp"
 #include "term.hpp"
+#include "armo.hpp"
