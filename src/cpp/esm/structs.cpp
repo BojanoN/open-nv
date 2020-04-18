@@ -59,7 +59,8 @@ void ModelData::loadCollection(ESMReader& reader, ModelData& modelData)
 void ModelData::load(ESMReader& reader, ModelData& modelData, int index, std::unordered_set<ESMType>& nextSubheaders)
 {
     reader.checkSubrecordHeader(filenameType[index]);
-    reader.readStringSubrecord(modelData.filename);
+    modelData.filenames.emplace_back();
+    reader.readStringSubrecord(modelData.filenames.back());
 
     while (reader.hasMoreSubrecords() && nextSubheaders.find(static_cast<ESMType>(reader.peekNextType())) == nextSubheaders.end()) {
         reader.readNextSubrecordHeader();

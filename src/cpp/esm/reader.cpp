@@ -131,9 +131,4 @@ void ESMReader::reportError(std::string err)
     throw std::runtime_error(err);
 }
 
-void ESMReader::skipSubrecord()
-{
-    std::fseek(this->file, this->endOfSubrecord, SEEK_SET);
-}
-
 };

@@ -182,7 +182,6 @@ enum ESMType : uint32_t {
     FGGS = 0x53474746,
     FGTS = 0x53544746,
     FGGA = 0x41474746,
-    SNAM = 0x4d414e53,
     FLTV = 0x56544c46,
     ENIT = 0x54494e45,
     EFID = 0x44494645,
