@@ -46,22 +46,21 @@ struct AlternateTexture {
 };
 
 struct ModelData {
-    std::string                       filename;
-    uint8_t                           unused[4];
-    uint32_t                          alternateTextureCount;
-    std::vector<uint8_t>              textureHashes;
-    std::vector<AlternateTexture>     alternateTextures;
-    uint8_t                           FaceGenModelFlags;
+    std::string                   filename;
+    uint8_t                       unused[4];
+    uint32_t                      alternateTextureCount;
+    std::vector<uint8_t>          textureHashes;
+    std::vector<AlternateTexture> alternateTextures;
+    uint8_t                       FaceGenModelFlags;
 
     const static constexpr ESMType filenameType[]    = { ESMType::MODL, ESMType::MOD2, ESMType::MOD3, ESMType::MOD4 };
-    const static constexpr ESMType unusedType[]      = { ESMType::MODB, 0, 0, 0 };
+    const static constexpr ESMType unusedType[]      = { ESMType::MODB, ESMType::NO_ENTRY, ESMType::NO_ENTRY, ESMType::NO_ENTRY };
     const static constexpr ESMType hashesType[]      = { ESMType::MODT, ESMType::MO2T, ESMType::MO3T, ESMType::MO4T };
     const static constexpr ESMType altTexturesType[] = { ESMType::MODS, ESMType::MO2S, ESMType::MO3S, ESMType::MO4S };
-    const static constexpr ESMType flagType[]        = { ESMType::MODD, 0, ESMType::MOSD, 0};
+    const static constexpr ESMType flagType[]        = { ESMType::MODD, ESMType::NO_ENTRY, ESMType::MOSD, ESMType::NO_ENTRY };
 
-    static void load(ESMReader& reader, ModelData& modelData, int index, std::unordered_set<ESMType>&  nextSubheaders);
+    static void load(ESMReader& reader, ModelData& modelData, int index, std::unordered_set<ESMType>& nextSubheaders);
 };
-
 
 struct EffectData {
     uint32_t magnitude;

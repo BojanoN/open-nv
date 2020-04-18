@@ -6,6 +6,7 @@ namespace ESM {
 MagicEffect::MagicEffect(ESMReader& reader)
     : Record(reader)
 {
+    std::unordered_set<ESMType> next = { ESMType::DATA };
     while (reader.hasMoreSubrecords()) {
         reader.readNextSubrecordHeader();
 
@@ -27,7 +28,7 @@ MagicEffect::MagicEffect(ESMReader& reader)
             break;
         case (ESMType::MODL):
             this->modelData.emplace_back();
-            ModelData::loadCollection(reader, this->modelData.back());
+            ModelData::load(reader, this->modelData.back(), 0, next);
             break;
         case (ESMType::DATA):
             reader.readSubrecord(this->magicEffectData);
