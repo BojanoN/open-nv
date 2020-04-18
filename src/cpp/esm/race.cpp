@@ -6,17 +6,17 @@ namespace ESM {
 
 void ModelPart::load(ESMReader& reader, std::vector<ModelPart>& parts, ESMType nextType)
 {
-
-    while (reader.subrecordType() != nextType) {
+    do {
         reader.readNextSubrecordHeader();
+        parts.emplace_back();
+        std::unordered_set<ESMType> nexts{ESMType::ICON, ESMType::MICO, ESMType::INDX, nextType};
 
         switch (reader.subrecordType()) {
         case (ESMType::INDX):
-            parts.emplace_back();
             reader.readSubrecord(parts.back().index);
             break;
         case (ESMType::MODL):
-            ModelData::loadCollection(reader, parts[parts.size() - 1].modelData);
+            ModelData::load(reader, parts.back().modelData, 0, nexts);
             break;
         case (ESMType::ICON):
             reader.readStringSubrecord(parts.back().largeIconFilename);
@@ -30,14 +30,13 @@ void ModelPart::load(ESMReader& reader, std::vector<ModelPart>& parts, ESMType n
             log_fatal(s.str().c_str());
             reader.reportError(s.str());
             break;
-        }
-    }
+        } 
+
+    } while(reader.peekNextType() != nextType);
 }
 
 Race::Race(ESMReader& reader)
     : Record(reader)
-    , maleHeadParts()
-    , maleBodyParts()
 {
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::EDID);
