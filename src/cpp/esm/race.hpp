@@ -42,6 +42,8 @@ struct ModelPart {
     ModelData   modelData;
     std::string largeIconFilename;
     std::string smallIconFilename;
+
+    static void load(ESMReader& reader, std::vector<ModelPart>& parts, ESMType nextType);
 };
 
 struct Race : public Record {

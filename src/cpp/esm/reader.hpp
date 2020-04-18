@@ -44,6 +44,7 @@ public:
     bool hasMoreBytes() { return std::ftell(this->file) < fileSize; }
     void skipRecord();
     void skipGroup();
+    void skipSubrecord();
 
     RecordHeader&    getCurrentRecord();
     SubrecordHeader& getCurrentSubrecord();
@@ -140,7 +141,7 @@ template <typename T>
 void ESMReader::readArraySubrecord(std::vector<T>& array)
 {
     array.resize(currentSubrecordHead.dataSize / sizeof(T));
-    int actual = std::fread(&array[0], sizeof(T), currentSubrecordHead.dataSize / sizeof(T), this->file);
+    int actual = std::fread(&array[0], 1, currentSubrecordHead.dataSize, this->file);
     if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";

@@ -168,6 +168,15 @@ enum ESMType : uint32_t {
     NAM2 = 0x324d414e,
     PNAM = 0x4d414e50,
     UNAM = 0x4d414e55,
+    NAM0 = 0x304d414e,
+    INDX = 0x58444e49,
+    NAM1 = 0x314d414e,
+    ENAM = 0x4d414e45,
+    FGGS = 0x53474746,
+    FGTS = 0x53544746,
+    FGGA = 0x41474746,
+    SNAM = 0x4d414e53,
+
 };
 
 };

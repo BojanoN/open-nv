@@ -62,8 +62,9 @@ void ESMReader::skipGroup() { std::fseek(this->file, endOfGroup, SEEK_SET); }
 void ESMReader::checkSubrecordHeader(ESMType type)
 {
     if (currentSubrecordHead.type != type) {
-        log_fatal("Expected subrecord type %s at record type %s, formid %u at 0x%06x",
+        log_fatal("Expected subrecord type %s got %s at record type %s, formid %u at 0x%06x",
             Util::typeValueToName(type).c_str(),
+            Util::typeValueToName(currentSubrecordHead.type).c_str(),
             Util::typeValueToName(currentRecordHead.type).c_str(),
             currentRecordHead.id,
             (std::ftell(this->file) - sizeof(SubrecordHeader)));
@@ -126,6 +127,11 @@ void ESMReader::reportError(std::string err)
     //  s << " in record type " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << std::ftell(this->file);
     log_fatal("Error encountered at 0x%06x", std::ftell(this->file));
     throw std::runtime_error("Error");
+}
+
+void ESMReader::skipSubrecord()
+{
+    std::fseek(this->file, this->endOfSubrecord, SEEK_SET);
 }
 
 };

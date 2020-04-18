@@ -1,9 +1,43 @@
 #include "race.hpp"
+#include "headers.hpp"
 #include "reader.hpp"
 
 namespace ESM {
+
+void ModelPart::load(ESMReader& reader, std::vector<ModelPart>& parts, ESMType nextType)
+{
+
+    while (reader.subrecordType() != nextType) {
+        reader.readNextSubrecordHeader();
+
+        switch (reader.subrecordType()) {
+        case (ESMType::INDX):
+            parts.emplace_back();
+            reader.readSubrecord(parts.back().index);
+            break;
+        case (ESMType::MODL):
+            ModelData::loadCollection(reader, parts[parts.size() - 1].modelData);
+            break;
+        case (ESMType::ICON):
+            reader.readStringSubrecord(parts.back().largeIconFilename);
+            break;
+        case (ESMType::MICO):
+            reader.readStringSubrecord(parts.back().smallIconFilename);
+            break;
+        default:
+            std::stringstream s;
+            s << "Invalid subrecord type " << Util::typeValueToName(reader.subrecordType()) << '\n';
+            log_fatal(s.str().c_str());
+            reader.reportError(s.str());
+            break;
+        }
+    }
+}
+
 Race::Race(ESMReader& reader)
     : Record(reader)
+    , maleHeadParts()
+    , maleBodyParts()
 {
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::EDID);
@@ -44,9 +78,11 @@ Race::Race(ESMReader& reader)
     reader.checkSubrecordHeader(ESMType::VTCK);
     reader.readSubrecord(this->voices);
 
-    reader.readNextSubrecordHeader();
-    reader.checkSubrecordHeader(ESMType::DNAM);
-    reader.readSubrecord(this->defaultHairStyle);
+    if (reader.peekNextType() == ESMType::DNAM) {
+        reader.readNextSubrecordHeader();
+        reader.checkSubrecordHeader(ESMType::DNAM);
+        reader.readSubrecord(this->defaultHairStyle);
+    }
 
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::CNAM);
@@ -64,10 +100,68 @@ Race::Race(ESMReader& reader)
     reader.checkSubrecordHeader(ESMType::ATTR);
     reader.readFixedArraySubrecord(this->unknown);
 
-    uint32_t index = 0;
-    while (reader.peekNextType() != ESMType::FNAM) {
-        maleHeadParts.emplace_back();
-        ModelData::load(reader, maleHeadParts.back(), index, )
-    }
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::NAM0);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::MNAM);
+    ModelPart::load(reader, this->maleHeadParts, ESMType::FNAM);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::FNAM);
+    ModelPart::load(reader, this->femaleHeadParts, ESMType::NAM1);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::NAM1);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::MNAM);
+    ModelPart::load(reader, this->maleBodyParts, ESMType::FNAM);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::FNAM);
+    ModelPart::load(reader, this->femaleHeadParts, ESMType::HNAM);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::HNAM);
+    reader.readArraySubrecord(this->hairs);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::ENAM);
+    reader.readArraySubrecord(this->eyes);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::MNAM);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::FGGS);
+    reader.readArraySubrecord(this->maleFaceGenGeometry_Symmetric);
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::FGGA);
+    reader.readArraySubrecord(this->maleFaceGenGeometry_Asymmetric);
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::FGTS);
+    reader.readArraySubrecord(this->maleFaceGenTexture_Symmetric);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::SNAM);
+    reader.skipSubrecord();
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::FNAM);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::FGGS);
+    reader.readArraySubrecord(this->femaleFaceGenGeometry_Symmetric);
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::FGGA);
+    reader.readArraySubrecord(this->femaleFaceGenGeometry_Asymmetric);
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::FGTS);
+    reader.readArraySubrecord(this->femaleFaceGenTexture_Symmetric);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::SNAM);
+    reader.skipSubrecord();
 }
 };
