@@ -33,7 +33,7 @@ class GameWorld {
     GameData<ESM::Activator>        activators;
     GameData<ESM::TalkingActivator> talkingActivators;
     GameData<ESM::Terminal>         terminals;
-    // GameData<ESM::Armor> armors;
+    GameData<ESM::Armor>            armors;
     // GameData<ESM::Book> books;
     // GameData<ESM::Container> containers;
     // GameData<ESM::Door> doors;

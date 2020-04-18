@@ -1,5 +1,6 @@
 #pragma once
 #include "acti.hpp"
+#include "armo.hpp"
 #include "aspc.hpp"
 #include "clas.hpp"
 #include "ench.hpp"
