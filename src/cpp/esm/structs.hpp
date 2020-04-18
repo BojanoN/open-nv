@@ -46,18 +46,16 @@ struct AlternateTexture {
 };
 
 struct ModelData {
-    std::vector<std::string> filenames;
-    uint8_t                  unused[4];
-    //benis
+    std::string                       filename;
+    uint8_t                           unused[4];
     uint32_t                          alternateTextureCount;
-    std::vector<std::vector<uint8_t>> textureHashes;
+    std::vector<uint8_t>              textureHashes;
     std::vector<AlternateTexture>     alternateTextures;
     uint8_t                           FaceGenModelFlags;
 
-    static void load(ESMReader& reader, ModelData& modelData, int index, ESMType nextSubheader);
-    static void loadCollection(ESMReader& reader, ModelData& modelData);
-    static void load(ESMReader& reader, ModelData& modelData, int index, std::unordered_set<ESMType>& nextSubheaders);
+    static void load(ESMReader& reader, ModelData& modelData, int index, std::unordered_set<ESMType>&  nextSubheaders);
 };
+
 
 struct EffectData {
     uint32_t magnitude;

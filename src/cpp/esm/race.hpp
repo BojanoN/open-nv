@@ -2,6 +2,7 @@
 
 #include "record.hpp"
 #include "structs.hpp"
+#include <unordered_set>
 
 namespace ESM {
 
