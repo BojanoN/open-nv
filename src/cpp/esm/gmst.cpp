@@ -2,27 +2,27 @@
 
 namespace ESM {
 
-void GameSetting::load(ESMReader& reader) {
+GameSetting::GameSetting(ESMReader& reader) : Record(reader) {
 	reader.readNextSubrecordHeader();
 	reader.checkSubrecordHeader(ESMType::EDID);
 	reader.readStringSubrecord(editorId);
 
 	reader.readNextSubrecordHeader();
 	reader.checkSubrecordHeader(ESMType::DATA);
-	/*switch(editorId[0]) {
+	switch(editorId[0]) {
 		case 's':
-			value = "";
-			reader.readStringSubrecord(value);
+			value.emplace<2>();
+			reader.readStringSubrecord(std::get<std::string>(value));
 			break;
 		case 'f':
-			value = 0.f;
-			reader.readSubrecord(value);
+			value.emplace<1>();
+			reader.readSubrecord(std::get<float>(value));
 			break;
 		default:
-			value = 0;
-			reader.readSubrecord(value);
+			//default type of value is uint32_t
+			reader.readSubrecord(std::get<int32_t>(value));
 			break;
-	}*/
+	}
 }
 
 };

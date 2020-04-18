@@ -55,7 +55,7 @@ const T& GameData<T>::get(formid id) const
 template <class T>
 void GameData<T>::insert(T* record)
 {
-    log_info("Inserting record %u", record->id);
+    log_debug("Inserting record %u", record->id);
     auto it = dataMap.insert(std::make_pair(record->id, record));
     assert(it.second);
 }
@@ -68,7 +68,7 @@ void GameData<T>::load(ESM::ESMReader& reader)
         T* record = new T(reader);
         this->insert(record);
         assert(dataMap.find(record->id) != dataMap.end());
-    } catch (std::runtime_error e) {
+    } catch (std::runtime_error& e) {
         std::stringstream s;
         log_fatal("Cannot read record!");
         log_fatal(e.what());

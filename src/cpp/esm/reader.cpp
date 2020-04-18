@@ -59,6 +59,8 @@ void ESMReader::skipRecord() { std::fseek(this->file, endOfRecord, SEEK_SET); }
 
 void ESMReader::skipGroup() { std::fseek(this->file, endOfGroup, SEEK_SET); }
 
+void ESMReader::skipSubrecord() { std::fseek(this->file, endOfSubrecord, SEEK_SET); }
+
 void ESMReader::checkSubrecordHeader(ESMType type)
 {
     if (currentSubrecordHead.type != type) {
@@ -126,7 +128,7 @@ void ESMReader::reportError(std::string err)
     //std::cerr << err;
     //  s << " in record type " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << std::ftell(this->file);
     log_fatal("Error encountered at 0x%06x", std::ftell(this->file));
-    throw std::runtime_error("Error");
+    throw std::runtime_error(err);
 }
 
 void ESMReader::skipSubrecord()

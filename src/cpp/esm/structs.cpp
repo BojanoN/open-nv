@@ -56,14 +56,13 @@ void ModelData::loadCollection(ESMReader& reader, ModelData& modelData)
     reader.rewind(sizeof(SubrecordHeader));
 }
 
-void ModelData::load(ESMReader& reader, ModelData& modelData, int index, ESMType nextSubheader)
+void ModelData::load(ESMReader& reader, ModelData& modelData, int index, std::unordered_set<ESMType>& nextSubheaders)
 {
-    reader.readNextSubrecordHeader();
-    reader.checkSubrecordHeader(ESMType::MODL);
-    modelData.filenames.emplace_back();
-    reader.readStringSubrecord(modelData.filenames.back());
+    reader.checkSubrecordHeader(filenameType[index]);
+    reader.readStringSubrecord(modelData.filename);
 
-    while (reader.subrecordType() != nextSubheader) {
+    while (reader.hasMoreSubrecords() && nextSubheaders.find(static_cast<ESMType>(reader.peekNextType())) == nextSubheaders.end()) {
+        reader.readNextSubrecordHeader();
 
         if (unusedType[index] && reader.subrecordType() == unusedType[index]) {
             reader.readFixedArraySubrecord(modelData.unused);
@@ -92,7 +91,45 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index, ESMType
         }
         reader.readNextSubrecordHeader();
     }
-    reader.rewind(sizeof(SubrecordHeader));
+    //reader.rewind(sizeof(SubrecordHeader));
+}
+
+void DestructionData::load(ESMReader& reader, DestructionData& destData,
+    std::unordered_set<ESMType>& nextSubheaders)
+{
+    reader.checkSubrecordHeader(ESMType::DEST);
+    reader.readSubrecord(destData.header);
+
+    while (reader.hasMoreSubrecords() && nextSubheaders.find(static_cast<ESMType>(reader.peekNextType())) == nextSubheaders.end()) {
+        reader.readNextSubrecordHeader();
+        reader.checkSubrecordHeader(ESMType::DSTD);
+
+        destData.stages.emplace_back();
+        reader.readSubrecord(destData.stages.back().stageData);
+        bool stageEnd = false;
+
+        while (reader.hasMoreSubrecords() && nextSubheaders.find(static_cast<ESMType>(reader.peekNextType())) == nextSubheaders.end() && !stageEnd) {
+
+            reader.readNextSubrecordHeader();
+            if (reader.subrecordType() == ESMType::DMDL) {
+                reader.readStringSubrecord(destData.stages.back().modelFilename);
+
+            } else if (reader.subrecordType() == ESMType::DMDT) {
+                reader.readArraySubrecord(destData.stages.back().textureHashes);
+            } else if (reader.subrecordType() == ESMType::DSTF) {
+                stageEnd = true;
+            }
+        }
+    }
+}
+
+void Condition::load(ESMReader& reader, Condition& condition)
+{
+    if (reader.getCurrentSubrecord().dataSize == 28) {
+        reader.readSubrecord(*reinterpret_cast<Condition::ConditionNullReference*>(&condition));
+    } else {
+        reader.readSubrecord(condition);
+    }
 }
 
 };

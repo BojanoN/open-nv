@@ -7,15 +7,16 @@
 #include <iostream>
 #include <sstream>
 #include <unordered_map>
+#include <utility>
 
 namespace GameWorld {
 
 class GameWorld {
     // TODO: sve ostalo
-    //GameData<ESM::GameSetting> gameSettings;
+    GameData<ESM::GameSetting> gameSettings;
     GameData<ESM::TextureSet> textureSets;
     GameData<ESM::MenuIcon>   menuIcons;
-    // GameData<ESM::GlobalVariable> globalVariables;
+    GameData<ESM::GlobalVariable> globalVariables;
     GameData<ESM::Class>    classes;
     GameData<ESM::Faction>  factions;
     GameData<ESM::HeadPart> headParts;
@@ -27,11 +28,11 @@ class GameWorld {
     // GameData<ESM::MagicEffect> magicEffects;
     // GameData<ESM::Script> scripts;
     // GameData<ESM::LandscapeTexture> landscapeTextures;
-    // GameData<ESM::ObjectEffect> objectEffects;
-    // GameData<ESM::ActorEffect> actorEffects;
-    // GameData<ESM::Activator> activators;
-    // GameData<ESM::TalkingActivator> talkingActivators;
-    // GameData<ESM::Terminal> terminals;
+    GameData<ESM::ObjectEffect> objectEffects;
+    GameData<ESM::ActorEffect> actorEffects;
+    GameData<ESM::Activator> activators;
+    GameData<ESM::TalkingActivator> talkingActivators;
+    GameData<ESM::Terminal> terminals;
     // GameData<ESM::Armor> armors;
     // GameData<ESM::Book> books;
     // GameData<ESM::Container> containers;
