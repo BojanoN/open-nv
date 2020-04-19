@@ -9,6 +9,7 @@
 #include "ench.hpp"
 #include "eyes.hpp"
 #include "fact.hpp"
+#include "furn.hpp"
 #include "glob.hpp"
 #include "gmst.hpp"
 #include "gras.hpp"

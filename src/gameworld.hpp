@@ -46,7 +46,7 @@ class GameWorld {
     // GameData<ESM::PlaceableWater> placeableWaters;
     GameData<ESM::Grass> grasses;
     // GameData<ESM::Tree> trees;
-    // GameData<ESM::Furniture> furnitures;
+    GameData<ESM::Furniture> furnitures;
     // GameData<ESM::Weapon> weapons;
     // GameData<ESM::Ammunition> ammunitions;
     // GameData<ESM::NPC> NPCs;
