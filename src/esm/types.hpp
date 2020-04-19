@@ -225,6 +225,8 @@ enum ESMType : uint32_t {
     COED = 0x44454f43,
     QNAM = 0x4d414e51,
 
+    FMAM = 0x4d414d46
+
 };
 
 };

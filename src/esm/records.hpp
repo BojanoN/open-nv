@@ -25,3 +25,4 @@
 #include "term.hpp"
 #include "tes4.hpp"
 #include "txst.hpp"
+#include "ligh.hpp"

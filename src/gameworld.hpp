@@ -38,7 +38,7 @@ class GameWorld {
     GameData<ESM::Container>        containers;
     GameData<ESM::Door>             doors;
     GameData<ESM::Ingredient>       ingredients;
-    // GameData<ESM::Light> lights;
+    GameData<ESM::Light> lights;
     // GameData<ESM::MiscItem> miscItems;
     // GameData<ESM::Static> statics;
     // GameData<ESM::StaticCollection> staticCollections;
