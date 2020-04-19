@@ -81,6 +81,8 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::CONT, &containers));
     dataStores.insert(std::make_pair(ESM::ESMType::DOOR, &doors));
     dataStores.insert(std::make_pair(ESM::ESMType::INGR, &ingredients));
+    //
+    dataStores.insert(std::make_pair(ESM::ESMType::MISC, &miscItems));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

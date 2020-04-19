@@ -17,6 +17,7 @@
 #include "ltex.hpp"
 #include "mgef.hpp"
 #include "micn.hpp"
+#include "misc.hpp"
 #include "race.hpp"
 #include "scpt.hpp"
 #include "sound.hpp"
