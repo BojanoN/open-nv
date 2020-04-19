@@ -35,7 +35,7 @@ class GameWorld {
     GameData<ESM::Terminal>         terminals;
     GameData<ESM::Armor>            armors;
     GameData<ESM::Book>             books;
-    // GameData<ESM::Container> containers;
+    GameData<ESM::Container>        containers;
     // GameData<ESM::Door> doors;
     // GameData<ESM::Ingredient> ingredients;
     // GameData<ESM::Light> lights;

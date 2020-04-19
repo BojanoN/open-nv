@@ -221,6 +221,9 @@ enum ESMType : uint32_t {
     ETYP = 0x50595445,
     ZNAM = 0x4d414e5a,
     BNAM = 0x4d414e42,
+    CNTO = 0x4f544e43,
+    COED = 0x44454f43,
+    QNAM = 0x4d414e51,
 
 };
 

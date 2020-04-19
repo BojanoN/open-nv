@@ -5,7 +5,7 @@
 namespace ESM {
 class ESMReader;
 
-enum BookFlag : uint8_t {
+enum class BookFlag : uint8_t {
     UNKNOWN   = 0x01,
     CANT_TAKE = 0x02
 };
