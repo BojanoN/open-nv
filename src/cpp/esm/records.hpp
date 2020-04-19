@@ -14,6 +14,7 @@
 #include "mgef.hpp"
 #include "micn.hpp"
 #include "race.hpp"
+#include "scpt.hpp"
 #include "sound.hpp"
 #include "spel.hpp"
 #include "tact.hpp"

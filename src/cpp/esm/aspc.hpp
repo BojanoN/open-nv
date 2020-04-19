@@ -1,3 +1,4 @@
+#pragma once
 #include "record.hpp"
 #include "structs.hpp"
 #include "types.hpp"

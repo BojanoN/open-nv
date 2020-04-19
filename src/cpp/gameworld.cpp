@@ -76,6 +76,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::MGEF, &magicEffects));
     dataStores.insert(std::make_pair(ESM::ESMType::LTEX, &landscapeTextures));
     dataStores.insert(std::make_pair(ESM::ESMType::ARMO, &armors));
+    dataStores.insert(std::make_pair(ESM::ESMType::SCPT, &scripts));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

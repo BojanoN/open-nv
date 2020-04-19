@@ -1,7 +1,7 @@
+#pragma once
 #include "record.hpp"
 #include "structs.hpp"
 #include "types.hpp"
-#include <variant>
 
 namespace ESM {
 class ESMReader;
