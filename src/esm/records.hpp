@@ -5,6 +5,7 @@
 #include "book.hpp"
 #include "clas.hpp"
 #include "cont.hpp"
+#include "door.hpp"
 #include "ench.hpp"
 #include "eyes.hpp"
 #include "fact.hpp"

@@ -1,13 +1,25 @@
-#include "cont.hpp"
+#include "door.hpp"
 #include "reader.hpp"
 
 namespace ESM {
 
-Container::Container(ESMReader& reader)
+Door::Door(ESMReader& reader)
     : Record(reader)
 {
-    std::unordered_set<ESMType> modelNextSubheaders = { ESMType::SCRI, ESMType::CNTO, ESMType::DATA, ESMType::DEST };
-    std::unordered_set<ESMType> destNextSubheaders  = { ESMType::SNAM, ESMType::QNAM, ESMType::RNAM, ESMType::DATA };
+    std::unordered_set<ESMType> modelNextSubheaders = {
+        ESMType::SCRI,
+        ESMType::SNAM,
+        ESMType::ANAM,
+        ESMType::BNAM,
+        ESMType::FNAM,
+        ESMType::DEST
+    };
+    std::unordered_set<ESMType> destNextSubheaders = {
+        ESMType::SNAM,
+        ESMType::ANAM,
+        ESMType::BNAM,
+        ESMType::FNAM
+    };
 
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::EDID);
@@ -16,15 +28,9 @@ Container::Container(ESMReader& reader)
     while (reader.hasMoreSubrecords()) {
         reader.readNextSubrecordHeader();
         switch (reader.subrecordType()) {
+            // one fucking edge case
         case ESMType::OBND:
             reader.readSubrecord(this->objectBounds);
-            break;
-        case ESMType::CNTO:
-            this->items.emplace_back();
-            reader.readSubrecord(this->items.back().first);
-            break;
-        case ESMType::COED:
-            reader.readSubrecord(this->items.back().second);
             break;
         case ESMType::FULL:
             reader.readStringSubrecord(this->name);
@@ -38,18 +44,19 @@ Container::Container(ESMReader& reader)
         case ESMType::SNAM:
             reader.readSubrecord(this->openSound);
             break;
-        case ESMType::QNAM:
+        case ESMType::ANAM:
             reader.readSubrecord(this->closeSound);
             break;
-        case ESMType::RNAM:
+        case ESMType::BNAM:
             reader.readSubrecord(this->loopingSound);
             break;
         case ESMType::SCRI:
             reader.readSubrecord(this->script);
             break;
-        case ESMType::DATA:
-            reader.readSubrecord(this->containerData);
+        case ESMType::FNAM:
+            reader.readSubrecord(this->flag);
             break;
+
         default:
             std::stringstream s;
             s << "Invalid subrecord type " << Util::typeValueToName(reader.subrecordType()) << '\n';
@@ -57,4 +64,5 @@ Container::Container(ESMReader& reader)
         }
     }
 }
+
 }
