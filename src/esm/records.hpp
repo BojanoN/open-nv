@@ -22,6 +22,7 @@
 #include "scpt.hpp"
 #include "sound.hpp"
 #include "spel.hpp"
+#include "stat.hpp"
 #include "tact.hpp"
 #include "term.hpp"
 #include "tes4.hpp"
