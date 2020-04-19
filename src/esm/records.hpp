@@ -13,6 +13,7 @@
 #include "gmst.hpp"
 #include "hair.hpp"
 #include "hdpt.hpp"
+#include "ingr.hpp"
 #include "ltex.hpp"
 #include "mgef.hpp"
 #include "micn.hpp"
