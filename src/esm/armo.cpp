@@ -42,10 +42,10 @@ Armor::Armor(ESMReader& reader) : Record(reader)
     	reader.readNextSubrecordHeader();
     	switch(reader.subrecordType()) {
     		case ESMType::MODL:
-    			ModelData::load(reader, maleBipedModelData, 0, nextMaleBiped);
+    			ModelData::load(reader, maleBipedModelData, 0);
     			break;
     		case ESMType::MOD2:
-    			ModelData::load(reader, maleWorldModelData, 1, nextMaleWorld);
+    			ModelData::load(reader, maleWorldModelData, 1);
     			break;
     		case ESMType::ICON:
     			reader.readStringSubrecord(maleInventoryIconFilename);
@@ -54,10 +54,10 @@ Armor::Armor(ESMReader& reader) : Record(reader)
     			reader.readStringSubrecord(maleMessageIconFilename);
     			break;
     		case ESMType::MOD3:
-    			ModelData::load(reader, femaleBipedModelData, 2, nextFemaleBiped);
+    			ModelData::load(reader, femaleBipedModelData, 2);
     			break;
     		case ESMType::MOD4: //Female world model missing when same as male model?
-			    ModelData::load(reader, femaleWorldModelData, 3, nextFemaleWorld);
+			    ModelData::load(reader, femaleWorldModelData, 3);
 			    break;
     		case ESMType::ICO2:
     			reader.readStringSubrecord(femaleInventoryIconFilename);

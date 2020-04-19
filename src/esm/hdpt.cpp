@@ -17,7 +17,7 @@ HeadPart::HeadPart(ESMReader& reader)
     if (reader.subrecordType() == ESMType::MODL) {
         //reader.skipSubrecord();
         std::unordered_set<ESMType> next { ESMType::DATA };
-        ModelData::load(reader, modelData, 0, next);
+        ModelData::load(reader, modelData, 0);
         reader.readNextSubrecordHeader();
     }
 

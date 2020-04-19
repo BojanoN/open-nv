@@ -2,12 +2,12 @@
 
 namespace ESM {
 
-void ModelData::load(ESMReader& reader, ModelData& modelData, int index, std::unordered_set<ESMType>& nextSubheaders)
+void ModelData::load(ESMReader& reader, ModelData& modelData, int index)
 {
     reader.checkSubrecordHeader(filenameType[index]);
     reader.readStringSubrecord(modelData.filename);
 
-    while (reader.hasMoreSubrecords() && nextSubheaders.find(static_cast<ESMType>(reader.peekNextType())) == nextSubheaders.end()) {
+    while (reader.hasMoreSubrecords() && isInCollection(reader.peekNextType(), index)) {
         reader.readNextSubrecordHeader();
 
         if (unusedType[index] && reader.subrecordType() == unusedType[index]) {
@@ -32,17 +32,50 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index, std::un
             reader.readSubrecord(modelData.FaceGenModelFlags);
         }
     }
-    //reader.rewind(sizeof(SubrecordHeader));
+}
+
+bool ModelData::isInCollection(uint32_t type, int index)
+{
+        uint32_t limit;
+        switch(index) {
+            case 0:
+                limit = 5;
+                break;
+            case 1:
+            case 3:
+                limit = 3;
+                break;
+            case 2:
+                limit = 4;
+                break;
+            default:
+                throw std::runtime_error("benis");
+        }
+
+        for(uint32_t i = 0; i < limit; i++) {
+            if(types[index][i] == type) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+bool DestructionData::isInCollection(uint32_t type) {
+    for(int i = 0; i < 4; i++) {
+        if(types[i] == type) {
+            return true;
+        }
+    }
+    return false;
 }
 
 
-void DestructionData::load(ESMReader& reader, DestructionData& destData,
-    std::unordered_set<ESMType>& nextSubheaders)
+void DestructionData::load(ESMReader& reader, DestructionData& destData)
 {
     reader.checkSubrecordHeader(ESMType::DEST);
     reader.readSubrecord(destData.header);
 
-    while (reader.hasMoreSubrecords() && nextSubheaders.find(static_cast<ESMType>(reader.peekNextType())) == nextSubheaders.end()) {
+    while (reader.hasMoreSubrecords() && isInCollection(reader.peekNextType())) {
         reader.readNextSubrecordHeader();
         reader.checkSubrecordHeader(ESMType::DSTD);
 
@@ -50,7 +83,7 @@ void DestructionData::load(ESMReader& reader, DestructionData& destData,
         reader.readSubrecord(destData.stages.back().stageData);
         bool stageEnd = false;
 
-        while (reader.hasMoreSubrecords() && nextSubheaders.find(static_cast<ESMType>(reader.peekNextType())) == nextSubheaders.end() && !stageEnd) {
+        while (reader.hasMoreSubrecords() && isInCollection(reader.peekNextType()) && !stageEnd) {
 
             reader.readNextSubrecordHeader();
             if (reader.subrecordType() == ESMType::DMDL) {

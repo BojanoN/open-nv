@@ -28,7 +28,7 @@ MagicEffect::MagicEffect(ESMReader& reader)
             break;
         case (ESMType::MODL):
             this->modelData.emplace_back();
-            ModelData::load(reader, this->modelData.back(), 0, next);
+            ModelData::load(reader, this->modelData.back(), 0);
             break;
         case (ESMType::DATA):
             reader.readSubrecord(this->magicEffectData);

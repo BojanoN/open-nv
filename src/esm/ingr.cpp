@@ -21,7 +21,7 @@ Ingredient::Ingredient(ESMReader& reader)
             reader.readStringSubrecord(this->name);
             break;
         case ESMType::MODL:
-            ModelData::load(reader, this->modelData, 0, modelNextSubheaders);
+            ModelData::load(reader, this->modelData, 0);
             break;
         case ESMType::SCRI:
             reader.readSubrecord(this->script);

@@ -26,3 +26,7 @@
 #include "tes4.hpp"
 #include "txst.hpp"
 #include "ligh.hpp"
+#include "mstt.hpp"
+#include "pwat.hpp"
+#include "tree.hpp"
+#include "weap.hpp"

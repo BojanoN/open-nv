@@ -24,13 +24,13 @@ TalkingActivator::TalkingActivator(ESMReader& reader) : Record(reader) {
         reader.readStringSubrecord(name);
         break;
       case ESMType::MODL:
-        ModelData::load(reader, modelData, 0, nextSubheadersModel);
+        ModelData::load(reader, modelData, 0);
         break;
       case ESMType::SCRI:
         reader.readSubrecord(script);
         break;
       case ESMType::DEST:
-        DestructionData::load(reader, destructionData, nextSubheadersDest);
+        DestructionData::load(reader, destructionData);
         break;
       case ESMType::SNAM:
         reader.readSubrecord(soundLooping);

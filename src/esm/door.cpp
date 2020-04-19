@@ -36,10 +36,10 @@ Door::Door(ESMReader& reader)
             reader.readStringSubrecord(this->name);
             break;
         case ESMType::MODL:
-            ModelData::load(reader, this->modelData, 0, modelNextSubheaders);
+            ModelData::load(reader, this->modelData, 0);
             break;
         case ESMType::DEST:
-            DestructionData::load(reader, this->destructionData, destNextSubheaders);
+            DestructionData::load(reader, this->destructionData);
             break;
         case ESMType::SNAM:
             reader.readSubrecord(this->openSound);

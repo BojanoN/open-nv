@@ -18,7 +18,7 @@ Hair::Hair(ESMReader& reader)
     reader.readNextSubrecordHeader();
     if (reader.subrecordType() == ESMType::MODL) {
         std::unordered_set<ESMType> next{ESMType::ICON};
-        ModelData::load(reader, modelData, 0, next);
+        ModelData::load(reader, modelData, 0);
         reader.readNextSubrecordHeader();
     }
 

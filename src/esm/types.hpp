@@ -225,7 +225,38 @@ enum ESMType : uint32_t {
     COED = 0x44454f43,
     QNAM = 0x4d414e51,
 
-    FMAM = 0x4d414d46
+    FMAM = 0x4d414d46,
+    EAMT = 0x544d4145,
+    EFSD = 0x44534645,
+    MWD1 = 0x3144574d,
+    MWD2 = 0x3244574d,
+    MWD3 = 0x3344574d,
+    MWD4 = 0x3444574d,
+    MWD5 = 0x3544574d,
+    MWD6 = 0x3644574d,
+    MWD7 = 0x3744574d,
+    NNAM = 0x4d414e4e,
+    WNM1 = 0x314d4e57,
+    WNM2 = 0x324d4e57,
+    WNM3 = 0x334d4e57,
+    WNM4 = 0x344d4e57,
+    WNM5 = 0x354d4e57,
+    WNM6 = 0x364d4e57,
+    WNM7 = 0x374d4e57,
+    NAM7 = 0x374d414e,
+    NAM6 = 0x364d414e,
+    NAM9 = 0x394d414e,
+    NAM8 = 0x384d414e,
+
+    WMS1 = 0x31534d57,
+    WMS2 = 0x32534d57,
+    CRDT = 0x54445243,
+    VATS = 0x53544156,
+
+    WMI2 = 0x32494d57,
+    WMI3 = 0x33494d57,
+    VANM = 0x4d4e4156, 
+
 
 };
 

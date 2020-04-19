@@ -16,7 +16,7 @@ void ModelPart::load(ESMReader& reader, std::vector<ModelPart>& parts, ESMType n
             reader.readSubrecord(parts.back().index);
             break;
         case (ESMType::MODL):
-            ModelData::load(reader, parts.back().modelData, 0, nexts);
+            ModelData::load(reader, parts.back().modelData, 0);
             break;
         case (ESMType::ICON):
             reader.readStringSubrecord(parts.back().largeIconFilename);

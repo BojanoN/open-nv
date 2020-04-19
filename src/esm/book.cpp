@@ -24,7 +24,7 @@ Book::Book(ESMReader& reader)
             reader.readStringSubrecord(this->name);
             break;
         case ESMType::MODL:
-            ModelData::load(reader, this->modelData, 0, modelNextSubheaders);
+            ModelData::load(reader, this->modelData, 0);
             break;
         case ESMType::ICON:
             reader.readStringSubrecord(this->largeIconFilename);
@@ -36,7 +36,7 @@ Book::Book(ESMReader& reader)
             reader.readStringSubrecord(this->description);
             break;
         case ESMType::DEST:
-            DestructionData::load(reader, this->destructionData, destNextSubheaders);
+            DestructionData::load(reader, this->destructionData);
             break;
         case ESMType::ZNAM:
             reader.readSubrecord(this->pickUpSound);
