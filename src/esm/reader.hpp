@@ -6,7 +6,9 @@
 #include "utils.hpp"
 
 #include <cassert>
+#include <cerrno>
 #include <cstdio>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -23,7 +25,9 @@ public:
 
         this->file = std::fopen(path.c_str(), "rb");
         if (this->file == NULL) {
-            exit(1);
+            std::stringstream s;
+            s << "Error opening file " << path << ": " << std::strerror(errno);
+            throw std::runtime_error(s.str());
         }
         std::fseek(this->file, 0, SEEK_END);
 

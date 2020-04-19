@@ -28,9 +28,12 @@ int main(int argc, char** argv)
     }
 
     GameWorld::GameWorld world;
-    ESM::ESMReader       reader(path);
-    world.load(reader);
-
+    try {
+        ESM::ESMReader reader(path);
+        world.load(reader);
+    } catch (std::runtime_error& e) {
+        log_fatal(e.what());
+    }
     //log_info("Loaded %s in %f miliseconds", path.c_str(), (double)(end - start) / (CLOCKS_PER_SEC / 1000));
 
     return 0;
