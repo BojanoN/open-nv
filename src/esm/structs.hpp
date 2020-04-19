@@ -12,6 +12,24 @@
 
 namespace ESM {
 
+enum class Skills : int8_t {
+    NONE = -1,
+    BARTER,
+    BIG,
+    ENERGY,
+    EXPLOSIVES,
+    LOCKPICK,
+    MEDICINE,
+    MELEE,
+    REPAIR,
+    SCIENCE,
+    GUNS,
+    SNEAK,
+    SPEECH,
+    SURVIVAL,
+    UNARMED,
+};
+
 struct ObjectBounds {
     int16_t x1;
     int16_t y1;

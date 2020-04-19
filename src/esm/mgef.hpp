@@ -6,7 +6,7 @@
 namespace ESM {
 class ESMReader;
 
-enum MagicEffectDataFlags : uint32_t {
+enum class MagicEffectDataFlags : uint32_t {
     HOSTILE,
     RECOVER,
     DETRIMENTAL,
@@ -39,7 +39,7 @@ enum MagicEffectDataFlags : uint32_t {
     UNKNOWN_MGEF_FLAG_9
 };
 
-enum MagicEffectArchtype : uint32_t {
+enum class MagicEffectArchtype : uint32_t {
     VALUE_MODIFIER,
     SCRIPT,
     DISPEL,
@@ -79,7 +79,7 @@ enum MagicEffectArchtype : uint32_t {
     TURBO_MAGIC_EFFECT
 };
 
-enum ActorValue : int32_t {
+enum class ActorValue : int32_t {
     NONE_ACTOR_VALUE = -1,
     AGGRESION,
     CONFIDENCE,

@@ -2,6 +2,7 @@
 #include "acti.hpp"
 #include "armo.hpp"
 #include "aspc.hpp"
+#include "book.hpp"
 #include "clas.hpp"
 #include "ench.hpp"
 #include "eyes.hpp"
