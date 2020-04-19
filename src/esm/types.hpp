@@ -226,6 +226,8 @@ enum ESMType : uint32_t {
     QNAM = 0x4d414e51,
     BRUS = 0x53555242,
     GRUP = 0x50555247,
+    RCIL = 0x4c494352,
+    DAT2 = 0x32544144,
 
 };
 

@@ -4,6 +4,7 @@
 
 namespace ESM {
 class ESMReader;
+
 struct Furniture : public Record {
     std::string          editorId;
     ObjectBounds         objectBounds;

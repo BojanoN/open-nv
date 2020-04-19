@@ -48,7 +48,7 @@ class GameWorld {
     // GameData<ESM::Tree> trees;
     GameData<ESM::Furniture> furnitures;
     // GameData<ESM::Weapon> weapons;
-    // GameData<ESM::Ammunition> ammunitions;
+    GameData<ESM::Ammo> ammunitions;
     // GameData<ESM::NPC> NPCs;
     // GameData<ESM::Creature> creatures;
     // GameData<ESM::LeveledCreature> leveledCreatures;
