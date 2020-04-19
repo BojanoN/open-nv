@@ -24,7 +24,7 @@ struct ClassData {
     int32_t  tagSkill3;
     int32_t  tagSkill4;
     uint32_t flags;
-    uint32_t services;
+    Services services;
     int8_t   teaches;
     uint8_t  maximumTrainingLevel;
     uint8_t  unused[2];

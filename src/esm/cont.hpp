@@ -10,19 +10,6 @@ enum class ContainerFlags : uint8_t {
     RESPAWNS
 };
 
-struct __attribute__((packed)) Item {
-    formid  item;
-    int32_t count;
-};
-
-struct __attribute__((packed)) ItemExtraData {
-    // FACT or NPC_
-    formid owner;
-    // GLOB or integer representing rank
-    formid requiredRank;
-    float  condition;
-};
-
 struct __attribute__((packed)) ContainerData {
     ContainerFlags flag;
     float          weight;
