@@ -1,7 +1,7 @@
 PROJECT=openNV
 
-DIRS := ./src/cpp/esm ./src/cpp ./src/cpp/logc
-SOURCEDIR = ./src/cpp
+DIRS := ./src/esm ./src/ ./src/logc
+SOURCEDIR = ./src/
 BUILDDIR = ./build
 LIBDIR = ./lib
 TESTS := ./src/tests
