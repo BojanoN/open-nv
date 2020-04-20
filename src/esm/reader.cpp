@@ -1,5 +1,6 @@
 #include "reader.hpp"
 #include "logc/log.h"
+#include "util/compress.hpp"
 
 namespace ESM {
 
@@ -9,12 +10,12 @@ SubrecordHeader& ESMReader::getCurrentSubrecord()
     return currentSubrecordHead;
 };
 
-uint32_t ESMReader::recordType() { return this->currentRecordHead.type; }
-uint32_t ESMReader::subrecordType() { return this->currentSubrecordHead.type; }
-uint32_t ESMReader::groupLabel() { return currentGroupHead.label; }
-int32_t  ESMReader::groupType() { return currentGroupHead.groupType; }
-uint32_t ESMReader::recordFlags() { return currentRecordHead.flags; }
-uint32_t ESMReader::recordId() { return currentRecordHead.id; }
+uint32_t    ESMReader::recordType() { return this->currentRecordHead.type; }
+uint32_t    ESMReader::subrecordType() { return this->currentSubrecordHead.type; }
+uint32_t    ESMReader::groupLabel() { return currentGroupHead.label; }
+int32_t     ESMReader::groupType() { return currentGroupHead.groupType; }
+RecordFlags ESMReader::recordFlags() { return currentRecordHead.flags; }
+uint32_t    ESMReader::recordId() { return currentRecordHead.id; }
 
 uint32_t ESMReader::peekNextType()
 {
@@ -130,6 +131,18 @@ void ESMReader::reportError(std::string err)
     //  s << " in record type " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << std::ftell(this->file);
     log_fatal("Error encountered at 0x%06x", std::ftell(this->file));
     throw std::runtime_error(err);
+}
+
+void ESMReader::readCompressed()
+{
+    CompressedDataHeader hdr;
+    this->readSubrecord(hdr);
+
+    std::vector<uint8_t> decomp(hdr.decompSize);
+    std::vector<uint8_t> comp(this->currentRecordHead.dataSize);
+
+    std::fread(&comp[0], 1, this->currentRecordHead.dataSize, this->file);
+    ::Util::zlibDecompress(comp, decomp);
 }
 
 };

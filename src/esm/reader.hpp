@@ -57,8 +57,8 @@ public:
     uint32_t         groupLabel();
     int32_t          groupType();
 
-    uint32_t recordFlags();
-    formid   recordId();
+    RecordFlags recordFlags();
+    formid      recordId();
 
     uint16_t subrecordSize() { return currentSubrecordHead.dataSize; }
 
@@ -66,6 +66,7 @@ public:
     void readNextRecordHeader();
     void readNextGroupHeader();
     void readNextHeader();
+    void readCompressed();
 
     void checkSubrecordHeader(ESMType type);
 

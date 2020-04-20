@@ -23,5 +23,7 @@ struct NPC : public Record {
     formid                                      script;
     std::vector<std::pair<Item, ItemExtraData>> items;
     AIDT                                        aiData;
+
+    NPC(ESMReader& reader);
 };
 }

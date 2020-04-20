@@ -1,6 +1,6 @@
 PROJECT=openNV
 
-DIRS := ./src/esm ./src ./src/logc
+DIRS := ./src/esm ./src ./src/logc ./src/util
 SOURCEDIR = ./src
 BUILDDIR = ./build
 LIBDIR = ./lib
@@ -15,7 +15,7 @@ CC=clang++
 INCLUDEFLAGS = $(foreach d, $(INCLUDEDIRS), -I$d)
 CFLAGS := --std=c++17 -DLOG_USE_COLOR $(INCLUDEFLAGS) -Wall -MD
 
-LDFLAGS= -L $(LIBDIR)
+LDFLAGS= -L$(LIBDIR) -lz
 
 all: CFLAGS += -O2 -DNDEBUG
 all: $(BUILDDIR)/$(PROJECT)
@@ -27,7 +27,7 @@ leak-check: debug
 	valgrind --leak-check=full --show-leak-kinds=all $(BUILDDIR)/$(PROJECT)
 
 $(BUILDDIR)/$(PROJECT): $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $^ -o $@ $(LDFLAGS)
 
 $(BUILDDIR)/%.o: $(SOURCEDIR)/%.cpp
 	@mkdir -p $(@D)

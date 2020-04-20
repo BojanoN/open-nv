@@ -4,9 +4,9 @@
 namespace ESM {
 
 struct Record {
-    uint32_t recordType;
-    uint32_t recordFlags;
-    formid   id;
+    uint32_t    recordType;
+    RecordFlags recordFlags;
+    formid      id;
 
     Record() {};
     Record(ESMReader& reader)
@@ -14,10 +14,11 @@ struct Record {
         , recordFlags { reader.recordFlags() }
         , id { reader.recordId() }
     {
+        if (this->recordFlags & RecordFlags::COMPRESSED) {
+            reader.readCompressed();
+        }
     }
     ~Record() {};
-
-    //virtual void load(ESMReader& reader) = 0;
 };
 
 };
