@@ -4,15 +4,16 @@ DIRS := ./src/esm ./src ./src/logc
 SOURCEDIR = ./src
 BUILDDIR = ./build
 LIBDIR = ./lib
-TESTS := ./src/tests
-
+INCLUDEDIRS = $(SOURCEDIR) $(LIBDIR)/include
 
 FILES := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
 BUILDFILES := $(subst $(SOURCEDIR)/,$(BUILDDIR)/,$(FILES)) 
 OBJS := $(BUILDFILES:.cpp=.o)
 
+
 CC=clang++
-CFLAGS := --std=c++17 -DLOG_USE_COLOR -I $(SOURCEDIR) -Wall -MD
+INCLUDEFLAGS = $(foreach d, $(INCLUDEDIRS), -I$d)
+CFLAGS := --std=c++17 -DLOG_USE_COLOR $(INCLUDEFLAGS) -Wall -MD
 
 LDFLAGS= -L $(LIBDIR)
 
@@ -36,11 +37,14 @@ $(BUILDDIR)/%.o: $(TESTS)/%.cpp
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
-tests:
-	make -C $(TESTS)
+libs:
+	make -C $(LIBDIR) all
+
+libclean:
+	make -C $(LIBDIR) clean
 
 clean:
 	- rm -rf $(BUILDDIR)
-	make -C $(TESTS) clean
+	make -C $(LIBDIR) buildclean
 
 -include $(OBJS:.o=.d)
