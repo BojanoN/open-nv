@@ -224,6 +224,10 @@ enum ESMType : uint32_t {
     CNTO = 0x4f544e43,
     COED = 0x44454f43,
     QNAM = 0x4d414e51,
+    BRUS = 0x53555242,
+    GRUP = 0x50555247,
+    RCIL = 0x4c494352,
+    DAT2 = 0x32544144,
 
     FMAM = 0x4d414d46,
     EAMT = 0x544d4145,
