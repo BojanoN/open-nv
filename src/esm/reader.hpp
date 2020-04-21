@@ -9,6 +9,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -20,32 +21,26 @@ namespace ESM {
 class ESMReader {
 public:
     ESMReader(std::string& path)
-        : fileName { path }
+        : currentStream { file }
+        , streamCache(nullptr)
+        , file { path.c_str() }
+        , fileName { path }
+
     {
+        this->file.seekg(0, std::ios::end);
 
-        this->file = std::fopen(path.c_str(), "rb");
-        if (this->file == NULL) {
-            std::stringstream s;
-            s << "Error opening file " << path << ": " << std::strerror(errno);
-            throw std::runtime_error(s.str());
-        }
-        std::fseek(this->file, 0, SEEK_END);
-
-        ssize_t size   = std::ftell(this->file);
+        ssize_t size   = this->file.tellg();
         this->fileSize = size;
         this->fileLeft = size;
 
-        std::fseek(this->file, 0, SEEK_SET);
+        this->file.seekg(0, std::ios::beg);
+        // this->currentStream = static_cast<std::istream&>(this->file);
     };
-    ~ESMReader()
-    {
-        if (this->file)
-            std::fclose(this->file);
-    };
+    ~ESMReader() {};
 
-    bool hasMoreSubrecords() { return std::ftell(this->file) < endOfRecord; }
-    bool hasMoreRecordsInGroup() { return std::ftell(this->file) < endOfGroup; }
-    bool hasMoreBytes() { return std::ftell(this->file) < fileSize; }
+    bool hasMoreSubrecords() { return this->file.tellg() < endOfRecord; }
+    bool hasMoreRecordsInGroup() { return this->file.tellg() < endOfGroup; }
+    bool hasMoreBytes() { return this->file.tellg() < fileSize; }
     void skipRecord();
     void skipGroup();
     void skipSubrecord();
@@ -99,7 +94,10 @@ public:
     reportError(std::string err);
 
 private:
-    std::FILE*  file;
+    std::istream& currentStream;
+    std::istream* streamCache;
+    std::ifstream file;
+
     ssize_t     fileSize;
     std::string fileName;
 
@@ -119,11 +117,16 @@ private:
 template <typename T>
 void ESMReader::readSubrecord(T& subrecValue)
 {
-    int actual = std::fread(&subrecValue, 1, currentSubrecordHead.dataSize, this->file);
+
+    int start = this->currentStream.tellg();
+    this->currentStream.read(reinterpret_cast<char*>(&subrecValue), currentSubrecordHead.dataSize);
+
+    int end    = this->currentStream.tellg();
+    int actual = end - start;
     if (actual != sizeof(T)) {
         std::stringstream s;
         s << "Expected to read " << sizeof(T) << " bytes, actually read " << actual << " bytes,\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << std::ftell(this->file);
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << this->currentStream.tellg();
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }
@@ -132,24 +135,38 @@ void ESMReader::readSubrecord(T& subrecValue)
 template <typename T>
 int ESMReader::readRawData(T& value)
 {
-    return std::fread(&value, sizeof(T), 1, this->file);
+    int start = this->currentStream.tellg();
+    this->currentStream.read(reinterpret_cast<char*>(&value), sizeof(T));
+    int end = this->currentStream.tellg();
+
+    return end - start;
 }
 
 template <typename T>
 int ESMReader::readRawArray(T* array, ssize_t length)
 {
-    return std::fread(array, sizeof(T), length, this->file);
+
+    int start = this->currentStream.tellg();
+    this->currentStream.read(reinterpret_cast<char*>(array), sizeof(T) * length);
+    int end = this->currentStream.tellg();
+
+    return end - start;
 }
 
 template <typename T>
 void ESMReader::readArraySubrecord(std::vector<T>& array)
 {
     array.resize(currentSubrecordHead.dataSize / sizeof(T));
-    int actual = std::fread(&array[0], 1, currentSubrecordHead.dataSize, this->file);
+    int start = this->currentStream.tellg();
+    this->currentStream.read(reinterpret_cast<char*>(&array[0]), currentSubrecordHead.dataSize);
+
+    int end    = this->currentStream.tellg();
+    int actual = end - start;
+
     if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << std::ftell(this->file);
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream.tellg();
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }
@@ -158,11 +175,15 @@ void ESMReader::readArraySubrecord(std::vector<T>& array)
 template <typename T>
 void ESMReader::readFixedArraySubrecord(T* array)
 {
-    int actual = std::fread(array, 1, currentSubrecordHead.dataSize, this->file);
+    int start = this->currentStream.tellg();
+    this->currentStream.read(reinterpret_cast<char*>(array), currentSubrecordHead.dataSize);
+
+    int end    = this->currentStream.tellg();
+    int actual = end - start;
     if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << std::ftell(this->file);
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream.tellg();
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }

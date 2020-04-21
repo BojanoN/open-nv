@@ -58,7 +58,7 @@ void GameData<T>::insert(T* record)
 #ifdef DEBUG
     auto it = dataMap.insert(std::make_pair(record->id, record));
     assert(it.second);
-#elif
+#else
     dataMap.insert(std::make_pair(record->id, record));
 #endif
 }
