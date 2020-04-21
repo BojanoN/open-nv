@@ -1,22 +1,30 @@
 #include "compress.hpp"
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
 static std::string zerr(int ret)
 {
-
+    std::stringstream s;
+    s << "zlib: ";
     switch (ret) {
     case Z_STREAM_ERROR:
-        return "invalid compression level\n";
+        s << "invalid compression level";
+        break;
     case Z_DATA_ERROR:
-        return "invalid or incomplete deflate data\n";
+        s << "invalid or incomplete deflate data";
+        break;
     case Z_MEM_ERROR:
-        return "out of memory\n";
+        s << "out of memory";
+        break;
     case Z_VERSION_ERROR:
-        return "zlib version mismatch!\n";
+        s << "zlib version mismatch!";
+        break;
     default:
-        return "unknown error!\n";
+        s << "unknown error!";
+        break;
     }
+    return s.str();
 }
 
 void Util::zlibDecompress(std::vector<uint8_t>& in, std::vector<uint8_t>& out)
@@ -30,10 +38,17 @@ void Util::zlibDecompress(std::vector<uint8_t>& in, std::vector<uint8_t>& out)
     strm.opaque   = Z_NULL;
     strm.avail_in = 0;
     strm.next_in  = Z_NULL;
+    strm.next_out = Z_NULL;
     ret           = inflateInit(&strm);
 
     if (ret != Z_OK)
         throw std::runtime_error(zerr(ret));
+
+    strm.next_in  = reinterpret_cast<Bytef*>(&in[0]);
+    strm.next_out = reinterpret_cast<Bytef*>(&out[0]);
+
+    strm.avail_out = out.size();
+    strm.avail_in  = in.size();
 
     ret = inflate(&strm, Z_NO_FLUSH);
 

@@ -136,7 +136,7 @@ void ESMReader::reportError(std::string err)
 void ESMReader::readCompressed()
 {
     CompressedDataHeader hdr;
-    this->readSubrecord(hdr);
+    std::fread(&hdr, 1, sizeof(CompressedDataHeader), this->file);
 
     std::vector<uint8_t> decomp(hdr.decompSize);
     std::vector<uint8_t> comp(this->currentRecordHead.dataSize);
