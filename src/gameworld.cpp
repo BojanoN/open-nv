@@ -39,7 +39,13 @@ void GameWorld::load(ESM::ESMReader& reader)
             }
 
             try {
-                dataStore->load(reader);
+                if(reader.isCurrentRecordCompressed()) {
+                    reader.startCompressedMode();
+                    dataStore->load(reader);
+                    reader.endCompressedMode();
+                } else {
+                    dataStore->load(reader);
+                }
             } catch (std::runtime_error& e) {
                 log_error(e.what());
                 reader.skipRecord();
@@ -85,7 +91,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::MSTT, &moveableStatics));
     dataStores.insert(std::make_pair(ESM::ESMType::PWAT, &placeableWaters));
     dataStores.insert(std::make_pair(ESM::ESMType::TREE, &trees));
-    dataStores.insert(std::make_pair(ESM::ESMType::WEAP, &weapons));
+    //dataStores.insert(std::make_pair(ESM::ESMType::WEAP, &weapons));
     dataStores.insert(std::make_pair(ESM::ESMType::MISC, &miscItems));
     dataStores.insert(std::make_pair(ESM::ESMType::STAT, &statics));
     dataStores.insert(std::make_pair(ESM::ESMType::SCOL, &staticCollections));

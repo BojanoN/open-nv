@@ -58,12 +58,12 @@ void ESMReader::readNextSubrecordHeader()
     }*/
 
     // Check if we ran out of compressed data
-    if (!currentStream && this->file) {
+    /*if (!currentStream && this->file) {
         this->currentStream   = &this->file;
         this->currentLocation = this->currentLocationBackup;
         std::streambuf* stb   = this->compressed.rdbuf();
         delete stb;
-    }
+    }*/
     this->currentStream->read(reinterpret_cast<char*>(&(this->currentSubrecordHead)), sizeof(SubrecordHeader));
     updateReadLocation(sizeof(SubrecordHeader));
     updateEndOfSubrecord();
@@ -72,18 +72,21 @@ void ESMReader::readNextSubrecordHeader()
 
 void ESMReader::skipRecord()
 {
+    endCompressedMode();
     this->currentStream->seekg(endOfRecord, std::ios::beg);
     updateReadLocation(endOfRecord - currentLocation);
 }
 
 void ESMReader::skipGroup()
 {
+    endCompressedMode();
     this->currentStream->seekg(endOfGroup, std::ios::beg);
     updateReadLocation(endOfGroup - currentLocation);
 }
 
 void ESMReader::skipSubrecord()
 {
+    endCompressedMode();
     this->currentStream->seekg(endOfSubrecord, std::ios::beg);
     updateReadLocation(endOfSubrecord - currentLocation);
 }
@@ -189,15 +192,42 @@ void ESMReader::reportError(std::string err)
     throw std::runtime_error(err);
 }
 
-void ESMReader::readCompressed()
+void ESMReader::startCompressedMode()
 {
-    CompressedDataHeader hdr;
-    this->currentStream->read(reinterpret_cast<char*>(&hdr), sizeof(CompressedDataHeader));
+    uint32_t recordSize;
+    this->currentStream->read(reinterpret_cast<char*>(&recordSize), sizeof(uint32_t));
 
-    decompBuf* newbuf = new decompBuf(this->file, this->currentRecordHead.dataSize, hdr.decompSize);
+    decompBuf* newbuf = new decompBuf(this->file, this->currentRecordHead.dataSize, recordSize);
+    
     this->compressed.rdbuf(newbuf);
     this->currentStream         = &this->compressed;
-    this->currentLocationBackup = this->currentLocation;
+    savedContext.save(*this);
+    this->endOfRecord = recordSize;
+    this->currentLocation = 0;
 }
 
+void ESMReader::endCompressedMode() {
+    if(currentRecordHead.flags & RecordFlags::COMPRESSED) {
+        savedContext.restore(*this);
+        currentStream = &file;
+        currentLocation = endOfRecord;
+        std::streambuf* stb   = compressed.rdbuf();
+        delete stb;     
+    }
+}
+
+
+void ESMReader::ReaderContext::save(ESMReader& reader) {
+    currentLocation = reader.currentLocation;
+    endOfSubrecord =  reader. endOfSubrecord;
+    endOfRecord =     reader.    endOfRecord;
+    endOfGroup =      reader.     endOfGroup;
+}
+
+void ESMReader::ReaderContext::restore(ESMReader& reader) {
+  reader.currentLocation = currentLocation;
+  reader.endOfSubrecord = endOfSubrecord;
+  reader.endOfRecord = endOfRecord;
+  reader.endOfGroup = endOfGroup;
+}
 };

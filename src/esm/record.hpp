@@ -14,9 +14,9 @@ struct Record {
         , recordFlags { reader.recordFlags() }
         , id { reader.recordId() }
     {
-        if (this->recordFlags & RecordFlags::COMPRESSED) {
+        /*if (this->recordFlags & RecordFlags::COMPRESSED) {
             reader.readCompressed();
-        }
+        }*/
     }
     ~Record() {};
 };

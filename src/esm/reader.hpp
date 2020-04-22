@@ -39,9 +39,9 @@ public:
     };
     ~ESMReader() {};
 
-    bool hasMoreSubrecords() { return this->file.tellg() < endOfRecord; }
-    bool hasMoreRecordsInGroup() { return this->file.tellg() < endOfGroup; }
-    bool hasMoreBytes() { return this->file.tellg() < fileSize; }
+    bool hasMoreSubrecords() { return currentLocation < endOfRecord; }
+    bool hasMoreRecordsInGroup() { return currentLocation < endOfGroup; }
+    bool hasMoreBytes() { return currentLocation < fileSize; }
     void skipRecord();
     void skipGroup();
     void skipSubrecord();
@@ -57,6 +57,8 @@ public:
     uint32_t         groupLabel();
     int32_t          groupType();
 
+    void checkSubrecordHeader(ESMType type);
+
     RecordFlags recordFlags();
     formid      recordId();
 
@@ -66,7 +68,10 @@ public:
     void readNextRecordHeader();
     void readNextGroupHeader();
     void readNextHeader();
-    void readCompressed();
+    
+    void startCompressedMode();
+    void endCompressedMode();
+    bool isCurrentRecordCompressed() { return currentRecordHead.flags & RecordFlags::COMPRESSED; }
 
     inline void updateReadLocation(ssize_t readSize)
     {
@@ -85,7 +90,6 @@ public:
         this->endOfSubrecord = currentLocation + currentSubrecordHead.dataSize;
     }
 
-    void checkSubrecordHeader(ESMType type);
 
     uint32_t peekNextType();
     void     rewind(ssize_t size);
@@ -136,7 +140,19 @@ private:
     GroupHeader     currentGroupHead;
     RecordHeader    currentRecordHead;
     SubrecordHeader currentSubrecordHead;
+
+    struct ReaderContext {
+      ssize_t endOfRecord;
+      ssize_t endOfGroup;
+      ssize_t endOfSubrecord;
+      ssize_t currentLocation;
+      void save(ESMReader& reader);
+      void restore(ESMReader& reader);
+    };
+
+    ReaderContext savedContext;
 };
+
 
 template <typename T>
 void ESMReader::readSubrecord(T& subrecValue)

@@ -261,6 +261,19 @@ enum ESMType : uint32_t {
     WMI3 = 0x33494d57,
     VANM = 0x4d4e4156, 
 
+    ACBS = 0x53424341,
+    TPLT = 0x544c5054,
+    SPLO = 0x4f4c5053,
+
+    AIDT = 0x54444941,
+    PKID = 0x44494b50,
+    HCLR = 0x524c4348,
+    LNAM = 0x4d414e4c,
+    NAM4 = 0x344d414e,
+    NAM5 = 0x354d414e,
+
+
+
 
 };
 

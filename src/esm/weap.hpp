@@ -82,7 +82,7 @@ enum class ReloadAnimation : uint8_t {
   Z
 };
 
-enum class AttackAnimation : uint8_t {
+enum class WeaponAttackAnimation : uint8_t {
 	ATTACK_LEFT = 26,
 	ATTACK_RIGHT = 32,
 	ATTACK_3 = 38,
@@ -195,7 +195,7 @@ struct WeaponAttributes {
 	float unknown_2;
 	formid projectile;
 	uint8_t baseVATSToHitChance;
-	AttackAnimation attackAnimation;
+	WeaponAttackAnimation attackAnimation;
 	uint8_t projectileCount;
 	EmbeddedWeaponActorValue embeddedWeaponActorValue;
 	float minRange;

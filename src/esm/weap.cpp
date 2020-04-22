@@ -192,10 +192,16 @@ Weapon::Weapon(ESMReader& reader) : Record(reader) {
     	}
     }
     reader.readNextSubrecordHeader();
+    if(reader.getCurrentSubrecord().dataSize != sizeof(WeaponData)) {
+        std::cout << "Formid: " << id << ", name: " << editorId << "\n";
+    }
     reader.checkSubrecordHeader(ESMType::DATA);
     reader.readSubrecord(data);
 
     reader.readNextSubrecordHeader();
+    if(ssize_t actualSize = reader.getCurrentSubrecord().dataSize; actualSize != sizeof(WeaponAttributes)) {
+        std::cout << "Formid: " << id << ", name: " << editorId << ", expected size: " << sizeof(WeaponAttributes) << ", actual size: " <<  actualSize << "\n";
+    }
     reader.checkSubrecordHeader(ESMType::DNAM);
     reader.readSubrecord(attributes);
 
@@ -228,5 +234,6 @@ void VATSData::load(ESMReader& reader, VATSData& vats) {
 		reader.readSubrecord(vats);
 	}
 }
+
 
 };

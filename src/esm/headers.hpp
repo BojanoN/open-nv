@@ -86,11 +86,8 @@ struct SubrecordHeader {
     uint32_t type;
     uint16_t dataSize;
 };
-
-struct CompressedDataHeader {
-    uint32_t decompSize;
-};
 #pragma options align = reset
+
 
 };
 ENABLE_BITWISE_OPERATORS(ESM::RecordFlags);

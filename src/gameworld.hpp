@@ -42,7 +42,7 @@ class GameWorld {
     GameData<ESM::MoveableStatic>   moveableStatics;
     GameData<ESM::PlaceableWater>   placeableWaters;
     GameData<ESM::Tree>             trees;
-    GameData<ESM::Weapon>           weapons;
+    //GameData<ESM::Weapon>           weapons;
     GameData<ESM::MiscItem>         miscItems;
     GameData<ESM::Static>           statics;
     GameData<ESM::StaticCollection> staticCollections;

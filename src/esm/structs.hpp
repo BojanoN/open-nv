@@ -529,7 +529,7 @@ struct __attribute__((packed)) ActorFaction {
     uint8_t unused[3];
 };
 
-enum class AttackAnimations : uint16_t {
+enum class AttackAnimation : uint16_t {
     AttackLeft         = 26,
     AttackLeftUp       = 27,
     AttackLeftDown     = 28,
@@ -713,7 +713,7 @@ enum class AIAggroRadiusBehavior : uint8_t {
     AggroRadiusBehavior = 0x1
 };
 
-struct __attribute__((packed)) AIDT {
+struct __attribute__((packed)) AIData {
     AIAggression          aggression;
     AIConfidence          confidence;
     uint8_t               energyLevel;
@@ -726,6 +726,21 @@ struct __attribute__((packed)) AIDT {
     AIAssistance          assistance;
     AIAggroRadiusBehavior aggroRadiusBehavior;
     int32_t               aggroRadius;
+};
+
+enum class ImpactMaterialType : uint32_t {
+    STONE,
+    DIRT,
+    GRASS,
+    GLASS,
+    METAL,
+    WOOD,
+    ORGANIC,
+    CLOTH,
+    WATER,
+    HOLLOW_METAL,
+    ORGANIC_BUG,
+    ORGANIC_GLOW
 };
 
 };
