@@ -121,20 +121,6 @@ void ESMReader::readStringSubrecord(std::string& subrecString)
         throw std::runtime_error("Read mismatch!");
     }
     updateReadLocation(currentSubrecordHead.dataSize);
-
-    /*int end    = this->currentStream->tellg();
-    int actual = end - start;
-
-    if (actual != currentSubrecordHead.dataSize) {
-        log_fatal("Expected to read size %u, actually read %u bytes", currentSubrecordHead.dataSize, actual);
-        log_fatal("In subrecord %s", Util::typeValueToName(this->currentSubrecordHead.type).c_str());
-        log_fatal("At record type %s, formid %u at 0x%06x",
-            Util::typeValueToName(this->currentRecordHead.type).c_str(),
-            this->currentRecordHead.id,
-            this->currentStream->tellg());
-
-        throw std::runtime_error("Read mismatch!");
-    }*/
 }
 
 void ESMReader::rewind(ssize_t size)
@@ -146,12 +132,8 @@ void ESMReader::rewind(ssize_t size)
 void ESMReader::readFixedSizeString(std::string& dest, size_t size)
 {
     dest.resize(size);
-    //int start = this->currentStream->tellg();
 
     this->currentStream->read(reinterpret_cast<char*>(&dest[0]), size);
-
-    //int end    = this->currentStream->tellg();
-    //int actual = end - start;
 
     if (!currentStream) {
         std::stringstream s;
@@ -162,17 +144,6 @@ void ESMReader::readFixedSizeString(std::string& dest, size_t size)
         throw std::runtime_error("Read mismatch!");
     }
     updateReadLocation(size);
-
-    /*if (actual != size) {
-        log_fatal("Expected to read size %u, actually read %u bytes", size, actual);
-        log_fatal("In subrecord %s", Util::typeValueToName(this->currentSubrecordHead.type).c_str());
-        log_fatal("At record type %s, formid %u at 0x%06x",
-            Util::typeValueToName(this->currentRecordHead.type).c_str(),
-            this->currentRecordHead.id,
-            this->currentStream->tellg());
-
-        throw std::runtime_error("Read mismatch!");
-    }*/
 }
 
 uint32_t ESMReader::getCurrentPosition()
@@ -185,9 +156,6 @@ uint32_t ESMReader::getCurrentPosition()
 }
 void ESMReader::reportError(std::string err)
 {
-    //std::stringstream s(err, std::ios_base::out | std::ios_base::app);
-    //std::cerr << err;
-    //  s << " in record type " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << this->currentStream->tellg();
     log_fatal("Error encountered at 0x%06x", this->currentStream->tellg());
     throw std::runtime_error(err);
 }
@@ -198,36 +166,38 @@ void ESMReader::startCompressedMode()
     this->currentStream->read(reinterpret_cast<char*>(&recordSize), sizeof(uint32_t));
 
     decompBuf* newbuf = new decompBuf(this->file, this->currentRecordHead.dataSize, recordSize);
-    
+
     this->compressed.rdbuf(newbuf);
-    this->currentStream         = &this->compressed;
+    this->currentStream = &this->compressed;
     savedContext.save(*this);
-    this->endOfRecord = recordSize;
+    this->endOfRecord     = recordSize;
     this->currentLocation = 0;
 }
 
-void ESMReader::endCompressedMode() {
-    if(currentRecordHead.flags & RecordFlags::COMPRESSED) {
+void ESMReader::endCompressedMode()
+{
+    if (currentRecordHead.flags & RecordFlags::COMPRESSED) {
         savedContext.restore(*this);
-        currentStream = &file;
-        currentLocation = endOfRecord;
-        std::streambuf* stb   = compressed.rdbuf();
-        delete stb;     
+        currentStream       = &file;
+        currentLocation     = endOfRecord;
+        std::streambuf* stb = compressed.rdbuf();
+        delete stb;
     }
 }
 
-
-void ESMReader::ReaderContext::save(ESMReader& reader) {
+void ESMReader::ReaderContext::save(ESMReader& reader)
+{
     currentLocation = reader.currentLocation;
-    endOfSubrecord =  reader. endOfSubrecord;
-    endOfRecord =     reader.    endOfRecord;
-    endOfGroup =      reader.     endOfGroup;
+    endOfSubrecord  = reader.endOfSubrecord;
+    endOfRecord     = reader.endOfRecord;
+    endOfGroup      = reader.endOfGroup;
 }
 
-void ESMReader::ReaderContext::restore(ESMReader& reader) {
-  reader.currentLocation = currentLocation;
-  reader.endOfSubrecord = endOfSubrecord;
-  reader.endOfRecord = endOfRecord;
-  reader.endOfGroup = endOfGroup;
+void ESMReader::ReaderContext::restore(ESMReader& reader)
+{
+    reader.currentLocation = currentLocation;
+    reader.endOfSubrecord  = endOfSubrecord;
+    reader.endOfRecord     = endOfRecord;
+    reader.endOfGroup      = endOfGroup;
 }
 };

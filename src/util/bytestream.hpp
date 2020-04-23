@@ -12,8 +12,19 @@ public:
         in.read(reinterpret_cast<char*>(&tmp[0]), compSize);
         ::Util::zlibDecompress(tmp, buffer);
 
-        setg((char*)&buffer[0], (char*)&buffer[0], (char*)&buffer[0] + decompSize);
+        setg((char*)buffer.data(), (char*)buffer.data(), (char*)buffer.data() + buffer.size());
     }
+
+    std::streampos seekoff(std::streamoff off, std::ios_base::seekdir way, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out)
+    {
+        if (way == std::ios_base::cur) {
+            gbump(off);
+        } else if (way == std::ios_base::cur) {
+            setg(eback(), eback() + off, egptr());
+        }
+
+        return gptr() - eback();
+    };
 
 private:
     std::vector<uint8_t> buffer;
