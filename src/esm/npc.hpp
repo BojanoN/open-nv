@@ -6,7 +6,7 @@ namespace ESM {
 
 class ESMReader;
 
-struct NPCData {
+struct __attribute__((packed)) NPCData {
     int32_t baseHealth;
     uint8_t strenght;
     uint8_t perception;
@@ -18,7 +18,7 @@ struct NPCData {
     //possibility of random padding
 };
 
-struct NPCSkills {
+struct __attribute__((packed)) NPCSkills {
     uint8_t barterValue;
     uint8_t bigGunsValue;
     uint8_t energyWeaponsValue;
@@ -47,7 +47,6 @@ struct NPCSkills {
     uint8_t speechOffset;
     uint8_t survivalOffset;
     uint8_t unarmedOffset;
-
 };
 
 struct NPC : public Record {

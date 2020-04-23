@@ -68,7 +68,7 @@ public:
     void readNextRecordHeader();
     void readNextGroupHeader();
     void readNextHeader();
-    
+
     void startCompressedMode();
     void endCompressedMode();
     bool isCurrentRecordCompressed() { return currentRecordHead.flags & RecordFlags::COMPRESSED; }
@@ -89,7 +89,6 @@ public:
     {
         this->endOfSubrecord = currentLocation + currentSubrecordHead.dataSize;
     }
-
 
     uint32_t peekNextType();
     void     rewind(ssize_t size);
@@ -142,23 +141,25 @@ private:
     SubrecordHeader currentSubrecordHead;
 
     struct ReaderContext {
-      ssize_t endOfRecord;
-      ssize_t endOfGroup;
-      ssize_t endOfSubrecord;
-      ssize_t currentLocation;
-      void save(ESMReader& reader);
-      void restore(ESMReader& reader);
+        ssize_t endOfRecord;
+        ssize_t endOfGroup;
+        ssize_t endOfSubrecord;
+        ssize_t currentLocation;
+        void    save(ESMReader& reader);
+        void    restore(ESMReader& reader);
     };
 
     ReaderContext savedContext;
 };
-
 
 template <typename T>
 void ESMReader::readSubrecord(T& subrecValue)
 {
 
     //int start = this->currentStream->tellg();
+#ifdef DEBUG
+    assert(sizeof(T) == currentSubrecordHead.dataSize);
+#endif
     this->currentStream->read(reinterpret_cast<char*>(&subrecValue), sizeof(T));
 
     if (!currentStream) {
@@ -185,6 +186,7 @@ void ESMReader::readSubrecord(T& subrecValue)
 template <typename T>
 void ESMReader::readRawData(T& value)
 {
+
     //int start = this->currentStream->tellg();
     this->currentStream->read(reinterpret_cast<char*>(&value), sizeof(T));
     //int end = this->currentStream->tellg();
@@ -196,6 +198,9 @@ void ESMReader::readRawData(T& value)
 template <typename T>
 void ESMReader::readRawArray(T* array, ssize_t length)
 {
+#ifdef DEBUG
+    assert((sizeof(T) * length) == currentSubrecordHead.dataSize);
+#endif
 
     //int start = this->currentStream->tellg();
     this->currentStream->read(reinterpret_cast<char*>(array), sizeof(T) * length);
@@ -209,6 +214,10 @@ template <typename T>
 void ESMReader::readArraySubrecord(std::vector<T>& array)
 {
     array.resize(currentSubrecordHead.dataSize / sizeof(T));
+#ifdef DEBUG
+    assert((sizeof(T) * array.size()) == currentSubrecordHead.dataSize);
+#endif
+
     //int start = this->currentStream->tellg();
     this->currentStream->read(reinterpret_cast<char*>(&array[0]), currentSubrecordHead.dataSize);
 

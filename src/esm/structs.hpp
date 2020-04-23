@@ -513,6 +513,7 @@ enum class ACBSTemplateFlags : uint16_t {
 struct __attribute__((packed)) NPC_ACBS {
     NPCFlags uint32_t;
     uint16_t fatigue;
+    uint16_t barterGold;
     // If the 0x00000080 flag is set, the value is divided by 1000 to give a multiplier.
     int16_t           level;
     uint16_t          calcMin;
