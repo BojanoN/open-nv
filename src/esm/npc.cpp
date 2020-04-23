@@ -68,7 +68,7 @@ NPC::NPC(ESMReader& reader)
     reader.checkSubrecordHeader(ESMType::EAMT);
     reader.readSubrecord(unarmedAttackAnimation);
 
-    while (reader.peekNextType() == ESMType::CNAM) {
+    while (reader.peekNextType() != ESMType::CNAM) {
         reader.readNextSubrecordHeader();
         switch (reader.subrecordType()) {
         case ESMType::DEST:
@@ -80,8 +80,8 @@ NPC::NPC(ESMReader& reader)
         case ESMType::CNTO:
             items.emplace_back();
             reader.readSubrecord(items.back().first);
-            reader.readNextSubrecordHeader();
-            reader.checkSubrecordHeader(ESMType::COED);
+            break;
+        case ESMType::COED:
             reader.readSubrecord(items.back().second);
             break;
         case ESMType::AIDT:
@@ -105,7 +105,7 @@ NPC::NPC(ESMReader& reader)
     reader.checkSubrecordHeader(ESMType::DATA);
     reader.readSubrecord(data);
 
-    while (reader.peekNextType() == ESMType::HCLR) {
+    while (reader.peekNextType() != ESMType::HCLR) {
         reader.readNextSubrecordHeader();
         switch (reader.subrecordType()) {
         case ESMType::DNAM:

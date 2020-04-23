@@ -39,7 +39,7 @@ void GameWorld::load(ESM::ESMReader& reader)
             }
 
             try {
-                if(reader.isCurrentRecordCompressed()) {
+                if (reader.isCurrentRecordCompressed()) {
                     reader.startCompressedMode();
                     dataStore->load(reader);
                     reader.endCompressedMode();
@@ -106,7 +106,7 @@ GameDataBase* GameWorld::getDataStore(uint32_t type)
     std::unordered_map<uint32_t, GameDataBase*>::iterator it = dataStores.find(type);
     if (it == dataStores.end()) {
         std::stringstream s;
-        s << ESM::Util::typeValueToName(type) << " record type not implemented!";
+        s << "Wrong record type, " << ESM::Util::typeValueToName(type) << " record type not implemented!";
         throw std::runtime_error(s.str());
     }
     return it->second;

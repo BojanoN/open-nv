@@ -122,6 +122,7 @@ private:
     std::istream* currentStream;
     std::ifstream file;
     std::istream  compressed;
+    decompBuf*    compBuf;
 
     ssize_t     fileSize;
     std::string fileName;
