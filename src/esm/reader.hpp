@@ -100,6 +100,7 @@ public:
     void readSubrecord(T& subrecValue);
 
     void readStringSubrecord(std::string& subrecString);
+    void readStringArray(std::vector<std::string>& vec);
 
     template <typename T>
     void readArraySubrecord(std::vector<T>& array);

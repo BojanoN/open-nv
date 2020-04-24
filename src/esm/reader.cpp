@@ -123,6 +123,21 @@ void ESMReader::readStringSubrecord(std::string& subrecString)
     updateReadLocation(currentSubrecordHead.dataSize);
 }
 
+void readStringArray(std::vector<std::string>& vec)
+{
+    std::vector<uint8_t> tmp(currentSubrecordHead.dataSize);
+    this->currentStream->read(reinterpret_cast<char*>(&tmp[0]), currentSubrecordHead.dataSize);
+
+    uint32_t beg = 0;
+
+    for (uint32_t i = 0; i < currentSubrecordHead.dataSize; i++) {
+        if (tmp[i] == 0) {
+            vec.emplace_back(&tmp[beg], i - beg);
+            beg = i + 1;
+        }
+    }
+}
+
 void ESMReader::rewind(ssize_t size)
 {
     this->currentStream->seekg(-size, std::ios::cur);
