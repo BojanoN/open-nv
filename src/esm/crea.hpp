@@ -68,7 +68,7 @@ struct Creature : public Record {
     ObjectBounds                                objectBounds;
     std::string                                 name;
     ModelData                                   modelData;
-    formid                                      actorEffect; //SPEL
+    std::vector<formid>                         actorEffects; //SPEL
     formid                                      unarmedAttackEffect;
     AttackAnimation                             unarmedAttackAnimation;
     std::vector<std::string>                    modelList;
@@ -98,5 +98,7 @@ struct Creature : public Record {
     std::vector<SoundTypeSubrecord>             sounds;
     formid                                      impactDataset; // IPDS
     formid                                      meleeWeaponsList; // FLST
+
+    Creature(ESMReader& reader);
 };
 }

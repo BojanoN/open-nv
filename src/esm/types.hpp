@@ -259,7 +259,7 @@ enum ESMType : uint32_t {
 
     WMI2 = 0x32494d57,
     WMI3 = 0x33494d57,
-    VANM = 0x4d4e4156, 
+    VANM = 0x4d4e4156,
 
     ACBS = 0x53424341,
     TPLT = 0x544c5054,
@@ -272,8 +272,14 @@ enum ESMType : uint32_t {
     NAM4 = 0x344d414e,
     NAM5 = 0x354d414e,
 
-
-
+    NIFZ = 0x5a46494e,
+    NIFT = 0x5446494e,
+    KFFZ = 0x5a46464b,
+    CSCR = 0x52435343,
+    CSDR = 0x52445343,
+    CSDI = 0x49445343,
+    CSDC = 0x43445343,
+    CSDT = 0x54445343,
 
 };
 
