@@ -51,8 +51,8 @@ class GameWorld {
     GameData<ESM::Ammo>             ammunitions;
     GameData<ESM::NPC>              NPCs;
     GameData<ESM::Creature>         creatures;
-    GameData<ESM::LeveledCreature>  leveledCreatures;
-    // GameData<ESM::LeveledNPC> leveledNPCs;
+    GameData<ESM::LeveledActor>     leveledCreatures;
+    GameData<ESM::LeveledActor>     leveledNPCs;
     // GameData<ESM::Key> keys;
     // GameData<ESM::Ingestible>
     // GameData<ESM::IdleMarker>

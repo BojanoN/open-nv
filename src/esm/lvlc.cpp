@@ -3,7 +3,7 @@
 
 namespace ESM {
 
-LeveledCreature::LeveledCreature(ESMReader& reader)
+LeveledActor::LeveledActor(ESMReader& reader)
     : Record(reader)
 {
     reader.readNextSubrecordHeader();
