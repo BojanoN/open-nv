@@ -55,7 +55,7 @@ class GameWorld {
     GameData<ESM::LeveledActor>     leveledNPCs;
     GameData<ESM::Item>             keys;
     GameData<ESM::Ingestible>       ingestibles;
-    // GameData<ESM::IdleMarker>
+    GameData<ESM::IdleMarker>       idleMarkers;
     // GameData<ESM::Note>
     // GameData<ESM::ConstructibleObject>
     // GameData<ESM::Projectile>

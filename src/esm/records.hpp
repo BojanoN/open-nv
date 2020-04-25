@@ -18,6 +18,7 @@
 #include "gras.hpp"
 #include "hair.hpp"
 #include "hdpt.hpp"
+#include "idlm.hpp"
 #include "ingr.hpp"
 #include "item.hpp"
 #include "ligh.hpp"
