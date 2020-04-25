@@ -5,12 +5,12 @@
 namespace ESM {
 class ESMReader;
 
-struct __attribute__((packed)) MiscItemData {
+struct __attribute__((packed)) ItemQuality {
     int32_t value;
     float   weight;
 };
 
-struct MiscItem : public Record {
+struct Item : public Record {
     std::string     editorId;
     ObjectBounds    objectBounds;
     std::string     name;
@@ -22,8 +22,8 @@ struct MiscItem : public Record {
     formid          pickUpSound;
     formid          dropSound;
     formid          loopingSound;
-    MiscItemData    data;
+    ItemQuality     data;
 
-    MiscItem(ESMReader& reader);
+    Item(ESMReader& reader);
 };
 }

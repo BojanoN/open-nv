@@ -50,40 +50,40 @@ struct __attribute__((packed)) NPCSkills {
 };
 
 struct NPC : public Record {
-    std::string                                 editorId;
-    ObjectBounds                                objectBounds;
-    std::string                                 name;
-    ModelData                                   modelData;
-    NPC_ACBS                                    configuration;
-    std::vector<ActorFaction>                   factions;
-    formid                                      deathItem; //LVLI
-    formid                                      voice; //VTCK
-    formid                                      templ; //NPC_ or LVLN
-    formid                                      race;
-    std::vector<formid>                         actorEffects; // ENCH or SPEL
-    formid                                      unarmedAttackEffect;
-    AttackAnimation                             unarmedAttackAnimation;
-    DestructionData                             destructionData;
-    formid                                      script;
-    std::vector<std::pair<Item, ItemExtraData>> items;
-    AIData                                      aiData;
-    std::vector<formid>                         packages;
-    formid                                      NPCClass;
-    NPCData                                     data;
-    NPCSkills                                   skills;
-    std::vector<formid>                         headParts;
-    formid                                      hair;
-    float                                       hairLength;
-    formid                                      eyes;
-    uint8_t                                     hairColor[4];
-    formid                                      combatStyle;
-    ImpactMaterialType                          impactMaterialType;
-    std::vector<uint8_t>                        FaceGenGeometrySymmetric;
-    std::vector<uint8_t>                        FaceGenGeometryAsymmetric;
-    std::vector<uint8_t>                        FaceGenTextureSymmetric;
-    uint16_t                                    unknown;
-    float                                       height;
-    float                                       weight;
+    std::string                                     editorId;
+    ObjectBounds                                    objectBounds;
+    std::string                                     name;
+    ModelData                                       modelData;
+    NPC_ACBS                                        configuration;
+    std::vector<ActorFaction>                       factions;
+    formid                                          deathItem; //LVLI
+    formid                                          voice; //VTCK
+    formid                                          templ; //NPC_ or LVLN
+    formid                                          race;
+    std::vector<formid>                             actorEffects; // ENCH or SPEL
+    formid                                          unarmedAttackEffect;
+    AttackAnimation                                 unarmedAttackAnimation;
+    DestructionData                                 destructionData;
+    formid                                          script;
+    std::vector<std::pair<ItemData, ItemExtraData>> items;
+    AIData                                          aiData;
+    std::vector<formid>                             packages;
+    formid                                          NPCClass;
+    NPCData                                         data;
+    NPCSkills                                       skills;
+    std::vector<formid>                             headParts;
+    formid                                          hair;
+    float                                           hairLength;
+    formid                                          eyes;
+    uint8_t                                         hairColor[4];
+    formid                                          combatStyle;
+    ImpactMaterialType                              impactMaterialType;
+    std::vector<uint8_t>                            FaceGenGeometrySymmetric;
+    std::vector<uint8_t>                            FaceGenGeometryAsymmetric;
+    std::vector<uint8_t>                            FaceGenTextureSymmetric;
+    uint16_t                                        unknown;
+    float                                           height;
+    float                                           weight;
 
     NPC(ESMReader& reader);
 };

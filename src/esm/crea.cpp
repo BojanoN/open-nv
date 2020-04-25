@@ -146,7 +146,6 @@ Creature::Creature(ESMReader& reader)
         sounds.emplace_back();
 
         reader.readNextSubrecordHeader();
-        reader.checkSubrecordHeader(ESMType::CSDI);
         reader.readSubrecord(sounds.back().type);
 
         reader.readNextSubrecordHeader();

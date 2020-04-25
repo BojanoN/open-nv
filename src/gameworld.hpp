@@ -43,7 +43,7 @@ class GameWorld {
     GameData<ESM::PlaceableWater>   placeableWaters;
     GameData<ESM::Tree>             trees;
     //GameData<ESM::Weapon>           weapons;
-    GameData<ESM::MiscItem>         miscItems;
+    GameData<ESM::Item>             miscItems;
     GameData<ESM::Static>           statics;
     GameData<ESM::StaticCollection> staticCollections;
     GameData<ESM::Grass>            grasses;
@@ -53,7 +53,7 @@ class GameWorld {
     GameData<ESM::Creature>         creatures;
     GameData<ESM::LeveledActor>     leveledCreatures;
     GameData<ESM::LeveledActor>     leveledNPCs;
-    // GameData<ESM::Key> keys;
+    GameData<ESM::Item>             keys;
     // GameData<ESM::Ingestible>
     // GameData<ESM::IdleMarker>
     // GameData<ESM::Note>

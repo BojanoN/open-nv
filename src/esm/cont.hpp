@@ -16,17 +16,17 @@ struct __attribute__((packed)) ContainerData {
 };
 
 struct Container : public Record {
-    std::string                                 editorId;
-    ObjectBounds                                objectBounds;
-    std::string                                 name;
-    ModelData                                   modelData;
-    formid                                      script;
-    std::vector<std::pair<Item, ItemExtraData>> items;
-    DestructionData                             destructionData;
-    ContainerData                               containerData;
-    formid                                      openSound;
-    formid                                      closeSound;
-    formid                                      loopingSound;
+    std::string                                     editorId;
+    ObjectBounds                                    objectBounds;
+    std::string                                     name;
+    ModelData                                       modelData;
+    formid                                          script;
+    std::vector<std::pair<ItemData, ItemExtraData>> items;
+    DestructionData                                 destructionData;
+    ContainerData                                   containerData;
+    formid                                          openSound;
+    formid                                          closeSound;
+    formid                                          loopingSound;
 
     Container(ESMReader& reader);
 };

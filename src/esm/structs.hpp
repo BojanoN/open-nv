@@ -663,7 +663,7 @@ enum class AttackAnimation : uint16_t {
     Any                = 255,
 };
 
-struct __attribute__((packed)) Item {
+struct __attribute__((packed)) ItemData {
     formid  item;
     int32_t count;
 };

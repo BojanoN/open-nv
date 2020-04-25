@@ -1,8 +1,8 @@
-#include "misc.hpp"
+#include "item.hpp"
 #include "reader.hpp"
 
 namespace ESM {
-MiscItem::MiscItem(ESMReader& reader)
+Item::Item(ESMReader& reader)
     : Record(reader)
 {
 

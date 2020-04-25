@@ -102,6 +102,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::CREA, &creatures));
     dataStores.insert(std::make_pair(ESM::ESMType::LVLC, &leveledCreatures));
     dataStores.insert(std::make_pair(ESM::ESMType::LVLN, &leveledNPCs));
+    dataStores.insert(std::make_pair(ESM::ESMType::KEYM, &keys));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

@@ -64,40 +64,40 @@ struct SoundTypeSubrecord {
 };
 
 struct Creature : public Record {
-    std::string                                 editorId;
-    ObjectBounds                                objectBounds;
-    std::string                                 name;
-    ModelData                                   modelData;
-    std::vector<formid>                         actorEffects; //SPEL
-    formid                                      unarmedAttackEffect;
-    AttackAnimation                             unarmedAttackAnimation;
-    std::vector<std::string>                    modelList;
-    std::vector<uint8_t>                        textureFileHashes;
-    CREA_ACBS                                   configuration;
-    std::vector<ActorFaction>                   factions;
-    formid                                      deathItem; //LVLI
-    formid                                      voice; //VTCK
-    formid                                      templ; //NPC_ or LVLN
-    formid                                      race;
-    DestructionData                             destructionData;
-    formid                                      script;
-    std::vector<std::pair<Item, ItemExtraData>> items;
-    AIData                                      aiData;
-    std::vector<formid>                         packages;
-    std::vector<std::string>                    animations;
-    CreatureData                                data;
-    uint8_t                                     attackReach;
-    formid                                      combatStyle;
-    formid                                      bodyPart; // BPTD
-    float                                       turningSpeed;
-    float                                       baseScale;
-    float                                       footWeight;
-    ImpactMaterialType                          impactMaterialType;
-    SoundLevel                                  soundLevel;
-    formid                                      inheritSound; // CREA
-    std::vector<SoundTypeSubrecord>             sounds;
-    formid                                      impactDataset; // IPDS
-    formid                                      meleeWeaponsList; // FLST
+    std::string                                     editorId;
+    ObjectBounds                                    objectBounds;
+    std::string                                     name;
+    ModelData                                       modelData;
+    std::vector<formid>                             actorEffects; //SPEL
+    formid                                          unarmedAttackEffect;
+    AttackAnimation                                 unarmedAttackAnimation;
+    std::vector<std::string>                        modelList;
+    std::vector<uint8_t>                            textureFileHashes;
+    CREA_ACBS                                       configuration;
+    std::vector<ActorFaction>                       factions;
+    formid                                          deathItem; //LVLI
+    formid                                          voice; //VTCK
+    formid                                          templ; //NPC_ or LVLN
+    formid                                          race;
+    DestructionData                                 destructionData;
+    formid                                          script;
+    std::vector<std::pair<ItemData, ItemExtraData>> items;
+    AIData                                          aiData;
+    std::vector<formid>                             packages;
+    std::vector<std::string>                        animations;
+    CreatureData                                    data;
+    uint8_t                                         attackReach;
+    formid                                          combatStyle;
+    formid                                          bodyPart; // BPTD
+    float                                           turningSpeed;
+    float                                           baseScale;
+    float                                           footWeight;
+    ImpactMaterialType                              impactMaterialType;
+    SoundLevel                                      soundLevel;
+    formid                                          inheritSound; // CREA
+    std::vector<SoundTypeSubrecord>                 sounds;
+    formid                                          impactDataset; // IPDS
+    formid                                          meleeWeaponsList; // FLST
 
     Creature(ESMReader& reader);
 };
