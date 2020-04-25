@@ -54,7 +54,7 @@ class GameWorld {
     GameData<ESM::LeveledActor>     leveledCreatures;
     GameData<ESM::LeveledActor>     leveledNPCs;
     GameData<ESM::Item>             keys;
-    // GameData<ESM::Ingestible>
+    GameData<ESM::Ingestible>       ingestibles;
     // GameData<ESM::IdleMarker>
     // GameData<ESM::Note>
     // GameData<ESM::ConstructibleObject>

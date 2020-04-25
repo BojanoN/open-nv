@@ -1,8 +1,9 @@
-#include "ingr.hpp"
+#include "alch.hpp"
 #include "reader.hpp"
 
 namespace ESM {
-Ingredient::Ingredient(ESMReader& reader)
+
+Ingestible::Ingestible(ESMReader& reader)
     : Record(reader)
 {
     reader.readNextSubrecordHeader();
@@ -47,7 +48,13 @@ Ingredient::Ingredient(ESMReader& reader)
             reader.readSubrecord(this->effects.back().data);
             break;
         case ESMType::CTDA:
-            reader.readSubrecord(this->effects.back().condition);
+            Condition::load(reader, this->effects.back().condition);
+            break;
+        case ESMType::YNAM:
+            reader.readSubrecord(this->pickUpSound);
+            break;
+        case ESMType::ZNAM:
+            reader.readSubrecord(this->dropSound);
             break;
         default:
             std::stringstream s;
@@ -56,4 +63,4 @@ Ingredient::Ingredient(ESMReader& reader)
         }
     }
 }
-};
+}
