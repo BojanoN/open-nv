@@ -281,6 +281,9 @@ enum ESMType : uint32_t {
     CSDC = 0x43445343,
     CSDT = 0x54445343,
 
+    LVLD = 0x444c564c,
+    LVLF = 0x464c564c,
+    LVLO = 0x4f4c564c,
 };
 
 };

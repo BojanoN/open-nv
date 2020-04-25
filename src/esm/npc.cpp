@@ -9,6 +9,7 @@ NPC::NPC(ESMReader& reader)
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::EDID);
     reader.readStringSubrecord(editorId);
+
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::OBND);
     reader.readSubrecord(objectBounds);

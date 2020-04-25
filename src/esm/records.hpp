@@ -20,6 +20,7 @@
 #include "ingr.hpp"
 #include "ligh.hpp"
 #include "ltex.hpp"
+#include "lvlc.hpp"
 #include "mgef.hpp"
 #include "micn.hpp"
 #include "misc.hpp"
