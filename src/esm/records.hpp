@@ -27,6 +27,7 @@
 #include "mgef.hpp"
 #include "micn.hpp"
 #include "mstt.hpp"
+#include "note.hpp"
 #include "npc.hpp"
 #include "pwat.hpp"
 #include "race.hpp"
