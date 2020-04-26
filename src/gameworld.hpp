@@ -57,8 +57,9 @@ class GameWorld {
     GameData<ESM::Ingestible>       ingestibles;
     GameData<ESM::IdleMarker>       idleMarkers;
     GameData<ESM::Note>             notes;
+    // COBJ is nonexistent
     // GameData<ESM::ConstructibleObject>
-    // GameData<ESM::Projectile>
+    GameData<ESM::Projectile> projectiles;
     // GameData<ESM::LeveledItem>
     // GameData<ESM::Weather>
     // GameData<ESM::Climate>

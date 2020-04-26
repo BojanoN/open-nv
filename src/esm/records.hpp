@@ -29,6 +29,7 @@
 #include "mstt.hpp"
 #include "note.hpp"
 #include "npc.hpp"
+#include "proj.hpp"
 #include "pwat.hpp"
 #include "race.hpp"
 #include "scol.hpp"

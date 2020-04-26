@@ -109,6 +109,9 @@ public:
     void readRawData(T& value);
 
     template <typename T>
+    void readRawDataSubrecSize(T& value);
+
+    template <typename T>
     void readRawArray(T* array, ssize_t length);
 
     template <typename T>
@@ -189,12 +192,16 @@ template <typename T>
 void ESMReader::readRawData(T& value)
 {
 
-    //int start = this->currentStream->tellg();
     this->currentStream->read(reinterpret_cast<char*>(&value), sizeof(T));
-    //int end = this->currentStream->tellg();
     updateReadLocation(sizeof(T));
+}
 
-    //return end - start;
+template <typename T>
+void ESMReader::readRawDataSubrecSize(T& value)
+{
+
+    this->currentStream->read(reinterpret_cast<char*>(&value), this->currentSubrecordHead.dataSize);
+    updateReadLocation(this->currentSubrecordHead.dataSize);
 }
 
 template <typename T>
