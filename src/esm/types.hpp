@@ -288,6 +288,8 @@ enum ESMType : uint32_t {
     IDLC = 0x434c4449,
     IDLT = 0x544c4449,
     IDLA = 0x414c4449,
+    LVLG = 0x474c564c,
+
 };
 
 };

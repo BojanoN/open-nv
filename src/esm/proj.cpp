@@ -29,6 +29,7 @@ Projectile::Projectile(ESMReader& reader)
             break;
         case ESMType::DATA:
             // Beams dont have rotation so we just read the data we get
+            // Possible bug hotspot
             reader.readRawDataSubrecSize(this->projectileData);
             break;
         case ESMType::NAM1:

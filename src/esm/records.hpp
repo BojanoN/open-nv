@@ -24,6 +24,7 @@
 #include "ligh.hpp"
 #include "ltex.hpp"
 #include "lvlc.hpp"
+#include "lvli.hpp"
 #include "mgef.hpp"
 #include "micn.hpp"
 #include "mstt.hpp"
