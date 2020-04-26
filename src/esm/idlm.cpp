@@ -32,6 +32,10 @@ IdleMarker::IdleMarker(ESMReader& reader)
         case (ESMType::IDLA):
             reader.readArraySubrecord(this->animations);
             break;
+        default:
+            std::stringstream s;
+            s << "Invalid subrecord type " << Util::typeValueToName(reader.subrecordType()) << '\n';
+            reader.reportError(s.str());
         }
     }
 }

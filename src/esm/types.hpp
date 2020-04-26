@@ -299,6 +299,20 @@ enum ESMType : uint32_t {
 
     WLST = 0x54534c57,
 
+    RDOT = 0x544f4452,
+    RDMP = 0x504d4452,
+    RDGS = 0x53474452,
+    RDMD = 0x444d4452,
+    RDMO = 0x4f4d4452,
+    RDSI = 0x49534452,
+    RDSD = 0x44534452,
+    RDWT = 0x54574452,
+    RDID = 0x44494452,
+    RDSB = 0x42534452,
+    RCLR = 0x524c4352,
+    RPLI = 0x494c5052,
+    RPLD = 0x444c5052,
+
 };
 
 };

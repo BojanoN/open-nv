@@ -34,6 +34,7 @@
 #include "proj.hpp"
 #include "pwat.hpp"
 #include "race.hpp"
+#include "regn.hpp"
 #include "scol.hpp"
 #include "scpt.hpp"
 #include "sound.hpp"

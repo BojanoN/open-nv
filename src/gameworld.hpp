@@ -63,7 +63,7 @@ class GameWorld {
     GameData<ESM::LeveledItem> leveledItems;
     GameData<ESM::Weather>     weather;
     GameData<ESM::Climate>     climates;
-    // GameData<ESM::Region>
+    GameData<ESM::Region>      regions;
     // GameData<ESM::NavigationMeshInfoMap>
     // GameData<ESM::DialogueTopic>
     // GameData<ESM::Quest>

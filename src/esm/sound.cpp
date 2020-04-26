@@ -36,6 +36,10 @@ Sound::Sound(ESMReader& reader)
         case (ESMType::HNAM):
             reader.readSubrecord(this->soundData.priority);
             break;
+        default:
+            std::stringstream s;
+            s << "Invalid subrecord type " << Util::typeValueToName(reader.subrecordType()) << '\n';
+            reader.reportError(s.str());
         }
     }
 }

@@ -53,7 +53,7 @@ public:
     RecordHeader&    getCurrentRecord();
     SubrecordHeader& getCurrentSubrecord();
     uint32_t         recordType();
-    uint32_t         subrecordType();
+    ESMType          subrecordType();
     uint32_t         groupLabel();
     int32_t          groupType();
 

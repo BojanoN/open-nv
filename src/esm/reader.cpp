@@ -11,7 +11,7 @@ SubrecordHeader& ESMReader::getCurrentSubrecord()
 };
 
 uint32_t    ESMReader::recordType() { return this->currentRecordHead.type; }
-uint32_t    ESMReader::subrecordType() { return this->currentSubrecordHead.type; }
+ESMType     ESMReader::subrecordType() { return this->currentSubrecordHead.type; }
 uint32_t    ESMReader::groupLabel() { return currentGroupHead.label; }
 int32_t     ESMReader::groupType() { return currentGroupHead.groupType; }
 RecordFlags ESMReader::recordFlags() { return currentRecordHead.flags; }

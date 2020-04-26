@@ -36,6 +36,10 @@ LeveledActor::LeveledActor(ESMReader& reader)
         case (ESMType::MODL):
             ModelData::load(reader, modelData, 0);
             break;
+        default:
+            std::stringstream s;
+            s << "Invalid subrecord type " << Util::typeValueToName(reader.subrecordType()) << '\n';
+            reader.reportError(s.str());
         }
     }
 }

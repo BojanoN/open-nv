@@ -20,6 +20,10 @@ void Faction::loadRankCollection(ESMReader& reader)
         case ESMType::INAM:
             reader.readSubrecord(ranks.back().insignia);
             break;
+        default:
+            std::stringstream s;
+            s << "Invalid subrecord type " << Util::typeValueToName(reader.subrecordType()) << '\n';
+            reader.reportError(s.str());
         }
 
         reader.readNextSubrecordHeader();

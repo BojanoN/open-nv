@@ -10,8 +10,8 @@ struct RegionPointListData {
 };
 
 struct RegionArea {
-    uint32_t            edgeFallOff;
-    RegionPointListData data;
+    uint32_t                         edgeFallOff;
+    std::vector<RegionPointListData> data;
 };
 
 enum class RegionDataObjectFlags : uint8_t {
@@ -28,6 +28,7 @@ enum class RegionDataObjectFlags : uint8_t {
 struct __attribute__((packed)) RegionDataObject {
     formid                object; // TREE, STAT, or LTEX
     uint16_t              parentIndex;
+    uint8_t               unused[2];
     float                 density;
     uint8_t               clustering;
     uint8_t               minSlope;
@@ -43,7 +44,7 @@ struct __attribute__((packed)) RegionDataObject {
     uint16_t              xAngleVariance;
     uint16_t              yAngleVariance;
     uint16_t              zAngleVariance;
-    uint8_t               unused[6];
+    uint8_t               unused2[6];
 };
 
 struct RegionDataGrasses {
@@ -68,7 +69,7 @@ enum class RegionDataEntryFlag : uint8_t {
 struct __attribute__((packed)) RegionDataHeader {
     RegionDataEntryType type;
     RegionDataEntryFlag flag;
-    uint8_t             unused;
+    uint8_t             unused[3];
 };
 
 enum class RegionEntryMusicType : uint32_t {
@@ -108,6 +109,8 @@ struct __attribute__((packed)) RegionDataEntry {
     std::vector<RegionDataSound>             sounds;
     std::vector<RegionDataEntryWeatherTypes> weatherTypes;
     std::vector<formid>                      imposters; // REFRs
+
+    static void loadRegionData(ESMReader& reader, std::vector<RegionDataEntry>& regionData);
 };
 
 struct Region : public Record {
@@ -118,5 +121,7 @@ struct Region : public Record {
     formid                       worldspace; // WRLD
     std::vector<RegionArea>      areas;
     std::vector<RegionDataEntry> dataEntries;
+
+    Region(ESMReader& reader);
 };
 }

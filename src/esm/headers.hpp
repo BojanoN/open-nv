@@ -83,11 +83,10 @@ struct GroupHeader {
 
 #pragma pack(1)
 struct SubrecordHeader {
-    uint32_t type;
+    ESMType  type;
     uint16_t dataSize;
 };
 #pragma options align = reset
-
 
 };
 ENABLE_BITWISE_OPERATORS(ESM::RecordFlags);
