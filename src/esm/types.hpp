@@ -297,6 +297,8 @@ enum ESMType : uint32_t {
     IAD4 = 0x44414904,
     IAD5 = 0x44414905,
 
+    WLST = 0x54534c57,
+
 };
 
 };

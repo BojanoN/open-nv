@@ -109,6 +109,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::PROJ, &projectiles));
     dataStores.insert(std::make_pair(ESM::ESMType::LVLI, &leveledItems));
     dataStores.insert(std::make_pair(ESM::ESMType::WTHR, &weather));
+    dataStores.insert(std::make_pair(ESM::ESMType::CLMT, &climates));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

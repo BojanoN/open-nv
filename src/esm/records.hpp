@@ -6,6 +6,7 @@
 #include "aspc.hpp"
 #include "book.hpp"
 #include "clas.hpp"
+#include "clmt.hpp"
 #include "cont.hpp"
 #include "crea.hpp"
 #include "door.hpp"
