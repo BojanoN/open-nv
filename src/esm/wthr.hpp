@@ -41,20 +41,24 @@ enum class WeatherClassification : uint8_t {
     Cloudy   = 2,
     Rainy    = 4,
     Snow     = 8
-}
+};
 
 struct __attribute__((packed)) WeatherData {
-    uint8_t               windSpeed;
-    uint8_t               upperCloudSpeed;
-    uint8_t               lowerCloudSpeed;
-    uint8_t               transitionDelta;
-    uint8_t               sunGlare;
-    uint8_t               sunDamage;
-    uint8_t               percipBeginFadeIn;
-    uint8_t               precipEndFadeOut;
-    uint8_t               thunderBeginFadeIn;
-    uint8_t               thunderEndFadeOut;
-    uint8_t               thunderFrequency;
+    uint8_t windSpeed;
+    uint8_t upperCloudSpeed;
+    uint8_t lowerCloudSpeed;
+
+    uint8_t transitionDelta;
+    uint8_t sunGlare;
+    uint8_t sunDamage;
+
+    uint8_t precipBeginFadeIn;
+    uint8_t precipEndFadeOut;
+
+    uint8_t thunderBeginFadeIn;
+    uint8_t thunderEndFadeOut;
+    uint8_t thunderFrequency;
+
     WeatherClassification type;
     rgb                   lightningColor;
 };
@@ -82,7 +86,6 @@ struct Weather : public Record {
     std::string cloudTextL1;
     std::string cloudTextL2;
     std::string cloudTextL3;
-    ModelData   modelData;
     // 4 byte unknown omitted
     uint8_t         cloudLayerSpeed[4]; // Value is divided by 2550. Each uint8 is for a different cloud layer.
     TimeOfDayColors cloudLayerColor[4]; // Each structure is for a different cloud layer.

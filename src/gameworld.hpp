@@ -61,7 +61,7 @@ class GameWorld {
     // GameData<ESM::ConstructibleObject>
     GameData<ESM::Projectile>  projectiles;
     GameData<ESM::LeveledItem> leveledItems;
-    // GameData<ESM::Weather>
+    GameData<ESM::Weather>     weather;
     // GameData<ESM::Climate>
     // GameData<ESM::Region>
     // GameData<ESM::NavigationMeshInfoMap>

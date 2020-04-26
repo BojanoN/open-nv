@@ -2,8 +2,6 @@
 #include <cstdint>
 
 typedef uint32_t formid;
-typedef uint32_t rgba;
-typedef uint32_t rgb;
 
 namespace ESM {
 
@@ -291,6 +289,13 @@ enum ESMType : uint32_t {
     IDLT = 0x544c4449,
     IDLA = 0x414c4449,
     LVLG = 0x474c564c,
+
+    IAD0 = 0x44414900,
+    IAD1 = 0x44414901,
+    IAD2 = 0x44414902,
+    IAD3 = 0x44414903,
+    IAD4 = 0x44414904,
+    IAD5 = 0x44414905,
 
 };
 

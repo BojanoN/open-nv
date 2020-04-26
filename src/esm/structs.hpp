@@ -800,4 +800,17 @@ enum class EquipmentType : int32_t {
     ALCOHOL  = 13,
 };
 
+struct __attribute__((packed)) rgb {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+};
+
+struct rgba {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+    uint8_t alpha;
+};
+
 };
