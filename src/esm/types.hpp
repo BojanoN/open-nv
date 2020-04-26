@@ -2,6 +2,8 @@
 #include <cstdint>
 
 typedef uint32_t formid;
+typedef uint32_t rgba;
+typedef uint32_t rgb;
 
 namespace ESM {
 
