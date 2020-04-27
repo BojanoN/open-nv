@@ -65,7 +65,7 @@ class GameWorld {
     GameData<ESM::Climate>     climates;
     GameData<ESM::Region>      regions;
     // GameData<ESM::NavigationMeshInfoMap>
-    // GameData<ESM::DialogueTopic>
+    GameData<ESM::DialogueTopic> dialogueTopics;
     // GameData<ESM::Quest>
     // GameData<ESM::IdleAnimation>
     // GameData<ESM::Package>
@@ -112,7 +112,7 @@ class GameWorld {
     // GameData<ESM::DehydrationStage>
     // GameData<ESM::HungerStage>
     // GameData<ESM::SleepDeprivationStage>
-    // GameData<ESM::Cell>
+    GameData<ESM::Cell> cells;
     // GameData<ESM::World>
 
     std::unordered_map<uint32_t, GameDataBase*> dataStores;

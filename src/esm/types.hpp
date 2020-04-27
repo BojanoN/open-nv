@@ -5,6 +5,20 @@ typedef uint32_t formid;
 
 namespace ESM {
 
+enum GroupType : int32_t {
+    TOP_LEVEL = 0,
+    WORLD_CHILDREN = 1,
+    INTERIOR_CELL_BLOCK = 2,
+    INTERIOR_CELL_SUB_BLOCK = 3,
+    EXTERIOR_CELL_BLOCK = 4,
+    EXTERIOR_CELL_SUB_BLOCK = 5,
+    CELL_CHILDREN = 6,
+    TOPIC_CHILDREN = 7,
+    CELL_PERSISTENT_CHILDREN = 8,
+    CELL_TEMPORARY_CHILDREN = 9,
+    CELL_VISIBLE_DISTANT_CHILDREN = 10
+};
+
 enum ESMType : uint32_t {
     NO_ENTRY = 0,
 
@@ -312,6 +326,29 @@ enum ESMType : uint32_t {
     RCLR = 0x524c4352,
     RPLI = 0x494c5052,
     RPLD = 0x444c5052,
+
+    QSTI = 0x49545351,
+    QSTR = 0x52545351,
+    INFC = 0x43464e49,
+    INFX = 0x58464e49,
+    TDUM = 0x4d554454,
+
+    IMPF = 0x46504d49,
+    LTMP = 0x504d544c,
+    XCLW = 0x574c4358,
+    XCLR = 0x524c4358,
+    XCIM = 0x4d494358,
+    XCET = 0x54454358,
+    XEZN = 0x4e5a4558,
+    XCCM = 0x4d434358,
+    XCWT = 0x54574358,
+    XOWN = 0x4e574f58,
+    XRNK = 0x4b4e5258,
+    XCLC = 0x434c4358,
+    XCLL = 0x4c4c4358,
+    XCAS = 0x53414358,
+    XCMT = 0x544d4358,
+    XCMO = 0x4f4d4358,
 
 };
 

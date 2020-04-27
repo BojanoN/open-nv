@@ -47,3 +47,5 @@
 #include "txst.hpp"
 #include "weap.hpp"
 #include "wthr.hpp"
+#include "dial.hpp"
+#include "cell.hpp"
