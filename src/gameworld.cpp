@@ -28,6 +28,10 @@ void GameWorld::load(ESM::ESMReader& reader)
         reader.readNextGroupHeader();
         while (reader.hasMoreRecordsInGroup()) {
 
+            if (reader.peekNextType() == ESM::ESMType::GRUP) {
+                break;
+            }
+
             reader.readNextRecordHeader();
             GameDataBase* dataStore;
             try {
@@ -112,6 +116,8 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::CLMT, &climates));
     dataStores.insert(std::make_pair(ESM::ESMType::REGN, &regions));
     dataStores.insert(std::make_pair(ESM::ESMType::WRLD, &worldspaces));
+    dataStores.insert(std::make_pair(ESM::ESMType::DIAL, &dialogueTopics));
+    dataStores.insert(std::make_pair(ESM::ESMType::CELL, &cells));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

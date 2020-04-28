@@ -48,3 +48,5 @@
 #include "weap.hpp"
 #include "wrld.hpp"
 #include "wthr.hpp"
+#include "dial.hpp"
+#include "cell.hpp"

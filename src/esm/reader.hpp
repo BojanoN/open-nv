@@ -42,6 +42,7 @@ public:
     bool hasMoreSubrecords() { return currentLocation < endOfRecord; }
     bool hasMoreRecordsInGroup() { return currentLocation < endOfGroup; }
     bool hasMoreBytes() { return currentLocation < fileSize; }
+    bool isCurrentLocationBefore(uint32_t loc) { return currentLocation < loc; }
     void skipRecord();
     void skipGroup();
     void skipSubrecord();
@@ -56,6 +57,7 @@ public:
     ESMType          subrecordType();
     uint32_t         groupLabel();
     int32_t          groupType();
+    uint32_t         groupSize() { return currentGroupHead.groupSize - 24; }
 
     void checkSubrecordHeader(ESMType type);
 

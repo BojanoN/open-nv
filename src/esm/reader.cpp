@@ -20,14 +20,6 @@ uint32_t    ESMReader::recordId() { return currentRecordHead.id; }
 uint32_t ESMReader::peekNextType()
 {
     uint32_t ret;
-
-    if (currentLocation != endOfSubrecord) {
-
-        log_warn("Cannot peek when not at end of subrecord");
-        log_warn("At 0x%06x", currentLocation);
-        log_warn("%.4s", currentRecordHead.type);
-    }
-
     this->currentStream->read(reinterpret_cast<char*>(&ret), sizeof(uint32_t));
     this->currentStream->seekg(-sizeof(uint32_t), std::ios::cur);
     return ret;
