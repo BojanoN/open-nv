@@ -66,6 +66,8 @@ class GameWorld {
     GameData<ESM::Region>      regions;
     // GameData<ESM::NavigationMeshInfoMap>
     // GameData<ESM::DialogueTopic>
+    GameData<ESM::Worldspace> worldspaces;
+
     // GameData<ESM::Quest>
     // GameData<ESM::IdleAnimation>
     // GameData<ESM::Package>

@@ -46,4 +46,5 @@
 #include "tree.hpp"
 #include "txst.hpp"
 #include "weap.hpp"
+#include "wrld.hpp"
 #include "wthr.hpp"

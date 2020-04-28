@@ -9,14 +9,6 @@ Activator::Activator(ESMReader& reader)
     reader.checkSubrecordHeader(ESMType::EDID);
     reader.readStringSubrecord(editorId);
 
-    std::unordered_set<ESMType> nextSubheadersModel {
-        ESMType::SCRI, ESMType::DEST, ESMType::SNAM, ESMType::VNAM,
-        ESMType::INAM, ESMType::RNAM, ESMType::WNAM, ESMType::XATO
-    };
-    std::unordered_set<ESMType> nextSubheadersDest { ESMType::SNAM, ESMType::VNAM,
-        ESMType::INAM, ESMType::RNAM,
-        ESMType::WNAM, ESMType::XATO };
-
     while (reader.hasMoreSubrecords()) {
         reader.readNextSubrecordHeader();
         switch (reader.subrecordType()) {

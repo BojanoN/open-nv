@@ -813,4 +813,17 @@ struct rgba {
     uint8_t alpha;
 };
 
+struct __attribute__((packed)) FootstepMaterial {
+    uint8_t concSolid[30];
+    uint8_t concBroken[30];
+    uint8_t metalSolid[30];
+    uint8_t metalHollow[30];
+    uint8_t metalSheet[30];
+    uint8_t wood[30];
+    uint8_t sand[30];
+    uint8_t dirt[30];
+    uint8_t grass[30];
+    uint8_t water[30];
+};
+
 };

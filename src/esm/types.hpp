@@ -313,6 +313,12 @@ enum ESMType : uint32_t {
     RPLI = 0x494c5052,
     RPLD = 0x444c5052,
 
+    XEZN = 0x4e5a4558,
+    NAM3 = 0x334d414e,
+    IMPF = 0x46504d49,
+    OFST = 0x5453464f,
+    IMPS = 0x53504d49,
+
 };
 
 };
