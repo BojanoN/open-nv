@@ -120,9 +120,6 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::WRLD, &worldspaces));
     dataStores.insert(std::make_pair(ESM::ESMType::DIAL, &dialogueTopics));
 
-    cellChildrenTypeMap.insert(std::make_pair(ESM::GroupType::CellPersistentChildren, &persistentChildren));
-    cellChildrenTypeMap.insert(std::make_pair(ESM::GroupType::CellTemporaryChildren, &temporaryChildren));
-    cellChildrenTypeMap.insert(std::make_pair(ESM::GroupType::CellVisibleDistantChildren, &visibleDistantChildren));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)
@@ -136,15 +133,20 @@ GameDataBase* GameWorld::getDataStore(uint32_t type)
     return it->second;
 }
 
-ESM::CellChildren* GameWorld::getCellChildrenMap(uint32_t groupType)
+std::unordered_map<formid, CellChildren*>& GameWorld::getCellChildrenMap(uint32_t groupType)
 {
-    auto it = this->cellChildrenTypeMap.find(groupType);
-    if (it == dataStores.end()) {
-        std::stringstream s;
-        s << groupType << " is not a cell children group type!";
-        throw std::runtime_error(s.str());
+    switch(groupType) {
+        case ESM::GroupType::CellPersistentChildren:
+            return persistentChildren;
+        case ESM::GroupType::CellTemporaryChildren:
+            return temporaryChildren;
+        case ESM::GroupType::CellVisibleDistantChildren:
+            return visibleDistantChildren;
+        default:
+            std::stringstream s;
+            s << groupType << " is not a valid cell children group type!";
+            throw std::runtime_error(s.str());
     }
-    return it->second;
 }
 
 void GameWorld::parseCellGroup(ESM::ESMReader& reader)

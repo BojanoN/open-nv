@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../gamedata.hpp"
-#include "reader.hpp"
-#include "records.hpp"
+#include "gamedata.hpp"
+#include "esm/reader.hpp"
+#include "esm/records.hpp"
 
-namespace ESM {
+namespace GameWorld {
 
 class CellChildren {
     /*
@@ -15,11 +15,11 @@ class CellChildren {
     GameData<ESM::PlacedNPC>      placedNPCs; //ACHR
     GameData<ESM::NavigationMesh> navigationMeshes; //NAVM
 */
-    std::unordered_map<uint32_t, GameWorld::GameDataBase*> typeMap;
+    std::unordered_map<uint32_t, GameDataBase*> typeMap;
 
 public:
     CellChildren();
-    void load(ESMReader& reader);
+    void load(ESM::ESMReader& reader);
 };
 
 }

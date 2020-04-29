@@ -1,6 +1,6 @@
 #include "children.hpp"
 
-namespace ESM {
+namespace GameWorld {
 
 CellChildren::CellChildren()
 {
@@ -12,9 +12,9 @@ CellChildren::CellChildren()
     typeMap.insert(std::make_pair(ESMType::NAVM, &navigationMeshes));*/
 }
 
-void CellChildren::load(ESMReader& reader)
+void CellChildren::load(ESM::ESMReader& reader)
 {
-    std::unordered_map<uint32_t, GameWorld::GameDataBase*>::iterator it = typeMap.find(reader.recordType());
+    std::unordered_map<uint32_t, GameDataBase*>::iterator it = typeMap.find(reader.recordType());
     if (it == this->typeMap.end()) {
         std::stringstream s;
         s << "Wrong record type, " << ESM::Util::typeValueToName(reader.recordType()) << " record type not implemented!";
