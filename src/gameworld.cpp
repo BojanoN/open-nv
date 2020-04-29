@@ -119,6 +119,10 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::REGN, &regions));
     dataStores.insert(std::make_pair(ESM::ESMType::WRLD, &worldspaces));
     dataStores.insert(std::make_pair(ESM::ESMType::DIAL, &dialogueTopics));
+
+    cellChildrenTypeMap.insert(std::make_pair(ESM::GroupType::CellPersistentChildren, &persistentChildren));
+    cellChildrenTypeMap.insert(std::make_pair(ESM::GroupType::CellTemporaryChildren, &temporaryChildren));
+    cellChildrenTypeMap.insert(std::make_pair(ESM::GroupType::CellVisibleDistantChildren, &visibleDistantChildren));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)
@@ -127,6 +131,16 @@ GameDataBase* GameWorld::getDataStore(uint32_t type)
     if (it == dataStores.end()) {
         std::stringstream s;
         s << "Wrong record type, " << ESM::Util::typeValueToName(type) << " record type not implemented!";
+        throw std::runtime_error(s.str());
+    }
+    return it->second;
+}
+
+CellChildren* GameWorld::getCellChildrenMap(uint32_t groupType) {
+    auto it = cellChildrenTypeMap.find(type);
+    if (it == dataStores.end()) {
+        std::stringstream s;
+        s << type << " is not a cell children group type!";
         throw std::runtime_error(s.str());
     }
     return it->second;

@@ -119,8 +119,15 @@ class GameWorld {
     std::unordered_map<uint32_t, std::vector<uint32_t>> interiorCellBlock;
     // GameData<ESM::World>
 
+    std::unordered_map<ESM::GroupType, std::unordered_map<formid, CellChildren*>*> cellChildrenTypeMap;
+    std::unordered_map<formid, CellChildren*> persistentChildren;
+    std::unordered_map<formid, CellChildren*> temporaryChildren;
+    std::unordered_map<formid, CellChildren*> visibleDistantChildren;
+
+
     std::unordered_map<uint32_t, GameDataBase*> dataStores;
     GameDataBase*                               getDataStore(uint32_t type);
+    std::unordered_map<formid, CellChildren*>*  getCellChildrenMap(uint32_t groupType); 
 
     void initDataStoreMap();
     void parseCellGroup(ESM::ESMReader& reader);
