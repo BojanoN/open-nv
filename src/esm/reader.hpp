@@ -53,10 +53,11 @@ public:
 
     RecordHeader&    getCurrentRecord();
     SubrecordHeader& getCurrentSubrecord();
+    GroupHeader&     getCurrentGroup();
     uint32_t         recordType();
     ESMType          subrecordType();
     uint32_t         groupLabel();
-    int32_t          groupType();
+    GroupType        groupType();
     uint32_t         groupSize() { return currentGroupHead.groupSize - 24; }
 
     void checkSubrecordHeader(ESMType type);

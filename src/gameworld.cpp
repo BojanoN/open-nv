@@ -1,4 +1,5 @@
 #include "gameworld.hpp"
+#include "esm/headers.hpp"
 #include "esm/utils.hpp"
 #include "logc/log.h"
 
@@ -26,11 +27,12 @@ void GameWorld::load(ESM::ESMReader& reader)
 
     while (reader.hasMoreBytes()) {
         reader.readNextGroupHeader();
-        while (reader.hasMoreRecordsInGroup()) {
+        if (reader.groupType() != ESM::GroupType::TopLevel) {
+            reader.skipGroup();
+            log_debug("Skipping non-toplevel group..");
+        }
 
-            if (reader.peekNextType() == ESM::ESMType::GRUP) {
-                break;
-            }
+        while (reader.hasMoreRecordsInGroup()) {
 
             reader.readNextRecordHeader();
             GameDataBase* dataStore;
@@ -117,7 +119,6 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::REGN, &regions));
     dataStores.insert(std::make_pair(ESM::ESMType::WRLD, &worldspaces));
     dataStores.insert(std::make_pair(ESM::ESMType::DIAL, &dialogueTopics));
-    dataStores.insert(std::make_pair(ESM::ESMType::CELL, &cells));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)
@@ -129,6 +130,61 @@ GameDataBase* GameWorld::getDataStore(uint32_t type)
         throw std::runtime_error(s.str());
     }
     return it->second;
+}
+
+void GameWorld::parseCellGroup(ESM::ESMReader& reader)
+{
+    ESM::GroupHeader interiorCellHdr;
+
+    // depth: 1
+    while (reader.hasMoreRecordsInGroup()) {
+        reader.readRawData(interiorCellHdr);
+#ifdef DEBUG
+        assert(interiorCellHdr.groupType == ESM::GroupType::InteriorCellBlock);
+#endif
+        uint32_t interiorCellBlockEnd = (interiorCellHdr.groupSize - 24) + reader.getCurrentPosition();
+        //depth : 2
+        ESM::GroupHeader interiorCellSubBlockHdr;
+        ESM::Cell*       cell = nullptr;
+        while (reader.isCurrentLocationBefore(interiorCellBlockEnd)) {
+            ESM::GroupHeader cellChildrenHdr;
+
+            reader.readRawData(interiorCellSubBlockHdr);
+#ifdef DEBUG
+            assert(interiorCellSubBlockHdr.groupType == ESM::GroupType::InteriorCellSubBlock);
+#endif
+            cell = new ESM::Cell(reader);
+            this->interiorCellSubBlocks[interiorCellHdr.label].insert(cell);
+
+            reader.readRawData(cellChildrenHdr);
+#ifdef DEBUG
+            assert(interiorCellSubBlockHdr.groupType == ESM::GroupType::CellChildren);
+#endif
+            uint32_t cellChildrenEnd = (cellChildrenHdr.groupSize - 24) + reader.getCurrentPosition();
+            while (reader.isCurrentLocationBefore(cellChildrenEnd)) {
+                // TODO: hmap for cellIDs and children
+                reader.readRawData(cellChildrenHdr);
+#ifdef DEBUG
+                assert(interiorCellSubBlockHdr.groupType == ESM::GroupType::CellPersistentChildren);
+#endif
+                while (reader.peekNextType() != ESM::ESMType::GRUP) {
+                    reader.readNextRecordHeader();
+                    switch (reader.recordType()) {
+                    case ESM::ESMType::ACHR:
+                        break;
+                    case ESM::ESMType::REFR:
+                        break;
+                    case ESM::ESMType::ACRE:
+                        break;
+                    default:
+                        std::stringstream s;
+                        s << "Invalid record type " << ESM::Util::typeValueToName(reader.subrecordType()) << "in group" << '\n';
+                        reader.reportError(s.str());
+                    }
+                }
+            }
+        }
+    }
 }
 
 };

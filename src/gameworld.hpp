@@ -114,13 +114,16 @@ class GameWorld {
     // GameData<ESM::DehydrationStage>
     // GameData<ESM::HungerStage>
     // GameData<ESM::SleepDeprivationStage>
-    GameData<ESM::Cell> cells;
+    std::unordered_map<uint32_t, GameData<ESM::Cell>> interiorCellSubBlocks;
+    // Key: cell block number, value: vector of subcellblock ids
+    std::unordered_map<uint32_t, std::vector<uint32_t>> interiorCellBlock;
     // GameData<ESM::World>
 
     std::unordered_map<uint32_t, GameDataBase*> dataStores;
     GameDataBase*                               getDataStore(uint32_t type);
 
     void initDataStoreMap();
+    void parseCellGroup(ESM::ESMReader& reader);
 
 public:
     GameWorld()

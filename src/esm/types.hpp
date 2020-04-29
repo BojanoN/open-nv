@@ -5,18 +5,17 @@ typedef uint32_t formid;
 
 namespace ESM {
 
-enum GroupType : int32_t {
-    TOP_LEVEL                     = 0,
-    WORLD_CHILDREN                = 1,
-    INTERIOR_CELL_BLOCK           = 2,
-    INTERIOR_CELL_SUB_BLOCK       = 3,
-    EXTERIOR_CELL_BLOCK           = 4,
-    EXTERIOR_CELL_SUB_BLOCK       = 5,
-    CELL_CHILDREN                 = 6,
-    TOPIC_CHILDREN                = 7,
-    CELL_PERSISTENT_CHILDREN      = 8,
-    CELL_TEMPORARY_CHILDREN       = 9,
-    CELL_VISIBLE_DISTANT_CHILDREN = 10
+enum class GroupType : uint32_t {
+    TopLevel,
+    WorldChildren,
+    InteriorCellBlock,
+    InteriorCellSubBlock,
+    ExteriorCellBlock,
+    CellChildren,
+    TopicChildren,
+    CellPersistentChildren,
+    CellTemporaryChildren,
+    CellVisibleDistantChildren,
 };
 
 enum ESMType : uint32_t {
@@ -338,13 +337,11 @@ enum ESMType : uint32_t {
     INFX = 0x58464e49,
     TDUM = 0x4d554454,
 
-    IMPF = 0x46504d49,
     LTMP = 0x504d544c,
     XCLW = 0x574c4358,
     XCLR = 0x524c4358,
     XCIM = 0x4d494358,
     XCET = 0x54454358,
-    XEZN = 0x4e5a4558,
     XCCM = 0x4d434358,
     XCWT = 0x54574358,
     XOWN = 0x4e574f58,

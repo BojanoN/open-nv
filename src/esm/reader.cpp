@@ -5,15 +5,13 @@
 namespace ESM {
 
 RecordHeader&    ESMReader::getCurrentRecord() { return currentRecordHead; };
-SubrecordHeader& ESMReader::getCurrentSubrecord()
-{
-    return currentSubrecordHead;
-};
+SubrecordHeader& ESMReader::getCurrentSubrecord() { return currentSubrecordHead; };
+GroupHeader&     ESMReader::getCurrentGroup() { return currentGroupHead; };
 
 uint32_t    ESMReader::recordType() { return this->currentRecordHead.type; }
 ESMType     ESMReader::subrecordType() { return this->currentSubrecordHead.type; }
 uint32_t    ESMReader::groupLabel() { return currentGroupHead.label; }
-int32_t     ESMReader::groupType() { return currentGroupHead.groupType; }
+GroupType   ESMReader::groupType() { return currentGroupHead.groupType; }
 RecordFlags ESMReader::recordFlags() { return currentRecordHead.flags; }
 uint32_t    ESMReader::recordId() { return currentRecordHead.id; }
 

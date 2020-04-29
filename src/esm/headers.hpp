@@ -73,12 +73,12 @@ struct RecordHeader {
 };
 
 struct GroupHeader {
-    uint32_t type;
-    uint32_t groupSize;
-    uint32_t label;
-    int32_t  groupType;
-    uint16_t stamp;
-    uint8_t  unknown[6];
+    uint32_t  type;
+    uint32_t  groupSize;
+    uint32_t  label;
+    GroupType groupType;
+    uint16_t  stamp;
+    uint8_t   unknown[6];
 };
 
 #pragma pack(1)
