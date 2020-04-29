@@ -136,11 +136,12 @@ GameDataBase* GameWorld::getDataStore(uint32_t type)
     return it->second;
 }
 
-CellChildren* GameWorld::getCellChildrenMap(uint32_t groupType) {
-    auto it = cellChildrenTypeMap.find(type);
+ESM::CellChildren* GameWorld::getCellChildrenMap(uint32_t groupType)
+{
+    auto it = this->cellChildrenTypeMap.find(groupType);
     if (it == dataStores.end()) {
         std::stringstream s;
-        s << type << " is not a cell children group type!";
+        s << groupType << " is not a cell children group type!";
         throw std::runtime_error(s.str());
     }
     return it->second;
@@ -148,7 +149,7 @@ CellChildren* GameWorld::getCellChildrenMap(uint32_t groupType) {
 
 void GameWorld::parseCellGroup(ESM::ESMReader& reader)
 {
-    ESM::GroupHeader interiorCellHdr;
+    /* ESM::GroupHeader interiorCellHdr;
 
     // depth: 1
     while (reader.hasMoreRecordsInGroup()) {
@@ -174,31 +175,20 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
 #ifdef DEBUG
             assert(interiorCellSubBlockHdr.groupType == ESM::GroupType::CellChildren);
 #endif
-            uint32_t cellChildrenEnd = (cellChildrenHdr.groupSize - 24) + reader.getCurrentPosition();
+            uint32_t cellChildrenEnd = (cellChildrenHdr.groupSize - 24)`` + reader.getCurrentPosition();
             while (reader.isCurrentLocationBefore(cellChildrenEnd)) {
-                // TODO: hmap for cellIDs and children
                 reader.readRawData(cellChildrenHdr);
-#ifdef DEBUG
-                assert(interiorCellSubBlockHdr.groupType == ESM::GroupType::CellPersistentChildren);
-#endif
+                std::unordered_map<formid, ESM::CellChildren*>* cellChildren = this->getCellChildrenMap(cellChildrenHdr.groupType);
+                ESM::CellChildren*                              children     = new ESM::CellChildren();
+
                 while (reader.peekNextType() != ESM::ESMType::GRUP) {
-                    reader.readNextRecordHeader();
-                    switch (reader.recordType()) {
-                    case ESM::ESMType::ACHR:
-                        break;
-                    case ESM::ESMType::REFR:
-                        break;
-                    case ESM::ESMType::ACRE:
-                        break;
-                    default:
-                        std::stringstream s;
-                        s << "Invalid record type " << ESM::Util::typeValueToName(reader.subrecordType()) << "in group" << '\n';
-                        reader.reportError(s.str());
-                    }
+                    children.load(reader);
                 }
+
+                cellChildren->insert(cellChildrenHdr.label, children);
             }
         }
-    }
+        }*/
 }
 
 };
