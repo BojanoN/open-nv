@@ -3,9 +3,9 @@
 
 namespace GameWorld {
 
-void CellBlock::insert(uint32_t subblock, formid cellId) {
+void CellBlock::insert(uint32_t subblock, uint32_t cellId) {
 	if(subblocks.find(subblock) == subblocks.end()) {
-		subblocks.emplace(subblock);
+		subblocks[subblock];
 	}
 
 	subblocks[subblock].insert(cellId);

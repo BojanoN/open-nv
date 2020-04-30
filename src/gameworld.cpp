@@ -162,7 +162,7 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
         assert(reader.groupType() == ESM::GroupType::InteriorCellBlock);
         uint32_t interiorCellBlockEnd = reader.groupSize() + reader.getCurrentPosition();
         uint32_t cellBlock = reader.groupLabel();
-        this->interiorCellBlocks.emplace(cellBlock);
+        this->interiorCellBlocks[cellBlock];
 
 
         while (reader.isCurrentLocationBefore(interiorCellBlockEnd)) {
@@ -206,10 +206,10 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
                         reader.readNextRecordHeader();
                         if (reader.isCurrentRecordCompressed()) {
                             reader.startCompressedMode();
-                            childrenMap[cellId].load(reader);
+                            childrenMap[cellId]->load(reader);
                             reader.endCompressedMode();
                         } else {
-                            childrenMap[cellId].load(reader);
+                            childrenMap[cellId]->load(reader);
                         }
                     }
 

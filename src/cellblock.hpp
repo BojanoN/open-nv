@@ -10,11 +10,11 @@ namespace GameWorld {
 class CellBlock {
 
 public:
-	CellBlock() {}
-	void insert(uint32_t subblock, formid cellId);
+	CellBlock() : subblocks() {}
+	void insert(uint32_t subblock, uint32_t cellId);
 
 private:
-	std::unordered_map<uint32_t, std::unordered_set<formid>> subblocks;
+	std::unordered_map<uint32_t, std::unordered_set<uint32_t>> subblocks;
 
 };
 

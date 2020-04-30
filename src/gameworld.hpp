@@ -4,11 +4,8 @@
 #include "esm/types.hpp"
 
 #include "children.hpp"
-<<<<<<< Updated upstream
 #include "gamedata.hpp"
-=======
 #include "cellblock.hpp"
->>>>>>> Stashed changes
 
 #include <iostream>
 #include <sstream>
