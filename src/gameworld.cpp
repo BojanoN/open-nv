@@ -34,6 +34,15 @@ void GameWorld::load(ESM::ESMReader& reader)
         }*/
         if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::CELL) {
             parseCellGroup(reader);
+            continue;
+        }
+        if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::WRLD) {
+            reader.skipGroup();
+            continue;
+        }
+        if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::DIAL) {
+            reader.skipGroup();
+            continue;
         }
 
         while (reader.hasMoreRecordsInGroup()) {
@@ -154,7 +163,10 @@ std::unordered_map<formid, CellChildren*>& GameWorld::getCellChildrenMap(uint32_
 
 void GameWorld::parseCellGroup(ESM::ESMReader& reader)
 {
-    while (reader.hasMoreRecordsInGroup()) {
+    uint32_t cellGroupEnd = reader.groupSize() + reader.getCurrentPosition();
+    uint32_t recordsLoaded = 0;
+    uint32_t recordsSkipped = 0;
+    while (reader.isCurrentLocationBefore(cellGroupEnd)) {
         reader.readNextGroupHeader();
 
         assert(reader.groupType() == ESM::GroupType::InteriorCellBlock);
@@ -169,8 +181,11 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
             uint32_t interiorCellSubBlockEnd = reader.groupSize() + reader.getCurrentPosition();
             uint32_t cellSubBlock            = reader.groupLabel();
 
+            log_info("Interior cell block: %d, subblock: %d", cellBlock, cellSubBlock);
+
             while (reader.isCurrentLocationBefore(interiorCellSubBlockEnd)) {
                 reader.readNextRecordHeader();
+                //log_info("Fpointer before cell 0x%x", reader.getCurrentPosition());
                 assert(reader.recordType() == ESM::ESMType::CELL);
                 formid cellId = reader.recordId();
 
@@ -181,11 +196,20 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
                 } else {
                     this->interiorCells.load(reader);
                 }
+                recordsLoaded++;
 
                 this->interiorCellBlocks[cellBlock].insert(cellSubBlock, cellId);
 
+                if(reader.peekNextType() != ESM::ESMType::GRUP) {
+                    //Not every cell has children
+                    continue;
+                }
+
                 reader.readNextGroupHeader();
                 assert(reader.groupType() == ESM::GroupType::CellChildren);
+
+                uint32_t totalChildrenSkipped = 0;
+                uint32_t totalChildrenLoaded = 0;
 
                 uint32_t cellChildrenEnd = reader.groupSize() + reader.getCurrentPosition();
                 while (reader.isCurrentLocationBefore(cellChildrenEnd)) {
@@ -196,21 +220,39 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
                     std::unordered_map<formid, CellChildren*> childrenMap = getCellChildrenMap(reader.groupType());
                     childrenMap.insert(std::make_pair(cellId, new CellChildren));
 
+                    uint32_t skipped = 0;
+                    uint32_t loaded = 0;
                     while (reader.hasMoreRecordsInGroup()) {
-
+                        
                         reader.readNextRecordHeader();
-                        if (reader.isCurrentRecordCompressed()) {
-                            reader.startCompressedMode();
-                            childrenMap[cellId]->load(reader);
-                            reader.endCompressedMode();
-                        } else {
-                            childrenMap[cellId]->load(reader);
-                        }
+                        try {
+                            if (reader.isCurrentRecordCompressed()) {
+                                reader.startCompressedMode();
+                                childrenMap[cellId]->load(reader);
+                                reader.endCompressedMode();
+                            } else {
+                                childrenMap[cellId]->load(reader);
+                            }
+                            loaded++;
+                        } catch (std::runtime_error &error) {
+                            //log_error(error.what());
+                            reader.skipRecord();
+                            skipped++;
+                        } 
                     }
+                    log_info("Loaded %d children, skipped %d children of record: %d", loaded, skipped, cellId);
+                    totalChildrenLoaded += loaded;
+                    totalChildrenSkipped += skipped;
+
                 }
+                recordsLoaded += totalChildrenLoaded;
+                recordsSkipped += totalChildrenSkipped;
+                //log_info("Fpointer after children 0x%x", reader.getCurrentPosition());
+
             }
         }
     }
+    log_info("Read a total of %d records in the CELL group. Skipped a total of %d records.", recordsLoaded, recordsSkipped);
 }
 
 };

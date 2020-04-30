@@ -198,7 +198,9 @@ template <typename T>
 void ESMReader::readSubrecord(T& subrecValue)
 {
 #ifdef DEBUG
-        assert(sizeof(T) == currentSubrecordHead.dataSize);
+    if(sizeof(T) != currentSubrecordHead.dataSize) {
+        log_warn("Size warning! type size: %d, subrecord data size: %d", sizeof(T), currentSubrecordHead.dataSize); 
+    }
 #endif
 
     this->currentStream->read(reinterpret_cast<char*>(&subrecValue), currentSubrecordHead.dataSize);

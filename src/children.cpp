@@ -20,8 +20,15 @@ void CellChildren::load(ESM::ESMReader& reader)
         s << "Wrong record type, " << ESM::Util::typeValueToName(reader.recordType()) << " record type not implemented!";
         throw std::runtime_error(s.str());
     }
+#ifdef DEBUG
+    formid id = reader.recordId();
+    uint32_t type = reader.recordType();
+#endif
     GameWorld::GameDataBase* dataStore = it->second;
     dataStore->load(reader);
+#ifdef DEBUG
+    log_debug("Child with id: %d, of type %s", id, ESM::Util::typeValueToName(type).c_str());
+#endif
 }
 
 };
