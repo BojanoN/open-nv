@@ -9,7 +9,7 @@ PlacedObject::PlacedObject(ESMReader& reader)
     bool rclrFlag = false;
     bool fullFlag = false;
 
-    while (reader.peekNextType() != ESMType::DATA) {
+    while (reader.hasMoreSubrecords()) {
         reader.readNextSubrecordHeader();
 
         switch (reader.subrecordType()) {
@@ -216,8 +216,5 @@ PlacedObject::PlacedObject(ESMReader& reader)
             reader.reportError(s.str());
         }
     }
-    reader.readNextSubrecordHeader();
-    reader.checkSubrecordHeader(ESMType::DATA);
-    reader.readSubrecord(positionRotation);
 }
 };

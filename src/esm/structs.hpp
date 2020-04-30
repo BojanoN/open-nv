@@ -939,4 +939,30 @@ struct OwnershipData {
     int32_t factionRank;
 };
 
+struct Vertex {
+    float x;
+    float y;
+    float z;
+};
+
+enum class TriangleFlags : uint32_t {
+    Triangle0External = 0x001,
+    Triangle1External = 0x002,
+    Triangle2External = 0x004,
+    PreferredPathing  = 0x040,
+    Water             = 0x200,
+    ContainsDoor      = 0x400,
+};
+
+struct Triangle {
+    int16_t vertex1;
+    int16_t vertex2;
+    int16_t vertex3;
+
+    int16_t       edgeVertex12;
+    int16_t       edgeVertex23;
+    int16_t       edgeVertex31;
+    TriangleFlags flags;
+};
+
 };
