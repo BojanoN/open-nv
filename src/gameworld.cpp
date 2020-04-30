@@ -119,7 +119,6 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::REGN, &regions));
     dataStores.insert(std::make_pair(ESM::ESMType::WRLD, &worldspaces));
     dataStores.insert(std::make_pair(ESM::ESMType::DIAL, &dialogueTopics));
-
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)
@@ -135,23 +134,23 @@ GameDataBase* GameWorld::getDataStore(uint32_t type)
 
 std::unordered_map<formid, CellChildren*>& GameWorld::getCellChildrenMap(uint32_t groupType)
 {
-    switch(groupType) {
-        case ESM::GroupType::CellPersistentChildren:
-            return persistentChildren;
-        case ESM::GroupType::CellTemporaryChildren:
-            return temporaryChildren;
-        case ESM::GroupType::CellVisibleDistantChildren:
-            return visibleDistantChildren;
-        default:
-            std::stringstream s;
-            s << groupType << " is not a valid cell children group type!";
-            throw std::runtime_error(s.str());
+    switch (groupType) {
+    case ESM::GroupType::CellPersistentChildren:
+        return persistentChildren;
+    case ESM::GroupType::CellTemporaryChildren:
+        return temporaryChildren;
+    case ESM::GroupType::CellVisibleDistantChildren:
+        return visibleDistantChildren;
+    default:
+        std::stringstream s;
+        s << groupType << " is not a valid cell children group type!";
+        throw std::runtime_error(s.str());
     }
 }
 
 void GameWorld::parseCellGroup(ESM::ESMReader& reader)
 {
-    /* ESM::GroupHeader interiorCellHdr;
+    ESM::GroupHeader interiorCellHdr;
 
     // depth: 1
     while (reader.hasMoreRecordsInGroup()) {
@@ -177,20 +176,20 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
 #ifdef DEBUG
             assert(interiorCellSubBlockHdr.groupType == ESM::GroupType::CellChildren);
 #endif
-            uint32_t cellChildrenEnd = (cellChildrenHdr.groupSize - 24)`` + reader.getCurrentPosition();
+            uint32_t cellChildrenEnd = (cellChildrenHdr.groupSize - 24) + reader.getCurrentPosition();
             while (reader.isCurrentLocationBefore(cellChildrenEnd)) {
                 reader.readRawData(cellChildrenHdr);
-                std::unordered_map<formid, ESM::CellChildren*>* cellChildren = this->getCellChildrenMap(cellChildrenHdr.groupType);
-                ESM::CellChildren*                              children     = new ESM::CellChildren();
+                std::unordered_map<formid, CellChildren*>& cellChildren = this->getCellChildrenMap(cellChildrenHdr.groupType);
+                CellChildren*                              children     = new CellChildren();
 
                 while (reader.peekNextType() != ESM::ESMType::GRUP) {
-                    children.load(reader);
+                    children->load(reader);
                 }
 
-                cellChildren->insert(cellChildrenHdr.label, children);
+                cellChildren[reinterpret_cast<formid>(cellChildrenHdr.label)] = children;
             }
         }
-        }*/
+    }
 }
 
 };
