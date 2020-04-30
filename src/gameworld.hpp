@@ -122,12 +122,6 @@ class GameWorld {
     // GameData<ESM::SleepDeprivationStage>
     // GameData<ESM::World>
 
-<<<<<<< Updated upstream
-    std::unordered_map<formid, std::unordered_map<formid, CellChildren*>*> cellChildrenTypeMap;
-    std::unordered_map<formid, CellChildren*>                              persistentChildren;
-    std::unordered_map<formid, CellChildren*>                              temporaryChildren;
-    std::unordered_map<formid, CellChildren*>                              visibleDistantChildren;
-=======
     GameData<ESM::Cell> interiorCells;
     //std::unordered_map<uint32_t, std::unordered_set<formid>> interiorCellBlocks;
     //std::unordered_map<uint32_t, std::unordered_set<formid>> interiorCellSubBlocks;
@@ -137,7 +131,7 @@ class GameWorld {
     std::unordered_map<formid, CellChildren*>                                        persistentChildren;
     std::unordered_map<formid, CellChildren*>                                        temporaryChildren;
     std::unordered_map<formid, CellChildren*>                                        visibleDistantChildren;
->>>>>>> Stashed changes
+
 
     std::unordered_map<uint32_t, GameDataBase*> dataStores;
     GameDataBase*                               getDataStore(uint32_t type);
