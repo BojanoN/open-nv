@@ -198,7 +198,7 @@ template <typename T>
 void ESMReader::readSubrecord(T& subrecValue)
 {
 #ifdef DEBUG
-        assert(sizeof(T) == currentSubrecordHead.dataSize);
+    assert(sizeof(T) == currentSubrecordHead.dataSize);
 #endif
 
     this->currentStream->read(reinterpret_cast<char*>(&subrecValue), currentSubrecordHead.dataSize);
@@ -224,10 +224,6 @@ void ESMReader::readRawDataSubrecSize(T& value)
 template <typename T>
 void ESMReader::readRawArray(T* array, ssize_t length)
 {
-#ifdef DEBUG
-    assert((sizeof(T) * length) == currentSubrecordHead.dataSize);
-#endif
-
     //int start = this->currentStream->tellg();
     this->currentStream->read(reinterpret_cast<char*>(array), sizeof(T) * length);
     //int end = this->currentStream->tellg();

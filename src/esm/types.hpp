@@ -402,6 +402,14 @@ enum ESMType : uint32_t {
     XLTW = 0x57544c58,
     XACT = 0x54434158,
     XLOC = 0x434f4c58,
+    NVER = 0x5245564e,
+    NVVX = 0x5856564e,
+    NVTR = 0x5254564e,
+    NVCA = 0x4143564e,
+    NCDP = 0x5044434e,
+    NVGD = 0x4447564e,
+    NVEX = 0x5845564e,
+    NVDP = 0x5044564e,
 };
 
 };
