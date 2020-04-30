@@ -241,6 +241,7 @@ struct PlacedObject : public Record {
     formid                       linkedRoom;
     bool                         ignoredBySandBox;
     PositionRotation             positionRotation;
+    LockData                     lockData;
 
     PlacedObject(ESMReader& reader);
 };

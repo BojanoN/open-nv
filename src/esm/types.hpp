@@ -400,6 +400,8 @@ enum ESMType : uint32_t {
     XTLW = 0x574c5458,
     XSRF = 0x46525358,
     XLTW = 0x57544c58,
+    XACT = 0x54434158,
+    XLOC = 0x434f4c58,
 };
 
 };

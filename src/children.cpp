@@ -4,7 +4,7 @@ namespace GameWorld {
 
 CellChildren::CellChildren()
 {
-    //typeMap.insert(std::make_pair(ESM::ESMType::REFR, &placedObjects));
+    typeMap.insert(std::make_pair(ESM::ESMType::REFR, &placedObjects));
     typeMap.insert(std::make_pair(ESM::ESMType::ACRE, &placedCreatures));
     //typeMap.insert(std::make_pair(ESM::ESMType::PGRE, &placedGrenades));
     //typeMap.insert(std::make_pair(ESM::ESMType::PMIS, &placedMissiles));

@@ -9,19 +9,25 @@ PlacedObject::PlacedObject(ESMReader& reader)
     bool rclrFlag = false;
     bool fullFlag = false;
 
-    reader.readNextSubrecordHeader();
-    reader.checkSubrecordHeader(ESMType::EDID);
-    reader.readStringSubrecord(editorId);
-
     while (reader.peekNextType() != ESMType::DATA) {
         reader.readNextSubrecordHeader();
 
         switch (reader.subrecordType()) {
+        case ESMType::EDID:
+            reader.readStringSubrecord(editorId);
+            break;
         case ESMType::NAME:
             reader.readSubrecord(base);
             break;
         case ESMType::XEZN:
             reader.readSubrecord(encounterZone);
+            break;
+        case ESMType::XACT:
+            reader.readSubrecord(flags);
+            break;
+        case ESMType::XLOC:
+            reader.readSubrecord(lockData);
+            break;
 
         case ESMType::RCLR: {
             if (!rclrFlag) {

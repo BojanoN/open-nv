@@ -5,16 +5,16 @@ namespace ESM {
 PlacedCreature::PlacedCreature(ESMReader& reader)
     : Record(reader)
 {
-    reader.readNextSubrecordHeader();
-    reader.checkSubrecordHeader(ESMType::EDID);
-    reader.readStringSubrecord(editorId);
-    reader.readNextSubrecordHeader();
-    reader.checkSubrecordHeader(ESMType::NAME);
-    reader.readSubrecord(base);
 
     while (reader.peekNextType() != ESMType::DATA) {
         reader.readNextSubrecordHeader();
         switch (reader.subrecordType()) {
+        case ESMType::EDID:
+            reader.readStringSubrecord(editorId);
+            break;
+        case ESMType::NAME:
+            reader.readSubrecord(base);
+            break;
         case ESMType::XEZN:
             reader.readSubrecord(encounterZone);
             break;
