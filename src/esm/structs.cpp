@@ -117,4 +117,45 @@ void ArmorAttributes::load(ESMReader& reader, ArmorAttributes& attrs)
 }
 
 
+void ScriptData::load(ESMReader& reader, ScriptData& scriptData) {
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::SCHR);
+    reader.readSubrecord(scriptData.scriptHeader);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::SCDA);
+    reader.readArraySubrecord(scriptData.compiledSource);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::SCTX);
+    reader.readStringSubrecord(scriptData.scriptSource);
+
+    while (reader.hasMoreSubrecords()) {
+        reader.readNextSubrecordHeader();
+        switch (reader.subrecordType()) {
+        case ESMType::SCRO:
+            scriptData.references.emplace_back();
+            scriptData.references.back().type = ReferenceType::OBJECT_REFERENCE;
+            reader.readSubrecord(scriptData.references.back().reference);
+            break;
+        case ESMType::SCRV:
+            scriptData.references.emplace_back();
+            scriptData.references.back().type = ReferenceType::VARIABLE_REFERENCE;
+            reader.readSubrecord(scriptData.references.back().reference);
+            break;
+        case ESMType::SLSD:
+            scriptData.localVariables.emplace_back();
+            reader.readSubrecord(scriptData.localVariables.back().data);
+            break;
+        case ESMType::SCVR:
+            reader.readStringSubrecord(scriptData.localVariables.back().name);
+            break;
+        default:
+            std::stringstream s;
+            s << "Invalid subrecord type " << Util::typeValueToName(reader.subrecordType()) << '\n';
+            reader.reportError(s.str());
+        }
+    }
+}
+
 };
