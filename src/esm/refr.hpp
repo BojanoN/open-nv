@@ -5,11 +5,6 @@
 
 namespace ESM {
 
-struct LinkedReferenceColor {
-    rgba linkStartColor;
-    rgba linkEndColor;
-};
-
 enum class PrimitiveType : uint32_t {
     None,
     Box,
@@ -161,26 +156,6 @@ struct DecalData {
     formid reference;
 };
 
-enum class ActivateParentFlags : uint8_t {
-    ParentActivateOnly = 0x1
-};
-
-struct ActivateParentRef {
-    formid reference;
-    float  delay;
-};
-
-enum class EnableParentFlags : uint8_t {
-    SetEnableToOppositeOfParent = 1,
-    PopIn                       = 2
-};
-
-struct EnableParent {
-    formid            reference;
-    EnableParentFlags flags;
-    uint8_t           unknown[3];
-};
-
 enum class ActionFlag : uint32_t {
     UseDefault    = 1,
     Activate      = 2,
@@ -215,15 +190,6 @@ struct OcclusionPlaneData {
     formid left;
     formid bottom;
     formid top;
-};
-
-struct PlacedObjectData {
-    float xPos;
-    float yPos;
-    float zPos;
-    float xRot;
-    float yRot;
-    float zRot;
 };
 
 struct PlacedObject : public Record {
@@ -263,7 +229,7 @@ struct PlacedObject : public Record {
     std::vector<DecalData>       linkedDecals;
     formid                       linkedReference;
     LinkedReferenceColor         altReferenceColor;
-    ActivateParentFlags          actParentFlags;
+    ActivateParentsFlags          actParentFlags;
     std::string                  activationPrompt;
     EnableParent                 enableParent;
     formid                       emittance;
