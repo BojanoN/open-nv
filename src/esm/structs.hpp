@@ -888,7 +888,7 @@ struct ScriptData {
 };
 
 struct LinkedDecal {
-    formid    reference; //REFR
+    formid reference; //REFR
     //unknown??
 };
 
@@ -898,7 +898,7 @@ struct LinkedReferenceColor {
 };
 
 enum ActivateParentsFlags : uint8_t {
-    NONE = 0,
+    NONE                 = 0,
     PARENT_ACTIVATE_ONLY = 1
 };
 
@@ -909,7 +909,7 @@ struct ActivateParent {
 
 enum EnableParentFlags : uint8_t {
     ENABLE_STATE_OPPOSITE_OF_PARENT = 1,
-    POP_IN = 2
+    POP_IN                          = 2
 };
 
 struct EnableParent {
@@ -925,6 +925,18 @@ struct PositionRotation {
     float xRot;
     float yRot;
     float zRot;
+};
+
+struct PatrolData {
+    float      idleTime;
+    formid     idleAnimation;
+    ScriptData patrolScript;
+    formid     dialogue;
+};
+
+struct OwnershipData {
+    formid  owner; //FACT, ACHR, CREA, NPC_
+    int32_t factionRank;
 };
 
 };

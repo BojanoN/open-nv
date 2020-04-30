@@ -152,10 +152,6 @@ struct WaterRenderData {
     WaterRenderType type;
 };
 
-struct DecalData {
-    formid reference;
-};
-
 enum class ActionFlag : uint32_t {
     UseDefault    = 1,
     Activate      = 2,
@@ -199,24 +195,20 @@ struct PlacedObject : public Record {
     formid               encounterZone;
     // ragdoll data omitted
     // ragdoll biped data omitted
-    Primitive            primitive;
-    CollisionLayerValues collisionLayerValues;
-    BoundHalfExtents     halfExtents;
-    TeleportDestination  teleportDest;
-    MapMarkerFlags       mapMarkerFlags;
-    std::string          mapMarkerName;
-    MapMarkerData        mapMarkerData;
-    formid               mapMarkerReputation; // REPU
-    formid               audioLocation; // ALOC
-    formid               target;
-    int32_t              levelModifier;
-    float                idleTime; // patrol data
-    formid               idle;
-    //  std::vector<ESM::Script>     embeddedScripts;
-    formid                       topic; // DIAL
+    Primitive                    primitive;
+    CollisionLayerValues         collisionLayerValues;
+    BoundHalfExtents             halfExtents;
+    TeleportDestination          teleportDest;
+    MapMarkerFlags               mapMarkerFlags;
+    std::string                  mapMarkerName;
+    MapMarkerData                mapMarkerData;
+    formid                       mapMarkerReputation; // REPU
+    formid                       audioLocation; // ALOC
+    formid                       target;
+    int32_t                      levelModifier;
+    PatrolData                   patrolData;
     RadioData                    radioData;
-    formid                       owner;
-    int32_t                      factionRank;
+    OwnershipData                ownershipData;
     int32_t                      count;
     float                        radius;
     float                        health;
@@ -226,10 +218,11 @@ struct PlacedObject : public Record {
     int32_t                      ammoCount;
     std::vector<WaterRenderData> waterReflection;
     std::vector<formid>          litWater;
-    std::vector<DecalData>       linkedDecals;
+    std::vector<LinkedDecal>     linkedDecals;
     formid                       linkedReference;
     LinkedReferenceColor         altReferenceColor;
-    ActivateParentsFlags          actParentFlags;
+    ActivateParentsFlags         activateParentsFlags;
+    std::vector<ActivateParent>  activateParents;
     std::string                  activationPrompt;
     EnableParent                 enableParent;
     formid                       emittance;
@@ -237,10 +230,14 @@ struct PlacedObject : public Record {
     ActionFlag                   flags;
     NavigationDoorLink           navDoorLink;
     std::vector<formid>          portalRooms; // REFRs
+    PortalData                   portalData;
     uint8_t                      speedTreeSeed;
     RoomDataHeader               roomHeader;
     OcclusionPlaneData           occlusionPlane;
     OcclusionPlaneData           linkedOcclusionPlanes;
     float                        scale;
+    formid                       linkedRoom;
+    bool                         ignoredBySandBox;
+    PositionRotation             positionRotation;
 };
 }
