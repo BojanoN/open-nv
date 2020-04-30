@@ -102,6 +102,9 @@ public:
     template <typename T>
     void readSubrecord(T& subrecValue);
 
+    template <typename T>
+    void readSubrecordTypeSize(T& subrecValue);
+
     void readStringSubrecord(std::string& subrecString);
     void readStringArray(std::vector<std::string>& vec);
 
@@ -161,7 +164,7 @@ private:
 };
 
 template <typename T>
-void ESMReader::readSubrecord(T& subrecValue)
+void ESMReader::readSubrecordTypeSize(T& subrecValue)
 {
 
     //int start = this->currentStream->tellg();
@@ -189,6 +192,13 @@ void ESMReader::readSubrecord(T& subrecValue)
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }*/
+}
+
+template <typename T>
+void ESMReader::readSubrecord(T& subrecValue)
+{
+    this->currentStream->read(reinterpret_cast<char*>(&subrecValue), currentSubrecordHead.dataSize);
+    updateReadLocation(currentSubrecordHead.dataSize);
 }
 
 template <typename T>

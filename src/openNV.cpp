@@ -13,7 +13,7 @@ int main(int argc, char** argv)
 #else
     log_set_level(LOG_INFO);
 #endif
-
+    log_set_level(LOG_INFO);
     int         c;
     std::string path = FALLOUTNV_ESM_DEFAULT_PATH;
 

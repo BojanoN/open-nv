@@ -13,9 +13,9 @@ OBJS := $(BUILDFILES:.cpp=.o)
 
 CC=clang++
 INCLUDEFLAGS = $(foreach d, $(INCLUDEDIRS), -I$d)
-CFLAGS := --std=c++17 -DLOG_USE_COLOR $(INCLUDEFLAGS) -Wall -MD
+CFLAGS := --std=c++17 --stdlib=libc++ -DLOG_USE_COLOR $(INCLUDEFLAGS) -Wall -MD
 
-LDFLAGS= -L$(LIBDIR) -lz
+LDFLAGS= -L$(LIBDIR) -lz -lc++ -lc++abi
 
 all: CFLAGS += -O2 -DNDEBUG
 all: $(BUILDDIR)/$(PROJECT)
