@@ -51,3 +51,4 @@
 #include "dial.hpp"
 #include "cell.hpp"
 #include "acre.hpp"
+#include "achr.hpp"

@@ -8,7 +8,7 @@ CellChildren::CellChildren()
     typeMap.insert(std::make_pair(ESM::ESMType::ACRE, &placedCreatures));
     //typeMap.insert(std::make_pair(ESM::ESMType::PGRE, &placedGrenades));
     //typeMap.insert(std::make_pair(ESM::ESMType::PMIS, &placedMissiles));
-    //typeMap.insert(std::make_pair(ESM::ESMType::ACHR, &placedNPCs));
+    typeMap.insert(std::make_pair(ESM::ESMType::ACHR, &placedNPCs));
     //typeMap.insert(std::make_pair(ESM::ESMType::NAVM, &navigationMeshes));
 }
 
