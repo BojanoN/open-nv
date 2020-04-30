@@ -353,6 +353,27 @@ enum ESMType : uint32_t {
     XCMT = 0x544d4358,
     XCMO = 0x4f4d4358,
 
+    XRGD = 0x44475258,
+    XRGB = 0x42475258,
+    XPRD = 0x44525058,
+    XPPA = 0x41505058,
+    XLCM = 0x4d434c58,
+    XMRC = 0x43524d58,
+    XCNT = 0x544e4358,
+    XRDS = 0x53445258,
+    XHLP = 0x504c4858,
+    XDCR = 0x52434458,
+    XLKR = 0x524b4c58,
+    XCLP = 0x504c4358,
+    XAPD = 0x44504158,
+    XAPR = 0x52504158,
+    XESP = 0x50534558,
+    XEMI = 0x494d4558,
+    XMBR = 0x52424d58,
+    XIBS = 0x53424958,
+    XSCL = 0x4c435358,
+    NAME = 0x454d414e,
+
 };
 
 };
