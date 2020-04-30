@@ -36,39 +36,39 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index)
 
 bool ModelData::isInCollection(uint32_t type, int index)
 {
-        uint32_t limit;
-        switch(index) {
-            case 0:
-                limit = 5;
-                break;
-            case 1:
-            case 3:
-                limit = 3;
-                break;
-            case 2:
-                limit = 4;
-                break;
-            default:
-                throw std::runtime_error("benis");
-        }
-
-        for(uint32_t i = 0; i < limit; i++) {
-            if(types[index][i] == type) {
-                return true;
-            }
-        }
-        return false;
+    uint32_t limit;
+    switch (index) {
+    case 0:
+        limit = 5;
+        break;
+    case 1:
+    case 3:
+        limit = 3;
+        break;
+    case 2:
+        limit = 4;
+        break;
+    default:
+        throw std::runtime_error("benis");
     }
 
-bool DestructionData::isInCollection(uint32_t type) {
-    for(int i = 0; i < 4; i++) {
-        if(types[i] == type) {
+    for (uint32_t i = 0; i < limit; i++) {
+        if (types[index][i] == type) {
             return true;
         }
     }
     return false;
 }
 
+bool DestructionData::isInCollection(uint32_t type)
+{
+    for (int i = 0; i < 4; i++) {
+        if (types[i] == type) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void DestructionData::load(ESMReader& reader, DestructionData& destData)
 {
@@ -116,23 +116,26 @@ void ArmorAttributes::load(ESMReader& reader, ArmorAttributes& attrs)
     }
 }
 
-
-void ScriptData::load(ESMReader& reader, ScriptData& scriptData) {
+void ScriptData::load(ESMReader& reader, ScriptData& scriptData)
+{
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::SCHR);
     reader.readSubrecord(scriptData.scriptHeader);
 
-    reader.readNextSubrecordHeader();
-    reader.checkSubrecordHeader(ESMType::SCDA);
-    reader.readArraySubrecord(scriptData.compiledSource);
-
-    reader.readNextSubrecordHeader();
-    reader.checkSubrecordHeader(ESMType::SCTX);
-    reader.readStringSubrecord(scriptData.scriptSource);
-
     while (reader.hasMoreSubrecords()) {
+        ESMType next = reader.peekNextType();
+
+        if (!(next == ESMType::SCRO || next == ESMType::SCRV || next == ESMType::SLSD || next == ESMType::SCVR || next == ESMType::SCDA || next == ESMType::SCTX))
+            break;
+
         reader.readNextSubrecordHeader();
         switch (reader.subrecordType()) {
+        case ESMType::SCTX:
+            reader.readStringSubrecord(scriptData.scriptSource);
+            break;
+        case ESMType::SCDA:
+            reader.readArraySubrecord(scriptData.compiledSource);
+            break;
         case ESMType::SCRO:
             scriptData.references.emplace_back();
             scriptData.references.back().type = ReferenceType::OBJECT_REFERENCE;

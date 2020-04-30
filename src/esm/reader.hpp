@@ -93,7 +93,7 @@ public:
         this->endOfSubrecord = currentLocation + currentSubrecordHead.dataSize;
     }
 
-    uint32_t peekNextType();
+    ESMType  peekNextType();
     void     rewind(ssize_t size);
     uint32_t getCurrentPosition();
 
@@ -198,8 +198,8 @@ template <typename T>
 void ESMReader::readSubrecord(T& subrecValue)
 {
 #ifdef DEBUG
-    if(sizeof(T) != currentSubrecordHead.dataSize) {
-        log_warn("Size warning! type size: %d, subrecord data size: %d", sizeof(T), currentSubrecordHead.dataSize); 
+    if (sizeof(T) != currentSubrecordHead.dataSize) {
+        log_warn("Size warning! type size: %d, subrecord data size: %d at 0x%x", sizeof(T), currentSubrecordHead.dataSize, currentLocation);
     }
 #endif
 

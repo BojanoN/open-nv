@@ -15,9 +15,9 @@ GroupType   ESMReader::groupType() { return currentGroupHead.groupType; }
 RecordFlags ESMReader::recordFlags() { return currentRecordHead.flags; }
 uint32_t    ESMReader::recordId() { return currentRecordHead.id; }
 
-uint32_t ESMReader::peekNextType()
+ESMType ESMReader::peekNextType()
 {
-    uint32_t ret;
+    ESMType ret;
     this->currentStream->read(reinterpret_cast<char*>(&ret), sizeof(uint32_t));
     this->currentStream->seekg(-sizeof(uint32_t), std::ios::cur);
     return ret;

@@ -235,7 +235,7 @@ struct PlacedObject : public Record {
     PortalData                   portalData;
     uint8_t                      speedTreeSeed;
     RoomDataHeader               roomHeader;
-    OcclusionPlaneData           occlusionPlane;
+    PortalData                   occlusionPlane;
     OcclusionPlaneData           linkedOcclusionPlanes;
     float                        scale;
     formid                       linkedRoom;
