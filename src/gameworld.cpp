@@ -32,8 +32,7 @@ void GameWorld::load(ESM::ESMReader& reader)
             reader.skipGroup();
             log_debug("Skipping non-toplevel group..");
         }*/
-        if (reader.groupType() == ESM::GroupType::TopLevel &&
-            reader.groupLabel() == ESM::ESMType::CELL) {
+        if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::CELL) {
             parseCellGroup(reader);
         }
 
@@ -124,7 +123,6 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::REGN, &regions));
     dataStores.insert(std::make_pair(ESM::ESMType::WRLD, &worldspaces));
     dataStores.insert(std::make_pair(ESM::ESMType::DIAL, &dialogueTopics));
-
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)
@@ -140,17 +138,17 @@ GameDataBase* GameWorld::getDataStore(uint32_t type)
 
 std::unordered_map<formid, CellChildren*>& GameWorld::getCellChildrenMap(uint32_t groupType)
 {
-    switch(groupType) {
-        case ESM::GroupType::CellPersistentChildren:
-            return persistentChildren;
-        case ESM::GroupType::CellTemporaryChildren:
-            return temporaryChildren;
-        case ESM::GroupType::CellVisibleDistantChildren:
-            return visibleDistantChildren;
-        default:
-            std::stringstream s;
-            s << groupType << " is not a valid cell children group type!";
-            throw std::runtime_error(s.str());
+    switch (groupType) {
+    case ESM::GroupType::CellPersistentChildren:
+        return persistentChildren;
+    case ESM::GroupType::CellTemporaryChildren:
+        return temporaryChildren;
+    case ESM::GroupType::CellVisibleDistantChildren:
+        return visibleDistantChildren;
+    default:
+        std::stringstream s;
+        s << groupType << " is not a valid cell children group type!";
+        throw std::runtime_error(s.str());
     }
 }
 
@@ -161,18 +159,17 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
 
         assert(reader.groupType() == ESM::GroupType::InteriorCellBlock);
         uint32_t interiorCellBlockEnd = reader.groupSize() + reader.getCurrentPosition();
-        uint32_t cellBlock = reader.groupLabel();
+        uint32_t cellBlock            = reader.groupLabel();
         this->interiorCellBlocks[cellBlock];
-
 
         while (reader.isCurrentLocationBefore(interiorCellBlockEnd)) {
             reader.readNextGroupHeader();
 
             assert(reader.groupType() == ESM::GroupType::InteriorCellSubBlock);
             uint32_t interiorCellSubBlockEnd = reader.groupSize() + reader.getCurrentPosition();
-            uint32_t cellSubBlock = reader.groupLabel();
+            uint32_t cellSubBlock            = reader.groupLabel();
 
-            while(reader.isCurrentLocationBefore(interiorCellSubBlockEnd)) {
+            while (reader.isCurrentLocationBefore(interiorCellSubBlockEnd)) {
                 reader.readNextRecordHeader();
                 assert(reader.recordType() == ESM::ESMType::CELL);
                 formid cellId = reader.recordId();
@@ -191,17 +188,15 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
                 assert(reader.groupType() == ESM::GroupType::CellChildren);
 
                 uint32_t cellChildrenEnd = reader.groupSize() + reader.getCurrentPosition();
-                while(reader.isCurrentLocationBefore(cellChildrenEnd)) {
-  
+                while (reader.isCurrentLocationBefore(cellChildrenEnd)) {
+
                     reader.readNextGroupHeader();
-                    assert(reader.groupType() == ESM::GroupType::CellPersistentChildren ||
-                        reader.groupType() == ESM::GroupType::CellTemporaryChildren ||
-                        reader.groupType() == ESM::GroupType::CellVisibleDistantChildren);
+                    assert(reader.groupType() == ESM::GroupType::CellPersistentChildren || reader.groupType() == ESM::GroupType::CellTemporaryChildren || reader.groupType() == ESM::GroupType::CellVisibleDistantChildren);
 
                     std::unordered_map<formid, CellChildren*> childrenMap = getCellChildrenMap(reader.groupType());
                     childrenMap.insert(std::make_pair(cellId, new CellChildren));
-                
-                    while(reader.hasMoreRecordsInGroup()) {
+
+                    while (reader.hasMoreRecordsInGroup()) {
 
                         reader.readNextRecordHeader();
                         if (reader.isCurrentRecordCompressed()) {
@@ -212,9 +207,7 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
                             childrenMap[cellId]->load(reader);
                         }
                     }
-
                 }
-
             }
         }
     }

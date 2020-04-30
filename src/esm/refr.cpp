@@ -1,15 +1,17 @@
 #include "refr.hpp"
+#include "reader.hpp"
 
 namespace ESM {
 
 PlacedObject::PlacedObject(ESMReader& reader)
     : Record(reader)
 {
+    bool rclrFlag = false;
+    bool fullFlag = false;
+
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::EDID);
     reader.readStringSubrecord(editorId);
-
-    bool rclrFlag = false;
 
     while (reader.peekNextType() != ESMType::DATA) {
         reader.readNextSubrecordHeader();
@@ -18,10 +20,10 @@ PlacedObject::PlacedObject(ESMReader& reader)
         case ESMType::NAME:
             reader.readSubrecord(base);
             break;
-        case ESMType::XEZN: {
+        case ESMType::XEZN:
             reader.readSubrecord(encounterZone);
 
-        case ESMType::RCLR:
+        case ESMType::RCLR: {
             if (!rclrFlag) {
                 reader.readSubrecord(this->linkedReferenceColor);
                 rclrFlag = true;
@@ -30,7 +32,6 @@ PlacedObject::PlacedObject(ESMReader& reader)
             }
             break;
         }
-        case ESMType::FULL:
         case ESMType::BNAM:
         case ESMType::MNAM:
         case ESMType::NNAM:
@@ -61,9 +62,16 @@ PlacedObject::PlacedObject(ESMReader& reader)
         case ESMType::FNAM:
             reader.readSubrecord(this->mapMarkerFlags);
             break;
-        case ESMType::FULL:
-            reader.readStringSubrecord(this->mapMarkerName);
+        case ESMType::FULL: {
+            if (!fullFlag) {
+                reader.readStringSubrecord(this->mapMarkerName);
+
+                fullFlag = true;
+            } else {
+                reader.skipSubrecord();
+            }
             break;
+        }
         case ESMType::TNAM:
             reader.readSubrecord(this->mapMarkerData);
             break;
@@ -74,7 +82,7 @@ PlacedObject::PlacedObject(ESMReader& reader)
             reader.skipSubrecord();
             if (reader.peekNextType() == ESMType::FULL) {
                 reader.readNextSubrecordHeader();
-                reader.skipSubrecord;
+                reader.skipSubrecord();
             }
             break;
         }
@@ -93,8 +101,8 @@ PlacedObject::PlacedObject(ESMReader& reader)
             reader.checkSubrecordHeader(ESMType::INAM);
             reader.readSubrecord(patrolData.idleAnimation);
             ScriptData::load(reader, patrolData.patrolScript);
-            break;
-        case ESMType::TNAM:
+            reader.readNextSubrecordHeader();
+            reader.checkSubrecordHeader(ESMType::TNAM);
             reader.readSubrecord(patrolData.dialogue);
             break;
         case ESMType::XLCM:
@@ -158,7 +166,7 @@ PlacedObject::PlacedObject(ESMReader& reader)
             reader.readSubrecord(enableParent);
             break;
         case ESMType::XEMI:
-            reader.readSubrecord(emmitance);
+            reader.readSubrecord(emittance);
             break;
         case ESMType::XMBR:
             reader.readSubrecord(multiBoundReference);
@@ -206,5 +214,4 @@ PlacedObject::PlacedObject(ESMReader& reader)
     reader.checkSubrecordHeader(ESMType::DATA);
     reader.readSubrecord(positionRotation);
 }
-
 };

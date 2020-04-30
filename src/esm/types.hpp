@@ -6,16 +6,16 @@ typedef uint32_t formid;
 namespace ESM {
 
 enum GroupType : uint32_t {
-    TopLevel = 0,
-    WorldChildren = 1,
-    InteriorCellBlock = 2,
-    InteriorCellSubBlock = 3,
-    ExteriorCellBlock = 4,
-    ExteriorCellSubBlock = 5,
-    CellChildren = 6,
-    TopicChildren = 7,
-    CellPersistentChildren = 8,
-    CellTemporaryChildren = 9,
+    TopLevel                   = 0,
+    WorldChildren              = 1,
+    InteriorCellBlock          = 2,
+    InteriorCellSubBlock       = 3,
+    ExteriorCellBlock          = 4,
+    ExteriorCellSubBlock       = 5,
+    CellChildren               = 6,
+    TopicChildren              = 7,
+    CellPersistentChildren     = 8,
+    CellTemporaryChildren      = 9,
     CellVisibleDistantChildren = 10
 };
 
@@ -374,6 +374,32 @@ enum ESMType : uint32_t {
     XSCL = 0x4c435358,
     NAME = 0x454d414e,
 
+    XAMC = 0x434d4158,
+    XPWR = 0x52575058,
+    XAMT = 0x544d4158,
+    XCHG = 0x47484358,
+    XRAD = 0x44415258,
+    XRDO = 0x4f445258,
+    XTRG = 0x47525458,
+    MMRK = 0x4b524d4d,
+    XTEL = 0x4c455458,
+    XMBO = 0x4f424d58,
+    XTRI = 0x49525458,
+    XORD = 0x44524f58,
+    XOCP = 0x50434f58,
+    XLRM = 0x4d524c58,
+    XRMR = 0x524d5258,
+    XSED = 0x44455358,
+    XPTL = 0x4c545058,
+    XPOD = 0x444f5058,
+    XNDP = 0x50444e58,
+    XLOD = 0x444f4c58,
+    XSRD = 0x44525358,
+    XMBP = 0x50424d58,
+    XPRM = 0x4d525058,
+    XTLW = 0x574c5458,
+    XSRF = 0x46525358,
+    XLTW = 0x57544c58,
 };
 
 };

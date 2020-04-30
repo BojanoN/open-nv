@@ -5,6 +5,8 @@
 
 namespace ESM {
 
+class ESMReader;
+
 enum class PrimitiveType : uint32_t {
     None,
     Box,
@@ -190,7 +192,7 @@ struct OcclusionPlaneData {
 
 struct PlacedObject : public Record {
     std::string          editorId;
-    LinkedReferenceColor referenceColor;
+    LinkedReferenceColor linkedReferenceColor;
     formid               base;
     formid               encounterZone;
     // ragdoll data omitted
@@ -239,5 +241,7 @@ struct PlacedObject : public Record {
     formid                       linkedRoom;
     bool                         ignoredBySandBox;
     PositionRotation             positionRotation;
+
+    PlacedObject(ESMReader& reader);
 };
 }
