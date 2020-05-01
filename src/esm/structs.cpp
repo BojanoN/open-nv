@@ -116,25 +116,29 @@ void ArmorAttributes::load(ESMReader& reader, ArmorAttributes& attrs)
     }
 }
 
-void ScriptData::load(ESMReader& reader, ScriptData& scriptData)
-{
+
+bool ScriptData::isInCollection(uint32_t type) {
+    for(int i = 0; i < 6; i++) {
+        if(types[i] == type) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void ScriptData::load(ESMReader& reader, ScriptData& scriptData) {
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::SCHR);
-    reader.readSubrecord(scriptData.scriptHeader);
+    reader.readSubrecord(scriptData.scriptHeader); 
 
-    while (reader.hasMoreSubrecords()) {
-        ESMType next = reader.peekNextType();
-
-        if (!(next == ESMType::SCRO || next == ESMType::SCRV || next == ESMType::SLSD || next == ESMType::SCVR || next == ESMType::SCDA || next == ESMType::SCTX))
-            break;
-
+    while (reader.hasMoreSubrecords() && isInCollection(reader.peekNextType())) {
         reader.readNextSubrecordHeader();
         switch (reader.subrecordType()) {
-        case ESMType::SCTX:
-            reader.readStringSubrecord(scriptData.scriptSource);
-            break;
         case ESMType::SCDA:
             reader.readArraySubrecord(scriptData.compiledSource);
+            break;
+        case ESMType::SCTX:
+            reader.readStringSubrecord(scriptData.scriptSource);
             break;
         case ESMType::SCRO:
             scriptData.references.emplace_back();

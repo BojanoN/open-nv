@@ -132,6 +132,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::REGN, &regions));
     dataStores.insert(std::make_pair(ESM::ESMType::WRLD, &worldspaces));
     dataStores.insert(std::make_pair(ESM::ESMType::DIAL, &dialogueTopics));
+    dataStores.insert(std::make_pair(ESM::ESMType::QUST, &quests));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)
