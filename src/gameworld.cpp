@@ -37,7 +37,8 @@ void GameWorld::load(ESM::ESMReader& reader)
             continue;
         }
         if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::WRLD) {
-            parseWorldspaceGroup(reader);
+            reader.skipGroup();
+            //parseWorldspaceGroup(reader);
             continue;
         }
         if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::DIAL) {
@@ -133,6 +134,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::WRLD, &worldspaces));
     dataStores.insert(std::make_pair(ESM::ESMType::DIAL, &dialogueTopics));
     dataStores.insert(std::make_pair(ESM::ESMType::QUST, &quests));
+    dataStores.insert(std::make_pair(ESM::ESMType::IDLE, &idleAnimations));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

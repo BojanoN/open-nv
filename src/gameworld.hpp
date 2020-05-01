@@ -72,7 +72,7 @@ class GameWorld {
 
     GameData<ESM::DialogueTopic> dialogueTopics;
     GameData<ESM::Quest> quests;
-    // GameData<ESM::IdleAnimation>
+    GameData<ESM::IdleAnimation> idleAnimations;
     // GameData<ESM::Package>
     // GameData<ESM::CombatStyle>
     // GameData<ESM::LoadScreen>
