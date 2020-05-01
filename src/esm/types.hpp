@@ -410,6 +410,11 @@ enum ESMType : uint32_t {
     NVGD = 0x4447564e,
     NVEX = 0x5845564e,
     NVDP = 0x5044564e,
+
+    QOBJ = 0x4a424f51,
+    QSDT = 0x54445351,
+    QSTA = 0x41545351,
+
 };
 
 };

@@ -146,7 +146,7 @@ uint32_t ESMReader::getCurrentPosition()
 }
 void ESMReader::reportError(std::string err)
 {
-    log_fatal("Error encountered at 0x%06x", this->currentStream->tellg());
+    log_fatal("Error encountered at 0x%06x", currentLocation);
     throw std::runtime_error(err);
 }
 
