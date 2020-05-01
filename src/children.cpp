@@ -21,7 +21,7 @@ void CellChildren::load(ESM::ESMReader& reader)
         throw std::runtime_error(s.str());
     }
 #ifdef DEBUG
-    formid id = reader.recordId();
+    formid   id   = reader.recordId();
     uint32_t type = reader.recordType();
 #endif
     GameWorld::GameDataBase* dataStore = it->second;

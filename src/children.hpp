@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cellblock.hpp"
 #include "esm/reader.hpp"
 #include "esm/records.hpp"
 #include "gamedata.hpp"
@@ -20,6 +21,16 @@ class CellChildren {
 public:
     CellChildren();
     void load(ESM::ESMReader& reader);
+};
+
+class WorldChildren {
+
+public:
+    WorldChildren() {};
+    std::unordered_set<uint32_t>    exteriorCells;
+    std::vector<ExteriorWorldBlock> exteriorWorldBlocks;
+    uint16_t                        x;
+    uint16_t                        y;
 };
 
 }

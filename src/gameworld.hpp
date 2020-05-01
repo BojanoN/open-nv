@@ -3,9 +3,9 @@
 #include "esm/records.hpp"
 #include "esm/types.hpp"
 
+#include "cellblock.hpp"
 #include "children.hpp"
 #include "gamedata.hpp"
-#include "cellblock.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -120,15 +120,18 @@ class GameWorld {
     // GameData<ESM::World>
 
     GameData<ESM::Cell> interiorCells;
+    GameData<ESM::Cell> exteriorCells;
+
     //std::unordered_map<uint32_t, std::unordered_set<formid>> interiorCellBlocks;
     //std::unordered_map<uint32_t, std::unordered_set<formid>> interiorCellSubBlocks;
     std::unordered_map<uint32_t, CellBlock> interiorCellBlocks;
 
     //std::unordered_map<uint32_t, std::unordered_map<formid, CellChildren*>*>         cellChildrenTypeMap;
-    std::unordered_map<formid, CellChildren*>                                        persistentChildren;
-    std::unordered_map<formid, CellChildren*>                                        temporaryChildren;
-    std::unordered_map<formid, CellChildren*>                                        visibleDistantChildren;
+    std::unordered_map<formid, CellChildren*> persistentChildren;
+    std::unordered_map<formid, CellChildren*> temporaryChildren;
+    std::unordered_map<formid, CellChildren*> visibleDistantChildren;
 
+    std::unordered_map<formid, WorldChildren*> worldChildren;
 
     std::unordered_map<uint32_t, GameDataBase*> dataStores;
     GameDataBase*                               getDataStore(uint32_t type);
@@ -136,6 +139,8 @@ class GameWorld {
 
     void initDataStoreMap();
     void parseCellGroup(ESM::ESMReader& reader);
+    void loadCellChildren(ESM::ESMReader& reader, formid cellId, uint32_t& recordsLoaded, uint32_t& recordsSkipped);
+    void parseWorldspaceGroup(ESM::ESMReader& reader);
 
 public:
     GameWorld()
