@@ -227,9 +227,9 @@ template <typename T>
 void ESMReader::readRawArray(T* array, ssize_t length)
 {
     //int start = this->currentStream->tellg();
-    this->currentStream->read(reinterpret_cast<char*>(array), sizeof(T) * length);
+    this->currentStream->read(reinterpret_cast<char*>(array), length);
     //int end = this->currentStream->tellg();
-    updateReadLocation(length * sizeof(T));
+    updateReadLocation(length);
 
     //return end - start;
 }
