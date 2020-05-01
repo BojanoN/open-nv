@@ -37,7 +37,7 @@ void GameWorld::load(ESM::ESMReader& reader)
             continue;
         }
         if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::WRLD) {
-            reader.skipGroup();
+            parseWorldspaceGroup(reader);
             continue;
         }
         if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::DIAL) {
@@ -193,7 +193,7 @@ void GameWorld::loadCellChildren(ESM::ESMReader& reader, formid cellId, uint32_t
                 }
                 loaded++;
             } catch (std::runtime_error& error) {
-                //log_error(error.what());
+                log_error(error.what());
                 reader.skipRecord();
                 skipped++;
             }
@@ -265,9 +265,12 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
     uint32_t recordsLoaded      = 0;
     uint32_t recordsSkipped     = 0;
 
-    this->worldspaces.load(reader);
-
     while (reader.isCurrentLocationBefore(worldspaceGroupEnd)) {
+
+        while (reader.peekNextType() == ESM::ESMType::WRLD) {
+            reader.readNextRecordHeader();
+            this->worldspaces.load(reader);
+        }
 
         reader.readNextGroupHeader();
         assert(reader.groupType() == ESM::GroupType::WorldChildren);
@@ -341,9 +344,11 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
                     if (reader.peekNextType() != ESM::ESMType::GRUP) {
                         //Not every cell has children
                         continue;
+                    } else if (reader.isCurrentLocationBefore(exteriorCellSubBlockEnd)) {
+                        loadCellChildren(reader, cellId, recordsLoaded, recordsSkipped);
+                    } else {
+                        break;
                     }
-
-                    loadCellChildren(reader, cellId, recordsLoaded, recordsSkipped);
                 }
             }
         }

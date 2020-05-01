@@ -95,6 +95,12 @@ Worldspace::Worldspace(ESMReader& reader)
         reader.readSubrecord(this->footstepMaterial);
     }
 
+    if (reader.peekNextType() == ESMType::XXXX) {
+        reader.readNextSubrecordHeader();
+        reader.skipRecord();
+        return;
+    }
+
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::OFST);
     reader.readArraySubrecord(this->offsetData);
