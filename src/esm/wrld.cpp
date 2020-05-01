@@ -97,7 +97,13 @@ Worldspace::Worldspace(ESMReader& reader)
 
     if (reader.peekNextType() == ESMType::XXXX) {
         reader.readNextSubrecordHeader();
-        reader.skipRecord();
+        uint32_t ofstSize = 0;
+        reader.readSubrecord(ofstSize);
+
+        reader.readNextSubrecordHeader();
+        reader.checkSubrecordHeader(ESMType::OFST);
+        this->offsetData.resize(ofstSize);
+        reader.readRawArray(this->offsetData.data(), ofstSize);
         return;
     }
 
