@@ -945,6 +945,12 @@ struct Vertex {
     float z;
 };
 
+struct Vertex8 {
+    uint8_t x;
+    uint8_t y;
+    uint8_t z;
+};
+
 enum class TriangleFlags : uint32_t {
     Triangle0External = 0x001,
     Triangle1External = 0x002,

@@ -13,27 +13,29 @@ Landscape::Landscape(ESMReader& reader)
             reader.skipSubrecord();
             break;
         case ESMType::VNML:
-            reader.readSubrecord(this->vertexNormals);
+            this->vertexNormals.emplace_back();
+            reader.readSubrecordTypeSize(this->vertexNormals.back());
             break;
         case ESMType::VCLR:
-            reader.readSubrecord(this->vertexColors);
+            this->vertexColors.emplace_back();
+            reader.readSubrecordTypeSize(this->vertexColors.back());
             break;
         case ESMType::VHGT:
-            reader.readSubrecord(this->vertexHeightMap);
+            reader.readSubrecordTypeSize(this->vertexHeightMap);
             break;
         case ESMType::VTEX:
             reader.readArraySubrecord(this->textures);
             break;
         case ESMType::BTXT:
             this->baseLayers.emplace_back();
-            reader.readSubrecord(this->baseLayers.back().header);
+            reader.readSubrecordTypeSize(this->baseLayers.back().header);
             break;
         case ESMType::ATXT:
             this->alphaLayers.emplace_back();
-            reader.readSubrecord(this->alphaLayers.back().header);
+            reader.readSubrecordTypeSize(this->alphaLayers.back().header);
             break;
         case ESMType::VTXT:
-            reader.readSubrecord(this->alphaLayers.back().data);
+            reader.readArraySubrecord(this->alphaLayers.back().data);
             break;
         default:
             std::stringstream s;

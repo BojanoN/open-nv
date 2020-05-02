@@ -35,8 +35,8 @@ struct BaseLayer {
 };
 
 struct AlphaLayer {
-    LayerHeader        header;
-    AlphaLayerCellData data;
+    LayerHeader                     header;
+    std::vector<AlphaLayerCellData> data;
 };
 
 struct VertexHeightMap {
@@ -45,13 +45,21 @@ struct VertexHeightMap {
     uint8_t unused[3];
 };
 
+struct LandscapeVertexNormal {
+    Vertex8 vertices[LANDSCAPE_VERTEX_COUNT];
+};
+
+struct LandscapeVertexColor {
+    rgb colors[LANDSCAPE_VERTEX_COUNT];
+};
+
 struct Landscape : public Record {
-    Vertex                  vertexNormals[LANDSCAPE_VERTEX_COUNT];
-    VertexHeightMap         vertexHeightMap;
-    std::vector<BaseLayer>  baseLayers;
-    std::vector<AlphaLayer> alphaLayers;
-    rgb                     vertexColors[LANDSCAPE_VERTEX_COUNT];
-    std::vector<formid>     textures; // LTEX
+    std::vector<LandscapeVertexNormal> vertexNormals;
+    VertexHeightMap                    vertexHeightMap;
+    std::vector<BaseLayer>             baseLayers;
+    std::vector<AlphaLayer>            alphaLayers;
+    std::vector<LandscapeVertexColor>  vertexColors;
+    std::vector<formid>                textures; // LTEX
 
     Landscape(ESMReader& reader);
 };
