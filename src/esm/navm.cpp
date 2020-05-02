@@ -7,7 +7,7 @@ void NavigationMeshGrid::load(ESMReader& reader, std::vector<NavigationMeshGrid>
 {
     vector.emplace_back();
     NavigationMeshGrid& tmp      = vector.back();
-    uint32_t            cellSize = (reader.getCurrentSubrecord().dataSize - 36) / sizeof(NavigationCell);
+    uint32_t            cellSize = (reader.getCurrentSubrecord().dataSize - 36);
 
     reader.readRawData(tmp.coords);
     tmp.cells.resize(cellSize);

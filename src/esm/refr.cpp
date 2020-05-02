@@ -47,6 +47,7 @@ PlacedObject::PlacedObject(ESMReader& reader)
         case ESMType::ONAM:
         case ESMType::XLOD:
         case ESMType::XRGD:
+        case ESMType::XMRK:
         case ESMType::XRGB:
             reader.skipSubrecord(); // ;_;
             break;

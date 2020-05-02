@@ -193,7 +193,7 @@ void GameWorld::loadCellChildren(ESM::ESMReader& reader, formid cellId, uint32_t
                 }
                 loaded++;
             } catch (std::runtime_error& error) {
-                log_error(error.what());
+                //log_error(error.what());
                 reader.skipRecord();
                 skipped++;
             }

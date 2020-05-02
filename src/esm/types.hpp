@@ -411,6 +411,8 @@ enum ESMType : uint32_t {
     NVEX = 0x5845564e,
     NVDP = 0x5044564e,
     XXXX = 0x58585858,
+    XMRK = 0x4b524d58,
+
 };
 
 };
