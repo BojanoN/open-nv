@@ -203,7 +203,7 @@ void GameWorld::loadCellChildren(ESM::ESMReader& reader, ESM::Cell& parentCell, 
                 skipped++;
             }
         }
-        log_info("Loaded %d children, skipped %d children of record: %d", loaded, skipped, parentCell.id);
+        log_debug("Loaded %d children, skipped %d children of record: %d", loaded, skipped, parentCell.id);
         totalChildrenLoaded += loaded;
         totalChildrenSkipped += skipped;
     }
@@ -231,7 +231,7 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
             uint32_t interiorCellSubBlockEnd = reader.groupSize() + reader.getCurrentPosition();
             uint32_t cellSubBlock            = reader.groupLabel();
 
-            log_info("Interior cell block: %d, subblock: %d", cellBlock, cellSubBlock);
+            log_debug("Interior cell block: %d, subblock: %d", cellBlock, cellSubBlock);
 
             while (reader.isCurrentLocationBefore(interiorCellSubBlockEnd)) {
                 reader.readNextRecordHeader();
@@ -286,7 +286,6 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
         reader.readNextGroupHeader();
         assert(reader.groupType() == ESM::GroupType::WorldChildren);
         uint32_t parent = reader.groupLabel();
-        log_info("Fpointer before world children 0x%x", reader.getCurrentPosition());
 
         uint32_t worldChildrenEnd = reader.groupSize() + reader.getCurrentPosition();
         //WorldChildren* children         = new WorldChildren();
@@ -359,7 +358,7 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
                 //currentExteriorBlock.subblocks.emplace_back();
                 //ExteriorWorldSubBlock& currentExteriorSubBlock = currentExteriorBlock.subblocks.back();
                 //currentExteriorSubBlock.coords                 = reader.groupLabel();
-                log_info("Exterior world block: %d, subblock: %d, location: 0x%08x", coords, subBlockCoords, reader.getCurrentPosition());
+                log_debug("Exterior world block: %d, subblock: %d, location: 0x%08x", coords, subBlockCoords, reader.getCurrentPosition());
                 if (reader.getCurrentPosition() == 0x019e3099) {
                     std::cout << "benis";
                 }
@@ -394,7 +393,7 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
                         loadCellChildren(reader, exteriorCell, recordsLoaded, recordsSkipped);
                     }
                 }
-                log_info("Read %d exterior sub block cells", subblockRecords);
+                log_debug("Read %d exterior sub block cells", subblockRecords);
             }
         }
     }
