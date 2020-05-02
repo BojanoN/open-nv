@@ -423,7 +423,9 @@ enum ESMType : uint32_t {
     QOBJ = 0x4a424f51,
     QSDT = 0x54445351,
     QSTA = 0x41545351,
-
+    CSTD = 0x44545343,
+    CSAD = 0x44415343,
+    CSSD = 0x44535343,
 };
 
 };
