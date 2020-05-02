@@ -132,6 +132,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::REGN, &regions));
     dataStores.insert(std::make_pair(ESM::ESMType::WRLD, &worldspaces));
     dataStores.insert(std::make_pair(ESM::ESMType::DIAL, &dialogueTopics));
+    dataStores.insert(std::make_pair(ESM::ESMType::LAND, &landscapes));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)
@@ -193,7 +194,7 @@ void GameWorld::loadCellChildren(ESM::ESMReader& reader, formid cellId, uint32_t
                 }
                 loaded++;
             } catch (std::runtime_error& error) {
-                //log_error(error.what());
+                log_error(error.what());
                 reader.skipRecord();
                 skipped++;
             }
@@ -346,8 +347,6 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
                         continue;
                     } else if (reader.isCurrentLocationBefore(exteriorCellSubBlockEnd)) {
                         loadCellChildren(reader, cellId, recordsLoaded, recordsSkipped);
-                    } else {
-                        break;
                     }
                 }
             }

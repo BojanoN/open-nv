@@ -412,6 +412,13 @@ enum ESMType : uint32_t {
     NVDP = 0x5044564e,
     XXXX = 0x58585858,
     XMRK = 0x4b524d58,
+    VNML = 0x4c4d4e56,
+    VHGT = 0x54474856,
+    VTEX = 0x58455456,
+    BTXT = 0x54585442,
+    ATXT = 0x54585441,
+    VTXT = 0x54585456,
+    VCLR = 0x524c4356,
 
 };
 

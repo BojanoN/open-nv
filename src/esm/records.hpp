@@ -26,6 +26,7 @@
 #include "idlm.hpp"
 #include "ingr.hpp"
 #include "item.hpp"
+#include "land.hpp"
 #include "ligh.hpp"
 #include "ltex.hpp"
 #include "lvlc.hpp"

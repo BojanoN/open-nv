@@ -15,6 +15,7 @@ class CellChildren {
     //GameData<ESM::PlacedMissile>  placedMissiles; //PMIS
     GameData<ESM::PlacedNPC>      placedNPCs; //ACHR
     GameData<ESM::NavigationMesh> navigationMeshes; //NAVM
+    GameData<ESM::Landscape>      landscapes; //LAND
 
     std::unordered_map<uint32_t, GameDataBase*> typeMap;
 

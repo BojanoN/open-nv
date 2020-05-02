@@ -10,6 +10,7 @@ CellChildren::CellChildren()
     //typeMap.insert(std::make_pair(ESM::ESMType::PMIS, &placedMissiles));
     typeMap.insert(std::make_pair(ESM::ESMType::ACHR, &placedNPCs));
     typeMap.insert(std::make_pair(ESM::ESMType::NAVM, &navigationMeshes));
+    typeMap.insert(std::make_pair(ESM::ESMType::LAND, &landscapes));
 }
 
 void CellChildren::load(ESM::ESMReader& reader)

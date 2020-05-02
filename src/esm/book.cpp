@@ -6,9 +6,6 @@ Book::Book(ESMReader& reader)
     : Record(reader)
 {
 
-    std::unordered_set<ESMType> modelNextSubheaders = { ESMType::ICON, ESMType::MICO, ESMType::SCRI, ESMType::DESC };
-    std::unordered_set<ESMType> destNextSubheaders  = { ESMType::YNAM, ESMType::ZNAM, ESMType::DATA };
-
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::EDID);
     reader.readStringSubrecord(this->editorId);
