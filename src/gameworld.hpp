@@ -129,19 +129,21 @@ class GameWorld {
     std::unordered_map<uint32_t, CellBlock> interiorCellBlocks;
 
     //std::unordered_map<uint32_t, std::unordered_map<formid, CellChildren*>*>         cellChildrenTypeMap;
-    std::unordered_map<formid, CellChildren*> persistentChildren;
-    std::unordered_map<formid, CellChildren*> temporaryChildren;
-    std::unordered_map<formid, CellChildren*> visibleDistantChildren;
+    //std::unordered_map<formid, CellChildren*> persistentChildren;
+    //std::unordered_map<formid, CellChildren*> temporaryChildren;
+    //std::unordered_map<formid, CellChildren*> visibleDistantChildren;
 
-    std::unordered_map<formid, WorldChildren*> worldChildren;
+    //std::unordered_map<formid, WorldChildren*> worldChildren;
 
     std::unordered_map<uint32_t, GameDataBase*> dataStores;
     GameDataBase*                               getDataStore(uint32_t type);
-    std::unordered_map<formid, CellChildren*>&  getCellChildrenMap(uint32_t groupType);
+    //std::unordered_map<formid, CellChildren*>&  getCellChildrenMap(uint32_t groupType);
 
     void initDataStoreMap();
     void parseCellGroup(ESM::ESMReader& reader);
-    void loadCellChildren(ESM::ESMReader& reader, formid cellId, uint32_t& recordsLoaded, uint32_t& recordsSkipped);
+    //void loadCellChildren(ESM::ESMReader& reader, formid cellId, uint32_t& recordsLoaded, uint32_t& recordsSkipped);
+    void loadCellChildren(ESM::ESMReader& reader, ESM::Cell& cellId, uint32_t& recordsLoaded, uint32_t& recordsSkipped);
+
     void parseWorldspaceGroup(ESM::ESMReader& reader);
 
 public:

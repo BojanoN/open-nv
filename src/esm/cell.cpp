@@ -2,9 +2,61 @@
 
 namespace ESM {
 
+
+CellChildren::CellChildren()
+{
+    typeMap.insert(std::make_pair(ESM::ESMType::REFR, &placedObjects));
+    typeMap.insert(std::make_pair(ESM::ESMType::ACRE, &placedCreatures));
+    //typeMap.insert(std::make_pair(ESM::ESMType::PGRE, &placedGrenades));
+    //typeMap.insert(std::make_pair(ESM::ESMType::PMIS, &placedMissiles));
+    typeMap.insert(std::make_pair(ESM::ESMType::ACHR, &placedNPCs));
+    typeMap.insert(std::make_pair(ESM::ESMType::NAVM, &navigationMeshes));
+    typeMap.insert(std::make_pair(ESM::ESMType::LAND, &landscapes));
+}
+
+void CellChildren::load(ESM::ESMReader& reader)
+{
+    std::unordered_map<uint32_t, GameWorld::GameDataBase*>::iterator it = typeMap.find(reader.recordType());
+    if (it == this->typeMap.end()) {
+        std::stringstream s;
+        s << "Wrong record type, " << ESM::Util::typeValueToName(reader.recordType()) << " record type not implemented!";
+        throw std::runtime_error(s.str());
+    }
+#ifdef DEBUG
+    formid   id   = reader.recordId();
+    uint32_t type = reader.recordType();
+#endif
+    GameWorld::GameDataBase* dataStore = it->second;
+    dataStore->load(reader);
+#ifdef DEBUG
+    log_debug("Child with id: %d, of type %s", id, ESM::Util::typeValueToName(type).c_str());
+#endif
+}
+
+
+class CellChildren* Cell::getChildren(uint32_t groupType) {
+
+    switch (groupType) {
+    case ESM::GroupType::CellPersistentChildren:
+        return persistentChildren;
+    case ESM::GroupType::CellTemporaryChildren:
+        return temporaryChildren;
+    case ESM::GroupType::CellVisibleDistantChildren:
+        return visibleDistantChildren;
+    default:
+        std::stringstream s;
+        s << groupType << " is not a valid cell children group type!";
+        throw std::runtime_error(s.str());
+    }
+}
+
 Cell::Cell(ESMReader& reader)
     : Record(reader)
 {
+    persistentChildren = new class CellChildren;
+    temporaryChildren = new class CellChildren;
+    visibleDistantChildren = new class CellChildren;
+
 
     reader.readNextSubrecordHeader();
     if (reader.subrecordType() == ESMType::EDID) {
@@ -80,6 +132,7 @@ Cell::Cell(ESMReader& reader)
             break;
         default:
             std::stringstream s;
+            log_fatal("Invalid subrecord type %s", Util::typeValueToName(reader.subrecordType()).c_str());
             s << "Invalid subrecord type " << Util::typeValueToName(reader.subrecordType()) << '\n';
             reader.reportError(s.str());
         }

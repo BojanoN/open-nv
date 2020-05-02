@@ -62,21 +62,18 @@ void ESMReader::readNextSubrecordHeader()
 
 void ESMReader::skipRecord()
 {
-    endCompressedMode();
     this->currentStream->seekg(endOfRecord, std::ios::beg);
     updateReadLocation(endOfRecord - currentLocation);
 }
 
 void ESMReader::skipGroup()
 {
-    endCompressedMode();
     this->currentStream->seekg(endOfGroup, std::ios::beg);
     updateReadLocation(endOfGroup - currentLocation);
 }
 
 void ESMReader::skipSubrecord()
 {
-    endCompressedMode();
     this->currentStream->seekg(endOfSubrecord, std::ios::beg);
     updateReadLocation(endOfSubrecord - currentLocation);
 }
@@ -146,7 +143,7 @@ uint32_t ESMReader::getCurrentPosition()
 }
 void ESMReader::reportError(std::string err)
 {
-    log_fatal("Error encountered at 0x%06x", this->currentStream->tellg());
+    log_fatal("Error encountered at 0x%06x", currentLocation);
     throw std::runtime_error(err);
 }
 

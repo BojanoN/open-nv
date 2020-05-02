@@ -3,9 +3,15 @@
 
 namespace ESM {
 
+void Worldspace::loadCell(ESMReader& reader) {
+    worldCell = new Cell(reader);
+}
+
 Worldspace::Worldspace(ESMReader& reader)
     : Record(reader)
 {
+    //children = new WorldChildren;
+
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::EDID);
     reader.readStringSubrecord(editorId);

@@ -199,7 +199,7 @@ void ESMReader::readSubrecord(T& subrecValue)
 {
 #ifdef DEBUG
     if (sizeof(T) != currentSubrecordHead.dataSize) {
-        log_warn("Size warning! type size: %d, subrecord data size: %d at 0x%x", sizeof(T), currentSubrecordHead.dataSize, currentLocation);
+        log_warn("Size warning! type size: %d, subrecord data size: %d at 0x%08x", sizeof(T), currentSubrecordHead.dataSize, currentLocation);
     }
 #endif
 

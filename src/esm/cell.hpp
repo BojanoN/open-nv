@@ -1,6 +1,8 @@
 #pragma once
 #include "record.hpp"
 #include "structs.hpp"
+#include "childrecords.hpp"
+#include "../gamedata.hpp"
 
 #include <cstdint>
 #include <sstream>
@@ -62,6 +64,23 @@ struct CellLightTemplate {
     CellLightTemplateInheritFlags inheritFlags;
 };
 
+class CellChildren {
+
+    GameWorld::GameData<PlacedObject>   placedObjects; //REFR
+    GameWorld::GameData<PlacedCreature> placedCreatures; //ACRE
+    //GameWorld::GameData<PlacedGrenade>  placedGrenades; //PGRE
+    //GameWorld::GameData<PlacedMissile>  placedMissiles; //PMIS
+    GameWorld::GameData<PlacedNPC>      placedNPCs; //ACHR
+    GameWorld::GameData<NavigationMesh> navigationMeshes; //NAVM
+    GameWorld::GameData<Landscape>      landscapes; //LAND
+
+    std::unordered_map<uint32_t, GameWorld::GameDataBase*> typeMap;
+
+public:
+    CellChildren();
+    void load(ESMReader& reader);
+};
+
 struct Cell : public Record {
 
     std::string         editorId;
@@ -85,7 +104,12 @@ struct Cell : public Record {
     uint8_t             unused;
     formid              musicType; //MUSC
 
+    class CellChildren*       persistentChildren;
+    class CellChildren*       temporaryChildren;
+    class CellChildren*       visibleDistantChildren;
+
     Cell(ESMReader& reader);
+    class CellChildren*       getChildren(uint32_t groupType);
 };
 
 };

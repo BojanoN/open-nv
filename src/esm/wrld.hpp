@@ -1,6 +1,10 @@
 #pragma once
 #include "record.hpp"
 #include "structs.hpp"
+#include "cell.hpp"
+#include "../cellblock.hpp"
+
+#include <unordered_map>
 
 namespace ESM {
 
@@ -78,6 +82,12 @@ struct Worldspace : public Record {
     FootstepMaterial                     footstepMaterial;
     std::vector<uint32_t>                offsetData;
 
+    Cell*                                   worldCell;
+    std::unordered_map<uint32_t, GameWorld::CellBlock> exteriorWorldBlocks;
+    //WorldChildren*                          children;
+
     Worldspace(ESMReader& reader);
+    void loadCell(ESMReader& reader);
 };
+
 }

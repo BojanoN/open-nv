@@ -28,7 +28,7 @@ private:
 public:
     virtual ssize_t size() { return dataMap.size(); }
     virtual void    load(ESM::ESMReader& reader);
-    const T&        get(formid id) const;
+    T&        get(formid id);
     void            insert(T* data);
     virtual ~GameData();
 };
@@ -42,7 +42,7 @@ GameData<T>::~GameData()
 }
 
 template <class T>
-const T& GameData<T>::get(formid id) const
+T& GameData<T>::get(formid id)
 {
     typename std::unordered_map<formid, T*>::const_iterator it = dataMap.find(id);
 
