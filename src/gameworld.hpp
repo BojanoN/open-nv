@@ -71,8 +71,7 @@ class GameWorld {
 
     GameData<ESM::DialogueTopic> dialogueTopics;
     GameData<ESM::Landscape>     landscapes;
-
-    // GameData<ESM::Quest>
+    GameData<ESM::Quest>         quests;
     // GameData<ESM::IdleAnimation>
     // GameData<ESM::Package>
     // GameData<ESM::CombatStyle>

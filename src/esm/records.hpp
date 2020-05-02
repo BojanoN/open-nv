@@ -55,3 +55,4 @@
 #include "weap.hpp"
 #include "wrld.hpp"
 #include "wthr.hpp"
+#include "qust.hpp"

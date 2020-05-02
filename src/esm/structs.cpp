@@ -160,5 +160,4 @@ void ScriptData::load(ESMReader& reader, ScriptData& scriptData)
         }
     }
 }
-
 };

@@ -885,6 +885,9 @@ struct ScriptData {
     std::vector<ScriptReference> references;
 
     static void load(ESMReader& reader, ScriptData& scriptData);
+private:
+    const static constexpr ESMType types[] = { ESMType::SCDA, ESMType::SCTX, ESMType::SCRO, ESMType::SCRV, ESMType::SLSD, ESMType::SCVR };
+    static bool                    isInCollection(uint32_t type);
 };
 
 struct LinkedDecal {

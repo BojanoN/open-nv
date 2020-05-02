@@ -420,6 +420,10 @@ enum ESMType : uint32_t {
     VTXT = 0x54585456,
     VCLR = 0x524c4356,
 
+    QOBJ = 0x4a424f51,
+    QSDT = 0x54445351,
+    QSTA = 0x41545351,
+
 };
 
 };
