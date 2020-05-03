@@ -18,6 +18,7 @@
 #include "door.hpp"
 #include "efsh.hpp"
 #include "ench.hpp"
+#include "expl.hpp"
 #include "eyes.hpp"
 #include "fact.hpp"
 #include "furn.hpp"
