@@ -30,6 +30,7 @@
 #include "hdpt.hpp"
 #include "idle.hpp"
 #include "idlm.hpp"
+#include "imad.hpp"
 #include "imgs.hpp"
 #include "ingr.hpp"
 #include "item.hpp"

@@ -82,7 +82,7 @@ class GameWorld {
     GameData<ESM::Water>   waters;
     GameData<ESM::Debris>       debris;
     GameData<ESM::ImageSpace> imageSpaces;
-    // GameData<ESM::ImageSpaceAdapter>
+    GameData<ESM::ImageSpaceAdapter> imageSpaceAdapters;
     // GameData<ESM::FormIdList>
     // GameData<ESM::Perk>
     // GameData<ESM::BodyPartData>

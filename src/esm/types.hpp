@@ -445,6 +445,30 @@ enum ESMType : uint32_t {
     PKDD = 0x44444b50,
     POEA = 0x41454f50,
     POCA = 0x41434f50,
+
+    AT_IAD = 0x44414940,                                                                                                                                                          
+    AIAD = 0x44414941,                                                                                                                                                          
+    BIAD = 0x44414942,                                                                                                                                                          
+    CIAD = 0x44414943,                                                                                                                                                          
+    DIAD = 0x44414944,                                                                                                                                                          
+    EIAD = 0x44414945,                                                                                                                                                          
+    FIAD = 0x44414946,                                                                                                                                                          
+    GIAD = 0x44414947,                                                                                                                                                          
+    HIAD = 0x44414948,                                                                                                                                                          
+    IIAD = 0x44414949,
+    JIAD = 0x4441494a,
+    KIAD = 0x4441494b,
+    LIAD = 0x4441494c,
+    MIAD = 0x4441494d,
+    NIAD = 0x4441494e,
+    OIAD = 0x4441494f,
+    QIAD = 0x44414951,
+    PIAD = 0x44414950,
+    RIAD = 0x44414952,
+    SIAD = 0x44414953,
+    TIAD = 0x44414954,
+
+    IAD_BASE = 0x44414900
 };
 
 };
