@@ -37,8 +37,8 @@ void GameWorld::load(ESM::ESMReader& reader)
             continue;
         }
         if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::WRLD) {
-            reader.skipGroup();
-            //parseWorldspaceGroup(reader);
+            //reader.skipGroup();
+            parseWorldspaceGroup(reader);
             continue;
         }
         if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::DIAL) {
