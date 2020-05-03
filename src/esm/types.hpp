@@ -468,6 +468,14 @@ enum ESMType : uint32_t {
     SIAD = 0x44414953,
     TIAD = 0x44414954,
 
+    BPTN = 0x4e545042,
+    BPNN = 0x4e4e5042,
+    BPNT = 0x544e5042,
+    BPNI = 0x494e5042,
+    BPND = 0x444e5042,
+    RAGA = 0x41474152,
+
+
     IAD_BASE = 0x44414900
 };
 

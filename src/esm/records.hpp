@@ -8,6 +8,7 @@
 #include "armo.hpp"
 #include "aspc.hpp"
 #include "book.hpp"
+#include "bptd.hpp"
 #include "cell.hpp"
 #include "clas.hpp"
 #include "clmt.hpp"
