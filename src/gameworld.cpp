@@ -141,6 +141,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::LSCR, &loadingScreens));
     dataStores.insert(std::make_pair(ESM::ESMType::EFSH, &effectShaders));
     dataStores.insert(std::make_pair(ESM::ESMType::EXPL, &explosions));
+    dataStores.insert(std::make_pair(ESM::ESMType::DEBR, &debris));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

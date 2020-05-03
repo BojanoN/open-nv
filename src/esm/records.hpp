@@ -14,6 +14,7 @@
 #include "cont.hpp"
 #include "crea.hpp"
 #include "csty.hpp"
+#include "debr.hpp"
 #include "dial.hpp"
 #include "door.hpp"
 #include "efsh.hpp"
