@@ -426,6 +426,25 @@ enum ESMType : uint32_t {
     CSTD = 0x44545343,
     CSAD = 0x44415343,
     CSSD = 0x44535343,
+
+    PKDT = 0x54444b50,
+    PLDT = 0x54444c50,
+    PLD2 = 0x32444c50,
+    PSDT = 0x54445350,
+    PTDT = 0x54445450,
+    PTD2 = 0x32445450,
+    POBA = 0x41424f50,
+    IDLB = 0x424c4449,
+    PKED = 0x44454b50,
+    PKE2 = 0x32454b50,
+    PKFD = 0x44464b50,
+    PKPT = 0x54504b50,
+    PKW3 = 0x33574b50,
+    PUID = 0x44495550,
+    PKAM = 0x4d414b50,
+    PKDD = 0x44444b50,
+    POEA = 0x41454f50,
+    POCA = 0x41434f50,
 };
 
 };

@@ -135,6 +135,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::LAND, &landscapes));
     dataStores.insert(std::make_pair(ESM::ESMType::QUST, &quests));
     dataStores.insert(std::make_pair(ESM::ESMType::IDLE, &idleAnimations));
+    dataStores.insert(std::make_pair(ESM::ESMType::PACK, &packages));    
     dataStores.insert(std::make_pair(ESM::ESMType::CSTY, &combatStyles));
 }
 

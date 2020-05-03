@@ -69,10 +69,6 @@ enum class FalloutBehaviorFlags : uint16_t{
 	AVOID_RADIATION = 0x0100
 };
 
-struct PackageLocation {
-
-};
-
 struct PackageData {
 	PackageGeneralFlags flags;
 	PackageType			type;
@@ -201,7 +197,8 @@ struct PackageDialogue {
 	formid topic; //DIAL
 	PackageDialogueFlags flags;
 	uint8_t  padding[4];
-	PackageDialogueType;
+	PackageDialogueType type;
+	uint32_t unknown;
 };
 
 enum class PackageLocationType : uint32_t {
@@ -231,19 +228,22 @@ struct Package : public Record {
 	PackageTarget   		  target_1;
 	std::vector<Condition>    conditions;
 	PackageIdleAnimationFlags idleAnimationFlags;
-	uint8_t  				  idleAnimationCount; //4 bytes in file
+	uint32_t  				  idleAnimationCount; //4 bytes in file, only first byte used
 	float 					  idleTimerSetting;
 	std::vector<formid>		  idleAnimations; //IDLE
 	uint32_t				  unused;
 	formid					  combatStyle; //CSTY
 	//eat marker
+	bool 					  eat;
 	uint32_t				  escortDistance;
 	float 					  followTriggerRadius;
 	uint16_t				  patrolFlags;
 	UseWeaponData			  useWeaponData;
 	PackageTarget 			  target_2;
 	//use item marker
+	bool useItem;
 	//ambush marker
+	bool ambush;
 	PackageDialogue  		  dialogue;
 	//onbegin marker
 	formid 				      onBeginIdle; //IDLE
@@ -259,6 +259,9 @@ struct Package : public Record {
 	formid					  onChangeTopic; //DIAL
 
 	Package(ESMReader& reader);
+
+private:
+	static void loadIdleScriptTopicGroup(ESMReader& reader, formid& idle, ScriptData& script, formid& topic);
 };
 
 };

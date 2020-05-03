@@ -39,6 +39,7 @@
 #include "navm.hpp"
 #include "note.hpp"
 #include "npc.hpp"
+#include "pack.hpp"
 #include "proj.hpp"
 #include "pwat.hpp"
 #include "qust.hpp"

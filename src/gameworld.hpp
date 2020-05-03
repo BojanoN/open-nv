@@ -73,7 +73,7 @@ class GameWorld {
     GameData<ESM::Landscape>     landscapes;
     GameData<ESM::Quest>         quests;
     GameData<ESM::IdleAnimation> idleAnimations;
-    // GameData<ESM::Package>
+    GameData<ESM::Package>     packages;
     GameData<ESM::CombatStyle> combatStyles;
     // GameData<ESM::LoadScreen>
     // GameData<ESM::AnimatedObject>
