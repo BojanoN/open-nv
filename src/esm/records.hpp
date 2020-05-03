@@ -4,6 +4,7 @@
 #include "acti.hpp"
 #include "alch.hpp"
 #include "ammo.hpp"
+#include "anio.hpp"
 #include "armo.hpp"
 #include "aspc.hpp"
 #include "book.hpp"

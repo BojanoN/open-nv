@@ -76,7 +76,7 @@ class GameWorld {
     GameData<ESM::Package>     packages;
     GameData<ESM::CombatStyle> combatStyles;
     // GameData<ESM::LoadScreen>
-    // GameData<ESM::AnimatedObject>
+    GameData<ESM::AnimatedObject> animatedObjects;
     // GameData<ESM::Water>
     // GameData<ESM::EffectShader>
     // GameData<ESM::Explosion>

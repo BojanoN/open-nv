@@ -1,0 +1,22 @@
+#include "anio.hpp"
+
+namespace ESM {
+
+AnimatedObject::AnimatedObject(ESMReader& reader) : Record(reader) {
+
+	reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::EDID);
+    reader.readStringSubrecord(editorId);
+
+    reader.readNextSubrecordHeader();
+    reader.checkSubrecordHeader(ESMType::MODL);
+    ModelData::load(reader, modelData, 0);
+
+    if(reader.hasMoreSubrecords()) {
+    	reader.readNextSubrecordHeader();
+    	reader.checkSubrecordHeader(ESMType::DATA);
+    	reader.readSubrecord(animation);
+    }
+}
+
+};
