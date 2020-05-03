@@ -15,6 +15,7 @@ public:
         : subblocks()
     {
     }
+    ~CellBlock() {};
     void insert(uint32_t subblock, uint32_t cellId);
 
 private:
@@ -24,9 +25,8 @@ private:
 class ExteriorWorldSubBlock {
 
 public:
-    ExteriorWorldSubBlock()
-    {
-    }
+    ExteriorWorldSubBlock() {};
+    ~ExteriorWorldSubBlock() {};
     std::unordered_set<uint32_t> cells;
     /// uint16 [2] Y,X;
     uint32_t coords;
@@ -39,7 +39,7 @@ public:
         : subblocks()
     {
     }
-
+    ~ExteriorWorldBlock() {};
     std::vector<ExteriorWorldSubBlock> subblocks;
     uint32_t                           coords;
 };

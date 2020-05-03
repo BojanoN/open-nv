@@ -69,14 +69,15 @@ class GameWorld {
     // GameData<ESM::NavigationMeshInfoMap>
     GameData<ESM::Worldspace> worldspaces;
 
-    GameData<ESM::DialogueTopic> dialogueTopics;
-    GameData<ESM::Landscape>     landscapes;
-    GameData<ESM::Quest>         quests;
-    GameData<ESM::IdleAnimation> idleAnimations;
-    GameData<ESM::Package>     packages;
-    GameData<ESM::CombatStyle> combatStyles;
-    // GameData<ESM::LoadScreen>
+    GameData<ESM::DialogueTopic>  dialogueTopics;
+    GameData<ESM::Landscape>      landscapes;
+    GameData<ESM::Quest>          quests;
+    GameData<ESM::IdleAnimation>  idleAnimations;
+    GameData<ESM::Package>        packages;
     GameData<ESM::AnimatedObject> animatedObjects;
+    // GameData<ESM::Package>
+    GameData<ESM::CombatStyle>   combatStyles;
+    GameData<ESM::LoadingScreen> loadingScreens;
     // GameData<ESM::Water>
     // GameData<ESM::EffectShader>
     // GameData<ESM::Explosion>
