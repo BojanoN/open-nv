@@ -74,8 +74,8 @@ class GameWorld {
     GameData<ESM::Quest>         quests;
     GameData<ESM::IdleAnimation> idleAnimations;
     // GameData<ESM::Package>
-    GameData<ESM::CombatStyle> combatStyles;
-    // GameData<ESM::LoadScreen>
+    GameData<ESM::CombatStyle>   combatStyles;
+    GameData<ESM::LoadingScreen> loadingScreens;
     // GameData<ESM::AnimatedObject>
     // GameData<ESM::Water>
     // GameData<ESM::EffectShader>

@@ -30,6 +30,7 @@
 #include "item.hpp"
 #include "land.hpp"
 #include "ligh.hpp"
+#include "lscr.hpp"
 #include "ltex.hpp"
 #include "lvlc.hpp"
 #include "lvli.hpp"

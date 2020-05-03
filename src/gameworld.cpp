@@ -136,6 +136,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::QUST, &quests));
     dataStores.insert(std::make_pair(ESM::ESMType::IDLE, &idleAnimations));
     dataStores.insert(std::make_pair(ESM::ESMType::CSTY, &combatStyles));
+    dataStores.insert(std::make_pair(ESM::ESMType::LSCR, &loadingScreens));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

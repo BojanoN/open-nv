@@ -244,5 +244,6 @@ struct PlacedObject : public Record {
     LockData                     lockData;
 
     PlacedObject(ESMReader& reader);
+    ~PlacedObject() {};
 };
 }
