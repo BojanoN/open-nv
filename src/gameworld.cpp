@@ -37,7 +37,8 @@ void GameWorld::load(ESM::ESMReader& reader)
             continue;
         }
         if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::WRLD) {
-            parseWorldspaceGroup(reader);
+            reader.skipGroup();
+            //parseWorldspaceGroup(reader);
             continue;
         }
         if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::DIAL) {
@@ -143,6 +144,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::EXPL, &explosions));
     dataStores.insert(std::make_pair(ESM::ESMType::WATR, &waters));
     dataStores.insert(std::make_pair(ESM::ESMType::DEBR, &debris));
+    dataStores.insert(std::make_pair(ESM::ESMType::IMGS, &imageSpaces));    
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)

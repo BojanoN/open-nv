@@ -81,7 +81,7 @@ class GameWorld {
     GameData<ESM::Explosion>    explosions;
     GameData<ESM::Water>   waters;
     GameData<ESM::Debris>       debris;
-    // GameData<ESM::ImageSpace>
+    GameData<ESM::ImageSpace> imageSpaces;
     // GameData<ESM::ImageSpaceAdapter>
     // GameData<ESM::FormIdList>
     // GameData<ESM::Perk>
