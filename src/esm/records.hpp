@@ -16,6 +16,7 @@
 #include "csty.hpp"
 #include "dial.hpp"
 #include "door.hpp"
+#include "efsh.hpp"
 #include "ench.hpp"
 #include "eyes.hpp"
 #include "fact.hpp"

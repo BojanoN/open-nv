@@ -79,7 +79,7 @@ class GameWorld {
     GameData<ESM::CombatStyle>   combatStyles;
     GameData<ESM::LoadingScreen> loadingScreens;
     // GameData<ESM::Water>
-    // GameData<ESM::EffectShader>
+    GameData<ESM::EffectShader> effectShaders;
     // GameData<ESM::Explosion>
     // GameData<ESM::Debris>
     // GameData<ESM::ImageSpace>
