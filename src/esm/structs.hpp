@@ -800,7 +800,13 @@ enum class EquipmentType : int32_t {
     ALCOHOL  = 13,
 };
 
-struct rgb {
+struct __attribute__((packed)) rgb {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+};
+
+struct rgbFloat {
     float red;
     float green;
     float blue;
@@ -885,6 +891,7 @@ struct ScriptData {
     std::vector<ScriptReference> references;
 
     static void load(ESMReader& reader, ScriptData& scriptData);
+
 private:
     const static constexpr ESMType types[] = { ESMType::SCDA, ESMType::SCTX, ESMType::SCRO, ESMType::SCRV, ESMType::SLSD, ESMType::SCVR };
     static bool                    isInCollection(uint32_t type);

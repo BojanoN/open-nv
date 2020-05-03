@@ -22,6 +22,7 @@
 #include "expl.hpp"
 #include "eyes.hpp"
 #include "fact.hpp"
+#include "flst.hpp"
 #include "furn.hpp"
 #include "glob.hpp"
 #include "gmst.hpp"

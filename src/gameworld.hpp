@@ -69,21 +69,21 @@ class GameWorld {
     // GameData<ESM::NavigationMeshInfoMap>
     GameData<ESM::Worldspace> worldspaces;
 
-    GameData<ESM::DialogueTopic>  dialogueTopics;
-    GameData<ESM::Landscape>      landscapes;
-    GameData<ESM::Quest>          quests;
-    GameData<ESM::IdleAnimation>  idleAnimations;
-    GameData<ESM::Package>        packages;
-    GameData<ESM::AnimatedObject> animatedObjects;
-    GameData<ESM::CombatStyle>   combatStyles;
-    GameData<ESM::LoadingScreen> loadingScreens;
-    GameData<ESM::EffectShader> effectShaders;
-    GameData<ESM::Explosion>    explosions;
-    GameData<ESM::Water>   waters;
-    GameData<ESM::Debris>       debris;
-    GameData<ESM::ImageSpace> imageSpaces;
+    GameData<ESM::DialogueTopic>     dialogueTopics;
+    GameData<ESM::Landscape>         landscapes;
+    GameData<ESM::Quest>             quests;
+    GameData<ESM::IdleAnimation>     idleAnimations;
+    GameData<ESM::Package>           packages;
+    GameData<ESM::AnimatedObject>    animatedObjects;
+    GameData<ESM::CombatStyle>       combatStyles;
+    GameData<ESM::LoadingScreen>     loadingScreens;
+    GameData<ESM::EffectShader>      effectShaders;
+    GameData<ESM::Explosion>         explosions;
+    GameData<ESM::Water>             waters;
+    GameData<ESM::Debris>            debris;
+    GameData<ESM::ImageSpace>        imageSpaces;
     GameData<ESM::ImageSpaceAdapter> imageSpaceAdapters;
-    // GameData<ESM::FormIdList>
+    GameData<ESM::FormIDList>        formIDlists;
     // GameData<ESM::Perk>
     // GameData<ESM::BodyPartData>
     // GameData<ESM::AddonNode>
