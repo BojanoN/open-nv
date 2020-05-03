@@ -7,11 +7,17 @@ void Worldspace::loadCell(ESMReader& reader) {
     worldCell = new Cell(reader);
 }
 
+Worldspace::~Worldspace() {
+    if(worldCell != nullptr) {
+        delete worldCell;
+    }
+}
+
 Worldspace::Worldspace(ESMReader& reader)
     : Record(reader)
 {
     //children = new WorldChildren;
-
+    worldCell = nullptr;
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::EDID);
     reader.readStringSubrecord(editorId);

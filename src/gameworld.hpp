@@ -75,12 +75,11 @@ class GameWorld {
     GameData<ESM::IdleAnimation>  idleAnimations;
     GameData<ESM::Package>        packages;
     GameData<ESM::AnimatedObject> animatedObjects;
-    // GameData<ESM::Package>
     GameData<ESM::CombatStyle>   combatStyles;
     GameData<ESM::LoadingScreen> loadingScreens;
-    // GameData<ESM::Water>
     GameData<ESM::EffectShader> effectShaders;
     GameData<ESM::Explosion>    explosions;
+    GameData<ESM::Water>   waters;
     // GameData<ESM::Debris>
     // GameData<ESM::ImageSpace>
     // GameData<ESM::ImageSpaceAdapter>

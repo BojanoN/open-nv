@@ -87,6 +87,7 @@ struct Worldspace : public Record {
     //WorldChildren*                          children;
 
     Worldspace(ESMReader& reader);
+    ~Worldspace();
     void loadCell(ESMReader& reader);
 };
 

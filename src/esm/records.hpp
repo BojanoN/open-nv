@@ -60,6 +60,7 @@
 #include "tes4.hpp"
 #include "tree.hpp"
 #include "txst.hpp"
+#include "watr.hpp"
 #include "weap.hpp"
 #include "wrld.hpp"
 #include "wthr.hpp"
