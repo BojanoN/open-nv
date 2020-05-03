@@ -59,6 +59,7 @@ struct FillTextureEffect {
 };
 
 struct EdgeEffect {
+    float fallOff;
     rgba  color;
     float alphaFadeInTime;
     float fullAlphaTime;
@@ -89,6 +90,7 @@ struct ParticleShader {
     float                fullParticleBirthTime;
     float                particleBirthRampDownTime;
     float                fullParticleBirthRatio;
+    float                persistentParticleBirthRatio;
     float                particleLifetime;
     float                particleLifetimeTol;
     float                initialSpeedAlongNormal;

@@ -18,6 +18,7 @@ struct ExplosionData {
     formid     impactDataset; // IPDS
     formid     sound2; // SOUN
     float      radiationLevel;
+    float      radiationDissipationTime;
     float      radiationRadius;
     SoundLevel soundLevel;
 };
