@@ -2,6 +2,11 @@
 
 namespace ESM {
 
+Cell::~Cell() {
+    delete persistentChildren;
+    delete temporaryChildren;
+    delete visibleDistantChildren;
+}
 
 CellChildren::CellChildren()
 {

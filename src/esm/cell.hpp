@@ -109,6 +109,7 @@ struct Cell : public Record {
     class CellChildren*       visibleDistantChildren;
 
     Cell(ESMReader& reader);
+    ~Cell();
     class CellChildren*       getChildren(uint32_t groupType);
 };
 

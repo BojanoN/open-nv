@@ -18,7 +18,7 @@ struct Record {
             reader.readCompressed();
         }*/
     }
-    ~Record() {};
+    virtual ~Record() {};
 };
 
 };

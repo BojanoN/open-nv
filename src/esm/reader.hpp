@@ -98,6 +98,7 @@ public:
     uint32_t getCurrentPosition();
 
     std::string getFileName() { return this->fileName; };
+    void readDirect(char* dest, ssize_t length);
 
     template <typename T>
     void readSubrecord(T& subrecValue);
