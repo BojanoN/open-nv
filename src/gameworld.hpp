@@ -80,7 +80,7 @@ class GameWorld {
     GameData<ESM::EffectShader> effectShaders;
     GameData<ESM::Explosion>    explosions;
     GameData<ESM::Water>   waters;
-    // GameData<ESM::Debris>
+    GameData<ESM::Debris>       debris;
     // GameData<ESM::ImageSpace>
     // GameData<ESM::ImageSpaceAdapter>
     // GameData<ESM::FormIdList>
