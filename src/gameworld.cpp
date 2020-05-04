@@ -174,6 +174,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::MSET, &mediaSets));
     dataStores.insert(std::make_pair(ESM::ESMType::ALOC, &mediaLocationControllers));
     dataStores.insert(std::make_pair(ESM::ESMType::CHAL, &challenges));
+    dataStores.insert(std::make_pair(ESM::ESMType::AMEF, &ammoEffects));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)
