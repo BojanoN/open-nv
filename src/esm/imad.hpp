@@ -69,7 +69,7 @@ struct ImageSpaceAdapterTime {
 
 struct ImageSpaceAdapterColor {
     float time;
-    rgb   color;
+    rgbf   color;
     float alpha;
 };
 

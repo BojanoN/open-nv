@@ -33,12 +33,12 @@ struct ImageSpaceData {
     float getHitBlurRadius;
     float getHitBlurDampingConstant;
     float getHitDampingConstant;
-    rgb   nightEyeTintColor;
+    rgbf   nightEyeTintColor;
     float brightness;
     float cinematicSaturation;
     float cinematicContrastAvgLumValue;
     float cinematicContrastValue;
-    rgb   cinematicBrightnessTintColor;
+    rgbf   cinematicBrightnessTintColor;
     float cinematicBrightnessTintValue;
     uint8_t unused[16];
     ImageSpaceFlags flags;
