@@ -490,6 +490,9 @@ enum ESMType : uint32_t {
     PRKE     = 0x454b5250,
     PRKC     = 0x434b5250,
     EPFT     = 0x54465045,
+    JNAM     = 0x4d414e4a,
+    KNAM     = 0x4d414e4b,
+
 };
 
 };

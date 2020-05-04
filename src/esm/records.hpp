@@ -59,6 +59,7 @@
 #include "mesg.hpp"
 #include "mgef.hpp"
 #include "micn.hpp"
+#include "mset.hpp"
 #include "mstt.hpp"
 #include "musc.hpp"
 #include "navm.hpp"

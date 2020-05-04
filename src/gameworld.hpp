@@ -108,7 +108,7 @@ class GameWorld {
     GameData<ESM::Perk>                  perks;
     GameData<ESM::Casino>                casinos;
     GameData<ESM::LoadingScreenType>     loadingScreenTypes;
-    // GameData<ESM::MediaSet>
+    GameData<ESM::MediaSet>              mediaSets;
     // GameData<ESM::MediaLocationController>
     // GameData<ESM::Challenge>
     // GameData<ESM::AmmoEffect>
