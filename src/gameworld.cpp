@@ -172,6 +172,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::CSNO, &casinos));
     dataStores.insert(std::make_pair(ESM::ESMType::LSCT, &loadingScreenTypes));
     dataStores.insert(std::make_pair(ESM::ESMType::MSET, &mediaSets));
+    dataStores.insert(std::make_pair(ESM::ESMType::ALOC, &mediaLocationControllers));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)
