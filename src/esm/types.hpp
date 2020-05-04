@@ -482,13 +482,14 @@ enum ESMType : uint32_t {
     RCOD = 0x444f4352,
     RCQY = 0x59514352,
 
-    IAD_BASE = 0x44414900 EPF2 = 0x32465045,
-    EPFD                       = 0x44465045,
-    EPF3                       = 0x33465045,
-    PRKF                       = 0x464b5250,
-    PRKE                       = 0x454b5250,
-    PRKC                       = 0x434b5250,
-    EPFT                       = 0x54465045,
+    IAD_BASE = 0x44414900,
+    EPF2     = 0x32465045,
+    EPFD     = 0x44465045,
+    EPF3     = 0x33465045,
+    PRKF     = 0x464b5250,
+    PRKE     = 0x454b5250,
+    PRKC     = 0x434b5250,
+    EPFT     = 0x54465045,
 };
 
 };
