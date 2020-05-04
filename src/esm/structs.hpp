@@ -1080,4 +1080,13 @@ struct __attribute__((packed)) ItemQuality {
     float   weight;
 };
 
+enum class WaterRenderType : uint32_t {
+    Reflection = 1,
+    Refraction = 2
+};
+
+struct WaterRenderData {
+    formid          reference;
+    WaterRenderType type;
+};
 };

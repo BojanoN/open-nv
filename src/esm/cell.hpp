@@ -1,8 +1,8 @@
 #pragma once
+#include "../gamedata.hpp"
+#include "childrecords.hpp"
 #include "record.hpp"
 #include "structs.hpp"
-#include "childrecords.hpp"
-#include "../gamedata.hpp"
 
 #include <cstdint>
 #include <sstream>
@@ -68,7 +68,7 @@ class CellChildren {
 
     GameWorld::GameData<PlacedObject>   placedObjects; //REFR
     GameWorld::GameData<PlacedCreature> placedCreatures; //ACRE
-    //GameWorld::GameData<PlacedGrenade>  placedGrenades; //PGRE
+    GameWorld::GameData<PlacedGrenade>  placedGrenades; //PGRE
     //GameWorld::GameData<PlacedMissile>  placedMissiles; //PMIS
     GameWorld::GameData<PlacedNPC>      placedNPCs; //ACHR
     GameWorld::GameData<NavigationMesh> navigationMeshes; //NAVM
@@ -104,13 +104,13 @@ struct Cell : public Record {
     uint8_t             unused;
     formid              musicType; //MUSC
 
-    class CellChildren*       persistentChildren;
-    class CellChildren*       temporaryChildren;
-    class CellChildren*       visibleDistantChildren;
+    class CellChildren* persistentChildren;
+    class CellChildren* temporaryChildren;
+    class CellChildren* visibleDistantChildren;
 
     Cell(ESMReader& reader);
     ~Cell();
-    class CellChildren*       getChildren(uint32_t groupType);
+    class CellChildren* getChildren(uint32_t groupType);
 };
 
 };

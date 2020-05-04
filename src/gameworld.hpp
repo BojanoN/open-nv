@@ -116,8 +116,8 @@ class GameWorld {
     GameData<ESM::CaravanMoney>            caravanMoney;
     GameData<ESM::CaravanDeck>             caravanDecks;
     GameData<ESM::DehydrationStage>        dehydrationStages;
-    // GameData<ESM::HungerStage>
-    // GameData<ESM::SleepDeprivationStage>
+    GameData<ESM::HungerStage>             hungerStages;
+    GameData<ESM::SleepDeprivationStage>   sleepDeprivationStages;
     // GameData<ESM::World>
 
     GameData<ESM::Cell> interiorCells;

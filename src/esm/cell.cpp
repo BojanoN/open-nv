@@ -2,7 +2,8 @@
 
 namespace ESM {
 
-Cell::~Cell() {
+Cell::~Cell()
+{
     delete persistentChildren;
     delete temporaryChildren;
     delete visibleDistantChildren;
@@ -12,7 +13,7 @@ CellChildren::CellChildren()
 {
     typeMap.insert(std::make_pair(ESM::ESMType::REFR, &placedObjects));
     typeMap.insert(std::make_pair(ESM::ESMType::ACRE, &placedCreatures));
-    //typeMap.insert(std::make_pair(ESM::ESMType::PGRE, &placedGrenades));
+    typeMap.insert(std::make_pair(ESM::ESMType::PGRE, &placedGrenades));
     //typeMap.insert(std::make_pair(ESM::ESMType::PMIS, &placedMissiles));
     typeMap.insert(std::make_pair(ESM::ESMType::ACHR, &placedNPCs));
     typeMap.insert(std::make_pair(ESM::ESMType::NAVM, &navigationMeshes));
@@ -38,8 +39,8 @@ void CellChildren::load(ESM::ESMReader& reader)
 #endif
 }
 
-
-class CellChildren* Cell::getChildren(uint32_t groupType) {
+class CellChildren* Cell::getChildren(uint32_t groupType)
+{
 
     switch (groupType) {
     case ESM::GroupType::CellPersistentChildren:
@@ -58,10 +59,9 @@ class CellChildren* Cell::getChildren(uint32_t groupType) {
 Cell::Cell(ESMReader& reader)
     : Record(reader)
 {
-    persistentChildren = new class CellChildren;
-    temporaryChildren = new class CellChildren;
+    persistentChildren     = new class CellChildren;
+    temporaryChildren      = new class CellChildren;
     visibleDistantChildren = new class CellChildren;
-
 
     reader.readNextSubrecordHeader();
     if (reader.subrecordType() == ESMType::EDID) {

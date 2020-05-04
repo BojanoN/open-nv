@@ -2,4 +2,5 @@
 #include "acre.hpp"
 #include "land.hpp"
 #include "navm.hpp"
+#include "pgre.hpp"
 #include "refr.hpp"

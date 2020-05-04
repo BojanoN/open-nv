@@ -144,16 +144,6 @@ struct LockData {
     uint8_t unknown[11];
 };
 
-enum class WaterRenderType : uint32_t {
-    Reflection = 1,
-    Refraction = 2
-};
-
-struct WaterRenderData {
-    formid          reference;
-    WaterRenderType type;
-};
-
 enum class ActionFlag : uint32_t {
     UseDefault    = 1,
     Activate      = 2,
