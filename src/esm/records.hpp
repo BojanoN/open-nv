@@ -48,6 +48,7 @@
 #include "note.hpp"
 #include "npc.hpp"
 #include "pack.hpp"
+#include "perk.hpp"
 #include "proj.hpp"
 #include "pwat.hpp"
 #include "qust.hpp"

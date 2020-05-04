@@ -84,7 +84,7 @@ class GameWorld {
     GameData<ESM::ImageSpace>        imageSpaces;
     GameData<ESM::ImageSpaceAdapter> imageSpaceAdapters;
     GameData<ESM::FormIDList>        formIDlists;
-    // GameData<ESM::Perk>
+    GameData<ESM::Perk>              perks;
     // GameData<ESM::BodyPartData>
     // GameData<ESM::AddonNode>
     // GameData<ESM::ActorValueInformation>

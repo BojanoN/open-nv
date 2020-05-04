@@ -1,6 +1,9 @@
 #pragma once
 #include "record.hpp"
+#include "structs.hpp"
 #include "types.hpp"
+
+#include <variant>
 
 namespace ESM {
 
@@ -104,7 +107,7 @@ struct __attribute__((packed)) PerkCondition {
     Condition condition;
 };
 
-enum class PerkEffectType {
+enum class PerkEffectType : uint8_t {
     QuestAndStage,
     Ability,
     EntryPoint
@@ -116,6 +119,30 @@ struct __attribute__((packed)) PerkEffectHeader {
     uint8_t        priority;
 };
 
+struct PerkEffectFloats {
+    float unk1;
+    float unk2;
+};
+struct PerkEffectActor {
+    ActorValue actor;
+    float      unk;
+};
+
+enum class ScriptFlags : uint16_t {
+    RunImmediately = 1
+};
+
+struct __attribute__((packed)) PerkEffect {
+    PerkEffectHeader                                                                              header;
+    std::variant<QuestAndStage, PerkAbility, PerkEntryPoint>                                      data;
+    std::vector<PerkCondition>                                                                    perkConditions;
+    uint8_t                                                                                       epfdType;
+    std::variant<std::vector<uint8_t>, float, PerkEffectFloats, formid, uint8_t, PerkEffectActor> entryPointData;
+    std::string                                                                                   buttonLabel;
+    ScriptFlags                                                                                   flags;
+    ScriptData                                                                                    scripts;
+};
+
 struct __attribute__((packed)) PerkData {
     uint8_t trait; // bool
     uint8_t minLevel;
@@ -125,12 +152,15 @@ struct __attribute__((packed)) PerkData {
 };
 
 struct Perk : public Record {
-    std::string editorId;
-    std::string name;
-    std::string description;
-    std::string largeIconFilename;
-    std::string smallIconFilename;
-    Condition   condition;
-    PerkData    data;
+    std::string             editorId;
+    std::string             name;
+    std::string             description;
+    std::string             largeIconFilename;
+    std::string             smallIconFilename;
+    Condition               condition;
+    PerkData                data;
+    std::vector<PerkEffect> effects;
+
+    Perk(ESMReader& reader);
 };
 }
