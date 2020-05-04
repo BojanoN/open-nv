@@ -492,6 +492,7 @@ enum ESMType : uint32_t {
     EPFT     = 0x54465045,
     JNAM     = 0x4d414e4a,
     KNAM     = 0x4d414e4b,
+    INTV     = 0x56544e49,
 
 };
 

@@ -112,7 +112,7 @@ class GameWorld {
     GameData<ESM::MediaLocationController> mediaLocationControllers;
     GameData<ESM::Challenge>               challenges;
     GameData<ESM::AmmoEffect>              ammoEffects;
-    // GameData<ESM::CaravanCard>
+    GameData<ESM::CaravanCard>             caravanCards;
     // GameData<ESM::CaravanMoney>
     // GameData<ESM::CaravanDeck>
     // GameData<ESM::DehydrationStage>

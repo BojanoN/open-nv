@@ -15,6 +15,7 @@
 #include "book.hpp"
 #include "bptd.hpp"
 #include "cams.hpp"
+#include "ccrd.hpp"
 #include "cell.hpp"
 #include "chal.hpp"
 #include "chip.hpp"
