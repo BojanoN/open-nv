@@ -69,43 +69,43 @@ class GameWorld {
     // GameData<ESM::NavigationMeshInfoMap>
     GameData<ESM::Worldspace> worldspaces;
 
-    GameData<ESM::DialogueTopic>  dialogueTopics;
-    GameData<ESM::Landscape>      landscapes;
-    GameData<ESM::Quest>          quests;
-    GameData<ESM::IdleAnimation>  idleAnimations;
-    GameData<ESM::Package>        packages;
-    GameData<ESM::AnimatedObject> animatedObjects;
-    GameData<ESM::CombatStyle>   combatStyles;
-    GameData<ESM::LoadingScreen> loadingScreens;
-    GameData<ESM::EffectShader> effectShaders;
-    GameData<ESM::Explosion>    explosions;
-    GameData<ESM::Water>   waters;
-    GameData<ESM::Debris>       debris;
-    GameData<ESM::ImageSpace> imageSpaces;
-    GameData<ESM::ImageSpaceAdapter> imageSpaceAdapters;
-    // GameData<ESM::FormIdList>
-    // GameData<ESM::Perk>
-    GameData<ESM::BodyPartData> bodyParts;
-    GameData<ESM::AddonNode> addonNodes;
+    GameData<ESM::DialogueTopic>         dialogueTopics;
+    GameData<ESM::Landscape>             landscapes;
+    GameData<ESM::Quest>                 quests;
+    GameData<ESM::IdleAnimation>         idleAnimations;
+    GameData<ESM::Package>               packages;
+    GameData<ESM::AnimatedObject>        animatedObjects;
+    GameData<ESM::CombatStyle>           combatStyles;
+    GameData<ESM::LoadingScreen>         loadingScreens;
+    GameData<ESM::EffectShader>          effectShaders;
+    GameData<ESM::Explosion>             explosions;
+    GameData<ESM::Water>                 waters;
+    GameData<ESM::Debris>                debris;
+    GameData<ESM::ImageSpace>            imageSpaces;
+    GameData<ESM::ImageSpaceAdapter>     imageSpaceAdapters;
+    GameData<ESM::BodyPartData>          bodyParts;
+    GameData<ESM::AddonNode>             addonNodes;
     GameData<ESM::ActorValueInformation> actorValueInformations;
-    GameData<ESM::RadiationStage> radiationStages;
-    GameData<ESM::CameraShot> cameraShots;
-    GameData<ESM::CameraPath> cameraPaths;
-    GameData<ESM::VoiceType>  voiceTypes;
-    GameData<ESM::Impact>    impacts;
-    GameData<ESM::ImpactDataset> impactDatasets;
-    GameData<ESM::ArmorAddon> armorAddons;
-    GameData<ESM::EncounterZone> encounterZones;
-    GameData<ESM::Message> messages;
-    GameData<ESM::Ragdoll> ragdolls;
-    GameData<ESM::DefaultObjectManager> defaultObjectManagers;
-    GameData<ESM::LightingTemplate> lightingTemplates;
-    GameData<ESM::MusicType> musicTypes;
-    GameData<ESM::ItemMod> itemMods;
-    GameData<ESM::Reputation> reputations;
-    GameData<ESM::Recipe> recipes;
-    GameData<ESM::RecipeCategory> recipeCategories;
-    GameData<ESM::CasinoChip> casinoChips;
+    GameData<ESM::RadiationStage>        radiationStages;
+    GameData<ESM::CameraShot>            cameraShots;
+    GameData<ESM::CameraPath>            cameraPaths;
+    GameData<ESM::VoiceType>             voiceTypes;
+    GameData<ESM::Impact>                impacts;
+    GameData<ESM::ImpactDataset>         impactDatasets;
+    GameData<ESM::ArmorAddon>            armorAddons;
+    GameData<ESM::EncounterZone>         encounterZones;
+    GameData<ESM::Message>               messages;
+    GameData<ESM::Ragdoll>               ragdolls;
+    GameData<ESM::DefaultObjectManager>  defaultObjectManagers;
+    GameData<ESM::LightingTemplate>      lightingTemplates;
+    GameData<ESM::MusicType>             musicTypes;
+    GameData<ESM::ItemMod>               itemMods;
+    GameData<ESM::Reputation>            reputations;
+    GameData<ESM::Recipe>                recipes;
+    GameData<ESM::RecipeCategory>        recipeCategories;
+    GameData<ESM::CasinoChip>            casinoChips;
+    GameData<ESM::FormIDList>            formIDlists;
+    GameData<ESM::Perk>                  perks;
     // GameData<ESM::LoadScreenType>
     // GameData<ESM::MediaSet>
     // GameData<ESM::MediaLocationController>

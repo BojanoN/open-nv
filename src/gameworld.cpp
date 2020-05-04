@@ -144,11 +144,9 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::EXPL, &explosions));
     dataStores.insert(std::make_pair(ESM::ESMType::WATR, &waters));
     dataStores.insert(std::make_pair(ESM::ESMType::DEBR, &debris));
-    dataStores.insert(std::make_pair(ESM::ESMType::IMGS, &imageSpaces));    
-    dataStores.insert(std::make_pair(ESM::ESMType::IMAD, &imageSpaceAdapters));    
-    dataStores.insert(std::make_pair(ESM::ESMType::BPTD, &bodyParts));    
-    dataStores.insert(std::make_pair(ESM::ESMType::ADDN, &addonNodes));        
-    dataStores.insert(std::make_pair(ESM::ESMType::AVIF, &actorValueInformations));       
+    dataStores.insert(std::make_pair(ESM::ESMType::BPTD, &bodyParts));
+    dataStores.insert(std::make_pair(ESM::ESMType::ADDN, &addonNodes));
+    dataStores.insert(std::make_pair(ESM::ESMType::AVIF, &actorValueInformations));
     dataStores.insert(std::make_pair(ESM::ESMType::RADS, &radiationStages));
     dataStores.insert(std::make_pair(ESM::ESMType::CAMS, &cameraShots));
     dataStores.insert(std::make_pair(ESM::ESMType::CPTH, &cameraPaths));
@@ -167,8 +165,8 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::RCPE, &recipes));
     dataStores.insert(std::make_pair(ESM::ESMType::RCCT, &recipeCategories));
     dataStores.insert(std::make_pair(ESM::ESMType::CHIP, &casinoChips));
-
-
+    dataStores.insert(std::make_pair(ESM::ESMType::FLST, &formIDlists));
+    dataStores.insert(std::make_pair(ESM::ESMType::PERK, &perks));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)
