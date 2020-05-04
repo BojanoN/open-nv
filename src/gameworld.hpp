@@ -110,7 +110,7 @@ class GameWorld {
     GameData<ESM::LoadingScreenType>       loadingScreenTypes;
     GameData<ESM::MediaSet>                mediaSets;
     GameData<ESM::MediaLocationController> mediaLocationControllers;
-    // GameData<ESM::Challenge>
+    GameData<ESM::Challenge>               challenges;
     // GameData<ESM::AmmoEffect>
     // GameData<ESM::CaravanCard>
     // GameData<ESM::CaravanMoney>

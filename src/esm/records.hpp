@@ -15,6 +15,7 @@
 #include "bptd.hpp"
 #include "cams.hpp"
 #include "cell.hpp"
+#include "chal.hpp"
 #include "chip.hpp"
 #include "clas.hpp"
 #include "clmt.hpp"
