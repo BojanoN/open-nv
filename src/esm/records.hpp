@@ -52,6 +52,7 @@
 #include "lgtm.hpp"
 #include "ligh.hpp"
 #include "lscr.hpp"
+#include "lsct.hpp"
 #include "ltex.hpp"
 #include "lvlc.hpp"
 #include "lvli.hpp"
