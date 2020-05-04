@@ -475,6 +475,13 @@ enum ESMType : uint32_t {
     BPND = 0x444e5042,
     RAGA = 0x41474152,
 
+    RAPS = 0x53504152,
+    RAFB = 0x42464152,
+    RAFD = 0x44464152,
+
+    RCOD = 0x444f4352,
+    RCQY = 0x59514352,
+
 
     IAD_BASE = 0x44414900
 };

@@ -3,9 +3,8 @@
 #include "structs.hpp"
 
 namespace ESM {
-class ESMReader;
 
-struct Item : public Record {
+struct ItemMod : public Record {
     std::string     editorId;
     ObjectBounds    objectBounds;
     std::string     name;
@@ -13,12 +12,13 @@ struct Item : public Record {
     std::string     largeIconFilename;
     std::string     smallIconFilename;
     formid          script;
+    std::string     description;
     DestructionData destructionData;
     formid          pickUpSound;
     formid          dropSound;
     formid          loopingSound;
     ItemQuality     data;
 
-    Item(ESMReader& reader);
+    ItemMod(ESMReader& reader);
 };
 }

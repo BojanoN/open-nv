@@ -86,26 +86,26 @@ class GameWorld {
     // GameData<ESM::FormIdList>
     // GameData<ESM::Perk>
     GameData<ESM::BodyPartData> bodyParts;
-    // GameData<ESM::AddonNode>
-    // GameData<ESM::ActorValueInformation>
-    // GameData<ESM::RadiationStage>
-    // GameData<ESM::CameraShot>
-    // GameData<ESM::CameraPath>
-    // GameData<ESM::VoiceType>
-    // GameData<ESM::Impact>
-    // GameData<ESM::ImpactDataset>
-    // GameData<ESM::ArmorAddon>
-    // GameData<ESM::EncounterZone>
-    // GameData<ESM::Message>
-    // GameData<ESM::Ragdoll>
-    // GameData<ESM::DefaultObjectManager>
-    // GameData<ESM::LightingTemplate>
-    // GameData<ESM::MusicType>
-    // GameData<ESM::ItemMod>
-    // GameData<ESM::Reputation>
-    // GameData<ESM::Recipe>
-    // GameData<ESM::RecipeCategory>
-    // GameData<ESM::CasinoChip>
+    GameData<ESM::AddonNode> addonNodes;
+    GameData<ESM::ActorValueInformation> actorValueInformations;
+    GameData<ESM::RadiationStage> radiationStages;
+    GameData<ESM::CameraShot> cameraShots;
+    GameData<ESM::CameraPath> cameraPaths;
+    GameData<ESM::VoiceType>  voiceTypes;
+    GameData<ESM::Impact>    impacts;
+    GameData<ESM::ImpactDataset> impactDatasets;
+    GameData<ESM::ArmorAddon> armorAddons;
+    GameData<ESM::EncounterZone> encounterZones;
+    GameData<ESM::Message> messages;
+    GameData<ESM::Ragdoll> ragdolls;
+    GameData<ESM::DefaultObjectManager> defaultObjectManagers;
+    GameData<ESM::LightingTemplate> lightingTemplates;
+    GameData<ESM::MusicType> musicTypes;
+    GameData<ESM::ItemMod> itemMods;
+    GameData<ESM::Reputation> reputations;
+    GameData<ESM::Recipe> recipes;
+    GameData<ESM::RecipeCategory> recipeCategories;
+    GameData<ESM::CasinoChip> casinoChips;
     // GameData<ESM::LoadScreenType>
     // GameData<ESM::MediaSet>
     // GameData<ESM::MediaLocationController>

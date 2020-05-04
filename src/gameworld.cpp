@@ -147,6 +147,27 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::IMGS, &imageSpaces));    
     dataStores.insert(std::make_pair(ESM::ESMType::IMAD, &imageSpaceAdapters));    
     dataStores.insert(std::make_pair(ESM::ESMType::BPTD, &bodyParts));    
+    dataStores.insert(std::make_pair(ESM::ESMType::ADDN, &addonNodes));        
+    dataStores.insert(std::make_pair(ESM::ESMType::AVIF, &actorValueInformations));       
+    dataStores.insert(std::make_pair(ESM::ESMType::RADS, &radiationStages));
+    dataStores.insert(std::make_pair(ESM::ESMType::CAMS, &cameraShots));
+    dataStores.insert(std::make_pair(ESM::ESMType::CPTH, &cameraPaths));
+    dataStores.insert(std::make_pair(ESM::ESMType::VTYP, &voiceTypes));
+    dataStores.insert(std::make_pair(ESM::ESMType::IPCT, &impacts));
+    dataStores.insert(std::make_pair(ESM::ESMType::IPDS, &impactDatasets));
+    dataStores.insert(std::make_pair(ESM::ESMType::ARMA, &armorAddons));
+    dataStores.insert(std::make_pair(ESM::ESMType::ECZN, &encounterZones));
+    dataStores.insert(std::make_pair(ESM::ESMType::MESG, &messages));
+    dataStores.insert(std::make_pair(ESM::ESMType::RGDL, &ragdolls));
+    dataStores.insert(std::make_pair(ESM::ESMType::DOBJ, &defaultObjectManagers));
+    dataStores.insert(std::make_pair(ESM::ESMType::LGTM, &lightingTemplates));
+    dataStores.insert(std::make_pair(ESM::ESMType::MUSC, &musicTypes));
+    dataStores.insert(std::make_pair(ESM::ESMType::IMOD, &itemMods));
+    dataStores.insert(std::make_pair(ESM::ESMType::REPU, &reputations));
+    dataStores.insert(std::make_pair(ESM::ESMType::RCPE, &recipes));
+    dataStores.insert(std::make_pair(ESM::ESMType::RCCT, &recipeCategories));
+    dataStores.insert(std::make_pair(ESM::ESMType::CHIP, &casinoChips));
+
 
 }
 

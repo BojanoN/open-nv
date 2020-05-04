@@ -32,12 +32,7 @@ Armor::Armor(ESMReader& reader) : Record(reader)
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::BMDT);
     reader.readSubrecord(bipedData);
-    std::unordered_set<ESMType> nextMaleBiped{ESMType::MOD2, ESMType::ICON, ESMType::MICO, ESMType::MOD3, ESMType::ICO2, ESMType::MIC2, ESMType::BMCT, ESMType::REPL, ESMType::BIPL, ESMType::ETYP};
-    std::unordered_set<ESMType> nextMaleWorld{ESMType::ICON, ESMType::MICO, ESMType::MOD3, ESMType::ICO2, ESMType::MIC2, ESMType::BMCT, ESMType::REPL, ESMType::BIPL, ESMType::ETYP};
-
-    std::unordered_set<ESMType> nextFemaleBiped{ESMType::MOD4, ESMType::ICO2, ESMType::MIC2, ESMType::BMCT, ESMType::REPL, ESMType::BIPL, ESMType::ETYP};
-    std::unordered_set<ESMType> nextFemaleWorld{ESMType::ICO2, ESMType::MIC2, ESMType::BMCT, ESMType::REPL, ESMType::BIPL, ESMType::ETYP};
-
+    
     while(reader.peekNextType() != ESMType::ETYP) {
     	reader.readNextSubrecordHeader();
     	switch(reader.subrecordType()) {
