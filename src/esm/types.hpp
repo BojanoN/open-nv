@@ -493,7 +493,7 @@ enum ESMType : uint32_t {
     JNAM     = 0x4d414e4a,
     KNAM     = 0x4d414e4b,
     INTV     = 0x56544e49,
-
+    CARD     = 0x44524143,
 };
 
 };

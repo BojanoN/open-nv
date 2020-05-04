@@ -113,8 +113,8 @@ class GameWorld {
     GameData<ESM::Challenge>               challenges;
     GameData<ESM::AmmoEffect>              ammoEffects;
     GameData<ESM::CaravanCard>             caravanCards;
-    // GameData<ESM::CaravanMoney>
-    // GameData<ESM::CaravanDeck>
+    GameData<ESM::CaravanMoney>            caravanMoney;
+    GameData<ESM::CaravanDeck>             caravanDecks;
     // GameData<ESM::DehydrationStage>
     // GameData<ESM::HungerStage>
     // GameData<ESM::SleepDeprivationStage>
