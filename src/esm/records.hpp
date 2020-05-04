@@ -29,6 +29,7 @@
 #include "csno.hpp"
 #include "csty.hpp"
 #include "debr.hpp"
+#include "dehy.hpp"
 #include "dial.hpp"
 #include "dobj.hpp"
 #include "door.hpp"

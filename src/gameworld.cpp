@@ -178,6 +178,7 @@ void GameWorld::initDataStoreMap()
     dataStores.insert(std::make_pair(ESM::ESMType::CCRD, &caravanCards));
     dataStores.insert(std::make_pair(ESM::ESMType::CMNY, &caravanMoney));
     dataStores.insert(std::make_pair(ESM::ESMType::CDCK, &caravanDecks));
+    dataStores.insert(std::make_pair(ESM::ESMType::DEHY, &dehydrationStages));
 }
 
 GameDataBase* GameWorld::getDataStore(uint32_t type)
