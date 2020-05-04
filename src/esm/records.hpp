@@ -20,6 +20,7 @@
 #include "cont.hpp"
 #include "cpth.hpp"
 #include "crea.hpp"
+#include "csno.hpp"
 #include "csty.hpp"
 #include "debr.hpp"
 #include "dial.hpp"

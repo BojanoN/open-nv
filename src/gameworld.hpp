@@ -106,6 +106,8 @@ class GameWorld {
     GameData<ESM::CasinoChip>            casinoChips;
     GameData<ESM::FormIDList>            formIDlists;
     GameData<ESM::Perk>                  perks;
+    GameData<ESM::Casino>                casinos;
+
     // GameData<ESM::LoadScreenType>
     // GameData<ESM::MediaSet>
     // GameData<ESM::MediaLocationController>
