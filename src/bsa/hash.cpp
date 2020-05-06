@@ -1,6 +1,11 @@
+#include <algorithm>
 #include <cstdint>
+#include <string.h>
+#include <string>
 
-uint32_t GenOBHashStr(std::string s)
+namespace BSA {
+
+uint32_t FNVHashStr(std::string s)
 {
     uint32_t hash = 0;
 
@@ -12,7 +17,7 @@ uint32_t GenOBHashStr(std::string s)
     return hash;
 }
 
-uint64_t GenOBHashPair(std::string fle, std::string ext)
+uint64_t FNVHashPair(std::string fle, std::string ext)
 {
     uint64_t hash = 0;
 
@@ -20,12 +25,12 @@ uint64_t GenOBHashPair(std::string fle, std::string ext)
         hash = (uint64_t)((((uint8_t)fle[fle.length() - 1]) * 0x1) + ((fle.length() > 2 ? (uint8_t)fle[fle.length() - 2] : (uint8_t)0) * 0x100) + (fle.length() * 0x10000) + (((uint8_t)fle[0]) * 0x1000000));
 
         if (fle.length() > 3) {
-            hash += (uint64_t)(GenOBHashStr(fle.substr(1, fle.length() - 3)) * 0x100000000);
+            hash += (uint64_t)(FNVHashStr(fle.substr(1, fle.length() - 3)) * 0x100000000);
         }
     }
 
     if (ext.length() > 0) {
-        hash += (uint64_t)(GenOBHashStr(ext) * 0x100000000LL);
+        hash += (uint64_t)(FNVHashStr(ext) * 0x100000000LL);
 
         uint8_t i = 0;
         if (ext == ".nif")
@@ -50,7 +55,7 @@ uint64_t GenOBHashPair(std::string fle, std::string ext)
     return hash;
 }
 
-uint64_t GenOBHash(std::string path, std::string file)
+uint64_t FNVHash(std::string path, std::string file)
 {
     std::transform(file.begin(), file.end(), file.begin(), ::tolower);
     std::replace(file.begin(), file.end(), '/', '\\');
@@ -69,7 +74,9 @@ uint64_t GenOBHash(std::string path, std::string file)
     }
 
     if (path.length() && fle.length())
-        return GenOBHashPair(path + "\\" + fle, ext);
+        return FNVHashPair(path + "\\" + fle, ext);
     else
-        return GenOBHashPair(path + fle, ext);
+        return FNVHashPair(path + fle, ext);
+    return 0;
+}
 }

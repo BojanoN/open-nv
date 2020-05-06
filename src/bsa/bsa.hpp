@@ -1,5 +1,8 @@
 #include "util/enumflags.hpp"
 #include <cstdint>
+#include <fstream>
+#include <queue>
+#include <unordered_map>
 #include <vector>
 
 #define BSAId 0x00415342
@@ -32,7 +35,7 @@ enum class FileFlags : uint32_t {
 };
 
 struct Header {
-    uint8_t      fileId[4]; // Always BSA0
+    uint32_t     fileId; // Always BSA0
     uint32_t     version; // 0x68 for FNV
     uint32_t     folderRecordsOffset;
     ArchiveFlags archiveFlags;
@@ -69,6 +72,28 @@ struct CompressedFileBlock {
 struct UncompressedFileBlock {
     std::string          name;
     std::vector<uint8_t> data;
+};
+
+struct BSACache {
+    std::unordered_map<uint64_t, uint32_t>             cacheEntries;
+    std::priority_queue<std::pair<uint64_t, uint32_t>> lfuCache;
+};
+
+class BSA {
+public:
+    BSA(std::string path);
+    std::vector<uint8_t>* getFile(std::string path);
+
+private:
+    std::ifstream file;
+    Header        header;
+    BSACache      cache;
+    // hash, offset
+    std::vector<FolderRecord> folders;
+
+    bool compressedByDefault;
+    bool filenamesEmbedded;
+    bool folderNamesIncluded;
 };
 
 };

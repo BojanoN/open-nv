@@ -1,41 +1,23 @@
 PROJECT=openNV
 
-DIRS := ./src/esm ./src ./src/logc ./src/util
-SOURCEDIR = ./src
-BUILDDIR = ./build
-LIBDIR = ./lib
+SOURCEDIR = $(CURDIR)/src
+BUILDDIR = $(CURDIR)/build
+LIBDIR = $(CURDIR)/lib
 INCLUDEDIRS = $(SOURCEDIR) $(LIBDIR)/include
 
-FILES := $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
-BUILDFILES := $(subst $(SOURCEDIR)/,$(BUILDDIR)/,$(FILES)) 
-OBJS := $(BUILDFILES:.cpp=.o)
+export
 
+LDFLAGS= -L$(LIBDIR) -lz 
 
-CC=clang++
-INCLUDEFLAGS = $(foreach d, $(INCLUDEDIRS), -I$d)
-CFLAGS := --std=c++17 --stdlib=libc++ -DLOG_USE_COLOR $(INCLUDEFLAGS) -Wall -MD
+all:
+	$(MAKE) -C $(SOURCEDIR) all
 
-LDFLAGS= -L$(LIBDIR) -lz -lc++ -lc++abi
+bsatest:
+	$(MAKE) -C $(SOURCEDIR) bsatest
 
-all: CFLAGS += -O2 -DNDEBUG
-all: $(BUILDDIR)/$(PROJECT)
-
-debug: CFLAGS += -DDEBUG -g
-debug: $(BUILDDIR)/$(PROJECT)
 
 leak-check: debug
 	valgrind --leak-check=full --show-leak-kinds=all $(BUILDDIR)/$(PROJECT)
-
-$(BUILDDIR)/$(PROJECT): $(OBJS)
-	$(CC) $^ -o $@ $(LDFLAGS)
-
-$(BUILDDIR)/%.o: $(SOURCEDIR)/%.cpp
-	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(BUILDDIR)/%.o: $(TESTS)/%.cpp
-	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $< -o $@
 
 libs:
 	make -C $(LIBDIR) all
