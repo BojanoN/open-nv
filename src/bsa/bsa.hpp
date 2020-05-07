@@ -62,20 +62,29 @@ struct FilenameBlock {
     std::vector<std::string> filenames;
 };
 
-struct CompressedFileBlock {
-    std::string          name;
-    uint32_t             uncompressedSize;
-    std::vector<uint8_t> data;
-};
-
 struct UncompressedFileBlock {
     std::string          name;
     std::vector<uint8_t> data;
 };
 
-struct BSACache {
-    std::unordered_map<uint64_t, uint32_t>             cacheEntries;
-    std::priority_queue<std::pair<uint64_t, uint32_t>> lfuCache;
+class BSACache {
+
+public:
+    bool     insert(uint64_t key, uint32_t value) const;
+    bool     exists(uint64_t key) const;
+    uint32_t get(uint64_t key) const;
+
+    BSACache(uint32_t size)
+        : cacheEntries(size)
+        , lfuCache()
+        , maxSize(size) {};
+
+private:
+    // id, offset
+    std::unordered_map<uint64_t, uint32_t> cacheEntries;
+    // pair<hits, id>
+    std::priority_queue<std::pair<uint32_t, uint64_t>> lfuCache;
+    uint32_t                                           maxSize;
 };
 
 class BSA {
@@ -84,9 +93,9 @@ public:
     std::vector<uint8_t>* getFile(std::string path);
 
 private:
-    std::ifstream file;
-    Header        header;
-    BSACache      cache;
+    std::ifstream   file;
+    Header          header;
+    const BSACache* cache;
     // hash, offset
     std::vector<FolderRecord> folders;
 

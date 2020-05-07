@@ -17,8 +17,9 @@ int main(void)
         return 1;
     }
 
-    bsa->getFile("meshes\\architecture\\mccarran\\mcmarranwallsdes\\walllong.nif");
+    std::vector<uint8_t>* ret = bsa->getFile("meshes\\architecture\\mccarran\\mcmarranwallsdes\\walllong.nif");
 
+    delete ret;
     delete bsa;
     return 0;
 }
