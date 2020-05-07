@@ -53,10 +53,9 @@ struct FolderRecord {
 };
 
 struct FileRecord {
-    std::string name; // Only present if EmbedFileNames is set
-    uint64_t    nameHash;
-    uint32_t    size; // 0x40000000 controls compression
-    uint32_t    offsetToFile;
+    uint64_t nameHash;
+    uint32_t size; // 0x40000000 controls compression
+    uint32_t offsetToFile;
 };
 
 struct FilenameBlock {

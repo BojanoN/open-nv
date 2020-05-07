@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstdint>
+#include <iostream>
 #include <string.h>
 #include <string>
 
@@ -72,7 +73,7 @@ uint64_t FNVHash(std::string path, std::string file)
         ext = "";
         fle = file;
     }
-
+    std::cout << fle << " " << ext << "\n";
     if (path.length() && fle.length())
         return FNVHashPair(path + "\\" + fle, ext);
     else

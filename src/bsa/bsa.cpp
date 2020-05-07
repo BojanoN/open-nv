@@ -37,22 +37,33 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
     std::string folderName    = path.substr(0, lastBackslash);
     std::string fileName      = path.substr(lastBackslash + 1);
 
+    FolderRecord* folder;
+    FileRecord    file;
+
     uint64_t folderHval = FNVHashPair(folderName, "");
-    uint32_t i          = -1;
+    uint64_t fileHval   = FNVHash("", fileName);
 
-    log_debug("%s", folderName.c_str());
-    log_debug("%lld", folderHval);
+    log_debug("%s", fileName.c_str());
+    log_debug("%llx", fileHval);
 
-    for (i = 0; i < this->folders.size(); i++) {
+    bool folderFound = false;
+    bool fileFound   = false;
+
+    for (uint32_t i = 0; i < this->folders.size(); i++) {
         if (this->folders[i].nameHash == folderHval) {
-            break;
+            folder      = &this->folders[i];
+            folderFound = true;
         }
     }
 
-    log_debug("Folder found at %d", i);
-    log_debug("%lld", this->folders[0].nameHash);
+    if (!folderFound) {
+        log_warn("File %s not found", path.c_str());
+        return nullptr;
+    }
 
-    uint32_t offset = this->folders[i].offset - this->header.totalFileNameLength;
+    log_debug("Folder found!");
+
+    uint32_t offset = folder->offset - this->header.totalFileNameLength;
 
     this->file.seekg(offset, std::ios::beg);
 
@@ -65,7 +76,27 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
         log_debug("Folder name: %s", folder.c_str());
     }
 
-    return nullptr;
+    for (uint32_t i = 0; i < folder->fileCount; i++) {
+        this->file.read(reinterpret_cast<char*>(&file), sizeof(FileRecord));
+        if (file.nameHash == fileHval) {
+            fileFound = true;
+            break;
+        }
+    }
+
+    if (!fileFound) {
+        log_warn("File %s not found", path.c_str());
+        return nullptr;
+    }
+
+    log_debug("File found!");
+
+    std::vector<uint8_t>* ret = new std::vector<uint8_t>(file.size);
+
+    this->file.seekg(file.offsetToFile, std::ios::beg);
+    this->file.read(reinterpret_cast<char*>(ret->data()), file.size);
+
+    return ret;
 };
 
 };

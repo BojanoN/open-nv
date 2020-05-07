@@ -17,7 +17,7 @@ int main(void)
         return 1;
     }
 
-    bsa->getFile("meshes\\creatures\\nvsecuritron\\xd.nif");
+    bsa->getFile("meshes\\architecture\\mccarran\\mcmarranwallsdes\\walllong.nif");
 
     delete bsa;
     return 0;
