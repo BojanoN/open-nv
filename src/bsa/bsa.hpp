@@ -1,3 +1,5 @@
+#pragma once
+
 #include "util/enumflags.hpp"
 #include <cstdint>
 #include <fstream>
