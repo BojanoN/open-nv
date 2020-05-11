@@ -1,7 +1,7 @@
 #include "util/enumflags.hpp"
 #include <cstdint>
 #include <fstream>
-#include <queue>
+#include <map>
 #include <unordered_map>
 #include <vector>
 
@@ -70,34 +70,39 @@ struct UncompressedFileBlock {
 class BSACache {
 
 public:
-    bool     insert(uint64_t key, uint32_t value) const;
-    bool     exists(uint64_t key) const;
-    uint32_t get(uint64_t key) const;
+    bool                        insert(uint64_t key, FileRecord value);
+    bool                        exists(uint64_t key);
+    std::pair<FileRecord, bool> get(uint64_t key);
 
     BSACache(uint32_t size)
         : cacheEntries(size)
-        , lfuCache()
+        , frequency()
+        , lfu()
         , maxSize(size) {};
 
 private:
-    // id, offset
-    std::unordered_map<uint64_t, uint32_t> cacheEntries;
-    // pair<hits, id>
-    std::priority_queue<std::pair<uint32_t, uint64_t>> lfuCache;
-    uint32_t                                           maxSize;
+    std::unordered_map<uint64_t, FileRecord>                                  cacheEntries;
+    std::multimap<uint32_t, uint64_t>                                         frequency;
+    std::unordered_map<uint64_t, std::multimap<uint32_t, uint64_t>::iterator> lfu;
+    uint32_t                                                                  maxSize;
 };
 
 class BSA {
 public:
     BSA(std::string path);
+    ~BSA() { delete cache; };
+
     std::vector<uint8_t>* getFile(std::string path);
 
 private:
-    std::ifstream   file;
-    Header          header;
-    const BSACache* cache;
+    std::ifstream file;
+    Header        header;
+    BSACache*     cache;
     // hash, offset
     std::vector<FolderRecord> folders;
+
+    std::pair<FolderRecord*, bool> findFolder(uint64_t hashval);
+    std::pair<FileRecord, bool>    findFile(FolderRecord* folder, uint64_t hashval);
 
     bool compressedByDefault;
     bool filenamesEmbedded;

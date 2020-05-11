@@ -17,7 +17,10 @@ int main(void)
         return 1;
     }
 
+    // Should succeed
     std::vector<uint8_t>* ret = bsa->getFile("meshes\\architecture\\mccarran\\mcmarranwallsdes\\walllong.nif");
+    // Should fail
+    bsa->getFile("meshes\\architecture\\mccaan\\mcmarranwallsdes\\walllong.nif");
 
     delete ret;
     delete bsa;

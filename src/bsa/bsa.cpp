@@ -4,8 +4,10 @@
 #include "util/compress.hpp"
 #include <algorithm>
 #include <string>
+#include <utility>
 
 #define SIZE_COMPRESSION_MASK 0x40000000
+#define MIN_CACHE_SIZE        50
 
 namespace BSA {
 BSA::BSA(std::string path)
@@ -26,27 +28,128 @@ BSA::BSA(std::string path)
     this->filenamesEmbedded   = this->header.archiveFlags & ArchiveFlags::EmbedFileNames;
     this->folderNamesIncluded = this->header.archiveFlags & ArchiveFlags::IncludeDirectoryNames;
 
+    log_info("File %s:", path.c_str());
     log_info("Read %d folders", this->folders.size());
+    log_info("Compressed by default: %s", this->compressedByDefault ? "true" : "false");
     // TODO: dynamically determine fair cache size
-    this->cache = new BSACache(50);
+    uint32_t dynSize = (this->header.fileCount * 0.1);
+    uint32_t size    = (dynSize < MIN_CACHE_SIZE) ? MIN_CACHE_SIZE : dynSize;
+    log_debug("Cache size: %u", size);
+    this->cache = new BSACache(size);
 };
 
-bool BSACache::insert(uint64_t key, uint32_t value) const
+bool BSACache::insert(uint64_t key, FileRecord value)
 {
-    return false;
+    bool ret = this->cacheEntries.insert(std::make_pair(key, value)).second;
+
+    if (ret) {
+        if (this->cacheEntries.size() >= this->maxSize) {
+            auto it = this->frequency.begin();
+
+            this->cacheEntries.erase(it->first);
+            this->lfu.erase(it->second);
+            this->frequency.erase(it);
+        }
+        log_debug("Caching element %llu", key);
+        this->lfu[key] = this->frequency.emplace(1, key);
+        this->cacheEntries.emplace(key, value);
+        log_debug("Current cache size: %u", this->cacheEntries.size());
+    }
+
+    return ret;
 }
 
-uint32_t BSACache::get(uint64_t key) const
+std::pair<FileRecord, bool> BSACache::get(uint64_t key)
 {
-    return 0;
+    std::pair<FileRecord, bool> ret;
+    auto                        found = this->cacheEntries.find(key);
+
+    if (found != this->cacheEntries.end()) {
+        ret.first  = found->second;
+        ret.second = true;
+
+        auto keyFreq = this->lfu[key];
+        log_debug("Cache value before: %d", keyFreq->first);
+        auto newPair = std::make_pair(keyFreq->first + 1, keyFreq->second);
+        log_debug("Cache value after: %d", newPair.first);
+        this->frequency.erase(keyFreq);
+
+        lfu[key] = this->frequency.emplace(std::move(newPair));
+    } else {
+        ret.second = false;
+    }
+
+    return ret;
 }
 
-bool BSACache::exists(uint64_t key) const
+bool BSACache::exists(uint64_t key)
 {
-    return false;
+    return this->cacheEntries.count(key) != 0;
 }
 
-// TODO: binary searches for files and folders
+std::pair<FolderRecord*, bool> BSA::findFolder(uint64_t hashval)
+{
+    std::pair<FolderRecord*, bool> ret;
+    FolderRecord                   folder;
+
+    ret.first       = nullptr;
+    folder.nameHash = hashval;
+
+    auto first = std::lower_bound(this->folders.begin(), this->folders.end(), folder, [](FolderRecord l, FolderRecord r) { return l.nameHash < r.nameHash; });
+
+    if (first != this->folders.end() && first->nameHash == hashval) {
+        ret.second = true;
+        ret.first  = &(*first);
+    } else {
+        ret.second = false;
+    }
+
+    return ret;
+}
+
+std::pair<FileRecord, bool> BSA::findFile(FolderRecord* folder, uint64_t hashval)
+{
+    std::pair<FileRecord, bool> ret;
+
+    uint32_t folderOffset = folder->offset - this->header.totalFileNameLength;
+
+    this->file.seekg(folderOffset, std::ios::beg);
+
+    if (this->folderNamesIncluded) {
+        uint8_t size;
+        this->file.read(reinterpret_cast<char*>(&size), 1);
+        this->file.seekg(size, std::ios::cur);
+    }
+
+    uint32_t startOffset = this->file.tellg();
+    int32_t  l           = 0;
+    int32_t  r           = folder->fileCount - 1;
+    int32_t  mid         = 0;
+
+    FileRecord tmp;
+
+    while (l <= r) {
+        mid = (l + r) / 2;
+
+        this->file.seekg(startOffset + (sizeof(FileRecord) * mid), std::ios::beg);
+        this->file.read(reinterpret_cast<char*>(&tmp), sizeof(FileRecord));
+
+        if (tmp.nameHash < hashval) {
+            l = mid + 1;
+        } else if (tmp.nameHash > hashval) {
+            r = mid - 1;
+        } else {
+            ret.first  = tmp;
+            ret.second = true;
+            return ret;
+        }
+    }
+
+    ret.second = false;
+
+    return ret;
+};
+
 std::vector<uint8_t>* BSA::getFile(std::string path)
 {
 
@@ -63,52 +166,34 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
 
     uint32_t offsetToFile = 0;
 
-    bool folderFound  = false;
     bool fileFound    = false;
     bool isCompressed = false;
 
-    for (uint32_t i = 0; i < this->folders.size(); i++) {
-        if (this->folders[i].nameHash == folderHval) {
-            folder      = &this->folders[i];
-            folderFound = true;
-        }
-    }
+    std::pair<FolderRecord*, bool> folderEntry = this->findFolder(folderHval);
 
-    if (!folderFound) {
-        log_warn("File %s not found", path.c_str());
+    if (!folderEntry.second) {
+        log_warn("Folder %s not found", folderName.c_str());
         return nullptr;
     }
 
+    folder = folderEntry.first;
     log_debug("Folder found!");
 
-    if (!this->cache->exists(cacheKey)) {
+    std::pair<FileRecord, bool> cacheEntry = this->cache->get(cacheKey);
 
-        uint32_t offset = folder->offset - this->header.totalFileNameLength;
+    if (!cacheEntry.second) {
+        std::pair<FileRecord, bool> fileEntry = this->findFile(folder, fileHval);
 
-        this->file.seekg(offset, std::ios::beg);
+        if (fileEntry.second) {
+            file      = fileEntry.first;
+            fileFound = true;
 
-        if (this->folderNamesIncluded) {
-            std::string folder;
-            uint8_t     size;
-            this->file.read(reinterpret_cast<char*>(&size), 1);
-            folder.resize(size);
-            this->file.read(folder.data(), size);
-            log_debug("Folder name: %s", folder.c_str());
+            this->cache->insert(cacheKey, file);
         }
-
-        for (uint32_t i = 0; i < folder->fileCount; i++) {
-            this->file.read(reinterpret_cast<char*>(&file), sizeof(FileRecord));
-            if (file.nameHash == fileHval) {
-                fileFound = true;
-                break;
-            }
-        }
-
-        offsetToFile = file.offsetToFile;
 
     } else {
-        offsetToFile = this->cache->get(cacheKey);
-        fileFound    = true;
+        file      = cacheEntry.first;
+        fileFound = true;
     }
 
     if (!fileFound) {
@@ -116,7 +201,9 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
         return nullptr;
     }
 
-    log_debug("File found!");
+    offsetToFile = file.offsetToFile;
+
+    log_debug("File found at 0x%x!", offsetToFile);
     this->file.seekg(offsetToFile, std::ios::beg);
 
     std::vector<uint8_t>* ret = nullptr;
@@ -138,9 +225,15 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
         std::vector<uint8_t>* tmpBuf = new std::vector<uint8_t>(file.size);
         ret                          = new std::vector<uint8_t>(decompSize);
 
-        Util::zlibDecompress(*tmpBuf, *ret);
+        try {
+            Util::zlibDecompress(*tmpBuf, *ret);
+            delete tmpBuf;
+        } catch (std::runtime_error& e) {
+            log_fatal("%s", e.what());
+            delete tmpBuf;
+            return ret;
+        }
 
-        delete tmpBuf;
     } else {
         ret = new std::vector<uint8_t>(file.size);
 
