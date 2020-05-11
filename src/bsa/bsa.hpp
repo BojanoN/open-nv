@@ -73,6 +73,7 @@ public:
     bool                        insert(uint64_t key, FileRecord value);
     bool                        exists(uint64_t key);
     std::pair<FileRecord, bool> get(uint64_t key);
+    void                        clear();
 
     BSACache(uint32_t size)
         : cacheEntries(size)
@@ -82,8 +83,8 @@ public:
 
 private:
     std::unordered_map<uint64_t, FileRecord>                                  cacheEntries;
-    std::multimap<uint32_t, uint64_t>                                         frequency;
-    std::unordered_map<uint64_t, std::multimap<uint32_t, uint64_t>::iterator> lfu;
+    std::multimap<uint64_t, uint64_t>                                         frequency;
+    std::unordered_map<uint64_t, std::multimap<uint64_t, uint64_t>::iterator> lfu;
     uint32_t                                                                  maxSize;
 };
 
@@ -93,6 +94,7 @@ public:
     ~BSA() { delete cache; };
 
     std::vector<uint8_t>* getFile(std::string path);
+    bool                  fileExists(std::string path);
 
 private:
     std::ifstream file;

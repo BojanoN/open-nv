@@ -141,6 +141,7 @@ std::pair<FileRecord, bool> BSA::findFile(FolderRecord* folder, uint64_t hashval
         } else {
             ret.first  = tmp;
             ret.second = true;
+            log_debug("File record found at 0x%x!", (int)this->file.tellg() - sizeof(FileRecord));
             return ret;
         }
     }
@@ -149,6 +150,40 @@ std::pair<FileRecord, bool> BSA::findFile(FolderRecord* folder, uint64_t hashval
 
     return ret;
 };
+
+void BSACache::clear()
+{
+    cacheEntries.clear();
+    frequency.clear();
+    lfu.clear();
+}
+
+bool BSA::fileExists(std::string path)
+{
+
+    uint32_t    lastBackslash = path.find_last_of('\\');
+    std::string folderName    = path.substr(0, lastBackslash);
+    std::string fileName      = path.substr(lastBackslash + 1);
+
+    uint64_t folderHval = FNVHash(folderName, "");
+    uint64_t fileHval   = FNVHash("", fileName);
+
+    if (this->cache->exists(folderHval + fileHval)) {
+        return true;
+    }
+
+    std::pair<FolderRecord*, bool> folderEntry = this->findFolder(folderHval);
+
+    if (folderEntry.second) {
+        std::pair<FileRecord, bool> fileEntry = this->findFile(folderEntry.first, fileHval);
+        if (fileEntry.second) {
+            this->cache->insert((folderHval + fileHval), fileEntry.first);
+            return true;
+        }
+    }
+
+    return false;
+}
 
 std::vector<uint8_t>* BSA::getFile(std::string path)
 {
@@ -169,19 +204,19 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
     bool fileFound    = false;
     bool isCompressed = false;
 
-    std::pair<FolderRecord*, bool> folderEntry = this->findFolder(folderHval);
-
-    if (!folderEntry.second) {
-        log_warn("Folder %s not found", folderName.c_str());
-        return nullptr;
-    }
-
-    folder = folderEntry.first;
-    log_debug("Folder found!");
-
     std::pair<FileRecord, bool> cacheEntry = this->cache->get(cacheKey);
 
     if (!cacheEntry.second) {
+        std::pair<FolderRecord*, bool> folderEntry = this->findFolder(folderHval);
+
+        if (!folderEntry.second) {
+            log_warn("Folder %s not found", folderName.c_str());
+            return nullptr;
+        }
+
+        folder = folderEntry.first;
+        log_debug("Folder found!");
+
         std::pair<FileRecord, bool> fileEntry = this->findFile(folder, fileHval);
 
         if (fileEntry.second) {
@@ -208,11 +243,15 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
 
     std::vector<uint8_t>* ret = nullptr;
 
-    isCompressed = this->compressedByDefault ^ (bool)(file.size & SIZE_COMPRESSION_MASK);
+    bool sizeFlag = file.size & SIZE_COMPRESSION_MASK;
+    if (sizeFlag) {
+        file.size ^= SIZE_COMPRESSION_MASK;
+    }
+
+    isCompressed = this->compressedByDefault ^ sizeFlag;
 
     if (isCompressed) {
         log_debug("Decompressing file..");
-        file.size ^= SIZE_COMPRESSION_MASK;
         uint32_t decompSize;
 
         if (this->filenamesEmbedded) {
@@ -222,16 +261,24 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
         }
 
         this->file.read(reinterpret_cast<char*>(&decompSize), sizeof(uint32_t));
-        std::vector<uint8_t>* tmpBuf = new std::vector<uint8_t>(file.size);
-        ret                          = new std::vector<uint8_t>(decompSize);
+
+        // file.size + 4, what the fuck
+        std::vector<uint8_t>* tmpBuf = new std::vector<uint8_t>(file.size + 4);
+        this->file.read(reinterpret_cast<char*>(tmpBuf->data()), file.size + 4);
+
+        ret = new std::vector<uint8_t>(decompSize);
 
         try {
             Util::zlibDecompress(*tmpBuf, *ret);
+
             delete tmpBuf;
         } catch (std::runtime_error& e) {
             log_fatal("%s", e.what());
+
             delete tmpBuf;
-            return ret;
+            delete ret;
+
+            return nullptr;
         }
 
     } else {
