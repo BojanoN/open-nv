@@ -15,6 +15,8 @@ all:
 bsatest:
 	$(MAKE) -C $(SOURCEDIR) bsatest
 
+debug:
+	$(MAKE) -C $(SOURCEDIR) debug
 
 leak-check: debug
 	valgrind --leak-check=full --show-leak-kinds=all $(BUILDDIR)/$(PROJECT)
