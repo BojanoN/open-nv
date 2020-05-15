@@ -1,0 +1,17 @@
+ScriptName MyFirstScript
+
+ref rContainer
+
+Begin OnAdd
+
+    set rContainer to GetContainer
+
+    if rContainer == player
+        ShowMessage MyMessage
+    elseif rContainer == MQDadRef
+        ShowMessage MyDadMessage
+    else
+        rContainer.AddItem Caps001 10
+    endif
+
+End
