@@ -64,7 +64,7 @@ void Tokenizer::parseNumber()
         }
     }
 
-    ADD_TOKEN(isFloat ? TokenType::Float : TokenType::Int, this->substring(this->source, this->startCharOffset, currentCharOffset));
+    ADD_TOKEN(TokenType::Number, this->substring(this->source, this->startCharOffset, currentCharOffset));
 };
 
 void Tokenizer::parseLiteral()
@@ -74,7 +74,6 @@ void Tokenizer::parseLiteral()
     while (this->isAlphaNum(this->peekNext())) {
         advance();
     }
-
     std::string value = this->substring(this->source, this->startCharOffset, this->currentCharOffset + 1);
     this->toLowerCase(value);
 
@@ -162,7 +161,9 @@ void Tokenizer::getTokens()
         case ('"'):
             this->parseStringLiteral();
             break;
-
+        case (','):
+            ADD_EMPTY_TOKEN(TokenType::Comma);
+            break;
         default:
             if (this->isDigit(current)) {
                 this->parseNumber();

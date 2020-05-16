@@ -4,7 +4,7 @@ ref rContainer
 
 Begin OnAdd
 
-    set rContainer to GetContainer
+    set rContainer to 1234.34
 
     if rContainer == player
         ShowMessage MyMessage

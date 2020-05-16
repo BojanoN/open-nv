@@ -56,11 +56,9 @@ namespace Script {
                             \
     X(Identifier)           \
     X(Eof)                  \
-    X(Separator)
+    X(Comma)
 
 #define X(name) name,
-
-#define ENUM_NAME TokenType
 
 enum class TokenType : uint8_t {
     TOKEN_ENUM
@@ -97,6 +95,17 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& out, const Token& t);
+    friend class Parser;
+
+    bool operator==(const Token& other) const
+    {
+        return this->type == other.type;
+    }
+
+    bool operator<(const Token& other) const
+    {
+        return this->type < other.type;
+    }
 
 private:
     uint32_t    line;
@@ -125,19 +134,23 @@ public:
         , sourceSize(script.size())
         , tokenizeError(false) {};
 
+    friend class Parser;
+
+    bool hadError()
+    {
+        return this->tokenizeError;
+    }
+
 private:
     void error(std::string message);
 
     bool end()
     {
-        return currentCharOffset > sourceSize;
+        return currentCharOffset > (sourceSize - 1);
     }
 
     char advance()
     {
-        if (this->end()) {
-            return '\0';
-        }
 
         this->currentCharOffset++;
         this->currentColumn++;
