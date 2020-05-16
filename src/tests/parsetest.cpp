@@ -23,6 +23,8 @@ int main(int argc, char** argv)
     Script::Tokenizer* tok = new Script::Tokenizer(source);
 
     tok->getTokens();
+    tok->printTokens();
+
     if (!tok->hadError()) {
         Script::Parser* parser = new Script::Parser(tok);
 
@@ -30,6 +32,8 @@ int main(int argc, char** argv)
 
         try {
             e = parser->parse();
+            e->print();
+            std::cout << "\n";
             delete e;
         } catch (std::runtime_error& e) {
             log_fatal("%s", e.what());

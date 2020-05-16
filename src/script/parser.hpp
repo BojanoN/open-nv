@@ -1,5 +1,6 @@
 #pragma once
 #include "expr.hpp"
+#include "logc/log.h"
 #include "tokenizer.hpp"
 #include <set>
 
@@ -25,7 +26,8 @@ private:
     {
         std::string errorMsg = "Syntax error: ";
         errorMsg += cause;
-        errorMsg += " at line: " + std::to_string(tok.line);
+        errorMsg += " at line " + std::to_string(tok.line);
+        errorMsg += " at column " + std::to_string(tok.column);
         throw std::runtime_error(errorMsg);
     }
 
@@ -78,6 +80,8 @@ private:
     void check(TokenType type, std::string errorMsg)
     {
         Token& tok = this->peekCurrent();
+        log_debug("check type: %s, current type: %s", TokenEnumToString(type), TokenEnumToString(tok.type));
+
         if (tok.type == type) {
             advance();
             return;

@@ -7,7 +7,7 @@ class Expr {
 public:
     Expr() {};
     virtual ~Expr() {};
-    //   virtual void parseExpr(Tokenizer& tokenizer);
+    virtual void print() = 0;
 };
 
 class BinaryExpr : public Expr {
@@ -25,7 +25,7 @@ public:
         delete right;
     }
 
-    void parseExpr(Tokenizer& tokenizer);
+    void print();
 
 private:
     Token op;
@@ -35,7 +35,7 @@ private:
 
 class AssignExpr : public Expr {
 public:
-    void parseExpr(Tokenizer& tokenizer);
+    void print();
 
 private:
     Token assignee;
@@ -50,7 +50,7 @@ public:
     {
         delete expression;
     }
-    void parseExpr(Tokenizer& tokenizer);
+    void print();
 
 private:
     Expr* expression;
@@ -63,7 +63,7 @@ public:
     {
     }
 
-    void parseExpr(Tokenizer& tokenizer);
+    void print();
 
 private:
     std::string value;

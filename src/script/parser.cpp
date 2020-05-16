@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "logc/log.h"
 
 static std::set<Script::TokenType> equalsMatch     = { Script::TokenType::EqualTo, Script::TokenType::NotEqualTo };
 static std::set<Script::TokenType> comparisonMatch = {
@@ -9,16 +10,22 @@ static std::set<Script::TokenType> comparisonMatch = {
 };
 static std::set<Script::TokenType> additionMatch       = { Script::TokenType::Plus, Script::TokenType::Minus };
 static std::set<Script::TokenType> multiplicationMatch = { Script::TokenType::Asterisk, Script::TokenType::Division };
-static std::set<Script::TokenType> baseTypeMatch       = { Script::TokenType::String, Script::TokenType::Number };
+static std::set<Script::TokenType> baseTypeMatch       = { Script::TokenType::String, Script::TokenType::Identifier, Script::TokenType::Number };
 
 namespace Script {
 Expr* Parser::expression()
 {
+#ifdef DEBUG
+    log_debug("%s", "expression");
+#endif
     return this->equals();
 }
 
 Expr* Parser::equals()
 {
+#ifdef DEBUG
+    log_debug("%s", "equals");
+#endif
     Expr* ret = this->comparison();
 
     while (this->advanceMatches(equalsMatch)) {
@@ -32,6 +39,11 @@ Expr* Parser::equals()
 
 Expr* Parser::comparison()
 {
+
+#ifdef DEBUG
+    log_debug("%s", "comparison");
+#endif
+
     Expr* ret = this->addition();
 
     while (this->advanceMatches(comparisonMatch)) {
@@ -45,9 +57,13 @@ Expr* Parser::comparison()
 
 Expr* Parser::addition()
 {
+#ifdef DEBUG
+    log_debug("%s", "addition");
+#endif
+
     Expr* ret = this->multiplication();
 
-    while (this->advanceMatches(comparisonMatch)) {
+    while (this->advanceMatches(additionMatch)) {
         Token& op            = this->previous();
         Expr*  rightHandExpr = this->multiplication();
         ret                  = new BinaryExpr(op, ret, rightHandExpr);
@@ -58,6 +74,10 @@ Expr* Parser::addition()
 
 Expr* Parser::multiplication()
 {
+#ifdef DEBUG
+    log_debug("%s", "multiplication");
+#endif
+
     Expr* ret = this->baseType();
 
     while (this->advanceMatches(multiplicationMatch)) {
@@ -71,6 +91,10 @@ Expr* Parser::multiplication()
 
 Expr* Parser::baseType()
 {
+#ifdef DEBUG
+    log_debug("%s", "baseType");
+#endif
+
     if (advanceMatches(baseTypeMatch)) {
         return new LiteralExpr(this->previous().literal);
     }
@@ -87,7 +111,7 @@ Expr* Parser::baseType()
         }
     }
 
-    error("Expected expression", this->peekCurrent());
+    error("Expected expression", this->peekNext());
     // Silence end-of-control warning
     return nullptr;
 }

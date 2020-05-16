@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logc/log.h"
 #include <cctype>
 #include <cstdint>
 #include <cstring>
@@ -80,17 +81,19 @@ constexpr const char* TokenEnumToString(TokenType e) noexcept
 
 class Token {
 public:
-    Token(uint32_t lineNum, std::string lit, std::string lex, TokenType tType)
+    Token(uint32_t lineNum, std::string lit, std::string lex, TokenType tType, uint32_t col)
         : line(lineNum)
         , lexeme(lex)
         , literal(lit)
-        , type(tType) {};
+        , type(tType)
+        , column(col) {};
 
-    Token(uint32_t lineNum, TokenType tType)
+    Token(uint32_t lineNum, TokenType tType, uint32_t col)
         : line(lineNum)
         , literal("")
         , lexeme("")
         , type(tType)
+        , column(col)
     {
     }
 
@@ -107,11 +110,13 @@ public:
         return this->type < other.type;
     }
 
+    TokenType type;
+
 private:
     uint32_t    line;
+    uint32_t    column;
     std::string literal;
     std::string lexeme;
-    TokenType   type;
 };
 
 class Tokenizer {
@@ -132,7 +137,10 @@ public:
         , currentCharOffset(0)
         , startCharOffset(0)
         , sourceSize(script.size())
-        , tokenizeError(false) {};
+        , tokenizeError(false)
+    {
+        log_debug("%s", source.c_str());
+    };
 
     friend class Parser;
 

@@ -1,9 +1,9 @@
 #include "tokenizer.hpp"
 #include "logc/log.h"
 
-#define ADD_EMPTY_TOKEN(type) this->tokens.emplace_back(Token((this->currentLine), (type)))
+#define ADD_EMPTY_TOKEN(type) this->tokens.emplace_back(Token((this->currentLine), (type), (this->currentColumn)))
 
-#define ADD_TOKEN(type, value) this->tokens.emplace_back(Token((this->currentLine), (value), "", (type)))
+#define ADD_TOKEN(type, value) this->tokens.emplace_back(Token((this->currentLine), (value), "", (type), (this->currentColumn)))
 
 #define UNK_CHAR_ERROR()                                 \
     errorMessage = "Unknown character in offset ";       \
@@ -14,10 +14,7 @@ namespace Script {
 
 std::ostream& operator<<(std::ostream& os, const Token& t)
 {
-    os << "Line: " << t.line << "\n"
-       << "Value: " << t.literal << "\n"
-       //       << "Lexeme: " << t.lexeme << "\n"
-       << "Type: " << TokenEnumToString(t.type) << "\n";
+    os << TokenEnumToString(t.type) << ", " << t.literal;
 
     return os;
 }
@@ -30,18 +27,17 @@ void Tokenizer::error(std::string message)
 
 void Tokenizer::parseStringLiteral()
 {
-    char c;
     this->startCharOffset = currentCharOffset;
 
-    while ((c = this->peekCurrent()) != '"' && !this->end()) {
-        if (c == '\n') {
+    while (this->peekNext() != '"' && !this->end()) {
+        if (this->peekCurrent() == '\n') {
             this->error("Unterminated string");
             return;
         }
         advance();
     }
 
-    ADD_TOKEN(TokenType::String, this->substring(this->source, this->startCharOffset + 1, currentCharOffset));
+    ADD_TOKEN(TokenType::String, this->substring(this->source, this->startCharOffset + 1, currentCharOffset + 1));
     advance();
 }
 
@@ -51,7 +47,7 @@ void Tokenizer::parseNumber()
 
     this->startCharOffset = this->currentCharOffset;
 
-    while (this->isDigit(this->peekCurrent())) {
+    while (this->isDigit(this->peekNext())) {
         this->advance();
     }
 
@@ -59,12 +55,12 @@ void Tokenizer::parseNumber()
         isFloat = true;
         this->advance();
 
-        while (this->isDigit(this->peekCurrent())) {
+        while (this->isDigit(this->peekNext())) {
             this->advance();
         }
     }
 
-    ADD_TOKEN(TokenType::Number, this->substring(this->source, this->startCharOffset, currentCharOffset));
+    ADD_TOKEN(TokenType::Number, this->substring(this->source, this->startCharOffset, currentCharOffset + 1));
 };
 
 void Tokenizer::parseLiteral()
