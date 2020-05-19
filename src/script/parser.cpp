@@ -10,7 +10,7 @@ static std::set<Script::TokenType> comparisonMatch = {
 };
 static std::set<Script::TokenType> additionMatch       = { Script::TokenType::Plus, Script::TokenType::Minus };
 static std::set<Script::TokenType> multiplicationMatch = { Script::TokenType::Asterisk, Script::TokenType::Division };
-static std::set<Script::TokenType> baseTypeMatch       = { Script::TokenType::String, Script::TokenType::Identifier, Script::TokenType::Number };
+static std::set<Script::TokenType> baseTypeMatch       = { Script::TokenType::Float, Script::TokenType::Identifier, Script::TokenType::Integer };
 
 namespace Script {
 Expr* Parser::expression()
@@ -96,7 +96,8 @@ Expr* Parser::baseType()
 #endif
 
     if (advanceMatches(baseTypeMatch)) {
-        return new LiteralExpr(this->previous().literal);
+        Token& tmp = previous();
+        return new LiteralExpr(tmp.literal, tmp.type);
     }
 
     if (advanceMatches(TokenType::LeftParenthesis)) {

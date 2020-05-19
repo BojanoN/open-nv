@@ -16,8 +16,87 @@ void GroupingExpr::print()
     this->expression->print();
 }
 
-void LiteralExpr::print()
+ExprValue GroupingExpr::eval()
 {
-    std::cout << this->value;
+    return this->expression->eval();
 }
+
+ExprValue BinaryExpr::eval()
+{
+    ExprValue ret;
+
+    ExprValue lval = this->left->eval();
+    ExprValue rval = this->right->eval();
+
+    if (lval.type == TokenType::Identifier || rval.type == TokenType::Identifier) {
+        throw std::runtime_error("Cant evaluate identifiers!");
+    }
+
+    float fRes = 0;
+
+    switch (this->op.type) {
+    case (TokenType::Plus):
+        fRes = lval.f + rval.f;
+        break;
+    case (TokenType::Minus):
+        fRes = lval.f - rval.f;
+        break;
+    case (TokenType::Asterisk):
+        fRes = lval.f * rval.f;
+        break;
+    case (TokenType::Division):
+        fRes = lval.f / rval.f;
+        break;
+    case (TokenType::GreaterThan):
+        fRes = lval.f > rval.f;
+        break;
+    case (TokenType::GreaterThanOrEqualTo):
+        fRes = lval.f >= rval.f;
+        break;
+    case (TokenType::LessThan):
+        fRes = lval.f < rval.f;
+        break;
+    case (TokenType::LessThanOrEqualTo):
+        fRes = lval.f <= rval.f;
+        break;
+    case (TokenType::EqualTo):
+        fRes = (int)lval.f == (int)rval.f;
+        break;
+    case (TokenType::NotEqualTo):
+        fRes = (int)lval.f != (int)rval.f;
+        break;
+    default:
+        throw std::runtime_error("Whoops");
+    }
+
+    ret.f    = fRes;
+    ret.type = TokenType::Float;
+    ret.s    = std::to_string(fRes);
+
+    return ret;
+}
+
+ExprValue LiteralExpr::eval()
+{
+    ExprValue ret(this->type);
+    ret.s = this->value;
+
+    switch (this->type) {
+    case (TokenType::Integer):
+        // Forcing everything to float for now
+        //  ret.i = std::stoi(this->value);
+        ret.f = std::stoi(this->value);
+        break;
+    case (TokenType::Float):
+        ret.f = std::stof(this->value);
+        break;
+    case (TokenType::Identifier):
+        break;
+    default:
+        throw std::runtime_error("Whoops");
+    }
+
+    return ret;
+}
+
 }

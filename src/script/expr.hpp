@@ -1,13 +1,46 @@
 #pragma once
 #include "tokenizer.hpp"
+#include <iostream>
 
 namespace Script {
+
+struct ExprValue {
+
+public:
+    ExprValue(TokenType t)
+        : i(0)
+        , f(0.)
+        , s("")
+        , type(t)
+    {
+    }
+
+    ExprValue()
+        : i(0)
+        , f(0.)
+        , s("")
+        , type(TokenType::Identifier)
+    {
+    }
+
+    int32_t     i;
+    float       f;
+    bool        b;
+    std::string s;
+    TokenType   type;
+
+    void print()
+    {
+        std::cout << s;
+    }
+};
 
 class Expr {
 public:
     Expr() {};
     virtual ~Expr() {};
-    virtual void print() = 0;
+    virtual void      print() = 0;
+    virtual ExprValue eval()  = 0;
 };
 
 class BinaryExpr : public Expr {
@@ -25,7 +58,8 @@ public:
         delete right;
     }
 
-    void print();
+    void      print();
+    ExprValue eval();
 
 private:
     Token op;
@@ -50,7 +84,8 @@ public:
     {
         delete expression;
     }
-    void print();
+    void      print();
+    ExprValue eval();
 
 private:
     Expr* expression;
@@ -58,15 +93,21 @@ private:
 
 class LiteralExpr : public Expr {
 public:
-    LiteralExpr(std::string& val)
+    LiteralExpr(std::string val, TokenType t)
         : value(val)
+        , type(t)
     {
     }
 
-    void print();
+    void print()
+    {
+        std::cout << value;
+    }
+    ExprValue eval();
 
 private:
     std::string value;
+    TokenType   type;
 };
 
 }

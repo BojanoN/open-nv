@@ -34,6 +34,10 @@ int main(int argc, char** argv)
             e = parser->parse();
             e->print();
             std::cout << "\n";
+
+            Script::ExprValue tmp = e->eval();
+            std::cout << tmp.s << "\n";
+
             delete e;
         } catch (std::runtime_error& e) {
             log_fatal("%s", e.what());

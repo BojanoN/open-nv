@@ -15,7 +15,7 @@ namespace Script {
     X(Number)               \
     X(Long)                 \
     X(Short)                \
-    X(Int)                  \
+    X(Integer)              \
     X(Reference)            \
     X(Float)                \
     X(String)               \

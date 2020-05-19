@@ -51,7 +51,7 @@ void Tokenizer::parseNumber()
         this->advance();
     }
 
-    if (this->peekCurrent() == '.' && this->isDigit(this->peekNext())) {
+    if (this->peekNext() == '.') {
         isFloat = true;
         this->advance();
 
@@ -60,7 +60,7 @@ void Tokenizer::parseNumber()
         }
     }
 
-    ADD_TOKEN(TokenType::Number, this->substring(this->source, this->startCharOffset, currentCharOffset + 1));
+    ADD_TOKEN(isFloat ? TokenType::Float : TokenType::Integer, this->substring(this->source, this->startCharOffset, currentCharOffset + 1));
 };
 
 void Tokenizer::parseLiteral()
@@ -154,9 +154,9 @@ void Tokenizer::getTokens()
         case ('\r'):
         case ('\t'):
             break;
-        case ('"'):
-            this->parseStringLiteral();
-            break;
+        //        case ('"'):
+        //   this->parseStringLiteral();
+        //    break;
         case (','):
             ADD_EMPTY_TOKEN(TokenType::Comma);
             break;
