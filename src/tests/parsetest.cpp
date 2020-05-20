@@ -1,3 +1,4 @@
+#include "interpreter.hpp"
 #include "logc/log.h"
 #include "parser.hpp"
 #include "tokenizer.hpp"
@@ -28,17 +29,9 @@ int main(int argc, char** argv)
     if (!tok->hadError()) {
         Script::Parser* parser = new Script::Parser(tok);
 
-        Script::Expr* e;
-
         try {
-            e = parser->parse();
-            e->print();
-            std::cout << "\n";
-
-            Script::ExprValue tmp = e->eval();
-            std::cout << tmp.s << "\n";
-
-            delete e;
+            std::vector<Script::Statement*>* s = parser->parse();
+            delete s;
         } catch (std::runtime_error& e) {
             log_fatal("%s", e.what());
         }

@@ -13,12 +13,98 @@ static std::set<Script::TokenType> multiplicationMatch = { Script::TokenType::As
 static std::set<Script::TokenType> baseTypeMatch       = { Script::TokenType::Float, Script::TokenType::Identifier, Script::TokenType::Integer };
 
 namespace Script {
+
+std::set<std::string> Parser::blocktypes = {
+    "function",
+    "gamemode",
+    "menumode",
+    "onactivate",
+    "onactorequip",
+    "onactorunequip",
+    "onadd",
+    "onclose",
+    "oncombatend",
+    "ondeath",
+    "ondestructionstagechange",
+    "ondrop",
+    "onequip",
+    "onfire",
+    "ongrab",
+    "onhit",
+    "onhitwith",
+    "onload",
+    "onmagiceffecthit",
+    "onmurder",
+    "onnpcactivate",
+    "onopen",
+    "onpackagechange",
+    "onpackagedone",
+    "onpackagestart",
+    "onrelease",
+    "onreset",
+    "onsell",
+    "onstartcombat",
+    "ontrigger",
+    "ontriggerenter",
+    "ontriggerleave",
+    "onunequip",
+    "saytodone",
+    "scripteffectfinish",
+    "scripteffectstart",
+    "scripteffectupdate"
+};
+
 Expr* Parser::expression()
 {
 #ifdef DEBUG
     log_debug("%s", "expression");
 #endif
     return this->equals();
+}
+
+std::vector<Statement*>* Parser::parse()
+{
+    this->currentOffset = 0;
+    std::vector<Statement*>* ret;
+    Token&                   current = peekCurrent();
+    std::string              blocktype;
+    std::string              scriptName;
+
+    if (current.type != TokenType::ScriptName) {
+        this->error("Expected ScriptName keyword", current);
+    }
+
+    current = advance();
+
+    if (current.type != TokenType::Identifier) {
+        this->error("Expected script name", current);
+    }
+
+    scriptName = current.literal;
+    checkNext(TokenType::Newline, "Expected newline");
+
+    while (advanceMatches(TokenType::Newline)) { };
+    current = peekCurrent();
+
+    if (current.type != TokenType::Begin) {
+        this->error("Expected Begin keyword", current);
+    }
+
+    current = advance();
+
+    if (current.type != TokenType::Identifier) {
+        this->error("Expected blocktype identifier", current);
+    }
+
+    blocktype = current.literal;
+
+    if (Parser::blocktypes.count(blocktype) == 0) {
+        this->error("Unknown blocktype", current);
+    }
+
+    ret = new std::vector<Statement*>();
+
+    return ret;
 }
 
 Expr* Parser::equals()

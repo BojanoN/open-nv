@@ -1,6 +1,7 @@
 #pragma once
 #include "expr.hpp"
 #include "logc/log.h"
+#include "statement.hpp"
 #include "tokenizer.hpp"
 #include <set>
 
@@ -12,15 +13,12 @@ public:
         , currentOffset(0)
     {
     }
-
-    Expr* parse()
-    {
-        return this->expression();
-    }
+    std::vector<Statement*>* parse();
 
 private:
-    uint32_t            currentOffset;
-    std::vector<Token>& tokens;
+    uint32_t                     currentOffset;
+    std::vector<Token>&          tokens;
+    static std::set<std::string> blocktypes;
 
     void error(std::string cause, Token& tok)
     {
@@ -90,6 +88,20 @@ private:
         error(errorMsg, tok);
     }
 
+    void checkNext(TokenType type, std::string errorMsg)
+    {
+        Token& tok = this->peekNext();
+        log_debug("check type: %s, next type: %s", TokenEnumToString(type), TokenEnumToString(tok.type));
+
+        if (tok.type == type) {
+            advance();
+            return;
+        }
+
+        error(errorMsg, tok);
+    }
+
+    Expr* statement();
     Expr* expression();
     Expr* equals();
     Expr* comparison();

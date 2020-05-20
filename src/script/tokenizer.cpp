@@ -149,6 +149,7 @@ void Tokenizer::getTokens()
         case ('\n'):
             this->currentLine++;
             this->currentColumn = 0;
+            ADD_EMPTY_TOKEN(TokenType::Newline);
             break;
         case (' '):
         case ('\r'):

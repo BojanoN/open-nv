@@ -55,6 +55,7 @@ namespace Script {
     X(LeftParenthesis)      \
     X(RightParenthesis)     \
                             \
+    X(Newline)              \
     X(Identifier)           \
     X(Eof)                  \
     X(Comma)

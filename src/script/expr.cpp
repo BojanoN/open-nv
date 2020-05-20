@@ -29,7 +29,7 @@ ExprValue BinaryExpr::eval()
     ExprValue rval = this->right->eval();
 
     if (lval.type == TokenType::Identifier || rval.type == TokenType::Identifier) {
-        throw std::runtime_error("Cant evaluate identifiers!");
+        throw std::runtime_error("Operands must be numbers!");
     }
 
     float fRes = 0;
@@ -64,6 +64,12 @@ ExprValue BinaryExpr::eval()
         break;
     case (TokenType::NotEqualTo):
         fRes = (int)lval.f != (int)rval.f;
+        break;
+    case (TokenType::Or):
+        fRes = (int)lval.f | (int)rval.f;
+        break;
+    case (TokenType::And):
+        fRes = (int)lval.f & (int)rval.f;
         break;
     default:
         throw std::runtime_error("Whoops");
