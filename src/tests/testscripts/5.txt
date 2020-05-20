@@ -1,0 +1,7 @@
+ScriptName MyFirstScript
+
+Begin OnAdd player
+
+    1234 + (321)
+
+End

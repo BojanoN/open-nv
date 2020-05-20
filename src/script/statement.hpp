@@ -13,10 +13,26 @@ class ExpressionStatement : public Statement {
 public:
     ExpressionStatement(Expr* expr)
         : expression(expr) {};
-    ~ExpressionStatement() {};
+    ~ExpressionStatement()
+    {
+        delete expression;
+    };
 
 private:
     Expr* expression;
+};
+
+class DeclarationStatement : public Statement {
+public:
+    DeclarationStatement(Expr* expr, std::string varName)
+        : expression(expr)
+        , variableName(varName) {};
+
+    ~DeclarationStatement() { delete expression; };
+
+private:
+    Expr*       expression;
+    std::string variableName;
 };
 
 };

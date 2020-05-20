@@ -31,6 +31,11 @@ int main(int argc, char** argv)
 
         try {
             std::vector<Script::Statement*>* s = parser->parse();
+
+            for (Script::Statement* stmt : *s) {
+                delete stmt;
+            }
+
             delete s;
         } catch (std::runtime_error& e) {
             log_fatal("%s", e.what());

@@ -101,7 +101,10 @@ private:
         error(errorMsg, tok);
     }
 
-    Expr* statement();
+    Statement* statement();
+    Statement* expressionStatement();
+    Statement* declaration();
+
     Expr* expression();
     Expr* equals();
     Expr* comparison();

@@ -102,7 +102,20 @@ std::vector<Statement*>* Parser::parse()
         this->error("Unknown blocktype", current);
     }
 
-    ret = new std::vector<Statement*>();
+    ret              = new std::vector<Statement*>();
+    bool hasEndBlock = false;
+
+    while (!end() && peekCurrent().type != TokenType::End) {
+
+        while (advanceMatches(TokenType::Newline)) { }
+
+        ret->emplace_back(statement());
+    }
+
+    if (end()) {
+        delete ret;
+        this->error("Missing End keyword", peekCurrent());
+    }
 
     return ret;
 }
@@ -200,6 +213,26 @@ Expr* Parser::baseType()
 
     error("Expected expression", this->peekNext());
     // Silence end-of-control warning
+    return nullptr;
+}
+
+Statement* Parser::statement()
+{
+    return expressionStatement();
+}
+
+Statement* Parser::expressionStatement()
+{
+    Expr* expr = expression();
+
+    checkNext(TokenType::Newline, "Expected newline after expression");
+    advance();
+
+    return new ExpressionStatement(expr);
+}
+
+Statement* Parser::declaration()
+{
     return nullptr;
 }
 
