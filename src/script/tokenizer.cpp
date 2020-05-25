@@ -1,5 +1,6 @@
 #include "tokenizer.hpp"
 #include "logc/log.h"
+#include <set>
 
 #define ADD_EMPTY_TOKEN(type) this->tokens.emplace_back(Token((this->currentLine), (type), (this->currentColumn)))
 
@@ -9,6 +10,14 @@
     errorMessage = "Unknown character in offset ";       \
     errorMessage += std::to_string(this->currentColumn); \
     this->error(errorMessage)
+
+static std::set<Script::TokenType> varTypeMatch = {
+    Script::TokenType::Reference,
+    Script::TokenType::Integer,
+    Script::TokenType::Short,
+    Script::TokenType::Float,
+    Script::TokenType::Long
+};
 
 namespace Script {
 
@@ -60,7 +69,7 @@ void Tokenizer::parseNumber()
         }
     }
 
-    ADD_TOKEN(isFloat ? TokenType::Float : TokenType::Integer, this->substring(this->source, this->startCharOffset, currentCharOffset + 1));
+    ADD_TOKEN(isFloat ? TokenType::FloatConstant : TokenType::IntegerConstant, this->substring(this->source, this->startCharOffset, currentCharOffset + 1));
 };
 
 void Tokenizer::parseLiteral()
@@ -74,7 +83,8 @@ void Tokenizer::parseLiteral()
     this->toLowerCase(value);
 
     if (Tokenizer::keywords.count(value)) {
-        ADD_TOKEN(Tokenizer::keywords[value], value);
+        TokenType tmp = Tokenizer::keywords[value];
+        ADD_TOKEN(tmp, value);
     } else {
         ADD_TOKEN(TokenType::Identifier, value);
     }
@@ -187,6 +197,11 @@ std::unordered_map<std::string, TokenType> Tokenizer::keywords = {
     { "end", TokenType::End },
     { "set", TokenType::Set },
     { "to", TokenType::To },
-};
+    { "ref", TokenType::Reference },
+    { "int", TokenType::Integer },
+    { "long", TokenType::Long },
+    { "short", TokenType::Short },
+    { "float", TokenType::Float },
 
+};
 };

@@ -1,5 +1,7 @@
 ScriptName MyFirstScript
 
+ref rTestVar
+
 Begin OnAdd player
 
     1234 + (321)

@@ -20,6 +20,8 @@ namespace Script {
     X(Float)                \
     X(String)               \
                             \
+    X(FloatConstant)        \
+    X(IntegerConstant)      \
     X(Var)                  \
     X(Function)             \
     X(GlobalVar)            \

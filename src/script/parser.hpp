@@ -4,6 +4,7 @@
 #include "statement.hpp"
 #include "tokenizer.hpp"
 #include <set>
+#include <unordered_map>
 
 namespace Script {
 class Parser {
@@ -16,9 +17,10 @@ public:
     std::vector<Statement*>* parse();
 
 private:
-    uint32_t                     currentOffset;
-    std::vector<Token>&          tokens;
-    static std::set<std::string> blocktypes;
+    uint32_t                                   currentOffset;
+    std::vector<Token>&                        tokens;
+    std::unordered_map<std::string, Variable*> variables;
+    static std::set<std::string>               blocktypes;
 
     void error(std::string cause, Token& tok)
     {
@@ -88,6 +90,18 @@ private:
         error(errorMsg, tok);
     }
 
+    void check(std::set<TokenType>& types, std::string errorMsg)
+    {
+        Token& tok = this->peekCurrent();
+
+        if (types.count(tok.type)) {
+            advance();
+            return;
+        }
+
+        error(errorMsg, tok);
+    }
+
     void checkNext(TokenType type, std::string errorMsg)
     {
         Token& tok = this->peekNext();
@@ -104,6 +118,8 @@ private:
     Statement* statement();
     Statement* expressionStatement();
     Statement* declaration();
+    Statement* varDeclaration();
+    Statement* assignment();
 
     Expr* expression();
     Expr* equals();

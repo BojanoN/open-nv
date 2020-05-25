@@ -10,7 +10,15 @@ static std::set<Script::TokenType> comparisonMatch = {
 };
 static std::set<Script::TokenType> additionMatch       = { Script::TokenType::Plus, Script::TokenType::Minus };
 static std::set<Script::TokenType> multiplicationMatch = { Script::TokenType::Asterisk, Script::TokenType::Division };
-static std::set<Script::TokenType> baseTypeMatch       = { Script::TokenType::Float, Script::TokenType::Identifier, Script::TokenType::Integer };
+static std::set<Script::TokenType> baseTypeMatch       = { Script::TokenType::FloatConstant, Script::TokenType::Identifier, Script::TokenType::IntegerConstant };
+
+static std::set<Script::TokenType> varTypeMatch = {
+    Script::TokenType::Reference,
+    Script::TokenType::Integer,
+    Script::TokenType::Short,
+    Script::TokenType::Float,
+    Script::TokenType::Long
+};
 
 namespace Script {
 
@@ -84,6 +92,17 @@ std::vector<Statement*>* Parser::parse()
     checkNext(TokenType::Newline, "Expected newline");
 
     while (advanceMatches(TokenType::Newline)) { };
+    current = peekCurrent();
+
+    // Variable declaration block
+    while (varTypeMatch.count(current.type)) {
+        log_debug("%s\n", TokenEnumToString(current.type));
+        Variable* tmp                      = dynamic_cast<Variable*>(varDeclaration());
+        this->variables[tmp->variableName] = tmp;
+        while (advanceMatches(TokenType::Newline)) { };
+        current = peekCurrent();
+    };
+
     current = peekCurrent();
 
     if (current.type != TokenType::Begin) {
@@ -231,9 +250,41 @@ Statement* Parser::expressionStatement()
     return new ExpressionStatement(expr);
 }
 
-Statement* Parser::declaration()
+Statement* Parser::varDeclaration()
 {
-    return nullptr;
+    check(varTypeMatch, "Expected variable type");
+    check(TokenType::Identifier, "Expected variable name");
+
+    Token& varType = peekCurrent();
+    Token& varName = advance();
+
+    check(TokenType::Newline, "Expected newline after declaration");
+
+    return new Variable(varType.type, varName.literal);
 }
 
+Statement* Parser::assignment()
+{
+    check(TokenType::Set, "Expected set keyword");
+    Token&    varToken = peekCurrent();
+    Variable* var;
+
+    if (this->variables.count(varToken.literal) == 0) {
+        error("Variable not found in current context", varToken);
+        return nullptr;
+    } else {
+        var = this->variables[varToken.literal];
+    }
+
+    check(TokenType::To, "Expected to keyword");
+    Expr* expr = this->expression();
+    check(TokenType::Newline, "Expected newline after assignment");
+
+    return new Assignment(var, expr);
+}
+
+Statement* Parser::declaration()
+{
+    return statement();
+}
 };

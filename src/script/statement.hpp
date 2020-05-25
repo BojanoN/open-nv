@@ -22,17 +22,34 @@ private:
     Expr* expression;
 };
 
-class DeclarationStatement : public Statement {
+class Variable : public Statement {
 public:
-    DeclarationStatement(Expr* expr, std::string varName)
-        : expression(expr)
+    Variable(TokenType& type, std::string varName)
+        : variableType(type)
         , variableName(varName) {};
+    ~Variable() {};
 
-    ~DeclarationStatement() { delete expression; };
+    friend class Parser;
 
 private:
-    Expr*       expression;
+    TokenType   variableType;
     std::string variableName;
+};
+
+class Assignment : public Statement {
+public:
+    Assignment(Variable* var, Expr* expr)
+        : variable(var)
+        , expression(expr) {};
+    ~Assignment()
+    {
+        delete variable;
+        delete expression;
+    };
+
+private:
+    Variable* variable;
+    Expr*     expression;
 };
 
 };
