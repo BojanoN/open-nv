@@ -16,17 +16,17 @@ void GroupingExpr::print()
     this->expression->print();
 }
 
-ExprValue GroupingExpr::eval()
+ExprValue GroupingExpr::eval(Context& context)
 {
-    return this->expression->eval();
+    return this->expression->eval(context);
 }
 
-ExprValue BinaryExpr::eval()
+ExprValue BinaryExpr::eval(Context& context)
 {
     ExprValue ret;
 
-    ExprValue lval = this->left->eval();
-    ExprValue rval = this->right->eval();
+    ExprValue lval = this->left->eval(context);
+    ExprValue rval = this->right->eval(context);
 
     if (lval.type == TokenType::Identifier || rval.type == TokenType::Identifier) {
         throw std::runtime_error("Operands must be numbers!");
@@ -82,7 +82,7 @@ ExprValue BinaryExpr::eval()
     return ret;
 }
 
-ExprValue LiteralExpr::eval()
+ExprValue LiteralExpr::eval(Context& context)
 {
     ExprValue ret(this->type);
     ret.s = this->value;

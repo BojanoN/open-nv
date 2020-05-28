@@ -36,20 +36,4 @@ private:
     std::string variableName;
 };
 
-class Assignment : public Statement {
-public:
-    Assignment(Variable* var, Expr* expr)
-        : variable(var)
-        , expression(expr) {};
-    ~Assignment()
-    {
-        delete variable;
-        delete expression;
-    };
-
-private:
-    Variable* variable;
-    Expr*     expression;
-};
-
 };

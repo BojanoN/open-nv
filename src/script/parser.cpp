@@ -95,10 +95,11 @@ std::vector<Statement*>* Parser::parse()
     current = peekCurrent();
 
     // Variable declaration block
+    ret = new std::vector<Statement*>();
+
     while (varTypeMatch.count(current.type)) {
-        log_debug("%s\n", TokenEnumToString(current.type));
-        Variable* tmp                      = dynamic_cast<Variable*>(varDeclaration());
-        this->variables[tmp->variableName] = tmp;
+        Statement* tmp = varDeclaration();
+        ret->push_back(tmp);
         while (advanceMatches(TokenType::Newline)) { };
         current = peekCurrent();
     };
@@ -106,22 +107,24 @@ std::vector<Statement*>* Parser::parse()
     current = peekCurrent();
 
     if (current.type != TokenType::Begin) {
+        delete ret;
         this->error("Expected Begin keyword", current);
     }
 
     current = advance();
 
     if (current.type != TokenType::Identifier) {
+        delete ret;
         this->error("Expected blocktype identifier", current);
     }
 
     blocktype = current.literal;
 
     if (Parser::blocktypes.count(blocktype) == 0) {
+        delete ret;
         this->error("Unknown blocktype", current);
     }
 
-    ret              = new std::vector<Statement*>();
     bool hasEndBlock = false;
 
     while (!end() && peekCurrent().type != TokenType::End) {
@@ -263,18 +266,13 @@ Statement* Parser::varDeclaration()
     return new Variable(varType.type, varName.literal);
 }
 
-Statement* Parser::assignment()
+Expr* Parser::assignment()
 {
     check(TokenType::Set, "Expected set keyword");
-    Token&    varToken = peekCurrent();
-    Variable* var;
+    Token&      varToken = peekCurrent();
+    std::string var;
 
-    if (this->variables.count(varToken.literal) == 0) {
-        error("Variable not found in current context", varToken);
-        return nullptr;
-    } else {
-        var = this->variables[varToken.literal];
-    }
+    var = varToken.literal;
 
     check(TokenType::To, "Expected to keyword");
     Expr* expr = this->expression();

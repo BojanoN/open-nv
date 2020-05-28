@@ -1,4 +1,5 @@
 #pragma once
+#include "context.hpp"
 #include "tokenizer.hpp"
 #include <iostream>
 
@@ -39,8 +40,8 @@ class Expr {
 public:
     Expr() {};
     virtual ~Expr() {};
-    virtual void      print() = 0;
-    virtual ExprValue eval()  = 0;
+    virtual void      print()                = 0;
+    virtual ExprValue eval(Context& context) = 0;
 };
 
 class BinaryExpr : public Expr {
@@ -59,7 +60,7 @@ public:
     }
 
     void      print();
-    ExprValue eval();
+    ExprValue eval(Context& context);
 
 private:
     Token op;
@@ -67,13 +68,27 @@ private:
     Expr* right;
 };
 
-class AssignExpr : public Expr {
+class Assignment : public Expr {
 public:
-    void print();
+    Assignment(std::string var, Expr* expr)
+        : variable(var)
+        , expression(expr) {};
+    ~Assignment()
+    {
+        delete expression;
+    };
+
+    void print() { }
+
+    ExprValue eval(Context& context)
+    {
+
+        return expression->eval(context);
+    }
 
 private:
-    Token assignee;
-    Expr* value;
+    std::string variable;
+    Expr*       expression;
 };
 
 class GroupingExpr : public Expr {
@@ -85,7 +100,7 @@ public:
         delete expression;
     }
     void      print();
-    ExprValue eval();
+    ExprValue eval(Context& context);
 
 private:
     Expr* expression;
@@ -103,7 +118,7 @@ public:
     {
         std::cout << value;
     }
-    ExprValue eval();
+    ExprValue eval(Context& context);
 
 private:
     std::string value;

@@ -17,10 +17,9 @@ public:
     std::vector<Statement*>* parse();
 
 private:
-    uint32_t                                   currentOffset;
-    std::vector<Token>&                        tokens;
-    std::unordered_map<std::string, Variable*> variables;
-    static std::set<std::string>               blocktypes;
+    uint32_t                     currentOffset;
+    std::vector<Token>&          tokens;
+    static std::set<std::string> blocktypes;
 
     void error(std::string cause, Token& tok)
     {
@@ -119,8 +118,8 @@ private:
     Statement* expressionStatement();
     Statement* declaration();
     Statement* varDeclaration();
-    Statement* assignment();
 
+    Expr* assignment();
     Expr* expression();
     Expr* equals();
     Expr* comparison();
