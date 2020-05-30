@@ -9,6 +9,15 @@ ExpressionStatement::~ExpressionStatement()
     delete this->expression;
 }
 
+IfStatement::~IfStatement()
+{
+    delete condition;
+    delete body;
+    if (elseBody != nullptr) {
+        delete elseBody;
+    }
+};
+
 void ExpressionStatement::execute(Context& context)
 {
 }

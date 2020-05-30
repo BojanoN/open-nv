@@ -192,7 +192,7 @@ std::unordered_map<std::string, TokenType> Tokenizer::keywords = {
     { "if", TokenType::If },
     { "else", TokenType::Else },
     { "elseif", TokenType::Elseif },
-    { "endif", TokenType::Else },
+    { "endif", TokenType::Endif },
     { "begin", TokenType::Begin },
     { "end", TokenType::End },
     { "set", TokenType::Set },

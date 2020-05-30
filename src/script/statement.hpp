@@ -28,6 +28,22 @@ private:
     Expr* expression;
 };
 
+class IfStatement : public Statement {
+public:
+    IfStatement(Expr* expr, Statement* ifBod, Statement* elseBod)
+        : condition(expr)
+        , body(ifBod)
+        , elseBody(elseBod) {};
+    ~IfStatement();
+
+    void execute(Context& context) {};
+
+private:
+    Expr*      condition;
+    Statement* body;
+    Statement* elseBody;
+};
+
 class Variable : public Statement {
 public:
     Variable(TokenType& type, std::string varName)

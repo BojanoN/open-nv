@@ -57,10 +57,10 @@ Object* Integer::evalBinaryExpr(TokenType& operatorType, Object* operand)
         result = lval != rval;
         break;
     case (TokenType::Or):
-        result = lval | rval;
+        result = lval || rval;
         break;
     case (TokenType::And):
-        result = lval & rval;
+        result = lval && rval;
         break;
     default:
         log_fatal("Operator %s is not supported for type integer", TokenEnumToString(operatorType));

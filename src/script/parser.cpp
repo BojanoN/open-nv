@@ -134,9 +134,13 @@ std::vector<Statement*>* Parser::parse()
         advance();
     }
 
-    while (!end() && peekCurrent().type != TokenType::End) {
+    while (!end()) {
 
         while (advanceMatches(TokenType::Newline)) { }
+
+        if (peekCurrent().type == TokenType::End) {
+            break;
+        }
 
         ret->emplace_back(statement());
     }
@@ -247,6 +251,9 @@ Expr* Parser::baseType()
 
 Statement* Parser::statement()
 {
+    if (advanceMatches(TokenType::If))
+        return ifStatement();
+
     return expressionStatement();
 }
 
@@ -254,8 +261,7 @@ Statement* Parser::expressionStatement()
 {
     Expr* expr = assignment();
 
-    checkNext(TokenType::Newline, "Expected newline after expression");
-    advance();
+    check(TokenType::Newline, "Expected newline after expression");
 
     return new ExpressionStatement(expr);
 }
@@ -291,4 +297,26 @@ Statement* Parser::declaration()
 {
     return statement();
 }
+
+Statement* Parser::ifStatement()
+{
+    Expr* condition = expression();
+    while (advanceMatches(TokenType::Newline)) { }
+    log_debug("%s", TokenEnumToString(peekCurrent().type));
+
+    Statement* body = statement();
+
+    log_debug("%s", TokenEnumToString(peekCurrent().type));
+
+    Statement* elseBody = nullptr;
+
+    if (peekCurrent().type == TokenType::Else) {
+        elseBody = statement();
+    }
+
+    check(TokenType::Endif, "Expected endif keyword");
+
+    return new IfStatement(condition, body, elseBody);
+}
+
 };
