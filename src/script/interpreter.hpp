@@ -4,6 +4,7 @@
 #include "expr.hpp"
 #include "logc/log.h"
 #include "statement.hpp"
+#include "types/base.hpp"
 
 namespace Script {
 
@@ -16,8 +17,9 @@ public:
     void interpret(Expr* expression)
     {
         try {
-            Script::ExprValue tmp = expression->eval(this->context);
-            log_info("Expression value: %s", tmp.s.c_str());
+            Script::Object* tmp = expression->eval(this->context);
+            log_info("Expression value: %s", tmp->toString().c_str());
+            delete tmp;
         } catch (std::runtime_error& e) {
             log_fatal("Expression evaluation error: %s", e.what());
         }

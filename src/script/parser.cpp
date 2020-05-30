@@ -126,6 +126,13 @@ std::vector<Statement*>* Parser::parse()
     }
 
     bool hasEndBlock = false;
+    current          = advance();
+
+    // TODO: store blocktype parameters
+    if (current.type == TokenType::Identifier) {
+        log_info("Blocktype parameter: %s", current.literal.c_str());
+        advance();
+    }
 
     while (!end() && peekCurrent().type != TokenType::End) {
 
@@ -245,7 +252,7 @@ Statement* Parser::statement()
 
 Statement* Parser::expressionStatement()
 {
-    Expr* expr = expression();
+    Expr* expr = assignment();
 
     checkNext(TokenType::Newline, "Expected newline after expression");
     advance();
@@ -273,10 +280,9 @@ Expr* Parser::assignment()
     std::string var;
 
     var = varToken.literal;
-
+    advance();
     check(TokenType::To, "Expected to keyword");
     Expr* expr = this->expression();
-    check(TokenType::Newline, "Expected newline after assignment");
 
     return new Assignment(var, expr);
 }

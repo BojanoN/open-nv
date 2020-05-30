@@ -4,15 +4,24 @@
 
 namespace Script {
 
+class Object;
+
 class Context {
 public:
-    bool exists(std::string& var)
+    bool varExists(std::string& var)
     {
         return variables.count(var);
     }
 
+    void declareVar(std::string& name, Object* var)
+    {
+        variables[name] = var;
+    }
+
+    ~Context();
+
 private:
-    std::unordered_map<std::string, int> variables;
+    std::unordered_map<std::string, Object*> variables;
 };
 
 };

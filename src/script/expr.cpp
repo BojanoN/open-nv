@@ -1,4 +1,10 @@
 #include "expr.hpp"
+#include "context.hpp"
+
+#include "types/float.hpp"
+#include "types/identifier.hpp"
+#include "types/integer.hpp"
+
 #include <iostream>
 
 namespace Script {
@@ -16,93 +22,61 @@ void GroupingExpr::print()
     this->expression->print();
 }
 
-ExprValue GroupingExpr::eval(Context& context)
+Object* GroupingExpr::eval(Context& context)
 {
     return this->expression->eval(context);
 }
 
-ExprValue BinaryExpr::eval(Context& context)
+Object* BinaryExpr::eval(Context& context)
 {
-    ExprValue ret;
+    Object* ret;
 
-    ExprValue lval = this->left->eval(context);
-    ExprValue rval = this->right->eval(context);
+    Object* lval = this->left->eval(context);
+    Object* rval = this->right->eval(context);
 
-    if (lval.type == TokenType::Identifier || rval.type == TokenType::Identifier) {
-        throw std::runtime_error("Operands must be numbers!");
+    if (lval->type == Type::Identifier || rval->type == Type::Identifier) {
+        throw std::runtime_error("This should never happen");
     }
 
-    float fRes = 0;
+    ret = lval->evalBinaryExpr(this->op.type, rval);
 
-    switch (this->op.type) {
-    case (TokenType::Plus):
-        fRes = lval.f + rval.f;
-        break;
-    case (TokenType::Minus):
-        fRes = lval.f - rval.f;
-        break;
-    case (TokenType::Asterisk):
-        fRes = lval.f * rval.f;
-        break;
-    case (TokenType::Division):
-        fRes = lval.f / rval.f;
-        break;
-    case (TokenType::GreaterThan):
-        fRes = lval.f > rval.f;
-        break;
-    case (TokenType::GreaterThanOrEqualTo):
-        fRes = lval.f >= rval.f;
-        break;
-    case (TokenType::LessThan):
-        fRes = lval.f < rval.f;
-        break;
-    case (TokenType::LessThanOrEqualTo):
-        fRes = lval.f <= rval.f;
-        break;
-    case (TokenType::EqualTo):
-        fRes = (int)lval.f == (int)rval.f;
-        break;
-    case (TokenType::NotEqualTo):
-        fRes = (int)lval.f != (int)rval.f;
-        break;
-    case (TokenType::Or):
-        fRes = (int)lval.f | (int)rval.f;
-        break;
-    case (TokenType::And):
-        fRes = (int)lval.f & (int)rval.f;
-        break;
-    default:
-        throw std::runtime_error("Whoops");
-    }
-
-    ret.f    = fRes;
-    ret.type = TokenType::Float;
-    ret.s    = std::to_string(fRes);
+    delete lval;
+    delete rval;
 
     return ret;
 }
 
-ExprValue LiteralExpr::eval(Context& context)
+Object* LiteralExpr::eval(Context& context)
 {
-    ExprValue ret(this->type);
-    ret.s = this->value;
+    Object* ret;
 
     switch (this->type) {
     case (TokenType::Integer):
-        // Forcing everything to float for now
-        //  ret.i = std::stoi(this->value);
-        ret.f = std::stoi(this->value);
+        ret = new Integer(std::stoi(this->value));
         break;
     case (TokenType::Float):
-        ret.f = std::stof(this->value);
+        ret = new Float(std::stof(this->value));
         break;
     case (TokenType::Identifier):
+        ret = new Identifier(this->value);
         break;
     default:
         throw std::runtime_error("Whoops");
     }
 
     return ret;
+}
+
+Object* Assignment::eval(Context& context)
+{
+
+    // TODO: variable assignments
+
+    if (!context.varExists(this->variable)) {
+        throw std::runtime_error("Undefined variable");
+    }
+
+    return this->expression->eval(context);
 }
 
 }

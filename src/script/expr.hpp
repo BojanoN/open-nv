@@ -1,47 +1,20 @@
 #pragma once
-#include "context.hpp"
+
+#include "misc.hpp"
 #include "tokenizer.hpp"
 #include <iostream>
 
 namespace Script {
 
-struct ExprValue {
-
-public:
-    ExprValue(TokenType t)
-        : i(0)
-        , f(0.)
-        , s("")
-        , type(t)
-    {
-    }
-
-    ExprValue()
-        : i(0)
-        , f(0.)
-        , s("")
-        , type(TokenType::Identifier)
-    {
-    }
-
-    int32_t     i;
-    float       f;
-    bool        b;
-    std::string s;
-    TokenType   type;
-
-    void print()
-    {
-        std::cout << s;
-    }
-};
+class Context;
+class Object;
 
 class Expr {
 public:
     Expr() {};
     virtual ~Expr() {};
-    virtual void      print()                = 0;
-    virtual ExprValue eval(Context& context) = 0;
+    virtual void    print()                = 0;
+    virtual Object* eval(Context& context) = 0;
 };
 
 class BinaryExpr : public Expr {
@@ -59,8 +32,8 @@ public:
         delete right;
     }
 
-    void      print();
-    ExprValue eval(Context& context);
+    void    print();
+    Object* eval(Context& context);
 
 private:
     Token op;
@@ -80,11 +53,7 @@ public:
 
     void print() { }
 
-    ExprValue eval(Context& context)
-    {
-
-        return expression->eval(context);
-    }
+    Object* eval(Context& context);
 
 private:
     std::string variable;
@@ -99,8 +68,8 @@ public:
     {
         delete expression;
     }
-    void      print();
-    ExprValue eval(Context& context);
+    void    print();
+    Object* eval(Context& context);
 
 private:
     Expr* expression;
@@ -118,7 +87,7 @@ public:
     {
         std::cout << value;
     }
-    ExprValue eval(Context& context);
+    Object* eval(Context& context);
 
 private:
     std::string value;
