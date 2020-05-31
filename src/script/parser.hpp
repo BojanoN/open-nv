@@ -119,6 +119,7 @@ private:
     Statement* declaration();
     Statement* varDeclaration();
     Statement* ifStatement();
+    Statement* functionCall();
 
     Expr* assignment();
     Expr* expression();

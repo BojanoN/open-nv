@@ -23,8 +23,6 @@ namespace Script {
     X(FloatConstant)        \
     X(IntegerConstant)      \
     X(Var)                  \
-    X(Function)             \
-    X(GlobalVar)            \
                             \
     X(Operator)             \
     X(BlockType)            \

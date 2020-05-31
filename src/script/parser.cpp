@@ -254,6 +254,9 @@ Statement* Parser::statement()
     if (advanceMatches(TokenType::If))
         return ifStatement();
 
+    if (advanceMatches(TokenType::Identifier))
+        return functionCall();
+
     return expressionStatement();
 }
 
@@ -311,6 +314,9 @@ Statement* Parser::ifStatement()
     Statement* elseBody = nullptr;
 
     if (peekCurrent().type == TokenType::Else) {
+        advance();
+        while (advanceMatches(TokenType::Newline)) { };
+
         elseBody = statement();
     }
 
@@ -319,4 +325,8 @@ Statement* Parser::ifStatement()
     return new IfStatement(condition, body, elseBody);
 }
 
+Statement* Parser::functionCall()
+{
+    return nullptr;
+}
 };

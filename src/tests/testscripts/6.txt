@@ -6,8 +6,10 @@ Begin OnAdd player
 
    set undefVar to  1234 + (321)
 
-   if player != 1
+   if rTestVar != 1
 	set rTestVar to 23
+   else
+	set undefVar to 24
    endif
 
 End
