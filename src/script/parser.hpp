@@ -119,8 +119,8 @@ private:
     Statement* declaration();
     Statement* varDeclaration();
     Statement* ifStatement();
-    Statement* functionCall();
 
+    Expr* functionCall();
     Expr* assignment();
     Expr* expression();
     Expr* equals();

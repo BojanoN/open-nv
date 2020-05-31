@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "function.hpp"
 #include "logc/log.h"
 
 static std::set<Script::TokenType> equalsMatch     = { Script::TokenType::EqualTo, Script::TokenType::NotEqualTo };
@@ -210,7 +211,7 @@ Expr* Parser::multiplication()
     log_debug("%s", "multiplication");
 #endif
 
-    Expr* ret = this->baseType();
+    Expr* ret = this->functionCall();
 
     while (this->advanceMatches(multiplicationMatch)) {
         Token& op            = this->previous();
@@ -219,6 +220,24 @@ Expr* Parser::multiplication()
     }
 
     return ret;
+}
+
+Expr* Parser::functionCall()
+{
+    Token& functionIdentifier = peekCurrent();
+    log_info("DEBUG: %s", functionIdentifier.literal.c_str());
+    if (FunctionResolver::functions.count(functionIdentifier.literal) == 0) {
+        return baseType();
+    }
+    //FunctionInfo& info               = FunctionResolver::functions[functionIdentifier.value];
+    advance();
+    std::vector<Expr*> arguments;
+
+    while (peekCurrent().type != TokenType::Newline) {
+        arguments.push_back(expression());
+    }
+
+    return new FunctionCallExpr(functionIdentifier.literal, arguments);
 }
 
 Expr* Parser::baseType()
@@ -254,17 +273,20 @@ Statement* Parser::statement()
     if (advanceMatches(TokenType::If))
         return ifStatement();
 
-    if (advanceMatches(TokenType::Identifier))
-        return functionCall();
-
     return expressionStatement();
 }
 
 Statement* Parser::expressionStatement()
 {
-    Expr* expr = assignment();
+    Expr* expr;
 
-    check(TokenType::Newline, "Expected newline after expression");
+    if (peekCurrent().type == TokenType::Set) {
+        expr = assignment();
+    } else {
+        expr = expression();
+    }
+
+    check(TokenType::Newline, "Expected newline after expression statement");
 
     return new ExpressionStatement(expr);
 }
@@ -325,8 +347,4 @@ Statement* Parser::ifStatement()
     return new IfStatement(condition, body, elseBody);
 }
 
-Statement* Parser::functionCall()
-{
-    return nullptr;
-}
 };

@@ -94,4 +94,30 @@ private:
     TokenType   type;
 };
 
+class FunctionCallExpr : public Expr {
+public:
+    FunctionCallExpr(std::string name, std::vector<Expr*>& args)
+        : functionName(name)
+        , arguments(args)
+    {
+    }
+
+    ~FunctionCallExpr()
+    {
+        for (Expr* e : arguments) {
+            delete e;
+        }
+    };
+
+    void print()
+    {
+        std::cout << "asdf";
+    }
+    Object* eval(Context& context);
+
+private:
+    std::string        functionName;
+    std::vector<Expr*> arguments;
+};
+
 }

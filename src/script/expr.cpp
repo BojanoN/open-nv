@@ -79,4 +79,9 @@ Object* Assignment::eval(Context& context)
     return this->expression->eval(context);
 }
 
+Object* FunctionCallExpr::eval(Context& context)
+{
+    return nullptr;
+};
+
 }
