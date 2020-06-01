@@ -14,14 +14,14 @@ void BinaryExpr::print()
     this->left->print();
     std::cout << " " << TokenEnumToString(this->op.type) << " ";
     this->right->print();
-    std::cout << ")";
+    std::cout << ")\n";
 }
 
 void GroupingExpr::print()
 {
     this->expression->print();
 }
-
+/*
 Object* GroupingExpr::eval(Context& context)
 {
     return this->expression->eval(context);
@@ -83,5 +83,5 @@ Object* FunctionCallExpr::eval(Context& context)
 {
     return nullptr;
 };
-
+*/
 }

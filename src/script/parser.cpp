@@ -7,7 +7,7 @@ static std::set<Script::TokenType> comparisonMatch = {
     Script::TokenType::GreaterThan,
     Script::TokenType::GreaterThanOrEqualTo,
     Script::TokenType::LessThan,
-    Script::TokenType::LessThanOrEqualTo
+    Script::TokenType::LessThanOrEqualTo,
 };
 static std::set<Script::TokenType> additionMatch       = { Script::TokenType::Plus, Script::TokenType::Minus };
 static std::set<Script::TokenType> multiplicationMatch = { Script::TokenType::Asterisk, Script::TokenType::Division };
@@ -63,7 +63,7 @@ std::set<std::string> Parser::blocktypes = {
     "scripteffectupdate"
 };
 
-Expr* Parser::expression()
+Node* Parser::expression()
 {
 #ifdef DEBUG
     log_debug("%s", "expression");
@@ -71,13 +71,13 @@ Expr* Parser::expression()
     return this->equals();
 }
 
-std::vector<Statement*>* Parser::parse()
+std::vector<Node*>* Parser::parse()
 {
     this->currentOffset = 0;
-    std::vector<Statement*>* ret;
-    Token&                   current = peekCurrent();
-    std::string              blocktype;
-    std::string              scriptName;
+    std::vector<Node*>* ret;
+    Token&              current = peekCurrent();
+    std::string         blocktype;
+    std::string         scriptName;
 
     if (current.type != TokenType::ScriptName) {
         this->error("Expected ScriptName keyword", current);
@@ -96,10 +96,10 @@ std::vector<Statement*>* Parser::parse()
     current = peekCurrent();
 
     // Variable declaration block
-    ret = new std::vector<Statement*>();
+    ret = new std::vector<Node*>();
 
     while (varTypeMatch.count(current.type)) {
-        Statement* tmp = varDeclaration();
+        Node* tmp = varDeclaration();
         ret->push_back(tmp);
         while (advanceMatches(TokenType::Newline)) { };
         current = peekCurrent();
@@ -154,75 +154,75 @@ std::vector<Statement*>* Parser::parse()
     return ret;
 }
 
-Expr* Parser::equals()
+Node* Parser::equals()
 {
 #ifdef DEBUG
     log_debug("%s", "equals");
 #endif
-    Expr* ret = this->comparison();
+    Node* ret = this->comparison();
 
     while (this->advanceMatches(equalsMatch)) {
         Token& op            = this->previous();
-        Expr*  rightHandExpr = this->comparison();
+        Node*  rightHandExpr = this->comparison();
         ret                  = new BinaryExpr(op, ret, rightHandExpr);
     }
 
     return ret;
 }
 
-Expr* Parser::comparison()
+Node* Parser::comparison()
 {
 
 #ifdef DEBUG
     log_debug("%s", "comparison");
 #endif
 
-    Expr* ret = this->addition();
+    Node* ret = this->addition();
 
     while (this->advanceMatches(comparisonMatch)) {
         Token& op            = this->previous();
-        Expr*  rightHandExpr = this->addition();
+        Node*  rightHandExpr = this->addition();
         ret                  = new BinaryExpr(op, ret, rightHandExpr);
     }
 
     return ret;
 }
 
-Expr* Parser::addition()
+Node* Parser::addition()
 {
 #ifdef DEBUG
     log_debug("%s", "addition");
 #endif
 
-    Expr* ret = this->multiplication();
+    Node* ret = this->multiplication();
 
     while (this->advanceMatches(additionMatch)) {
         Token& op            = this->previous();
-        Expr*  rightHandExpr = this->multiplication();
+        Node*  rightHandExpr = this->multiplication();
         ret                  = new BinaryExpr(op, ret, rightHandExpr);
     }
 
     return ret;
 }
 
-Expr* Parser::multiplication()
+Node* Parser::multiplication()
 {
 #ifdef DEBUG
     log_debug("%s", "multiplication");
 #endif
 
-    Expr* ret = this->functionCall();
+    Node* ret = this->functionCall();
 
     while (this->advanceMatches(multiplicationMatch)) {
         Token& op            = this->previous();
-        Expr*  rightHandExpr = this->baseType();
+        Node*  rightHandExpr = this->baseType();
         ret                  = new BinaryExpr(op, ret, rightHandExpr);
     }
 
     return ret;
 }
 
-Expr* Parser::functionCall()
+Node* Parser::functionCall()
 {
     Token& functionIdentifier = peekCurrent();
     log_info("DEBUG: %s", functionIdentifier.literal.c_str());
@@ -231,7 +231,7 @@ Expr* Parser::functionCall()
     }
     //FunctionInfo& info               = FunctionResolver::functions[functionIdentifier.value];
     advance();
-    std::vector<Expr*> arguments;
+    std::vector<Node*> arguments;
 
     while (peekCurrent().type != TokenType::Newline) {
         arguments.push_back(expression());
@@ -240,7 +240,7 @@ Expr* Parser::functionCall()
     return new FunctionCallExpr(functionIdentifier.literal, arguments);
 }
 
-Expr* Parser::baseType()
+Node* Parser::baseType()
 {
 #ifdef DEBUG
     log_debug("%s", "baseType");
@@ -252,7 +252,7 @@ Expr* Parser::baseType()
     }
 
     if (advanceMatches(TokenType::LeftParenthesis)) {
-        Expr* expr = expression();
+        Node* expr = expression();
 
         try {
             this->check(TokenType::RightParenthesis, "Expected )");
@@ -268,7 +268,7 @@ Expr* Parser::baseType()
     return nullptr;
 }
 
-Statement* Parser::statement()
+Node* Parser::statement()
 {
     if (advanceMatches(TokenType::If))
         return ifStatement();
@@ -276,9 +276,9 @@ Statement* Parser::statement()
     return expressionStatement();
 }
 
-Statement* Parser::expressionStatement()
+Node* Parser::expressionStatement()
 {
-    Expr* expr;
+    Node* expr;
 
     if (peekCurrent().type == TokenType::Set) {
         expr = assignment();
@@ -291,20 +291,22 @@ Statement* Parser::expressionStatement()
     return new ExpressionStatement(expr);
 }
 
-Statement* Parser::varDeclaration()
+Node* Parser::varDeclaration()
 {
+    Token& varType = peekCurrent();
+
     check(varTypeMatch, "Expected variable type");
+    Token& varName = peekCurrent();
     check(TokenType::Identifier, "Expected variable name");
 
-    Token& varType = peekCurrent();
-    Token& varName = advance();
+    advance();
 
     check(TokenType::Newline, "Expected newline after declaration");
 
     return new Variable(varType.type, varName.literal);
 }
 
-Expr* Parser::assignment()
+Node* Parser::assignment()
 {
     check(TokenType::Set, "Expected set keyword");
     Token&      varToken = peekCurrent();
@@ -313,27 +315,27 @@ Expr* Parser::assignment()
     var = varToken.literal;
     advance();
     check(TokenType::To, "Expected to keyword");
-    Expr* expr = this->expression();
+    Node* expr = this->expression();
 
     return new Assignment(var, expr);
 }
 
-Statement* Parser::declaration()
+Node* Parser::declaration()
 {
     return statement();
 }
 
-Statement* Parser::ifStatement()
+Node* Parser::ifStatement()
 {
-    Expr* condition = expression();
+    Node* condition = expression();
     while (advanceMatches(TokenType::Newline)) { }
     log_debug("%s", TokenEnumToString(peekCurrent().type));
 
-    Statement* body = statement();
+    Node* body = statement();
 
     log_debug("%s", TokenEnumToString(peekCurrent().type));
 
-    Statement* elseBody = nullptr;
+    Node* elseBody = nullptr;
 
     if (peekCurrent().type == TokenType::Else) {
         advance();

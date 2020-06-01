@@ -1,7 +1,6 @@
 #pragma once
 
 #include "logc/log.h"
-#include <cctype>
 #include <cstdint>
 #include <cstring>
 #include <iostream>

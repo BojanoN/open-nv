@@ -14,7 +14,7 @@ public:
         , currentOffset(0)
     {
     }
-    std::vector<Statement*>* parse();
+    std::vector<Node*>* parse();
 
 private:
     uint32_t                     currentOffset;
@@ -114,19 +114,19 @@ private:
         error(errorMsg, tok);
     }
 
-    Statement* statement();
-    Statement* expressionStatement();
-    Statement* declaration();
-    Statement* varDeclaration();
-    Statement* ifStatement();
+    Node* statement();
+    Node* expressionStatement();
+    Node* declaration();
+    Node* varDeclaration();
+    Node* ifStatement();
 
-    Expr* functionCall();
-    Expr* assignment();
-    Expr* expression();
-    Expr* equals();
-    Expr* comparison();
-    Expr* addition();
-    Expr* multiplication();
-    Expr* baseType();
+    Node* functionCall();
+    Node* assignment();
+    Node* expression();
+    Node* equals();
+    Node* comparison();
+    Node* addition();
+    Node* multiplication();
+    Node* baseType();
 };
 };

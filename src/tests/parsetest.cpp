@@ -30,9 +30,16 @@ int main(int argc, char** argv)
         Script::Parser* parser = new Script::Parser(tok);
 
         try {
-            std::vector<Script::Statement*>* s = parser->parse();
+            std::vector<Script::Node*>* s = parser->parse();
 
-            for (Script::Statement* stmt : *s) {
+            for (Script::Node* n : *s) {
+                log_info("Node: %s", Script::NodeEnumToString(n->type));
+            }
+
+            for (Script::Node* n : *s) {
+                n->print();
+            }
+            for (Script::Node* stmt : *s) {
                 delete stmt;
             }
 
