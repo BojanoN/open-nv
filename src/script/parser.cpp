@@ -335,7 +335,17 @@ Node* Parser::ifStatement()
 
     log_debug("%s", TokenEnumToString(peekCurrent().type));
 
+    std::vector<Node*> elifs;
+
+    while (peekCurrent().type == TokenType::Elseif) {
+        advance();
+        while (advanceMatches(TokenType::Newline)) { };
+
+        elifs.push_back(statement());
+    }
+
     Node* elseBody = nullptr;
+    log_debug("PENIS: %s", TokenEnumToString(peekCurrent().type));
 
     if (peekCurrent().type == TokenType::Else) {
         advance();
@@ -346,7 +356,7 @@ Node* Parser::ifStatement()
 
     check(TokenType::Endif, "Expected endif keyword");
 
-    return new IfStatement(condition, body, elseBody);
+    return new IfStatement(condition, body, elifs, elseBody);
 }
 
 };

@@ -173,8 +173,6 @@ public:
         delete this->expression;
     };
 
-    void execute(Context& context);
-
     void print()
     {
         expression->print();
@@ -186,9 +184,10 @@ private:
 
 class IfStatement : public Node {
 public:
-    IfStatement(Node* expr, Node* ifBod, Node* elseBod)
+    IfStatement(Node* expr, Node* ifBod, std::vector<Node*>& elifBod, Node* elseBod)
         : condition(expr)
         , body(ifBod)
+        , elseifBody(elifBod)
         , elseBody(elseBod)
         , Node(NodeType::IfStatement) {};
     ~IfStatement()
@@ -198,9 +197,11 @@ public:
         if (elseBody != nullptr) {
             delete elseBody;
         }
-    };
 
-    void execute(Context& context) {};
+        for (Node* n : elseifBody) {
+            delete n;
+        }
+    };
 
     void print()
     {
@@ -216,9 +217,10 @@ public:
     }
 
 private:
-    Node* condition;
-    Node* body;
-    Node* elseBody;
+    Node*              condition;
+    Node*              body;
+    std::vector<Node*> elseifBody;
+    Node*              elseBody;
 };
 
 class Variable : public Node {

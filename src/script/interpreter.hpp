@@ -1,9 +1,8 @@
 #pragma once
 
 #include "context.hpp"
-#include "expr.hpp"
 #include "logc/log.h"
-#include "statement.hpp"
+#include "node.hpp"
 #include "types/base.hpp"
 
 namespace Script {

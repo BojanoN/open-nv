@@ -1,11 +1,10 @@
 #pragma once
 
+#include "types/base.hpp"
 #include <string>
 #include <unordered_map>
 
 namespace Script {
-
-class Object;
 
 class Context {
 public:
@@ -14,15 +13,15 @@ public:
         return variables.count(var);
     }
 
-    void declareVar(std::string& name, Object* var)
+    void declareVar(std::string& name, Type type)
     {
-        variables[name] = var;
+        variables[name] = type;
     }
 
     ~Context();
 
 private:
-    std::unordered_map<std::string, Object*> variables;
+    std::unordered_map<std::string, Type> variables;
 };
 
 };
