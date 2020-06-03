@@ -20,6 +20,8 @@ public:
 
     ~Context();
 
+    std::string scriptName;
+
 private:
     std::unordered_map<std::string, Type> variables;
 };

@@ -1,0 +1,19 @@
+ScriptName MyFirstScript
+
+ref rTestVar
+
+Begin OnAdd player
+
+  set undefVar to  1234 + (321)
+
+   if rTestVar != 1
+	set rTestVar to 23
+   elseif rTestVar == 42
+	SetSize 110
+   elseif anotherVar != 22
+	SetSize 112
+   else 
+      SetSize 69
+   endif
+
+End

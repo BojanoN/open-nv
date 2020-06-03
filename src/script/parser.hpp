@@ -20,6 +20,8 @@ private:
     std::vector<Token>&          tokens;
     static std::set<std::string> blocktypes;
 
+    // TODO: refactor error reporting and handling to ease memory management
+
     void error(std::string cause, Token& tok)
     {
         std::string errorMsg = "Syntax error: ";
@@ -118,6 +120,8 @@ private:
     Node* declaration();
     Node* varDeclaration();
     Node* ifStatement();
+    Node* scriptName();
+    Node* blocktype();
 
     Node* functionCall();
     Node* assignment();

@@ -1,34 +1,46 @@
 #pragma once
 
 #include "context.hpp"
+#include "opcode.hpp"
+#include <vector>
 
 namespace Script {
+
+class Node;
+
 class Compiler {
 public:
-    Compiler() {};
+    Compiler(std::vector<Node*>* n)
+        : nodes(n) {};
 
     void compile();
 
 private:
-    Context ctx;
+    Context             ctx;
+    std::vector<Node*>* nodes;
+    std::vector<Opcode> bytecode;
 
-    void compileBinaryExpr();
-    void compileAssignment();
-    void compileGroupingExpr();
-    void compileLiteralExpr();
-    void compileFunctionCallExpr();
+    int compileNode(Node* node);
 
-    void compileExpressionStatement();
-    void compileIfStatement();
-    void compileVariable();
+    int compileBinaryExpr(Node* node);
+    int compileAssignment(Node* node);
+    int compileGroupingExpr(Node* node);
+    int compileLiteralExpr(Node* node);
+    int compileFunctionCallExpr(Node* node);
 
-    void error(std::string cause, Token& tok)
+    int compileScriptName(Node* node);
+    int compileBlocktype(Node* node);
+    int compileExpressionStatement(Node* node);
+    int compileIfStatement(Node* node);
+    int compileVariable(Node* node);
+
+    void emit(OpcodeType type, uint16_t arglen);
+
+    int error(std::string cause)
     {
-        std::string errorMsg = "Syntax error: ";
-        errorMsg += cause;
-        errorMsg += " at line " + std::to_string(tok.line);
-        errorMsg += " at column " + std::to_string(tok.column);
-        throw std::runtime_error(errorMsg);
+        log_fatal("Compile error: %s ", cause.c_str());
+
+        return -1;
     }
 };
 }

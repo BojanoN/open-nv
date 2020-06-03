@@ -17,6 +17,8 @@ class Object;
     X(FunctionCallExpr)    \
     X(ExpressionStatement) \
     X(IfStatement)         \
+    X(ScriptName)          \
+    X(Blocktype)           \
     X(Variable)
 
 #define X(name) name,
@@ -66,7 +68,6 @@ public:
 
     void print();
 
-private:
     Token op;
     Node* left;
     Node* right;
@@ -91,7 +92,6 @@ public:
         std::cout << ")\n";
     }
 
-private:
     std::string variable;
     Node*       expression;
 };
@@ -107,7 +107,6 @@ public:
     }
     void print();
 
-private:
     Node* expression;
 };
 
@@ -126,7 +125,6 @@ public:
         std::cout << value;
     }
 
-private:
     std::string value;
     TokenType   type;
 };
@@ -157,7 +155,6 @@ public:
         std::cout << ")\n";
     }
 
-private:
     std::string        functionName;
     std::vector<Node*> arguments;
 };
@@ -178,16 +175,47 @@ public:
         expression->print();
     }
 
-private:
     Node* expression;
+};
+
+class ScriptNameStatement : public Node {
+public:
+    ScriptNameStatement(std::string& n)
+        : Node(NodeType::ScriptName)
+        , name(n) {};
+    ~ScriptNameStatement() {};
+
+    void print()
+    {
+        std::cout << "(script " << name << ")\n";
+    }
+
+    std::string name;
+};
+class BlockTypeStatement : public Node {
+public:
+    BlockTypeStatement(std::string& t, std::string& a)
+        : Node(NodeType::Blocktype)
+        , type(t)
+        , arg(a) {};
+    ~BlockTypeStatement() {};
+
+    void print()
+    {
+        std::cout << "(blocktype " << type << " " << arg << ")\n";
+    }
+
+private:
+    std::string type;
+    std::string arg;
 };
 
 class IfStatement : public Node {
 public:
-    IfStatement(Node* expr, Node* ifBod, std::vector<Node*>& elifBod, Node* elseBod)
+    IfStatement(Node* expr, Node* ifBod, std::vector<std::pair<Node*, Node*>>& elifBod, Node* elseBod)
         : condition(expr)
         , body(ifBod)
-        , elseifBody(elifBod)
+        , elseIfs(elifBod)
         , elseBody(elseBod)
         , Node(NodeType::IfStatement) {};
     ~IfStatement()
@@ -198,8 +226,9 @@ public:
             delete elseBody;
         }
 
-        for (Node* n : elseifBody) {
-            delete n;
+        for (std::pair<Node*, Node*> n : elseIfs) {
+            delete n.first;
+            delete n.second;
         }
     };
 
@@ -208,6 +237,17 @@ public:
         std::cout << "(if ";
         condition->print();
         body->print();
+
+        if (elseIfs.size()) {
+            for (std::pair<Node*, Node*> n : elseIfs) {
+                std::cout << "(elseif ";
+                n.first->print();
+                std::cout << " ";
+                n.second->print();
+                std::cout << ")\n";
+            }
+        }
+
         if (elseBody != nullptr) {
             elseBody->print();
         } else {
@@ -216,11 +256,10 @@ public:
         std::cout << ")\n";
     }
 
-private:
-    Node*              condition;
-    Node*              body;
-    std::vector<Node*> elseifBody;
-    Node*              elseBody;
+    Node*                                condition;
+    Node*                                body;
+    std::vector<std::pair<Node*, Node*>> elseIfs;
+    Node*                                elseBody;
 };
 
 class Variable : public Node {
@@ -236,7 +275,6 @@ public:
         std::cout << "(" << TokenEnumToString(variableType) << " " << variableName << ")\n";
     }
 
-private:
     TokenType   variableType;
     std::string variableName;
 };
