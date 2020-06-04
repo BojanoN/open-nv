@@ -13,28 +13,25 @@ public:
     Compiler(std::vector<Node*>* n)
         : nodes(n) {};
 
-    void compile();
+    std::vector<uint8_t>* compile();
 
 private:
     Context             ctx;
     std::vector<Node*>* nodes;
-    std::vector<Opcode> bytecode;
 
-    int compileNode(Node* node);
+    int compileNode(Node* node, std::vector<uint8_t>* out);
 
-    int compileBinaryExpr(Node* node);
-    int compileAssignment(Node* node);
-    int compileGroupingExpr(Node* node);
-    int compileLiteralExpr(Node* node);
-    int compileFunctionCallExpr(Node* node);
+    int compileBinaryExpr(Node* node, std::vector<uint8_t>* out);
+    int compileAssignment(Node* node, std::vector<uint8_t>* out);
+    int compileGroupingExpr(Node* node, std::vector<uint8_t>* out);
+    int compileLiteralExpr(Node* node, std::vector<uint8_t>* out);
+    int compileFunctionCallExpr(Node* node, std::vector<uint8_t>* out);
 
-    int compileScriptName(Node* node);
-    int compileBlocktype(Node* node);
-    int compileExpressionStatement(Node* node);
-    int compileIfStatement(Node* node);
-    int compileVariable(Node* node);
-
-    void emit(OpcodeType type, uint16_t arglen);
+    int compileScriptName(Node* node, std::vector<uint8_t>* out);
+    int compileBlocktype(Node* node, std::vector<uint8_t>* out);
+    int compileExpressionStatement(Node* node, std::vector<uint8_t>* out);
+    int compileIfStatement(Node* node, std::vector<uint8_t>* out);
+    int compileVariable(Node* node, std::vector<uint8_t>* out);
 
     int error(std::string cause)
     {
