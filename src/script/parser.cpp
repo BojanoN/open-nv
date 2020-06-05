@@ -79,43 +79,20 @@ std::vector<Node*>* Parser::parse()
     Token&              current = peekCurrent();
     ret                         = new std::vector<Node*>();
 
-    try {
-        ret->push_back(scriptName());
+    ret->push_back(scriptName());
 
+    while (advanceMatches(TokenType::Newline)) { };
+    current = peekCurrent();
+
+    // Variable declaration block
+    while (varTypeMatch.count(current.type)) {
+        Node* tmp = varDeclaration();
+        ret->push_back(tmp);
         while (advanceMatches(TokenType::Newline)) { };
         current = peekCurrent();
+    };
 
-        // Variable declaration block
-        while (varTypeMatch.count(current.type)) {
-            Node* tmp = varDeclaration();
-            ret->push_back(tmp);
-            while (advanceMatches(TokenType::Newline)) { };
-            current = peekCurrent();
-        };
-
-        ret->push_back(blocktype());
-
-        bool hasEndBlock = false;
-        current          = advance();
-
-        while (!end()) {
-
-            while (advanceMatches(TokenType::Newline)) { }
-
-            if (peekCurrent().type == TokenType::End) {
-                break;
-            }
-
-            ret->emplace_back(statement());
-        }
-    } catch (std::runtime_error& e) {
-        for (Node* n : *ret) {
-            delete n;
-        }
-        delete ret;
-
-        throw e;
-    }
+    ret->push_back(block());
 
     if (end()) {
         for (Node* n : *ret) {
@@ -388,5 +365,43 @@ Node* Parser::blocktype()
 
     return new BlockTypeStatement(blocktype, blocktypeArg);
 };
+
+Node* Parser::block()
+{
+    std::vector<Node*>* ret     = new std::vector<Node*>();
+    Node*               retNode = nullptr;
+    Token&              current = peekCurrent();
+
+    try {
+        Node* type = blocktype();
+
+        bool hasEndBlock = false;
+        current          = advance();
+
+        while (!end()) {
+
+            while (advanceMatches(TokenType::Newline)) { }
+
+            if (peekCurrent().type == TokenType::End) {
+                break;
+            }
+
+            ret->emplace_back(statement());
+        }
+
+        retNode = new Block(type, ret);
+
+    } catch (std::runtime_error& e) {
+        int size = ret->size();
+        for (int i = 0; i < size; i++) {
+            delete ret->at(i);
+        }
+        delete ret;
+
+        throw e;
+    }
+
+    return retNode;
+}
 
 };

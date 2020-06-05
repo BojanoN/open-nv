@@ -19,6 +19,7 @@ class Object;
     X(IfStatement)         \
     X(ScriptName)          \
     X(Blocktype)           \
+    X(Block)               \
     X(Variable)
 
 #define X(name) name,
@@ -277,6 +278,32 @@ public:
 
     TokenType   variableType;
     std::string variableName;
+};
+
+class Block : public Node {
+public:
+    Block(Node* t, std::vector<Node*>* ns)
+        : Node(NodeType::Block)
+        , type(t)
+        , nodes(ns) {};
+    ~Block()
+    {
+        for (Node* n : *nodes) {
+            delete n;
+        }
+
+        delete nodes;
+    }
+
+    void print()
+    {
+        for (Node* n : *nodes) {
+            n->print();
+        }
+    }
+
+    std::vector<Node*>* nodes;
+    Node*               type;
 };
 
 }

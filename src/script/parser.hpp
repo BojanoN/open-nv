@@ -122,6 +122,7 @@ private:
     Node* ifStatement();
     Node* scriptName();
     Node* blocktype();
+    Node* block();
 
     Node* functionCall();
     Node* assignment();
