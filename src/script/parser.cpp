@@ -22,6 +22,23 @@ static std::set<Script::TokenType> varTypeMatch = {
     Script::TokenType::Long
 };
 
+static std::set<Script::TokenType> functionCallDelimiters = {
+    Script::TokenType::GreaterThan,
+    Script::TokenType::GreaterThanOrEqualTo,
+    Script::TokenType::LessThan,
+    Script::TokenType::LessThanOrEqualTo,
+    Script::TokenType::EqualTo,
+    Script::TokenType::NotEqualTo,
+    Script::TokenType::Newline
+};
+
+static std::unordered_map<Script::TokenType, Script::Type> tokenTypeToVarType = {
+    { Script::TokenType::Reference, Script::Type::Reference },
+    { Script::TokenType::Integer, Script::Type::Integer },
+    { Script::TokenType::Float, Script::Type::Float },
+    { Script::TokenType::Identifier, Script::Type::Identifier }
+};
+
 namespace Script {
 
 std::set<std::string> Parser::blocktypes = {
@@ -182,11 +199,10 @@ Node* Parser::functionCall()
     if (FunctionResolver::functions.count(functionIdentifier.literal) == 0) {
         return baseType();
     }
-    //FunctionInfo& info               = FunctionResolver::functions[functionIdentifier.value];
     advance();
     std::vector<Node*> arguments;
 
-    while (peekCurrent().type != TokenType::Newline) {
+    while (functionCallDelimiters.count(peekCurrent().type) == 0) {
         arguments.push_back(expression());
     }
 
@@ -201,7 +217,7 @@ Node* Parser::baseType()
 
     if (advanceMatches(baseTypeMatch)) {
         Token& tmp = previous();
-        return new LiteralExpr(tmp.literal, tmp.type);
+        return new LiteralExpr(tmp.literal, tokenTypeToVarType[tmp.type]);
     }
 
     if (advanceMatches(TokenType::LeftParenthesis)) {
@@ -246,7 +262,12 @@ Node* Parser::expressionStatement()
 
 Node* Parser::varDeclaration()
 {
-    Token& varType = peekCurrent();
+    Token& varTypeToken = peekCurrent();
+
+    if (tokenTypeToVarType.count(varTypeToken.type) == 0)
+        error("Unknown variable type", varTypeToken);
+
+    Type varType = tokenTypeToVarType[varTypeToken.type];
 
     check(varTypeMatch, "Expected variable type");
     Token& varName = peekCurrent();
@@ -256,7 +277,7 @@ Node* Parser::varDeclaration()
 
     check(TokenType::Newline, "Expected newline after declaration");
 
-    return new Variable(varType.type, varName.literal);
+    return new Variable(varType, varName.literal);
 }
 
 Node* Parser::assignment()
@@ -403,5 +424,4 @@ Node* Parser::block()
 
     return retNode;
 }
-
 };

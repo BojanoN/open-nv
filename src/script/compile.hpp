@@ -30,12 +30,7 @@ public:
     bool write(uint8_t* source, uint32_t n)
     {
         if ((currentSize + n) > capacity) {
-            capacity += DEFAULT_ARR_SIZE * (n / capacity);
-            bytecode = (uint8_t*)std::realloc(bytecode, capacity);
-
-            if (bytecode == NULL) {
-                throw std::runtime_error("Realloc fail");
-            }
+            resize(n);
         }
 
         memcpy(bytecode + currentSize, source, n);
@@ -52,17 +47,50 @@ public:
         }
 
         memcpy(bytecode + offset, source, n);
+
+        return true;
+    }
+
+    bool writeZeros(uint32_t n)
+    {
+        if ((currentSize + n) > capacity) {
+            resize(n);
+        }
+
+        bzero(this->bytecode + this->currentSize, n);
         currentSize += n;
+        return true;
+    }
+
+    bool writeByte(uint8_t value)
+    {
+        if (this->currentSize + 1 < this->capacity) {
+            resize(1);
+        }
+
+        bytecode[currentSize++] = value;
 
         return true;
     }
 
     uint32_t getSize() { return currentSize; };
 
+    void print();
+
 private:
     uint8_t* bytecode;
     uint32_t currentSize;
     uint32_t capacity;
+
+    void resize(int n)
+    {
+        capacity += DEFAULT_ARR_SIZE * ((n + capacity) / capacity);
+        bytecode = (uint8_t*)std::realloc(bytecode, capacity);
+
+        if (bytecode == NULL) {
+            throw std::runtime_error("Realloc fail");
+        }
+    }
 };
 
 class Compiler {

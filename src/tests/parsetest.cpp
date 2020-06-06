@@ -1,3 +1,4 @@
+#include "compile.hpp"
 #include "interpreter.hpp"
 #include "logc/log.h"
 #include "parser.hpp"
@@ -39,10 +40,14 @@ int main(int argc, char** argv)
             for (Script::Node* n : *s) {
                 n->print();
             }
-            for (Script::Node* stmt : *s) {
-                delete stmt;
-            }
 
+            Script::Compiler*       c  = new Script::Compiler(s);
+            Script::CompiledScript* cs = c->compile();
+
+            cs->print();
+
+            delete c;
+            delete cs;
             delete s;
         } catch (std::runtime_error& e) {
             log_fatal("%s", e.what());

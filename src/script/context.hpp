@@ -3,6 +3,7 @@
 #include "types/base.hpp"
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace Script {
 
@@ -15,15 +16,31 @@ public:
 
     void declareVar(std::string& name, Type type)
     {
-        variables[name] = type;
+        variables[name] = std::make_pair(type, variableIndex);
+        variableIndex++;
     }
 
-    ~Context();
+    std::pair<Type, int>& getVar(std::string& name)
+    {
+        return variables[name];
+    }
+    Context()
+        : variableIndex(0)
+    {
+    }
+    ~Context() {};
+
+    int SCROLookup(uint32_t formid)
+    {
+        log_info("SCROLookup called");
+        return 0;
+    }
 
     std::string scriptName;
 
 private:
-    std::unordered_map<std::string, Type> variables;
+    std::unordered_map<std::string, std::pair<Type, int>> variables;
+    int                                                   variableIndex;
 };
 
 };

@@ -2,6 +2,7 @@
 
 #include "misc.hpp"
 #include "tokenizer.hpp"
+#include "types/base.hpp"
 #include <iostream>
 
 namespace Script {
@@ -113,7 +114,7 @@ public:
 
 class LiteralExpr : public Node {
 public:
-    LiteralExpr(std::string val, TokenType t)
+    LiteralExpr(std::string val, Type t)
         : value(val)
         , type(t)
         , Node(NodeType::LiteralExpr)
@@ -127,7 +128,7 @@ public:
     }
 
     std::string value;
-    TokenType   type;
+    Type        type;
 };
 
 class FunctionCallExpr : public Node {
@@ -265,7 +266,7 @@ public:
 
 class Variable : public Node {
 public:
-    Variable(TokenType& type, std::string varName)
+    Variable(Type& type, std::string varName)
         : variableType(type)
         , variableName(varName)
         , Node(NodeType::Variable) {};
@@ -273,10 +274,10 @@ public:
 
     void print()
     {
-        std::cout << "(" << TokenEnumToString(variableType) << " " << variableName << ")\n";
+        std::cout << "(" << TypeEnumToString(variableType) << " " << variableName << ")\n";
     }
 
-    TokenType   variableType;
+    Type        variableType;
     std::string variableName;
 };
 
