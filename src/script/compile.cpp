@@ -137,12 +137,12 @@ int Compiler::compileAssignment(Node* node, CompiledScript* out)
     Assignment* expr    = dynamic_cast<Assignment*>(node);
     uint32_t    begSize = out->getSize();
 
-    uint8_t set[]              = { static_cast<uint8_t>(OutputCodes::ASSIGN), 0x00 };
-    uint8_t exprLenPlaceholder = { 0x00, 0x00 };
+    uint8_t set[]                = { static_cast<uint8_t>(OutputCodes::ASSIGN), 0x00 };
+    uint8_t exprLenPlaceholder[] = { 0x00, 0x00 };
 
     out->write(set, 2);
     uint16_t nameLen = expr->variable.size();
-    out->write(nameLen, sizeof(uint16_t));
+    out->write((uint8_t*)&nameLen, sizeof(uint16_t));
     out->write((uint8_t*)expr->variable.data(), nameLen);
 
     uint32_t exprLenOffset = out->getSize();
@@ -263,36 +263,98 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     IfStatement* ifStmt    = dynamic_cast<IfStatement*>(node);
     uint32_t     begOffset = out->getSize();
 
-    uint8_t ifBegin[] = { static_cast<uint8_t>(OutputCodes::IF), 0x00 };
+    uint8_t ifBegin[]   = { static_cast<uint8_t>(OutputCodes::IF), 0x00 };
+    uint8_t elifBegin[] = { static_cast<uint8_t>(OutputCodes::ELIF), 0x00 };
+    uint8_t elseBegin[] = { static_cast<uint8_t>(OutputCodes::ELSE), 0x00, 0x02, 0x00 };
 
-    int      exprLen, compLen;
+    int      exprLen, compLen, bodyLen;
     uint16_t exprLenOut, compLenOut, jumpOps;
-    uint32_t exprLenOffset, jumpOpsOffset;
+    uint32_t exprLenOffset, jumpOpsOffset, compLenOffset;
+
+    out->write(ifBegin, 2);
 
     // TODO: check .esm files for source and see what this is supposed to be
     compLenOut = 0;
+    jumpOps    = 0;
+    exprLenOut = 0;
+
+    compLenOffset = out->getSize();
+    out->write((uint8_t*)&compLenOut, sizeof(uint16_t));
+
+    jumpOpsOffset = out->getSize();
+    out->write((uint8_t*)&jumpOps, sizeof(uint16_t));
+
+    exprLenOffset = out->getSize();
+    out->write((uint8_t*)&exprLenOut, sizeof(uint16_t));
 
     exprLen = compileNode(ifStmt->condition, out);
     if (compLen < 0) {
         return -1;
     }
     exprLenOut = (uint16_t)exprLen;
-    jumpOps    = exprLenOut + sizeof(uint16_t);
+
+    bodyLen = compileNode(ifStmt->body, out);
+    if (bodyLen < 0) {
+        return -1;
+    }
+
+    jumpOps    = exprLenOut + sizeof(uint16_t) + bodyLen;
     compLenOut = jumpOps + sizeof(uint16_t);
 
-    compileNode(ifStmt->body, out);
+    out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
+    out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
+    out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(uint16_t));
 
     uint32_t elifsSize = ifStmt->elseIfs.size();
 
     if (elifsSize) {
         for (uint32_t i = 0; i < elifsSize; i++) {
-            compileNode(ifStmt->elseIfs[i].first, out);
-            compileNode(ifStmt->elseIfs[i].second, out);
+            out->write(elifBegin, 2);
+
+            compLenOut = 0;
+            jumpOps    = 0;
+            exprLenOut = 0;
+
+            compLenOffset = out->getSize();
+            out->write((uint8_t*)&compLenOut, sizeof(uint16_t));
+
+            jumpOpsOffset = out->getSize();
+            out->write((uint8_t*)&jumpOps, sizeof(uint16_t));
+
+            exprLenOffset = out->getSize();
+            out->write((uint8_t*)&exprLenOut, sizeof(uint16_t));
+
+            exprLen = compileNode(ifStmt->elseIfs[i].first, out);
+            if (compLen < 0) {
+                return -1;
+            }
+            exprLenOut = (uint16_t)exprLen;
+
+            bodyLen = compileNode(ifStmt->elseIfs[i].second, out);
+            if (bodyLen < 0) {
+                return -1;
+            }
+
+            jumpOps    = exprLenOut + sizeof(uint16_t) + bodyLen;
+            compLenOut = jumpOps + sizeof(uint16_t);
+
+            out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
+            out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
+            out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(uint16_t));
         }
     }
 
     if (ifStmt->elseBody != nullptr) {
-        compileNode(ifStmt->elseBody, out);
+        out->write(elseBegin, 4);
+        jumpOpsOffset = out->getSize();
+        bodyLen       = compileNode(ifStmt->elseBody, out);
+
+        if (bodyLen < 0) {
+            return -1;
+        }
+
+        jumpOps = bodyLen;
+        out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
     }
 
     return out->getSize() - begOffset;
