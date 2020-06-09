@@ -20,7 +20,7 @@ int main(int argc, char** argv)
     in.seekg(0, std::ios::beg);
 
     std::string source(size, '\0');
-    in.read(source.data(), size);
+    in.read(const_cast<char*>(source.data()), size);
 
     Script::Tokenizer* tok = new Script::Tokenizer(source);
 

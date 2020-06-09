@@ -30,7 +30,7 @@ public:
     }
     ~Context() {};
 
-    int SCROLookup(uint32_t formid)
+    int SCROLookup(std::string& formid)
     {
         log_info("SCROLookup called");
         return 0;

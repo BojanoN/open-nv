@@ -66,8 +66,6 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
 
     case NodeType::ScriptName:
         return compileScriptName(node, out);
-    case NodeType::Blocktype:
-        return compileBlocktype(node, out);
     case NodeType::Variable:
         return compileVariable(node, out);
     case NodeType::Block:
@@ -84,12 +82,12 @@ int Compiler::compileBlock(Node* node, CompiledScript* out)
     int    size  = block->nodes->size();
 
     uint8_t beg[] = {
-        0x10, 0x00, 0x06, 0x00,
+        static_cast<uint8_t>(OutputCodes::BEGIN), 0x00, 0x06, 0x00,
         0x00, 0x00,
         0x00, 0x00, 0x00, 0x00
     };
     uint8_t end[] = {
-        0x11, 0x00, 0x00, 0x00
+        static_cast<uint8_t>(OutputCodes::END), 0x00, 0x00, 0x00
     };
 
     uint32_t totalWrite      = out->getSize();
@@ -107,7 +105,7 @@ int Compiler::compileBlock(Node* node, CompiledScript* out)
 
         totalBlocksize += (uint32_t)compiledBytes;
     }
-    if (!out->writeAt(blocksizeOffset, (uint8_t*)&totalBlocksize, 4)) {
+    if (!out->writeAt(blocksizeOffset, (uint8_t*)&totalBlocksize, sizeof(uint32_t))) {
         log_fatal("WriteAt error");
         return -1;
     }
@@ -121,14 +119,43 @@ int Compiler::compileBlock(Node* node, CompiledScript* out)
 
 int Compiler::compileBinaryExpr(Node* node, CompiledScript* out)
 {
+    BinaryExpr* expr    = dynamic_cast<BinaryExpr*>(node);
+    uint32_t    begSize = out->getSize();
 
-    return 0;
+    compileNode(expr->left, out);
+    compileNode(expr->right, out);
+
+    // TODO: check if this really is the case
+    out->writeByte(static_cast<uint8_t>(OutputCodes::PUSH));
+    out->write((uint8_t*)expr->op.literal.data(), expr->op.literal.size());
+
+    return out->getSize() - begSize;
 };
 
 int Compiler::compileAssignment(Node* node, CompiledScript* out)
 {
+    Assignment* expr    = dynamic_cast<Assignment*>(node);
+    uint32_t    begSize = out->getSize();
 
-    return 0;
+    uint8_t set[]              = { static_cast<uint8_t>(OutputCodes::ASSIGN), 0x00 };
+    uint8_t exprLenPlaceholder = { 0x00, 0x00 };
+
+    out->write(set, 2);
+    uint16_t nameLen = expr->variable.size();
+    out->write(nameLen, sizeof(uint16_t));
+    out->write((uint8_t*)expr->variable.data(), nameLen);
+
+    uint32_t exprLenOffset = out->getSize();
+    out->write(exprLenPlaceholder, 2);
+
+    int exprLen = compileNode(expr->expression, out);
+    if (exprLen < 0) {
+        return -1;
+    }
+    uint16_t exprLenOut = (uint16_t)exprLen;
+    out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(exprLenOut));
+
+    return out->getSize() - begSize;
 };
 
 int Compiler::compileGroupingExpr(Node* node, CompiledScript* out)
@@ -141,7 +168,7 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
     LiteralExpr* expr    = dynamic_cast<LiteralExpr*>(node);
     uint32_t     begSize = out->getSize();
 
-    out->writeByte(0x20);
+    out->writeByte(static_cast<uint8_t>(OutputCodes::PUSH));
     if (expr->type == Type::Identifier) {
         uint8_t  typeCode;
         uint16_t varIndex;
@@ -154,11 +181,11 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
             switch (varInfo.first) {
             case (Type::Reference):
             case (Type::Float):
-                typeCode = 0x66;
+                typeCode = static_cast<uint8_t>(OutputCodes::FLOAT_REF_LOCAL);
                 break;
             case (Type::Short):
             case (Type::Integer):
-                typeCode = 0x73;
+                typeCode = static_cast<uint8_t>(OutputCodes::INT_LOCAL);
                 break;
             default:
                 return -1;
@@ -168,8 +195,8 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
             // If not present locally leave for reference checking later
             // TODO: SCRO lookup
 
-            typeCode      = 0x5A;
-            uint32_t form = std::stoi(expr->value);
+            typeCode          = static_cast<uint8_t>(OutputCodes::REF_GLOBAL);
+            std::string& form = expr->value;
             // Dummy SCRO lookup for now
             varIndex = ctx.SCROLookup(form);
         }
@@ -226,10 +253,6 @@ int Compiler::compileScriptName(Node* node, CompiledScript* out)
 
     return sizeof(scn);
 };
-int Compiler::compileBlocktype(Node* node, CompiledScript* out)
-{
-    return 0;
-};
 int Compiler::compileExpressionStatement(Node* node, CompiledScript* out)
 {
     ExpressionStatement* expr = dynamic_cast<ExpressionStatement*>(node);
@@ -240,10 +263,27 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     IfStatement* ifStmt    = dynamic_cast<IfStatement*>(node);
     uint32_t     begOffset = out->getSize();
 
-    compileNode(ifStmt->condition, out);
+    uint8_t ifBegin[] = { static_cast<uint8_t>(OutputCodes::IF), 0x00 };
+
+    int      exprLen, compLen;
+    uint16_t exprLenOut, compLenOut, jumpOps;
+    uint32_t exprLenOffset, jumpOpsOffset;
+
+    // TODO: check .esm files for source and see what this is supposed to be
+    compLenOut = 0;
+
+    exprLen = compileNode(ifStmt->condition, out);
+    if (compLen < 0) {
+        return -1;
+    }
+    exprLenOut = (uint16_t)exprLen;
+    jumpOps    = exprLenOut + sizeof(uint16_t);
+    compLenOut = jumpOps + sizeof(uint16_t);
+
     compileNode(ifStmt->body, out);
 
     uint32_t elifsSize = ifStmt->elseIfs.size();
+
     if (elifsSize) {
         for (uint32_t i = 0; i < elifsSize; i++) {
             compileNode(ifStmt->elseIfs[i].first, out);

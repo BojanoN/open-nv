@@ -99,6 +99,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const Token& t);
     friend class Parser;
+    friend class Compiler;
 
     bool operator==(const Token& other) const
     {
@@ -224,7 +225,7 @@ private:
         std::string ret;
         ret.resize(end - beg);
 
-        std::strncpy(ret.data(), str.data() + beg, end - beg);
+        std::strncpy(const_cast<char*>(ret.data()), const_cast<char*>(str.data()) + beg, end - beg);
 
         return ret;
     }
