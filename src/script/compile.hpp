@@ -17,6 +17,7 @@ class CompiledScript {
 public:
     CompiledScript()
         : currentSize(0)
+        , currentReadOffset(0)
         , capacity(DEFAULT_ARR_SIZE)
     {
         bytecode = new uint8_t[DEFAULT_ARR_SIZE];
@@ -73,7 +74,58 @@ public:
         return true;
     }
 
-    uint32_t getSize() { return currentSize; };
+    uint8_t peekByte()
+    {
+        return this->bytecode[this->currentReadOffset];
+    }
+
+    uint16_t peekShort()
+    {
+        if (currentReadOffset + sizeof(uint16_t) > currentSize) {
+            return 0;
+        }
+
+        return *((uint16_t*)(bytecode + currentReadOffset));
+    }
+
+    uint32_t peekLong()
+    {
+        if (currentReadOffset + sizeof(uint32_t) > currentSize) {
+            return 0;
+        }
+
+        return *((uint32_t*)(bytecode + currentReadOffset));
+    }
+
+    uint32_t consumeLong()
+    {
+        uint32_t ret = peekLong();
+        currentReadOffset += sizeof(uint32_t);
+        return ret;
+    }
+
+    uint16_t consumeShort()
+    {
+        uint16_t ret = peekShort();
+        currentReadOffset += sizeof(uint16_t);
+        return ret;
+    }
+    uint8_t consumeByte()
+    {
+        uint8_t ret = peekByte();
+        currentReadOffset++;
+        return ret;
+    }
+
+    bool hasMoreBytes()
+    {
+        return currentReadOffset < currentSize;
+    }
+
+    uint32_t getSize()
+    {
+        return currentSize;
+    };
 
     void print();
 
@@ -81,6 +133,8 @@ private:
     uint8_t* bytecode;
     uint32_t currentSize;
     uint32_t capacity;
+
+    uint32_t currentReadOffset;
 
     void resize(int n)
     {

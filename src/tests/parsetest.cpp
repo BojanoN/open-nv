@@ -3,6 +3,7 @@
 #include "logc/log.h"
 #include "parser.hpp"
 #include "tokenizer.hpp"
+#include "vm.hpp"
 #include <fstream>
 
 int main(int argc, char** argv)
@@ -31,7 +32,8 @@ int main(int argc, char** argv)
         Script::Parser* parser = new Script::Parser(tok);
 
         try {
-            std::vector<Script::Node*>* s = parser->parse();
+            Script::VM*                 vm = new Script::VM();
+            std::vector<Script::Node*>* s  = parser->parse();
 
             for (Script::Node* n : *s) {
                 log_info("Node: %s", Script::NodeEnumToString(n->type));
@@ -46,6 +48,9 @@ int main(int argc, char** argv)
 
             cs->print();
 
+            vm->execute(cs);
+
+            delete vm;
             delete c;
             delete cs;
             delete s;
