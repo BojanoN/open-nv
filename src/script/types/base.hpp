@@ -45,4 +45,13 @@ public:
 
     Type type;
 };
+
+struct Value {
+    Type type;
+    union {
+        float    f;
+        uint32_t l;
+    } value;
+};
+
 }

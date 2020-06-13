@@ -126,7 +126,7 @@ int Compiler::compileBinaryExpr(Node* node, CompiledScript* out)
     compileNode(expr->right, out);
 
     // TODO: check if this really is the case
-    out->writeByte(static_cast<uint8_t>(OutputCodes::PUSH));
+    out->writeByte(static_cast<uint8_t>(ExprCodes::PUSH));
     out->write((uint8_t*)expr->op.literal.data(), expr->op.literal.size());
 
     return out->getSize() - begSize;
@@ -168,7 +168,7 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
     LiteralExpr* expr    = dynamic_cast<LiteralExpr*>(node);
     uint32_t     begSize = out->getSize();
 
-    out->writeByte(static_cast<uint8_t>(OutputCodes::PUSH));
+    out->writeByte(static_cast<uint8_t>(ExprCodes::PUSH));
     if (expr->type == Type::Identifier) {
         uint8_t  typeCode;
         uint16_t varIndex;
@@ -181,11 +181,11 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
             switch (varInfo.first) {
             case (Type::Reference):
             case (Type::Float):
-                typeCode = static_cast<uint8_t>(OutputCodes::FLOAT_REF_LOCAL);
+                typeCode = static_cast<uint8_t>(ExprCodes::FLOAT_REF_LOCAL);
                 break;
             case (Type::Short):
             case (Type::Integer):
-                typeCode = static_cast<uint8_t>(OutputCodes::INT_LOCAL);
+                typeCode = static_cast<uint8_t>(ExprCodes::INT_LOCAL);
                 break;
             default:
                 return -1;
@@ -195,7 +195,7 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
             // If not present locally leave for reference checking later
             // TODO: SCRO lookup
 
-            typeCode          = static_cast<uint8_t>(OutputCodes::REF_GLOBAL);
+            typeCode          = static_cast<uint8_t>(ExprCodes::REF_GLOBAL);
             std::string& form = expr->value;
             // Dummy SCRO lookup for now
             varIndex = ctx.SCROLookup(form);

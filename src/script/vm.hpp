@@ -1,6 +1,7 @@
 #pragma once
 
 #include "compile.hpp"
+#include "types/base.hpp"
 #include <cstdint>
 
 #define DEF_STACK_SIZE 512
@@ -14,21 +15,21 @@ public:
         : top(-1)
     {
     }
-    void push(uint32_t val)
+    void push(Value val)
     {
         // TODO: benchmark scripts and determine optimal stack size
         if (top + 1 < DEF_STACK_SIZE)
             this->buf[top++] = val;
     };
-    uint32_t pop()
+    Value pop()
     {
-        uint32_t ret = this->buf[top];
-        top          = (top - 1) < -1 ? -1 : top - 1;
+        Value ret = this->buf[top];
+        top       = (top - 1) < -1 ? -1 : top - 1;
         return ret;
     };
 
 private:
-    uint32_t buf[DEF_STACK_SIZE];
+    Value    buf[DEF_STACK_SIZE];
     uint32_t top;
 };
 
@@ -63,9 +64,17 @@ public:
     bool execute(CompiledScript* script);
 
 private:
-    Stack stack;
+    Stack           stack;
+    CompiledScript* script;
 
-    bool handleExpressionCode(CompiledScript* script);
-    bool handleOpcode(CompiledScript* script);
+    bool handleExpressionCode();
+    bool handleOpcode();
+
+    bool evalExpression(uint16_t exprLen);
+
+    bool handleIf();
+
+    bool functionCall();
+    bool numberParse();
 };
 };

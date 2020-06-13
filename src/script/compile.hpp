@@ -2,6 +2,7 @@
 
 #include "context.hpp"
 #include "opcode.hpp"
+#include "types/base.hpp"
 #include <cstdlib>
 #include <string.h>
 #include <vector>
@@ -97,24 +98,39 @@ public:
         return *((uint32_t*)(bytecode + currentReadOffset));
     }
 
-    uint32_t consumeLong()
+    uint32_t readLong()
     {
         uint32_t ret = peekLong();
         currentReadOffset += sizeof(uint32_t);
         return ret;
     }
 
-    uint16_t consumeShort()
+    uint16_t readShort()
     {
         uint16_t ret = peekShort();
         currentReadOffset += sizeof(uint16_t);
         return ret;
     }
-    uint8_t consumeByte()
+    uint8_t readByte()
     {
         uint8_t ret = peekByte();
         currentReadOffset++;
         return ret;
+    }
+
+    bool jump(uint32_t offset)
+    {
+        if (offset + currentReadOffset > currentSize) {
+            return false;
+        }
+
+        currentReadOffset += offset;
+        return true;
+    }
+
+    bool isBeforeOffset(uint32_t offset)
+    {
+        return offset < currentReadOffset;
     }
 
     bool hasMoreBytes()
@@ -122,10 +138,24 @@ public:
         return currentReadOffset < currentSize;
     }
 
+    uint32_t getReadOffset()
+    {
+        return currentReadOffset;
+    }
+
     uint32_t getSize()
     {
         return currentSize;
     };
+
+    Value getLocalVariable(uint16_t index)
+    {
+        Value ret;
+
+        // TODO: local var lookup
+
+        return ret;
+    }
 
     void print();
 
