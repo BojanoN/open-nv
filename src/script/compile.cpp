@@ -128,6 +128,8 @@ int Compiler::compileBinaryExpr(Node* node, CompiledScript* out)
     // TODO: check if this really is the case
     out->writeByte(static_cast<uint8_t>(ExprCodes::PUSH));
     out->write((uint8_t*)expr->op.literal.data(), expr->op.literal.size());
+    // TODO: add literals to arithmetic operator tokens
+    log_debug("WTF: %s", expr->op.literal.c_str());
 
     return out->getSize() - begSize;
 };

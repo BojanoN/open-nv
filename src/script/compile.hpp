@@ -128,9 +128,21 @@ public:
         return true;
     }
 
+    bool readString(uint32_t len, char* dest)
+    {
+        if (len + currentReadOffset > currentSize) {
+            return false;
+        }
+
+        memcpy(dest, bytecode + currentReadOffset, len);
+        currentReadOffset += len;
+
+        return true;
+    }
+
     bool isBeforeOffset(uint32_t offset)
     {
-        return offset < currentReadOffset;
+        return currentReadOffset < offset;
     }
 
     bool hasMoreBytes()

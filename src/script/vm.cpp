@@ -7,6 +7,46 @@ bool VM::execute(CompiledScript* script)
     bool err;
     this->script = script;
 
+    // Check for beginning header
+    uint16_t opcode = script->readShort();
+    if (opcode != OutputCodes::SCRIPTNAME) {
+        log_fatal("Invalid script name opcode");
+        this->script = nullptr;
+        return true;
+    }
+
+    opcode = script->readShort();
+    if (opcode != 0) {
+        log_fatal("Invalid script name opcode");
+        this->script = nullptr;
+        return true;
+    }
+
+    // Blocktype
+    // TODO: only GameMode supported for now, add other blocktypes
+    opcode = script->readShort();
+    if (opcode != OutputCodes::BEGIN) {
+        log_fatal("Invalid script beginning opcode");
+        this->script = nullptr;
+        return true;
+    }
+
+    opcode = script->readShort();
+    if (opcode != 0x6) {
+        log_fatal("Invalid script beginning opcode");
+        this->script = nullptr;
+        return true;
+    }
+
+    opcode = script->readShort();
+    if (opcode != 0) {
+        log_fatal("Invalid script beginning opcode");
+        this->script = nullptr;
+        return true;
+    }
+
+    script->readLong();
+
     while (script->hasMoreBytes()) {
 
         err = handleOpcode();
@@ -27,11 +67,16 @@ bool VM::numberParse()
 {
     bool isFloat = false;
     // TODO: refactor this, add bound checking to avoid nasty buffer overflows
-    char     tmpbuf[512];
-    uint32_t i = 0;
+    char     tmpbuf[4096] = { 0 };
+    uint32_t i            = 0;
 
-    char c = script->peekByte();
-    while (c >= '0' && c <= '9') {
+    char c;
+    while (true) {
+        c = script->peekByte();
+
+        if (!(c >= '0' && c <= '9'))
+            break;
+
         tmpbuf[i] = script->readByte();
         i++;
     }
@@ -39,16 +84,24 @@ bool VM::numberParse()
     if (script->peekByte() == '.') {
         isFloat = true;
 
-        tmpbuf[i] = script->readByte();
+        c         = script->readByte();
+        tmpbuf[i] = c;
         i++;
 
-        while (c >= '0' && c <= '9') {
+        c = script->peekByte();
+
+        while (true) {
+            c = script->peekByte();
+
+            if (!(c >= '0' && c <= '9'))
+                break;
+
             tmpbuf[i] = script->readByte();
             i++;
         }
     }
 
-    tmpbuf[i + 1] = 0;
+    tmpbuf[i] = 0;
 
     try {
         Value val;
@@ -60,12 +113,13 @@ bool VM::numberParse()
             val.value.l = std::stod(tmpbuf);
         }
 
+        log_debug("Number parse result: %s, %d", TypeEnumToString(val.type), AS_INT(val));
+
         this->stack.push(val);
     } catch (std::invalid_argument& e) {
         log_fatal("numberParse failure: %s", e.what());
         return true;
     }
-
     return false;
 }
 
@@ -74,6 +128,90 @@ bool VM::functionCall()
 
     return false;
 };
+
+enum TwoCharOperators : uint16_t {
+    EQUAL     = 0x3d3d,
+    NOT_EQUAL = 0x213d,
+    GTE       = 0x3e3d,
+    LTE       = 0x3c3d
+};
+
+static std::set<uint8_t>  singleCharOp = { '+', '-', '*', '/' };
+static std::set<uint16_t> comparisonOp = {
+    TwoCharOperators::EQUAL,
+    TwoCharOperators::NOT_EQUAL,
+    TwoCharOperators::GTE,
+    TwoCharOperators::LTE
+};
+
+bool VM::handleBinaryOperator()
+{
+    uint8_t  code = script->peekByte();
+    uint16_t comp = script->peekShort();
+    Value    res;
+
+    if (singleCharOp.count(code)) {
+        script->readByte();
+        Value right = this->stack.pop();
+        Value left  = this->stack.pop();
+
+        if (right.type == Type::Reference || left.type == Type::Reference) {
+            log_fatal("Reference arithmetic is not allowed");
+            return true;
+        }
+
+        switch (code) {
+        case ('+'):
+            ARITHMETIC_OP(left, right, +);
+            break;
+        case ('-'):
+            ARITHMETIC_OP(left, right, -);
+            break;
+        case ('*'):
+            ARITHMETIC_OP(left, right, *);
+            break;
+        case ('/'):
+            ARITHMETIC_OP(left, right, /);
+            break;
+        case ('>'):
+            COMPARISON_OP(left, right, >);
+            break;
+        case ('<'):
+            COMPARISON_OP(left, right, <);
+            break;
+        default:
+            break;
+        }
+
+        return false;
+    } else if (comparisonOp.count(comp)) {
+        script->readByte();
+
+        Value right = this->stack.pop();
+        Value left  = this->stack.pop();
+
+        switch (comp) {
+        case (TwoCharOperators::EQUAL):
+            COMPARISON_OP(left, right, ==);
+            break;
+        case (TwoCharOperators::NOT_EQUAL):
+            COMPARISON_OP(left, right, !=);
+            break;
+        case (TwoCharOperators::GTE):
+            COMPARISON_OP(left, right, >=);
+            break;
+        case (TwoCharOperators::LTE):
+            COMPARISON_OP(left, right, <=);
+            break;
+        default:
+            break;
+        }
+
+        return false;
+    }
+
+    return true;
+}
 
 bool VM::handleExpressionCode()
 {
@@ -91,11 +229,6 @@ bool VM::handleExpressionCode()
         this->stack.push(script->getLocalVariable(index));
         return false;
     }
-    case ('+'):
-    case ('-'):
-    case ('*'):
-    case ('/'):
-
     case (ExprCodes::REF_GLOBAL):
         // TODO: SCRO/SCRV lookup
         break;
@@ -110,24 +243,68 @@ bool VM::handleExpressionCode()
         break;
     }
 
-    // Why would anyone do this
+    // This is a really terrible way to do this but bethesda's poor bytecode design has forced me
     // Two character operator parsing
-    uint16_t op = script->peekShort();
-    switch (op) {
-    };
+    err = handleBinaryOperator();
+
+    if (!err)
+        return false;
     // Constants parsing
     return numberParse();
+};
+
+bool VM::handleIf()
+{
+    return false;
+}
+
+bool VM::handleAssign()
+{
+    uint16_t    varnameLen = script->readShort();
+    std::string var;
+    bool        err;
+    log_debug("SIZE: 0x%x", varnameLen);
+    var.reserve(varnameLen + 1);
+
+    if (!script->readString(varnameLen, var.data())) {
+        log_fatal("Unexpected end of script");
+        return true;
+    }
+    var[varnameLen] = 0;
+
+    log_debug("ASSIGN: %s", var.c_str());
+
+    uint16_t exprLen = script->readShort();
+    err              = evalExpression(exprLen);
+    if (err) {
+        return true;
+    }
+
+    Value exprRes = this->stack.pop();
+
+    log_debug("Eval result: %s, %d", TypeEnumToString(exprRes.type), AS_INT(exprRes));
+
+    // script->context.assign()
+
+    return false;
 };
 
 bool VM::evalExpression(uint16_t exprLen)
 {
     uint32_t exprEnd = script->getReadOffset() + exprLen;
     uint8_t  currentOpcode;
+    bool     err;
 
     while (script->isBeforeOffset(exprEnd)) {
         currentOpcode = script->readByte();
         if (currentOpcode != ExprCodes::PUSH) {
-            log_fatal("Expected push");
+            log_fatal("Expected push, got 0x%x", currentOpcode);
+            return true;
+        }
+        log_debug("BENIS: 0x%x", script->peekByte());
+
+        err = handleExpressionCode();
+        if (err) {
             return true;
         }
     }
@@ -137,13 +314,17 @@ bool VM::evalExpression(uint16_t exprLen)
 
 bool VM::handleOpcode()
 {
-    uint16_t opcode = script->peekShort();
+    uint16_t opcode = script->readShort();
     bool     err    = false;
 
     switch (opcode) {
-
+    case (OutputCodes::IF):
+    case (OutputCodes::ELIF):
+        return handleIf();
+    case (OutputCodes::ASSIGN):
+        return handleAssign();
     default:
-        log_fatal("Unknown opcode");
+        log_fatal("Unknown opcode 0x%x", opcode);
         err = true;
         break;
     }
