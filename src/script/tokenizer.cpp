@@ -4,7 +4,7 @@
 
 #define ADD_EMPTY_TOKEN(type) this->tokens.emplace_back(Token((this->currentLine), (type), (this->currentColumn)))
 
-#define ADD_TOKEN(type, value) this->tokens.emplace_back(Token((this->currentLine), (value), "", (type), (this->currentColumn)))
+#define ADD_TOKEN(type, value) this->tokens.emplace_back(Token((this->currentLine), (value), (type), (this->currentColumn)))
 
 #define UNK_CHAR_ERROR()                                 \
     errorMessage = "Unknown character in offset ";       \
@@ -100,16 +100,16 @@ void Tokenizer::getTokens()
     while (!this->end()) {
         switch (current) {
         case ('+'):
-            ADD_EMPTY_TOKEN(TokenType::Plus);
+            ADD_TOKEN(TokenType::Plus, "+");
             break;
         case ('-'):
-            ADD_EMPTY_TOKEN(TokenType::Minus);
+            ADD_TOKEN(TokenType::Minus, "-");
             break;
         case ('*'):
-            ADD_EMPTY_TOKEN(TokenType::Asterisk);
+            ADD_TOKEN(TokenType::Asterisk, "*");
             break;
         case ('.'):
-            ADD_EMPTY_TOKEN(TokenType::Dot);
+            ADD_TOKEN(TokenType::Dot, "/");
             break;
         case ('('):
             ADD_EMPTY_TOKEN(TokenType::LeftParenthesis);
@@ -119,38 +119,42 @@ void Tokenizer::getTokens()
             break;
         case ('!'):
             if (advanceMatches('=')) {
-                ADD_EMPTY_TOKEN(TokenType::NotEqualTo);
+                ADD_TOKEN(TokenType::NotEqualTo, "!=");
             } else {
                 UNK_CHAR_ERROR();
             }
             break;
         case ('='):
             if (advanceMatches('=')) {
-                ADD_EMPTY_TOKEN(TokenType::EqualTo);
+                ADD_TOKEN(TokenType::EqualTo, "==");
             } else {
                 UNK_CHAR_ERROR();
             }
             break;
         case ('&'):
             if (advanceMatches('&')) {
-                ADD_EMPTY_TOKEN(TokenType::And);
+                ADD_TOKEN(TokenType::And, "&&");
             } else {
                 UNK_CHAR_ERROR();
             }
             break;
         case ('|'):
             if (advanceMatches('|')) {
-                ADD_EMPTY_TOKEN(TokenType::Or);
+                ADD_TOKEN(TokenType::Or, "||");
             } else {
                 UNK_CHAR_ERROR();
             }
             break;
-        case ('<'):
-            ADD_EMPTY_TOKEN(advanceMatches('=') ? TokenType::LessThanOrEqualTo : TokenType::LessThan);
+        case ('<'): {
+            bool isLte = advanceMatches('=');
+            ADD_TOKEN(isLte ? TokenType::LessThanOrEqualTo : TokenType::LessThan, isLte ? "<=" : "<");
             break;
-        case ('>'):
-            ADD_EMPTY_TOKEN(advanceMatches('=') ? TokenType::GreaterThanOrEqualTo : TokenType::GreaterThan);
+        }
+        case ('>'): {
+            bool isGte = advanceMatches('=');
+            ADD_TOKEN(isGte ? TokenType::GreaterThanOrEqualTo : TokenType::GreaterThan, isGte ? ">=" : ">");
             break;
+        }
         case (';'):
             while (this->peekCurrent() != '\n' && !this->end()) {
                 advance();

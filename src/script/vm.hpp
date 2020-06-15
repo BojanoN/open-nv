@@ -37,8 +37,8 @@ public:
     };
 
 private:
-    Value    buf[DEF_STACK_SIZE];
-    uint32_t top;
+    Value   buf[DEF_STACK_SIZE];
+    int32_t top;
 };
 
 #define VM_STATUS_CODES_ENUM \
