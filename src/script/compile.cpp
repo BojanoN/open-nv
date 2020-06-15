@@ -290,7 +290,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     out->write((uint8_t*)&exprLenOut, sizeof(uint16_t));
 
     exprLen = compileNode(ifStmt->condition, out);
-    if (compLen < 0) {
+    if (exprLen < 0) {
         return -1;
     }
     exprLenOut = (uint16_t)exprLen;
@@ -327,7 +327,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
             out->write((uint8_t*)&exprLenOut, sizeof(uint16_t));
 
             exprLen = compileNode(ifStmt->elseIfs[i].first, out);
-            if (compLen < 0) {
+            if (exprLen < 0) {
                 return -1;
             }
             exprLenOut = (uint16_t)exprLen;

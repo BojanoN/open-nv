@@ -26,7 +26,7 @@ public:
 
     ~CompiledScript()
     {
-        delete bytecode;
+        delete[] bytecode;
     }
 
     bool write(uint8_t* source, uint32_t n)
@@ -181,7 +181,7 @@ private:
     void resize(int n)
     {
         capacity += DEFAULT_ARR_SIZE * ((n + capacity) / capacity);
-        bytecode = (uint8_t*)std::realloc(bytecode, capacity);
+        //        bytecode = (uint8_t*)std::realloc(bytecode, capacity);
 
         if (bytecode == NULL) {
             throw std::runtime_error("Realloc fail");

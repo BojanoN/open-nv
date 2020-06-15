@@ -50,6 +50,10 @@ int main(int argc, char** argv)
 
             vm->execute(cs);
 
+            for (Script::Node* n : *s) {
+                delete n;
+            }
+
             delete vm;
             delete c;
             delete cs;

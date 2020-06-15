@@ -289,11 +289,14 @@ public:
         , nodes(ns) {};
     ~Block()
     {
-        for (Node* n : *nodes) {
-            delete n;
+        uint32_t size = nodes->size();
+
+        for (uint32_t i = 0; i < size; i++) {
+            delete nodes->at(i);
         }
 
         delete nodes;
+        delete type;
     }
 
     void print()
