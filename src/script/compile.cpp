@@ -320,7 +320,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
             compLenOffset = out->getSize();
             out->write((uint8_t*)&compLenOut, sizeof(uint16_t));
 
-            jumpOpsOffset = out->getSize();
+            jumpOpsOffset = out->getSize() + 1;
             out->write((uint8_t*)&jumpOps, sizeof(uint16_t));
 
             exprLenOffset = out->getSize();
@@ -337,7 +337,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
                 return -1;
             }
 
-            jumpOps    = exprLenOut + sizeof(uint16_t) + bodyLen;
+            jumpOps    = exprLenOut + sizeof(uint16_t) + bodyLen + 1;
             compLenOut = jumpOps + sizeof(uint16_t);
 
             out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));

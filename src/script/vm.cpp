@@ -131,9 +131,9 @@ bool VM::functionCall()
 
 enum TwoCharOperators : uint16_t {
     EQUAL     = 0x3d3d,
-    NOT_EQUAL = 0x213d,
-    GTE       = 0x3e3d,
-    LTE       = 0x3c3d
+    NOT_EQUAL = 0x3d21,
+    GTE       = 0x3d3e,
+    LTE       = 0x3d3c
 };
 
 static std::set<uint8_t>  singleCharOp = { '+', '-', '*', '/' };
@@ -185,7 +185,7 @@ bool VM::handleBinaryOperator()
 
         return false;
     } else if (comparisonOp.count(comp)) {
-        script->readByte();
+        script->readShort();
 
         Value right = this->stack.pop();
         Value left  = this->stack.pop();
@@ -255,6 +255,26 @@ bool VM::handleExpressionCode()
 
 bool VM::handleIf()
 {
+    uint16_t compLen, jumpOps, exprLen;
+    bool     err;
+
+    compLen = script->readShort();
+    jumpOps = script->readShort();
+    exprLen = script->readShort();
+
+    err = evalExpression(exprLen);
+
+    if (err) {
+        return true;
+    }
+
+    Value conditionResult = this->stack.pop();
+    log_debug("Eval result: %s, %d", TypeEnumToString(conditionResult.type), AS_INT(conditionResult));
+
+    if (!AS_BOOL(conditionResult)) {
+        this->script->jump(jumpOps);
+    }
+
     return false;
 }
 
@@ -282,7 +302,7 @@ bool VM::handleAssign()
 
     Value exprRes = this->stack.pop();
 
-    log_debug("Eval result: %s, %d", TypeEnumToString(exprRes.type), AS_INT(exprRes));
+    log_debug("ASSIGN: Eval result: %s, %d", TypeEnumToString(exprRes.type), AS_INT(exprRes));
 
     // script->context.assign()
 

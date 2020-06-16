@@ -60,5 +60,8 @@ struct Value {
 #define AS_INT(val) \
     (((val).type == Type::Integer) ? (val).value.l : (uint32_t)(val).value.f)
 
+#define AS_BOOL(val) \
+    ((val).type == Type::Integer ? (val).value.l != 0 : (val).value.f != 0)
+
 Value operator+(Value& l, Value& r);
 }
