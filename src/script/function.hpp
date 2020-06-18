@@ -4,7 +4,7 @@
 
 namespace Script {
 struct FunctionInfo {
-    uint32_t    opcode;
+    uint16_t    opcode;
     std::string name;
     std::string alias;
     std::string description;
@@ -12,6 +12,9 @@ struct FunctionInfo {
 
 class FunctionResolver {
 public:
+    void callFunction(uint16_t functionID)
+    {
+    }
     static std::unordered_map<std::string, FunctionInfo> functions;
 };
 }

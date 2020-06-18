@@ -52,7 +52,7 @@ bool VM::execute(CompiledScript* script)
         err = handleOpcode();
 
         if (err) {
-            log_fatal("VM execution error");
+            log_fatal("VM execution error at offset: %d", script->getReadOffset());
             this->script = nullptr;
             return true;
         }
@@ -229,9 +229,13 @@ bool VM::handleExpressionCode()
         this->stack.push(script->getLocalVariable(index));
         return false;
     }
-    case (ExprCodes::REF_GLOBAL):
+    case (ExprCodes::REF_GLOBAL): {
+        script->readByte();
+        uint16_t index = script->readShort();
+        this->stack.push(script->getLocalVariable(index));
+        return false;
         // TODO: SCRO/SCRV lookup
-        break;
+    }
     case (ExprCodes::GLOBAL):
         // TODO: SCRO/SCRV lookup
         break;
@@ -253,11 +257,29 @@ bool VM::handleExpressionCode()
     return numberParse();
 };
 
-bool VM::handleIf()
+bool VM::executeBlock(uint16_t blocklen)
 {
-    uint16_t compLen, jumpOps, exprLen;
+    uint32_t blockEnd = script->getReadOffset() + blocklen;
     bool     err;
 
+    while (this->script->isBeforeOffset(blockEnd)) {
+        err = handleOpcode();
+        if (err) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool VM::handleIf()
+{
+    uint16_t compLen, jumpOps, exprLen, blockLen;
+    uint16_t nextOpcode;
+    bool     err;
+    bool     evalResult;
+
+    // If block
     compLen = script->readShort();
     jumpOps = script->readShort();
     exprLen = script->readShort();
@@ -269,10 +291,81 @@ bool VM::handleIf()
     }
 
     Value conditionResult = this->stack.pop();
-    log_debug("Eval result: %s, %d", TypeEnumToString(conditionResult.type), AS_INT(conditionResult));
 
-    if (!AS_BOOL(conditionResult)) {
-        this->script->jump(jumpOps);
+    evalResult = AS_BOOL(conditionResult);
+
+    if (evalResult) {
+        log_debug("If expression evaluated to true");
+        // TODO: find a sane way of skipping through all other bytecode related to the statement
+        // which wont be executed
+        blockLen = jumpOps;
+        err      = executeBlock(blockLen);
+        if (err) {
+            return true;
+        }
+
+        goto skip;
+    }
+
+    script->jump(jumpOps);
+    // if else
+    nextOpcode = script->peekShort();
+
+    while (nextOpcode == (uint8_t)OutputCodes::ELIF) {
+        script->readShort();
+        compLen = script->readShort();
+        jumpOps = script->readShort();
+        exprLen = script->readShort();
+
+        err = evalExpression(exprLen);
+
+        if (err) {
+            return true;
+        }
+
+        Value conditionResult = this->stack.pop();
+
+        evalResult = AS_BOOL(conditionResult);
+
+        if (evalResult) {
+            log_debug("Elif expression evaluated to true");
+            blockLen = jumpOps;
+
+            err = executeBlock(blockLen);
+            if (err) {
+                return true;
+            }
+
+            goto skip;
+        }
+        nextOpcode = script->peekShort();
+    }
+
+    if (nextOpcode == (uint8_t)OutputCodes::ELSE) {
+        script->readShort();
+        jumpOps  = script->readShort();
+        blockLen = jumpOps;
+
+        return executeBlock(blockLen);
+    }
+
+skip:
+    nextOpcode = script->peekShort();
+
+    while (nextOpcode == (uint8_t)OutputCodes::ELIF) {
+        script->readShort();
+        compLen = script->readShort();
+        jumpOps = script->readShort();
+        exprLen = script->readShort();
+
+        script->jump(jumpOps);
+        nextOpcode = script->peekShort();
+    }
+
+    if (nextOpcode == (uint8_t)OutputCodes::ELSE) {
+        script->readShort();
+        jumpOps = script->readShort();
+        script->jump(jumpOps);
     }
 
     return false;
@@ -339,7 +432,6 @@ bool VM::handleOpcode()
 
     switch (opcode) {
     case (OutputCodes::IF):
-    case (OutputCodes::ELIF):
         return handleIf();
     case (OutputCodes::ASSIGN):
         return handleAssign();

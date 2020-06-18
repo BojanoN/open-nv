@@ -13,7 +13,7 @@ void CompiledScript::print()
     for (uint32_t i = 0; i < currentSize; i++) {
         printf("%.2x ", bytecode[i]);
         if ((i + 1) % 4 == 0) {
-            printf("\n");
+            printf("\n%.5d: ", i + 1);
         }
     }
     printf("\n");
@@ -230,6 +230,13 @@ int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
     uint16_t paramBytes = 0;
 
     for (uint32_t i = 0; i < paramCount; i++) {
+        // TODO: add information about the number of parameters required for each available function
+        // so we can enable nested function calls
+        if (func->arguments[i]->type != NodeType::LiteralExpr) {
+            log_fatal("Function arguments can only be constant values");
+            return -1;
+        }
+
         int written = compileNode(func->arguments[i], out);
         if (written < 0) {
             return -1;
@@ -300,7 +307,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
         return -1;
     }
 
-    jumpOps    = exprLenOut + sizeof(uint16_t) + bodyLen;
+    jumpOps    = exprLenOut;
     compLenOut = jumpOps + sizeof(uint16_t);
 
     out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
@@ -320,7 +327,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
             compLenOffset = out->getSize();
             out->write((uint8_t*)&compLenOut, sizeof(uint16_t));
 
-            jumpOpsOffset = out->getSize() + 1;
+            jumpOpsOffset = out->getSize();
             out->write((uint8_t*)&jumpOps, sizeof(uint16_t));
 
             exprLenOffset = out->getSize();
@@ -337,7 +344,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
                 return -1;
             }
 
-            jumpOps    = exprLenOut + sizeof(uint16_t) + bodyLen + 1;
+            jumpOps    = exprLenOut;
             compLenOut = jumpOps + sizeof(uint16_t);
 
             out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));

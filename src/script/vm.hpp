@@ -81,6 +81,7 @@ private:
     bool evalExpression(uint16_t exprLen);
 
     bool handleIf();
+    bool executeBlock(uint16_t blocklen);
     bool handleBinaryOperator();
     bool functionCall();
     bool handleAssign();
