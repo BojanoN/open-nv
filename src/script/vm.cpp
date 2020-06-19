@@ -4,7 +4,7 @@
 namespace Script {
 bool VM::execute(CompiledScript* script)
 {
-    bool err;
+    VMStatusCode err;
     this->script = script;
 
     // Check for beginning header
@@ -51,8 +51,15 @@ bool VM::execute(CompiledScript* script)
 
         err = handleOpcode();
 
-        if (err) {
+        switch (err) {
+        case VMStatusCode::VM_OK:
+            break;
+        case VMStatusCode::VM_END:
+            this->script = nullptr;
+            return false;
+        default:
             log_fatal("VM execution error at offset: %d", script->getReadOffset());
+            log_fatal("VM status code: %s", VMStatusCodeToString(err));
             this->script = nullptr;
             return true;
         }
@@ -63,7 +70,7 @@ bool VM::execute(CompiledScript* script)
     return false;
 };
 
-bool VM::numberParse()
+VMStatusCode VM::numberParse()
 {
     bool isFloat = false;
     // TODO: refactor this, add bound checking to avoid nasty buffer overflows
@@ -118,15 +125,15 @@ bool VM::numberParse()
         this->stack.push(val);
     } catch (std::invalid_argument& e) {
         log_fatal("numberParse failure: %s", e.what());
-        return true;
+        return VMStatusCode::VM_GENERIC_ERROR;
     }
-    return false;
+    return VMStatusCode::VM_OK;
 }
 
-bool VM::functionCall()
+VMStatusCode VM::functionCall()
 {
 
-    return false;
+    return VMStatusCode::VM_OK;
 };
 
 enum TwoCharOperators : uint16_t {
@@ -144,7 +151,7 @@ static std::set<uint16_t> comparisonOp = {
     TwoCharOperators::LTE
 };
 
-bool VM::handleBinaryOperator()
+VMStatusCode VM::handleBinaryOperator()
 {
     uint8_t  code = script->peekByte();
     uint16_t comp = script->peekShort();
@@ -157,7 +164,7 @@ bool VM::handleBinaryOperator()
 
         if (right.type == Type::Reference || left.type == Type::Reference) {
             log_fatal("Reference arithmetic is not allowed");
-            return true;
+            return VMStatusCode::VM_REFERENCE_ARITHMETIC;
         }
 
         switch (code) {
@@ -183,7 +190,7 @@ bool VM::handleBinaryOperator()
             break;
         }
 
-        return false;
+        return VMStatusCode::VM_OK;
     } else if (comparisonOp.count(comp)) {
         script->readShort();
 
@@ -207,16 +214,16 @@ bool VM::handleBinaryOperator()
             break;
         }
 
-        return false;
+        return VM_OK;
     }
 
-    return true;
+    return VM_GENERIC_ERROR;
 }
 
-bool VM::handleExpressionCode()
+VMStatusCode VM::handleExpressionCode()
 {
-    uint8_t code = script->peekByte();
-    bool    err  = false;
+    uint8_t      code = script->peekByte();
+    VMStatusCode err;
 
     switch (code) {
     case (ExprCodes::FUNC):
@@ -227,13 +234,13 @@ bool VM::handleExpressionCode()
         script->readByte();
         uint16_t index = script->readShort();
         this->stack.push(script->getLocalVariable(index));
-        return false;
+        return VMStatusCode::VM_OK;
     }
     case (ExprCodes::REF_GLOBAL): {
         script->readByte();
         uint16_t index = script->readShort();
         this->stack.push(script->getLocalVariable(index));
-        return false;
+        return VMStatusCode::VM_OK;
         // TODO: SCRO/SCRV lookup
     }
     case (ExprCodes::GLOBAL):
@@ -252,32 +259,32 @@ bool VM::handleExpressionCode()
     err = handleBinaryOperator();
 
     if (!err)
-        return false;
+        return VMStatusCode::VM_OK;
     // Constants parsing
     return numberParse();
 };
 
-bool VM::executeBlock(uint16_t blocklen)
+VMStatusCode VM::executeBlock(uint16_t blocklen)
 {
-    uint32_t blockEnd = script->getReadOffset() + blocklen;
-    bool     err;
+    uint32_t     blockEnd = script->getReadOffset() + blocklen;
+    VMStatusCode err;
 
     while (this->script->isBeforeOffset(blockEnd)) {
         err = handleOpcode();
         if (err) {
-            return true;
+            return err;
         }
     }
 
-    return false;
+    return VMStatusCode::VM_OK;
 }
 
-bool VM::handleIf()
+VMStatusCode VM::handleIf()
 {
-    uint16_t compLen, jumpOps, exprLen, blockLen;
-    uint16_t nextOpcode;
-    bool     err;
-    bool     evalResult;
+    uint16_t     compLen, jumpOps, exprLen, blockLen;
+    uint16_t     nextOpcode;
+    VMStatusCode err;
+    bool         evalResult;
 
     // If block
     compLen = script->readShort();
@@ -287,7 +294,7 @@ bool VM::handleIf()
     err = evalExpression(exprLen);
 
     if (err) {
-        return true;
+        return err;
     }
 
     Value conditionResult = this->stack.pop();
@@ -298,10 +305,10 @@ bool VM::handleIf()
         log_debug("If expression evaluated to true");
         // TODO: find a sane way of skipping through all other bytecode related to the statement
         // which wont be executed
-        blockLen = jumpOps;
+        blockLen = jumpOps - exprLen;
         err      = executeBlock(blockLen);
         if (err) {
-            return true;
+            return err;
         }
 
         goto skip;
@@ -320,7 +327,7 @@ bool VM::handleIf()
         err = evalExpression(exprLen);
 
         if (err) {
-            return true;
+            return err;
         }
 
         Value conditionResult = this->stack.pop();
@@ -329,11 +336,11 @@ bool VM::handleIf()
 
         if (evalResult) {
             log_debug("Elif expression evaluated to true");
-            blockLen = jumpOps;
+            blockLen = jumpOps - exprLen;
 
             err = executeBlock(blockLen);
             if (err) {
-                return true;
+                return err;
             }
 
             goto skip;
@@ -343,6 +350,7 @@ bool VM::handleIf()
 
     if (nextOpcode == (uint8_t)OutputCodes::ELSE) {
         script->readShort();
+        compLen  = script->readShort();
         jumpOps  = script->readShort();
         blockLen = jumpOps;
 
@@ -364,24 +372,25 @@ skip:
 
     if (nextOpcode == (uint8_t)OutputCodes::ELSE) {
         script->readShort();
+        compLen = script->readShort();
         jumpOps = script->readShort();
         script->jump(jumpOps);
     }
 
-    return false;
+    return VMStatusCode::VM_OK;
 }
 
-bool VM::handleAssign()
+VMStatusCode VM::handleAssign()
 {
-    uint16_t    varnameLen = script->readShort();
-    std::string var;
-    bool        err;
+    uint16_t     varnameLen = script->readShort();
+    std::string  var;
+    VMStatusCode err;
     log_debug("SIZE: 0x%x", varnameLen);
     var.reserve(varnameLen + 1);
 
     if (!script->readString(varnameLen, var.data())) {
         log_fatal("Unexpected end of script");
-        return true;
+        return VMStatusCode::VM_UNEXP_EOF;
     }
     var[varnameLen] = 0;
 
@@ -390,7 +399,7 @@ bool VM::handleAssign()
     uint16_t exprLen = script->readShort();
     err              = evalExpression(exprLen);
     if (err) {
-        return true;
+        return err;
     }
 
     Value exprRes = this->stack.pop();
@@ -399,45 +408,49 @@ bool VM::handleAssign()
 
     // script->context.assign()
 
-    return false;
+    return VMStatusCode::VM_OK;
 };
 
-bool VM::evalExpression(uint16_t exprLen)
+VMStatusCode VM::evalExpression(uint16_t exprLen)
 {
-    uint32_t exprEnd = script->getReadOffset() + exprLen;
-    uint8_t  currentOpcode;
-    bool     err;
+    uint32_t     exprEnd = script->getReadOffset() + exprLen;
+    uint8_t      currentOpcode;
+    VMStatusCode err;
 
     while (script->isBeforeOffset(exprEnd)) {
         currentOpcode = script->readByte();
         if (currentOpcode != ExprCodes::PUSH) {
             log_fatal("Expected push, got 0x%x", currentOpcode);
-            return true;
+            return VMStatusCode::VM_EVAL_FAILED;
         }
         log_debug("BENIS: 0x%x", script->peekByte());
 
         err = handleExpressionCode();
         if (err) {
-            return true;
+            return err;
         }
     }
 
-    return false;
+    return VMStatusCode::VM_OK;
 }
 
-bool VM::handleOpcode()
+VMStatusCode VM::handleOpcode()
 {
-    uint16_t opcode = script->readShort();
-    bool     err    = false;
+    uint16_t     opcode = script->readShort();
+    VMStatusCode err    = VMStatusCode::VM_OK;
 
     switch (opcode) {
     case (OutputCodes::IF):
         return handleIf();
     case (OutputCodes::ASSIGN):
         return handleAssign();
+    case (OutputCodes::END):
+        // consume two trailing zeros
+        script->readShort();
+        return VMStatusCode::VM_END;
     default:
         log_fatal("Unknown opcode 0x%x", opcode);
-        err = true;
+        err = VM_UNKNOWN_OPCODE;
         break;
     }
 

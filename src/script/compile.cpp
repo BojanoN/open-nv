@@ -307,8 +307,8 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
         return -1;
     }
 
-    jumpOps    = exprLenOut;
-    compLenOut = jumpOps + sizeof(uint16_t);
+    jumpOps    = exprLenOut + bodyLen;
+    compLenOut = exprLenOut + sizeof(uint16_t);
 
     out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
     out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
@@ -344,8 +344,8 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
                 return -1;
             }
 
-            jumpOps    = exprLenOut;
-            compLenOut = jumpOps + sizeof(uint16_t);
+            jumpOps    = exprLenOut + bodyLen;
+            compLenOut = exprLenOut + sizeof(uint16_t);
 
             out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
             out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
@@ -362,7 +362,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
             return -1;
         }
 
-        jumpOps = bodyLen;
+        jumpOps = bodyLen + 1;
         out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
     }
 

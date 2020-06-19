@@ -15,6 +15,8 @@ class Node;
 
 class CompiledScript {
 
+    // TODO: fix out of bounds read error
+
 public:
     CompiledScript()
         : currentSize(0)

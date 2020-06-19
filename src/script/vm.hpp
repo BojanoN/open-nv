@@ -41,12 +41,19 @@ private:
     int32_t top;
 };
 
-#define VM_STATUS_CODES_ENUM \
-    X(SUCCESS)               \
-    X(ERROR)
+#define VM_STATUS_CODES_ENUM   \
+    X(VM_OK)                   \
+    X(VM_GENERIC_ERROR)        \
+    X(VM_END)                  \
+    X(VM_UNEXP_EOF)            \
+    X(VM_UNKNOWN_OPCODE)       \
+    X(VM_FUNC_LOOKUP_FAILED)   \
+    X(VM_REFERENCE_ARITHMETIC) \
+    X(VM_EVAL_FAILED)
+
 #define X(name) name,
 
-enum class VMStatusCode : uint8_t {
+enum VMStatusCode : uint8_t {
     VM_STATUS_CODES_ENUM
 };
 
@@ -75,17 +82,17 @@ private:
     Stack           stack;
     CompiledScript* script;
 
-    bool handleExpressionCode();
-    bool handleOpcode();
+    VMStatusCode handleExpressionCode();
+    VMStatusCode handleOpcode();
 
-    bool evalExpression(uint16_t exprLen);
+    VMStatusCode evalExpression(uint16_t exprLen);
 
-    bool handleIf();
-    bool executeBlock(uint16_t blocklen);
-    bool handleBinaryOperator();
-    bool functionCall();
-    bool handleAssign();
-    bool numberParse();
+    VMStatusCode handleIf();
+    VMStatusCode executeBlock(uint16_t blocklen);
+    VMStatusCode handleBinaryOperator();
+    VMStatusCode functionCall();
+    VMStatusCode handleAssign();
+    VMStatusCode numberParse();
 };
 
 #define ARITHMETIC_OP(left, right, op)                                               \
