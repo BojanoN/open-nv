@@ -15,7 +15,7 @@ class Node;
 
 class CompiledScript {
 
-    // TODO: fix out of bounds read error
+    // TODO: fix out of bounds read error        case VMStatusCode::VM_END:
 
 public:
     CompiledScript()
@@ -102,24 +102,37 @@ public:
 
     uint32_t readLong()
     {
-        uint32_t ret = peekLong();
-        currentReadOffset += sizeof(uint32_t);
-        return ret;
+        if (currentReadOffset + sizeof(uint32_t) < currentSize) {
+            uint32_t ret = *((uint32_t*)(bytecode + currentReadOffset));
+            currentReadOffset += sizeof(uint32_t);
+            return ret;
+        } else {
+            return 0;
+        }
     }
 
     uint16_t readShort()
     {
-        uint16_t ret = peekShort();
-        currentReadOffset += sizeof(uint16_t);
-        return ret;
-    }
-    uint8_t readByte()
-    {
-        uint8_t ret = peekByte();
-        currentReadOffset++;
-        return ret;
+        if (currentReadOffset + sizeof(uint16_t) < currentSize) {
+            uint16_t ret = *((uint16_t*)(bytecode + currentReadOffset));
+            currentReadOffset += sizeof(uint16_t);
+            return ret;
+        } else {
+            return 0;
+        }
     }
 
+    uint8_t readByte()
+    {
+        if (currentReadOffset + sizeof(uint8_t) < currentSize) {
+
+            uint8_t ret = peekByte();
+            currentReadOffset++;
+            return ret;
+        } else {
+            return 0;
+        }
+    }
     bool jump(uint32_t offset)
     {
         if (offset + currentReadOffset > currentSize) {

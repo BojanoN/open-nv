@@ -356,13 +356,15 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     if (ifStmt->elseBody != nullptr) {
         out->write(elseBegin, 4);
         jumpOpsOffset = out->getSize();
-        bodyLen       = compileNode(ifStmt->elseBody, out);
+        out->write((uint8_t*)&jumpOps, sizeof(uint16_t));
+
+        bodyLen = compileNode(ifStmt->elseBody, out);
 
         if (bodyLen < 0) {
             return -1;
         }
 
-        jumpOps = bodyLen + 1;
+        jumpOps = bodyLen;
         out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
     }
 
