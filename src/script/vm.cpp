@@ -1,4 +1,5 @@
 #include "vm.hpp"
+#include "function.hpp"
 #include "logc/log.h"
 
 namespace Script {
@@ -130,10 +131,57 @@ VMStatusCode VM::numberParse()
     return VMStatusCode::VM_OK;
 }
 
-VMStatusCode VM::functionCall()
+VMStatusCode VM::functionCall(uint16_t opcode)
 {
+    uint16_t paramBytes = script->readShort();
+    uint16_t paramEnd   = script->getReadOffset() + paramBytes;
+    uint16_t paramCount = script->readShort();
 
-    return VMStatusCode::VM_OK;
+    uint8_t  paramOpcode;
+    uint32_t noPushed = 0;
+
+    while (script->isBeforeOffset(paramEnd)) {
+        Value val;
+        paramOpcode = script->readByte();
+
+        switch (paramOpcode) {
+        case (ExprCodes::REF_FUNC_PARAM): {
+            val.type = Type::Reference;
+            // TODO: we are actually reading the SCRO index here.
+            // Replace with the actual reference once things are setup.
+            val.value.l = script->readShort();
+            this->stack.push(val);
+            break;
+        }
+        case (ExprCodes::LONG_FUNC_PARAM): {
+            val.type    = Type::Integer;
+            val.value.l = script->readLong();
+            this->stack.push(val);
+            break;
+        }
+        case (ExprCodes::FLOAT_FUNC_PARAM): {
+            val.type    = Type::Float;
+            val.value.f = script->readDouble();
+            this->stack.push(val);
+            break;
+        }
+        default:
+            log_fatal("Unknown function parameter opcode!");
+            return VMStatusCode::VM_UNKNOWN_FUNC_PARAM;
+        }
+        noPushed++;
+    }
+
+    if (FunctionResolver::callFunction(opcode)) {
+        return VMStatusCode::VM_OK;
+    }
+
+    // Function calls should clean the stack, but for now we clean it manually
+    for (uint16_t i = 0; i < noPushed; i++) {
+        this->stack.pop();
+    }
+
+    return VMStatusCode::VM_UNKNOWN_FUNC_OPCODE;
 };
 
 enum TwoCharOperators : uint16_t {
@@ -226,9 +274,6 @@ VMStatusCode VM::handleExpressionCode()
     VMStatusCode err;
 
     switch (code) {
-    case (ExprCodes::FUNC):
-        script->readByte();
-        return functionCall();
     case (ExprCodes::INT_LOCAL):
     case (ExprCodes::FLOAT_REF_LOCAL): {
         script->readByte();
@@ -284,7 +329,7 @@ VMStatusCode VM::handleIf()
     uint16_t     compLen, jumpOps, exprLen, blockLen;
     uint16_t     nextOpcode;
     VMStatusCode err;
-    bool         evalResult;
+    bool         evalResult = false;
 
     // If block
     compLen = script->readShort();
@@ -448,10 +493,11 @@ VMStatusCode VM::handleOpcode()
         // consume two trailing zeros
         script->readShort();
         return VMStatusCode::VM_END;
-    default:
-        log_fatal("Unknown opcode 0x%x", opcode);
-        err = VM_UNKNOWN_OPCODE;
+
+    default: {
+        err = functionCall(opcode);
         break;
+    }
     }
 
     return err;

@@ -25,7 +25,7 @@ CompiledScript* Compiler::compile()
     CompiledScript* ret = new CompiledScript();
 
     uint32_t n = nodes->size();
-    uint32_t err;
+    int      err;
 
     for (uint32_t i = 0; i < n; i++) {
         err = compileNode(nodes->at(i), ret);
@@ -121,15 +121,20 @@ int Compiler::compileBinaryExpr(Node* node, CompiledScript* out)
 {
     BinaryExpr* expr    = dynamic_cast<BinaryExpr*>(node);
     uint32_t    begSize = out->getSize();
+    int         ret;
 
-    compileNode(expr->left, out);
-    compileNode(expr->right, out);
+    ret = compileNode(expr->left, out);
+    if (ret < 0) {
+        return -1;
+    }
 
-    // TODO: check if this really is the case
+    ret = compileNode(expr->right, out);
+    if (ret < 0) {
+        return -1;
+    }
+
     out->writeByte(static_cast<uint8_t>(ExprCodes::PUSH));
     out->write((uint8_t*)expr->op.literal.data(), expr->op.literal.size());
-    // TODO: add literals to arithmetic operator tokens
-    log_debug("WTF: %s", expr->op.literal.c_str());
 
     return out->getSize() - begSize;
 };
@@ -227,7 +232,8 @@ int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
     uint16_t paramCount = func->arguments.size();
     out->write((uint8_t*)&paramCount, sizeof(uint16_t));
 
-    uint16_t paramBytes = 0;
+    uint16_t     paramBytes = 0;
+    LiteralExpr* literal;
 
     for (uint32_t i = 0; i < paramCount; i++) {
         // TODO: add information about the number of parameters required for each available function
@@ -237,8 +243,35 @@ int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
             return -1;
         }
 
-        int written = compileNode(func->arguments[i], out);
-        if (written < 0) {
+        literal = dynamic_cast<LiteralExpr*>(func->arguments[i]);
+
+        int written;
+
+        switch (literal->type) {
+        case (Type::Integer): {
+            out->writeByte(ExprCodes::LONG_FUNC_PARAM);
+            uint32_t value = std::stol(literal->value);
+            out->write((uint8_t*)&value, sizeof(uint32_t));
+            paramBytes += 1 + sizeof(uint32_t);
+            break;
+        }
+        case (Type::Reference):
+        case (Type::Identifier): {
+            out->writeByte(ExprCodes::REF_FUNC_PARAM);
+            uint16_t index = ctx.SCROLookup(literal->value);
+            out->write((uint8_t*)&index, sizeof(uint16_t));
+            paramBytes += 1 + sizeof(uint16_t);
+            break;
+        }
+        case (Type::Float): {
+            out->writeByte(ExprCodes::FLOAT_FUNC_PARAM);
+            double value = std::stod(literal->value);
+            out->write((uint8_t*)&value, sizeof(double));
+            paramBytes += 1 + sizeof(double);
+            break;
+        }
+        default:
+            log_fatal("Unknown function parameter %s", TypeEnumToString(literal->type));
             return -1;
         }
 

@@ -46,9 +46,13 @@ int main(int argc, char** argv)
             Script::Compiler*       c  = new Script::Compiler(s);
             Script::CompiledScript* cs = c->compile();
 
-            cs->print();
+            if (cs != nullptr) {
 
-            vm->execute(cs);
+                cs->print();
+
+                vm->execute(cs);
+                delete cs;
+            }
 
             for (Script::Node* n : *s) {
                 delete n;
@@ -56,7 +60,6 @@ int main(int argc, char** argv)
 
             delete vm;
             delete c;
-            delete cs;
             delete s;
         } catch (std::runtime_error& e) {
             log_fatal("%s", e.what());

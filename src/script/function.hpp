@@ -12,9 +12,13 @@ struct FunctionInfo {
 
 class FunctionResolver {
 public:
-    void callFunction(uint16_t functionID)
-    {
-    }
+    static bool callFunction(uint16_t functionID);
+
+    // TODO: this is just a dummy implemetation.
+    // When the engine matures enough there should be an interface for all functions
     static std::unordered_map<std::string, FunctionInfo> functions;
+
+private:
+    static std::unordered_map<uint16_t, std::string> opcodeFuncs;
 };
 }

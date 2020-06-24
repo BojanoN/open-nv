@@ -49,13 +49,13 @@ public:
 struct Value {
     Type type;
     union {
-        float    f;
+        double   f;
         uint32_t l;
     } value;
 };
 
 #define AS_FLOAT(val) \
-    (((val).type == Type::Float) ? (val).value.f : (float)(val).value.l)
+    (((val).type == Type::Float) ? (val).value.f : (double)(val).value.l)
 
 #define AS_INT(val) \
     (((val).type == Type::Integer) ? (val).value.l : (uint32_t)(val).value.f)

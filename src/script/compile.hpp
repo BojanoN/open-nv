@@ -133,6 +133,19 @@ public:
             return 0;
         }
     }
+
+    double readDouble()
+    {
+        if (currentReadOffset + sizeof(double) < currentSize) {
+
+            double ret = *((double*)(bytecode + currentReadOffset));
+            currentReadOffset += sizeof(double);
+            return ret;
+        } else {
+            return 0;
+        }
+    }
+
     bool jump(uint32_t offset)
     {
         if (offset + currentReadOffset > currentSize) {
