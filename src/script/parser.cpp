@@ -34,6 +34,8 @@ static std::set<Script::TokenType> functionCallDelimiters = {
 
 static std::unordered_map<Script::TokenType, Script::Type> tokenTypeToVarType = {
     { Script::TokenType::Reference, Script::Type::Reference },
+    { Script::TokenType::IntegerConstant, Script::Type::Integer },
+    { Script::TokenType::FloatConstant, Script::Type::Float },
     { Script::TokenType::Integer, Script::Type::Integer },
     { Script::TokenType::Float, Script::Type::Float },
     { Script::TokenType::Identifier, Script::Type::Identifier }

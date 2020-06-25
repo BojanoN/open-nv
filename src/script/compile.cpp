@@ -176,7 +176,7 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
     uint32_t     begSize = out->getSize();
 
     out->writeByte(static_cast<uint8_t>(ExprCodes::PUSH));
-    if (expr->type == Type::Identifier) {
+    if (expr->valueType == Type::Identifier) {
         uint8_t  typeCode;
         uint16_t varIndex;
 
@@ -244,8 +244,8 @@ int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
         }
 
         literal = dynamic_cast<LiteralExpr*>(func->arguments[i]);
-
-        switch (literal->type) {
+        log_debug("WHAT: %s", TypeEnumToString(literal->valueType));
+        switch (literal->valueType) {
         case (Type::Integer): {
             out->writeByte(ExprCodes::LONG_FUNC_PARAM);
             uint32_t value = std::stol(literal->value);
@@ -269,7 +269,7 @@ int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
             break;
         }
         default:
-            log_fatal("Unknown function parameter %s", TypeEnumToString(literal->type));
+            log_fatal("Unknown function parameter %s", TypeEnumToString(literal->valueType));
             return -1;
         }
     }

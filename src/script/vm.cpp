@@ -172,16 +172,20 @@ VMStatusCode VM::functionCall(uint16_t opcode)
         noPushed++;
     }
 
-    if (FunctionResolver::callFunction(opcode)) {
-        return VMStatusCode::VM_OK;
+    if (!FunctionResolver::callFunction(opcode)) {
+        return VMStatusCode::VM_UNKNOWN_FUNC_OPCODE;
     }
 
     // Function calls should clean the stack, but for now we clean it manually
     for (uint16_t i = 0; i < noPushed; i++) {
-        this->stack.pop();
+        Value tmp = this->stack.pop();
+
+#ifdef DEBUG
+        log_debug("Function argument: %s, %d", TypeEnumToString(tmp.type), AS_INT(tmp));
+#endif
     }
 
-    return VMStatusCode::VM_UNKNOWN_FUNC_OPCODE;
+    return VMStatusCode::VM_OK;
 };
 
 enum TwoCharOperators : uint16_t {

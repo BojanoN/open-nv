@@ -116,7 +116,7 @@ class LiteralExpr : public Node {
 public:
     LiteralExpr(std::string val, Type t)
         : value(val)
-        , type(t)
+        , valueType(t)
         , Node(NodeType::LiteralExpr)
 
     {
@@ -128,7 +128,7 @@ public:
     }
 
     std::string value;
-    Type        type;
+    Type        valueType;
 };
 
 class FunctionCallExpr : public Node {
