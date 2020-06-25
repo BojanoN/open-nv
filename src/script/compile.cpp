@@ -245,8 +245,6 @@ int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
 
         literal = dynamic_cast<LiteralExpr*>(func->arguments[i]);
 
-        int written;
-
         switch (literal->type) {
         case (Type::Integer): {
             out->writeByte(ExprCodes::LONG_FUNC_PARAM);
@@ -274,8 +272,6 @@ int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
             log_fatal("Unknown function parameter %s", TypeEnumToString(literal->type));
             return -1;
         }
-
-        paramBytes += (uint32_t)written;
     }
 
     out->writeAt(paramBytesOffset, (uint8_t*)&paramBytes, sizeof(uint16_t));
@@ -340,7 +336,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
         return -1;
     }
 
-    jumpOps    = exprLenOut + bodyLen;
+    jumpOps    = bodyLen;
     compLenOut = exprLenOut + sizeof(uint16_t);
 
     out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
@@ -377,7 +373,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
                 return -1;
             }
 
-            jumpOps    = exprLenOut + bodyLen;
+            jumpOps    = bodyLen;
             compLenOut = exprLenOut + sizeof(uint16_t);
 
             out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));

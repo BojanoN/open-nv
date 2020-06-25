@@ -350,7 +350,7 @@ VMStatusCode VM::handleIf()
         log_debug("If expression evaluated to true");
         // TODO: find a sane way of skipping through all other bytecode related to the statement
         // which wont be executed
-        blockLen = jumpOps - exprLen;
+        blockLen = jumpOps;
         err      = executeBlock(blockLen);
         if (err) {
             return err;
@@ -381,7 +381,7 @@ VMStatusCode VM::handleIf()
 
         if (evalResult) {
             log_debug("Elif expression evaluated to true");
-            blockLen = jumpOps - exprLen;
+            blockLen = jumpOps;
 
             err = executeBlock(blockLen);
             if (err) {
@@ -411,7 +411,7 @@ skip:
         jumpOps = script->readShort();
         exprLen = script->readShort();
 
-        script->jump(jumpOps);
+        script->jump(jumpOps + exprLen);
         nextOpcode = script->peekShort();
     }
 
