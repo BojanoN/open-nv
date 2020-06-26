@@ -51,6 +51,7 @@ private:
     X(VM_REFERENCE_ARITHMETIC) \
     X(VM_UNKNOWN_FUNC_OPCODE)  \
     X(VM_UNKNOWN_FUNC_PARAM)   \
+    X(VM_FUNC_CALL_FAILED)     \
     X(VM_EVAL_FAILED)
 
 #define X(name) name,
@@ -92,7 +93,8 @@ private:
     VMStatusCode handleIf();
     VMStatusCode executeBlock(uint16_t blocklen);
     VMStatusCode handleBinaryOperator();
-    VMStatusCode functionCall(uint16_t opcode);
+    VMStatusCode functionCall(uint16_t opcode, int16_t refIndex);
+    VMStatusCode handleReferenceAccess();
     VMStatusCode handleAssign();
     VMStatusCode numberParse();
 };

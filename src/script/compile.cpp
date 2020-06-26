@@ -223,6 +223,13 @@ int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
 
     FunctionInfo& info = FunctionResolver::functions[func->functionName];
 
+    // Reference function call
+    if (func->reference.size()) {
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+        uint16_t index = ctx.SCROLookup(func->reference);
+        out->write((uint8_t*)&index, sizeof(uint16_t));
+    }
+
     uint16_t funcCode = info.opcode;
     out->write((uint8_t*)&funcCode, sizeof(uint16_t));
 
@@ -291,11 +298,13 @@ int Compiler::compileScriptName(Node* node, CompiledScript* out)
 
     return sizeof(scn);
 };
+
 int Compiler::compileExpressionStatement(Node* node, CompiledScript* out)
 {
     ExpressionStatement* expr = dynamic_cast<ExpressionStatement*>(node);
     return compileNode(expr->expression, out);
 };
+
 int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 {
     IfStatement* ifStmt    = dynamic_cast<IfStatement*>(node);

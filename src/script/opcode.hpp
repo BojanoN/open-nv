@@ -43,8 +43,7 @@ constexpr const char* outputCodeToString(OutputCodes e) noexcept
     X(REF_FUNC_PARAM, 0x72)   \
     X(LONG_FUNC_PARAM, 0x6E)  \
     X(FLOAT_FUNC_PARAM, 0x7A) \
-    X(PUSH, 0x20)             \
-    X(FUNC, 0x58)
+    X(PUSH, 0x20)
 
 #define X(name, value) name = value,
 

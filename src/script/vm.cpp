@@ -131,14 +131,23 @@ VMStatusCode VM::numberParse()
     return VMStatusCode::VM_OK;
 }
 
-VMStatusCode VM::functionCall(uint16_t opcode)
+VMStatusCode VM::functionCall(uint16_t opcode, int16_t refIndex)
 {
+
+    if (!FunctionResolver::lookupFunction(opcode)) {
+        return VMStatusCode::VM_UNKNOWN_FUNC_OPCODE;
+    }
+
     uint16_t paramBytes = script->readShort();
     uint16_t paramEnd   = script->getReadOffset() + paramBytes;
     uint16_t paramCount = script->readShort();
 
     uint8_t  paramOpcode;
     uint32_t noPushed = 0;
+
+    if (refIndex) {
+        // TODO: check if the target reference supports the following function call
+    }
 
     while (script->isBeforeOffset(paramEnd)) {
         Value val;
@@ -173,7 +182,7 @@ VMStatusCode VM::functionCall(uint16_t opcode)
     }
 
     if (!FunctionResolver::callFunction(opcode)) {
-        return VMStatusCode::VM_UNKNOWN_FUNC_OPCODE;
+        return VMStatusCode::VM_FUNC_CALL_FAILED;
     }
 
     // Function calls should clean the stack, but for now we clean it manually
@@ -272,6 +281,17 @@ VMStatusCode VM::handleBinaryOperator()
     return VM_GENERIC_ERROR;
 }
 
+VMStatusCode VM::handleReferenceAccess()
+{
+
+    uint16_t index = script->readShort();
+
+    // Only function calls are handled for now
+    uint16_t functionID = script->readShort();
+
+    return functionCall(functionID, index);
+}
+
 VMStatusCode VM::handleExpressionCode()
 {
     uint8_t      code = script->peekByte();
@@ -295,10 +315,9 @@ VMStatusCode VM::handleExpressionCode()
     case (ExprCodes::GLOBAL):
         // TODO: SCRO/SCRV lookup
         break;
-        /*
-    case (ExprCodes::REF_FUNC):
-    break;
-        */
+    case (ExprCodes::REF_FUNC_PARAM):
+        script->readByte();
+        return handleReferenceAccess();
     default:
         break;
     }
@@ -485,6 +504,12 @@ VMStatusCode VM::evalExpression(uint16_t exprLen)
 
 VMStatusCode VM::handleOpcode()
 {
+    // Reference function call
+    if (script->peekByte() == ExprCodes::REF_FUNC_PARAM) {
+        script->readByte();
+        return handleReferenceAccess();
+    }
+
     uint16_t     opcode = script->readShort();
     VMStatusCode err    = VMStatusCode::VM_OK;
 
@@ -499,7 +524,7 @@ VMStatusCode VM::handleOpcode()
         return VMStatusCode::VM_END;
 
     default: {
-        err = functionCall(opcode);
+        err = functionCall(opcode, -1);
         break;
     }
     }

@@ -1146,4 +1146,9 @@ bool FunctionResolver::callFunction(uint16_t opcode)
     return true;
 }
 
+bool FunctionResolver::lookupFunction(uint16_t opcode)
+{
+    log_debug("DEBUG: funcID 0x%.2x", opcode);
+    return FunctionResolver::opcodeFuncs.count(opcode);
+}
 }

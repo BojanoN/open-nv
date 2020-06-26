@@ -195,10 +195,21 @@ Node* Parser::multiplication()
 
 Node* Parser::functionCall()
 {
+
+    std::string reference = "";
+
+    // Reference function call
+    if (peekNext().type == TokenType::Dot) {
+        reference = peekCurrent().literal;
+        advance();
+        advance();
+    }
+
     Token& functionIdentifier = peekCurrent();
     log_info("DEBUG: %s", functionIdentifier.literal.c_str());
 
     if (FunctionResolver::functions.count(functionIdentifier.literal) == 0) {
+
         return baseType();
     }
     advance();
@@ -208,7 +219,7 @@ Node* Parser::functionCall()
         arguments.push_back(expression());
     }
 
-    return new FunctionCallExpr(functionIdentifier.literal, arguments);
+    return new FunctionCallExpr(functionIdentifier.literal, reference, arguments);
 }
 
 Node* Parser::baseType()

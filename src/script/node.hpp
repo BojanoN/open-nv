@@ -133,8 +133,9 @@ public:
 
 class FunctionCallExpr : public Node {
 public:
-    FunctionCallExpr(std::string name, std::vector<Node*>& args)
+    FunctionCallExpr(std::string& name, std::string& ref, std::vector<Node*>& args)
         : functionName(name)
+        , reference(ref)
         , arguments(args)
         , Node(NodeType::FunctionCallExpr)
 
@@ -150,7 +151,12 @@ public:
 
     void print()
     {
-        std::cout << "(" << functionName << " ";
+        std::cout << "(";
+
+        if (this->reference.size())
+            std::cout << this->reference << '.';
+
+        std::cout << functionName << " ";
         for (Node* n : arguments) {
             n->print();
         }
@@ -158,6 +164,7 @@ public:
     }
 
     std::string        functionName;
+    std::string        reference;
     std::vector<Node*> arguments;
 };
 

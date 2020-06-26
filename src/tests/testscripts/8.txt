@@ -9,7 +9,7 @@ Begin OnAdd player
    if rTestVar == 1
 	set rTestVar to 23
    elseif rTestVar != 42
-	SetSize 110
+	player.SetSize 110
    elseif rTestVar == 22
 	SetSize 112
    else 
