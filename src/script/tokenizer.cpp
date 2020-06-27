@@ -30,9 +30,6 @@ std::ostream& operator<<(std::ostream& os, const Token& t)
 
 void Tokenizer::error(std::string message)
 {
-    delete this->tokens;
-    this->tokens = nullptr;
-
     log_fatal("Tokenizer: %s in line %u", message.c_str(), this->currentLine);
     this->tokenizeError = true;
 }

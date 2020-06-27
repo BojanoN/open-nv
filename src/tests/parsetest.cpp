@@ -25,6 +25,11 @@ int main(int argc, char** argv)
     Script::Parser*    parser = new Script::Parser();
 
     if (d) {
+
+        int passed = 0;
+        int failed = 0;
+        int total  = 0;
+
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_type != DT_REG) {
                 continue;
@@ -39,6 +44,7 @@ int main(int argc, char** argv)
                 continue;
             }
 
+            total++;
             in.seekg(0, std::ios::end);
             ssize_t size = in.tellg();
             in.seekg(0, std::ios::beg);
@@ -58,17 +64,25 @@ int main(int argc, char** argv)
                     }
 
                     delete s;
-                } catch (std::runtime_error& e) {
-                    log_fatal("%s", e.what());
+                    passed++;
+                } catch (std::exception& e) {
+                    log_fatal("%s\n", e.what());
+                    failed++;
                 }
 
                 delete tokens;
             }
+            log_info("Scripts successfully parsed: %d", passed);
+            log_info("Scripts unsuccessfully parsed: %d", failed);
         }
 
         delete parser;
         delete tok;
         closedir(d);
+
+        log_info("Scripts successfully parsed: %d", passed);
+        log_info("Scripts unsuccessfully parsed: %d", failed);
+        log_info("Overall success rate: %lf", (double)passed / (total));
 
         return 0;
     }
