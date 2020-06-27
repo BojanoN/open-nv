@@ -119,22 +119,15 @@ private:
 
 class Tokenizer {
 public:
-    void getTokens();
+    std::vector<Token>* getTokens(std::string& src);
 
-    void printTokens()
-    {
-        for (Token t : this->tokens) {
-            std::cout << t << "\n";
-        }
-    }
-
-    Tokenizer(std::string& script)
-        : source(script)
-        , currentLine(0)
+    Tokenizer()
+        : currentLine(0)
         , currentColumn(0)
         , currentCharOffset(0)
         , startCharOffset(0)
-        , sourceSize(script.size())
+        , sourceSize(0)
+        , tokens(nullptr)
         , tokenizeError(false)
     {
         log_debug("%s", source.c_str());
@@ -217,6 +210,16 @@ private:
         }
     }
 
+    void reset()
+    {
+        currentLine       = 1;
+        currentColumn     = 0;
+        currentCharOffset = 0;
+        startCharOffset   = 0;
+        tokenizeError     = false;
+        sourceSize        = source.size();
+    }
+
     std::string substring(std::string& str, unsigned int beg, unsigned int end)
     {
         std::string ret;
@@ -233,7 +236,7 @@ private:
     uint32_t     currentCharOffset;
     uint32_t     startCharOffset;
 
-    std::vector<Token>                                tokens;
+    std::vector<Token>*                               tokens;
     static std::unordered_map<std::string, TokenType> keywords;
 
     std::string source;

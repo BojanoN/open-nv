@@ -91,12 +91,15 @@ Node* Parser::expression()
     return this->equals();
 }
 
-std::vector<Node*>* Parser::parse()
+std::vector<Node*>* Parser::parse(std::vector<Token>* toks)
 {
     this->currentOffset = 0;
+    this->tokens        = toks;
+
     std::vector<Node*>* ret;
-    Token&              current = peekCurrent();
-    ret                         = new std::vector<Node*>();
+
+    Token& current = peekCurrent();
+    ret            = new std::vector<Node*>();
 
     ret->push_back(scriptName());
 

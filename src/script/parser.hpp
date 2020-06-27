@@ -8,16 +8,17 @@
 namespace Script {
 class Parser {
 public:
-    Parser(Tokenizer* tokenizer)
-        : tokens(tokenizer->tokens)
+    Parser()
+        : tokens(nullptr)
         , currentOffset(0)
     {
     }
-    std::vector<Node*>* parse();
+
+    std::vector<Node*>* parse(std::vector<Token>* tokens);
 
 private:
     uint32_t                     currentOffset;
-    std::vector<Token>&          tokens;
+    std::vector<Token>*          tokens;
     static std::set<std::string> blocktypes;
 
     // TODO: refactor error reporting and handling to ease memory management
@@ -28,18 +29,19 @@ private:
         errorMsg += cause;
         errorMsg += " at line " + std::to_string(tok.line);
         errorMsg += " at column " + std::to_string(tok.column);
+        this->tokens = nullptr;
         throw std::runtime_error(errorMsg);
     }
 
     bool end()
     {
-        return this->tokens[currentOffset].type == TokenType::Eof;
+        return this->tokens->at(currentOffset).type == TokenType::Eof;
     }
 
     Token& advance()
     {
         this->currentOffset++;
-        return this->tokens[currentOffset];
+        return this->tokens->at(currentOffset);
     }
 
     bool advanceMatches(std::set<TokenType>& tokens)
@@ -64,17 +66,17 @@ private:
 
     Token& peekCurrent()
     {
-        return tokens[currentOffset];
+        return tokens->at(currentOffset);
     }
 
     Token& peekNext()
     {
-        return tokens[currentOffset + 1];
+        return tokens->at(currentOffset + 1);
     }
 
     Token& previous()
     {
-        return tokens[currentOffset - 1];
+        return tokens->at(currentOffset - 1);
     }
 
     void check(TokenType type, std::string errorMsg)

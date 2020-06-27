@@ -14,7 +14,6 @@
 namespace GameWorld {
 
 class GameWorld {
-    // TODO: sve ostalo
     GameData<ESM::GameSetting>      gameSettings;
     GameData<ESM::TextureSet>       textureSets;
     GameData<ESM::MenuIcon>         menuIcons;
@@ -135,7 +134,6 @@ class GameWorld {
     //std::unordered_map<formid, WorldChildren*> worldChildren;
 
     std::unordered_map<uint32_t, GameDataBase*> dataStores;
-    GameDataBase*                               getDataStore(uint32_t type);
     //std::unordered_map<formid, CellChildren*>&  getCellChildrenMap(uint32_t groupType);
 
     void initDataStoreMap();
@@ -151,7 +149,8 @@ public:
         initDataStoreMap();
     }
 
-    void load(ESM::ESMReader& reader);
+    void          load(ESM::ESMReader& reader);
+    GameDataBase* getDataStore(uint32_t type);
 };
 
 };

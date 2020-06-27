@@ -15,7 +15,7 @@ class GameDataBase {
 public:
     virtual void    load(ESM::ESMReader& reader) = 0;
     virtual ssize_t size()                       = 0;
-    virtual ~GameDataBase() {}
+    virtual ~GameDataBase() { }
 };
 
 template <class T>
@@ -26,10 +26,12 @@ private:
     void                           raiseError(formid id) const;
 
 public:
-    virtual ssize_t size() { return dataMap.size(); }
-    virtual void    load(ESM::ESMReader& reader);
-    T&        get(formid id);
-    void            insert(T* data);
+    virtual ssize_t                 size() { return dataMap.size(); }
+    virtual void                    load(ESM::ESMReader& reader);
+    std::unordered_map<formid, T*>& getMap() { return this->dataMap; };
+
+    T&   get(formid id);
+    void insert(T* data);
     virtual ~GameData();
 };
 

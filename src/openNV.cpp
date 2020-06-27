@@ -34,6 +34,22 @@ int main(int argc, char** argv)
     } catch (std::runtime_error& e) {
         log_fatal(e.what());
     }
+
+    GameWorld::GameData<ESM::Script>* scriptStore = (GameWorld::GameData<ESM::Script>*)world.getDataStore(ESM::ESMType::SCPT);
+
+    std::unordered_map<formid, ESM::Script*>& scriptMap = scriptStore->getMap();
+
+    for (auto& n : scriptMap) {
+
+        std::string   filename = std::to_string(n.first) + ".scpt";
+        std::ofstream out { "./dump/" + filename };
+
+        std::string& source = n.second->data.scriptSource;
+
+        out.write(source.data(), source.size());
+        out.close();
+    }
+
     //log_info("Loaded %s in %f miliseconds", path.c_str(), (double)(end - start) / (CLOCKS_PER_SEC / 1000));
 
     return 0;

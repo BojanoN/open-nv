@@ -4,70 +4,74 @@
 #include "parser.hpp"
 #include "tokenizer.hpp"
 #include "vm.hpp"
+#include <dirent.h>
 #include <fstream>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
 
     if (argc != 2) {
-        log_fatal("%s", "Only one file please!");
+        log_fatal("%s", "Only one folder please!");
         return 1;
     }
 
-    std::ifstream in { argv[1] };
+    DIR*           d;
+    struct dirent* dir;
+    d = opendir(argv[1]);
+    chdir(argv[1]);
 
-    in.seekg(0, std::ios::end);
-    ssize_t size = in.tellg();
-    in.seekg(0, std::ios::beg);
+    Script::Tokenizer* tok    = new Script::Tokenizer();
+    Script::Parser*    parser = new Script::Parser();
 
-    std::string source(size, '\0');
-    in.read(const_cast<char*>(source.data()), size);
-
-    Script::Tokenizer* tok = new Script::Tokenizer(source);
-
-    tok->getTokens();
-    tok->printTokens();
-
-    if (!tok->hadError()) {
-        Script::Parser* parser = new Script::Parser(tok);
-
-        try {
-            Script::VM*                 vm = new Script::VM();
-            std::vector<Script::Node*>* s  = parser->parse();
-
-            for (Script::Node* n : *s) {
-                log_info("Node: %s", Script::NodeEnumToString(n->type));
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            if (dir->d_type != DT_REG) {
+                continue;
             }
 
-            for (Script::Node* n : *s) {
-                n->print();
+            printf("PENIS: %s\n", dir->d_name);
+
+            std::ifstream in { dir->d_name };
+
+            if (in.fail()) {
+                log_error("Failed to open file %s!", dir->d_name);
+                continue;
             }
 
-            Script::Compiler*       c  = new Script::Compiler(s);
-            Script::CompiledScript* cs = c->compile();
+            in.seekg(0, std::ios::end);
+            ssize_t size = in.tellg();
+            in.seekg(0, std::ios::beg);
 
-            if (cs != nullptr) {
+            std::string source(size, '\0');
+            in.read(const_cast<char*>(source.data()), size);
 
-                cs->print();
+            std::vector<Script::Token>* tokens = tok->getTokens(source);
 
-                vm->execute(cs);
-                delete cs;
+            if (!tok->hadError()) {
+
+                try {
+                    std::vector<Script::Node*>* s = parser->parse(tokens);
+
+                    for (Script::Node* n : *s) {
+                        delete n;
+                    }
+
+                    delete s;
+                } catch (std::runtime_error& e) {
+                    log_fatal("%s", e.what());
+                }
+
+                delete tokens;
             }
-
-            for (Script::Node* n : *s) {
-                delete n;
-            }
-
-            delete vm;
-            delete c;
-            delete s;
-        } catch (std::runtime_error& e) {
-            log_fatal("%s", e.what());
         }
 
         delete parser;
-    }
-    delete tok;
+        delete tok;
+        closedir(d);
 
-    return 0;
+        return 0;
+    }
+
+    return 1;
 }

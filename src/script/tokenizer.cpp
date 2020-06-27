@@ -2,9 +2,9 @@
 #include "logc/log.h"
 #include <set>
 
-#define ADD_EMPTY_TOKEN(type) this->tokens.emplace_back(Token((this->currentLine), (type), (this->currentColumn)))
+#define ADD_EMPTY_TOKEN(type) this->tokens->emplace_back(Token((this->currentLine), (type), (this->currentColumn)))
 
-#define ADD_TOKEN(type, value) this->tokens.emplace_back(Token((this->currentLine), (value), (type), (this->currentColumn)))
+#define ADD_TOKEN(type, value) this->tokens->emplace_back(Token((this->currentLine), (value), (type), (this->currentColumn)))
 
 #define UNK_CHAR_ERROR()                                 \
     errorMessage = "Unknown character in offset ";       \
@@ -30,6 +30,9 @@ std::ostream& operator<<(std::ostream& os, const Token& t)
 
 void Tokenizer::error(std::string message)
 {
+    delete this->tokens;
+    this->tokens = nullptr;
+
     log_fatal("Tokenizer: %s in line %u", message.c_str(), this->currentLine);
     this->tokenizeError = true;
 }
@@ -90,8 +93,12 @@ void Tokenizer::parseLiteral()
     }
 }
 
-void Tokenizer::getTokens()
+std::vector<Token>* Tokenizer::getTokens(std::string& src)
 {
+    this->tokens = new std::vector<Token>();
+    this->source = src;
+    reset();
+
     char        current = peekCurrent();
     std::string errorMessage;
 
@@ -188,6 +195,11 @@ void Tokenizer::getTokens()
         current = advance();
     }
     ADD_EMPTY_TOKEN(TokenType::Eof);
+
+    std::vector<Token>* ret = this->tokens;
+    this->tokens            = nullptr;
+
+    return ret;
 }
 
 std::unordered_map<std::string, TokenType> Tokenizer::keywords = {
