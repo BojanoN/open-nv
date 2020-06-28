@@ -21,6 +21,7 @@ class Object;
     X(ScriptName)          \
     X(Blocktype)           \
     X(Block)               \
+    X(ReferenceAccessExpr) \
     X(Variable)
 
 #define X(name) name,
@@ -166,6 +167,26 @@ public:
     std::string        functionName;
     std::string        reference;
     std::vector<Node*> arguments;
+};
+
+class ReferenceAccessExpr : public Node {
+public:
+    ReferenceAccessExpr(std::string& ref, std::string& f)
+        : Node(NodeType::ReferenceAccessExpr)
+        , reference(ref)
+        , field(f)
+    {
+    }
+
+    ~ReferenceAccessExpr() {};
+
+    void print()
+    {
+        std::cout << "(" << reference << '.' << field << ")\n";
+    }
+
+    std::string reference;
+    std::string field;
 };
 
 class ExpressionStatement : public Node {

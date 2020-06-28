@@ -113,7 +113,7 @@ std::vector<Token>* Tokenizer::getTokens(std::string& src)
             ADD_TOKEN(TokenType::Asterisk, "*");
             break;
         case ('.'):
-            ADD_TOKEN(TokenType::Dot, "/");
+            ADD_TOKEN(TokenType::Dot, ".");
             break;
         case ('('):
             ADD_EMPTY_TOKEN(TokenType::LeftParenthesis);
@@ -163,6 +163,8 @@ std::vector<Token>* Tokenizer::getTokens(std::string& src)
             while (this->peekCurrent() != '\n' && !this->end()) {
                 advance();
             }
+            ADD_EMPTY_TOKEN(TokenType::Newline);
+            this->currentLine++;
             break;
         case ('\n'):
             this->currentLine++;

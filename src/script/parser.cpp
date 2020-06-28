@@ -3,12 +3,15 @@
 #include "logc/log.h"
 #include <utility>
 
-static std::set<Script::TokenType> equalsMatch     = { Script::TokenType::EqualTo, Script::TokenType::NotEqualTo };
-static std::set<Script::TokenType> comparisonMatch = {
+static std::set<Script::TokenType> equalsMatch               = { Script::TokenType::EqualTo, Script::TokenType::NotEqualTo };
+static std::set<Script::TokenType> comparisonAndLogicalMatch = {
     Script::TokenType::GreaterThan,
     Script::TokenType::GreaterThanOrEqualTo,
     Script::TokenType::LessThan,
     Script::TokenType::LessThanOrEqualTo,
+    Script::TokenType::EqualTo,
+    Script::TokenType::And,
+    Script::TokenType::Or,
 };
 static std::set<Script::TokenType> additionMatch       = { Script::TokenType::Plus, Script::TokenType::Minus };
 static std::set<Script::TokenType> multiplicationMatch = { Script::TokenType::Asterisk, Script::TokenType::Division };
@@ -22,14 +25,10 @@ static std::set<Script::TokenType> varTypeMatch = {
     Script::TokenType::Long
 };
 
-static std::set<Script::TokenType> functionCallDelimiters = {
-    Script::TokenType::GreaterThan,
-    Script::TokenType::GreaterThanOrEqualTo,
-    Script::TokenType::LessThan,
-    Script::TokenType::LessThanOrEqualTo,
-    Script::TokenType::EqualTo,
-    Script::TokenType::NotEqualTo,
-    Script::TokenType::Newline
+static std::set<Script::TokenType> functionCallArgType = {
+    Script::TokenType::IntegerConstant,
+    Script::TokenType::Float,
+    Script::TokenType::Identifier,
 };
 
 static std::unordered_map<Script::TokenType, Script::Type> tokenTypeToVarType = {
@@ -37,6 +36,7 @@ static std::unordered_map<Script::TokenType, Script::Type> tokenTypeToVarType = 
     { Script::TokenType::IntegerConstant, Script::Type::Integer },
     { Script::TokenType::FloatConstant, Script::Type::Float },
     { Script::TokenType::Integer, Script::Type::Integer },
+    { Script::TokenType::Short, Script::Type::Integer },
     { Script::TokenType::Float, Script::Type::Float },
     { Script::TokenType::Identifier, Script::Type::Identifier }
 };
@@ -153,7 +153,7 @@ Node* Parser::comparison()
 
     Node* ret = this->addition();
 
-    while (this->advanceMatches(comparisonMatch)) {
+    while (this->advanceMatches(comparisonAndLogicalMatch)) {
         Token& op            = this->previous();
         Node*  rightHandExpr = this->addition();
         ret                  = new BinaryExpr(op, ret, rightHandExpr);
@@ -199,30 +199,42 @@ Node* Parser::multiplication()
 Node* Parser::functionCall()
 {
 
-    std::string reference = "";
+    std::string  reference           = "";
+    Token&       funcOrRefToken      = peekCurrent();
+    std::string& funcOrRefIdentifier = funcOrRefToken.literal;
+    log_info("DEBUG: %s", funcOrRefIdentifier.c_str());
 
-    // Reference function call
-    if (peekNext().type == TokenType::Dot) {
-        reference = peekCurrent().literal;
-        advance();
-        advance();
+    if (FunctionResolver::functions.count(funcOrRefIdentifier) == 0) {
+        // Check for reference access
+        if (peekNext().type == TokenType::Dot) {
+            reference = peekCurrent().literal;
+            advance();
+
+            std::string& fieldOrFuncIdentifier = peekNext().literal;
+            // If the identifier right of the dot is not a function treat it as a reference access
+            if (FunctionResolver::functions.count(fieldOrFuncIdentifier) == 0) {
+                advance();
+                advance();
+                return new ReferenceAccessExpr(reference, fieldOrFuncIdentifier);
+            }
+            advance();
+            funcOrRefIdentifier = fieldOrFuncIdentifier;
+            goto parse_args;
+        } else {
+            return baseType();
+        }
     }
 
-    Token& functionIdentifier = peekCurrent();
-    log_info("DEBUG: %s", functionIdentifier.literal.c_str());
-
-    if (FunctionResolver::functions.count(functionIdentifier.literal) == 0) {
-
-        return baseType();
-    }
+    // Plain function call
+parse_args:
     advance();
     std::vector<Node*> arguments;
 
-    while (functionCallDelimiters.count(peekCurrent().type) == 0) {
+    while (functionCallArgType.count(peekCurrent().type)) {
         arguments.push_back(expression());
     }
 
-    return new FunctionCallExpr(functionIdentifier.literal, reference, arguments);
+    return new FunctionCallExpr(funcOrRefIdentifier, reference, arguments);
 }
 
 Node* Parser::baseType()
@@ -285,12 +297,9 @@ Node* Parser::varDeclaration()
 
     Type varType = tokenTypeToVarType[varTypeToken.type];
 
-    check(varTypeMatch, "Expected variable type");
+    advance();
     Token& varName = peekCurrent();
     check(TokenType::Identifier, "Expected variable name");
-
-    advance();
-
     check(TokenType::Newline, "Expected newline after declaration");
 
     return new Variable(varType, varName.literal);
