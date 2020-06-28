@@ -83,7 +83,7 @@ std::set<std::string> Parser::blocktypes = {
     "scripteffectupdate"
 };
 
-Node* Parser::expression()
+inline Node* Parser::expression()
 {
 #ifdef DEBUG
     log_debug("%s", "expression");
@@ -113,6 +113,13 @@ std::vector<Node*>* Parser::parse(std::vector<Token>* toks)
         while (advanceMatches(TokenType::Newline)) { };
         current = peekCurrent();
     };
+    while (advanceMatches(TokenType::Newline)) { };
+
+    // This allows scripts which only declare variables, without a script body
+    // The use case is fairly common
+    if (end()) {
+        return ret;
+    }
 
     ret->push_back(scriptBlock());
 
@@ -128,7 +135,7 @@ std::vector<Node*>* Parser::parse(std::vector<Token>* toks)
     return ret;
 }
 
-Node* Parser::equals()
+inline Node* Parser::equals()
 {
 #ifdef DEBUG
     log_debug("%s", "equals");
@@ -144,7 +151,7 @@ Node* Parser::equals()
     return ret;
 }
 
-Node* Parser::comparison()
+inline Node* Parser::comparison()
 {
 
 #ifdef DEBUG
@@ -162,7 +169,7 @@ Node* Parser::comparison()
     return ret;
 }
 
-Node* Parser::addition()
+inline Node* Parser::addition()
 {
 #ifdef DEBUG
     log_debug("%s", "addition");
@@ -179,7 +186,7 @@ Node* Parser::addition()
     return ret;
 }
 
-Node* Parser::multiplication()
+inline Node* Parser::multiplication()
 {
 #ifdef DEBUG
     log_debug("%s", "multiplication");
@@ -196,7 +203,7 @@ Node* Parser::multiplication()
     return ret;
 }
 
-Node* Parser::functionCall()
+inline Node* Parser::functionCall()
 {
 
     std::string  reference           = "";
@@ -237,7 +244,7 @@ parse_args:
     return new FunctionCallExpr(funcOrRefIdentifier, reference, arguments);
 }
 
-Node* Parser::baseType()
+inline Node* Parser::baseType()
 {
 #ifdef DEBUG
     log_debug("%s", "baseType");
@@ -265,7 +272,7 @@ Node* Parser::baseType()
     return nullptr;
 }
 
-Node* Parser::statement()
+inline Node* Parser::statement()
 {
     if (advanceMatches(TokenType::If))
         return ifStatement();
@@ -273,7 +280,7 @@ Node* Parser::statement()
     return expressionStatement();
 }
 
-Node* Parser::expressionStatement()
+inline Node* Parser::expressionStatement()
 {
     Node* expr;
 
@@ -288,7 +295,7 @@ Node* Parser::expressionStatement()
     return new ExpressionStatement(expr);
 }
 
-Node* Parser::varDeclaration()
+inline Node* Parser::varDeclaration()
 {
     Token& varTypeToken = peekCurrent();
 
@@ -305,21 +312,34 @@ Node* Parser::varDeclaration()
     return new Variable(varType, varName.literal);
 }
 
-Node* Parser::assignment()
+inline Node* Parser::assignment()
 {
     check(TokenType::Set, "Expected set keyword");
-    Token&      varToken = peekCurrent();
-    std::string var;
+    Token& varOrRefToken = peekCurrent();
 
-    var = varToken.literal;
+    std::string variable;
+    std::string reference;
+
+    // Reference access
+    if (peekNext().type == TokenType::Dot) {
+        reference = varOrRefToken.literal;
+        advance();
+        advance();
+        variable = peekCurrent().literal;
+
+        // Plain var access
+    } else {
+        variable = varOrRefToken.literal;
+    }
+
     advance();
     check(TokenType::To, "Expected to keyword");
     Node* expr = this->expression();
 
-    return new Assignment(var, expr);
+    return new Assignment(variable, reference, expr);
 }
 
-Node* Parser::declaration()
+inline Node* Parser::declaration()
 {
     return statement();
 }
@@ -327,7 +347,7 @@ Node* Parser::declaration()
 static std::set<TokenType> ifBlockDelimiters   = { TokenType::Elseif, TokenType::Else, TokenType::Endif };
 static std::set<TokenType> elseBlockDelimiters = { TokenType::Endif };
 
-Node* Parser::ifStatement()
+inline Node* Parser::ifStatement()
 {
     Node* condition = expression();
     while (advanceMatches(TokenType::Newline)) { }
@@ -363,7 +383,7 @@ Node* Parser::ifStatement()
     return new IfStatement(condition, body, elifs, elseBody);
 }
 
-Node* Parser::scriptName()
+inline Node* Parser::scriptName()
 {
     Token& current = peekCurrent();
 
@@ -383,7 +403,7 @@ Node* Parser::scriptName()
     return new ScriptNameStatement(scriptName);
 };
 
-Node* Parser::blocktype()
+inline Node* Parser::blocktype()
 {
     std::string blocktype;
     std::string blocktypeArg = "";
@@ -415,7 +435,7 @@ Node* Parser::blocktype()
     return new BlockTypeStatement(blocktype, blocktypeArg);
 };
 
-Node* Parser::scriptBlock()
+inline Node* Parser::scriptBlock()
 {
     std::vector<Node*>* ret     = new std::vector<Node*>();
     Node*               retNode = nullptr;
@@ -453,7 +473,7 @@ Node* Parser::scriptBlock()
     return retNode;
 }
 
-Node* Parser::statementBlock(std::set<TokenType>& delimiters)
+inline Node* Parser::statementBlock(std::set<TokenType>& delimiters)
 {
     std::vector<Node*>* statements = new std::vector<Node*>();
     try {
@@ -461,6 +481,7 @@ Node* Parser::statementBlock(std::set<TokenType>& delimiters)
         while (delimiters.count(peekCurrent().type) == 0) {
             while (advanceMatches(TokenType::Newline)) { }
             statements->emplace_back(statement());
+            while (advanceMatches(TokenType::Newline)) { }
         }
     } catch (std::runtime_error& e) {
         int size = statements->size();

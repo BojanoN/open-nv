@@ -79,8 +79,9 @@ public:
 
 class Assignment : public Node {
 public:
-    Assignment(std::string var, Node* expr)
+    Assignment(std::string& var, std::string& ref, Node* expr)
         : variable(var)
+        , reference(ref)
         , expression(expr)
         , Node(NodeType::Assignment) {};
 
@@ -97,6 +98,7 @@ public:
     }
 
     std::string variable;
+    std::string reference;
     Node*       expression;
 };
 
