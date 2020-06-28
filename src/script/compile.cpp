@@ -68,18 +68,18 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
         return compileScriptName(node, out);
     case NodeType::Variable:
         return compileVariable(node, out);
-    case NodeType::Block:
-        return compileBlock(node, out);
+    case NodeType::ScriptBlock:
+        return compileScriptBlock(node, out);
     default:
         return error("Unknown node type");
     }
     return 0;
 }
 
-int Compiler::compileBlock(Node* node, CompiledScript* out)
+int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
 {
-    Block* block = dynamic_cast<Block*>(node);
-    int    size  = block->nodes->size();
+    ScriptBlock* block = dynamic_cast<ScriptBlock*>(node);
+    int          size  = block->nodes->size();
 
     uint8_t beg[] = {
         static_cast<uint8_t>(OutputCodes::BEGIN), 0x00, 0x06, 0x00,

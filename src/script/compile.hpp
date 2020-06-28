@@ -209,7 +209,7 @@ private:
     void resize(int n)
     {
         capacity += DEFAULT_ARR_SIZE * ((n + capacity) / capacity);
-        //        bytecode = (uint8_t*)std::realloc(bytecode, capacity);
+        bytecode = (uint8_t*)std::realloc(bytecode, capacity);
 
         if (bytecode == NULL) {
             throw std::runtime_error("Realloc fail");
@@ -235,7 +235,7 @@ private:
     int compileGroupingExpr(Node* node, CompiledScript* out);
     int compileLiteralExpr(Node* node, CompiledScript* out);
     int compileFunctionCallExpr(Node* node, CompiledScript* out);
-    int compileBlock(Node* node, CompiledScript* out);
+    int compileScriptBlock(Node* node, CompiledScript* out);
 
     int compileScriptName(Node* node, CompiledScript* out);
     int compileBlocktype(Node* node, CompiledScript* out);

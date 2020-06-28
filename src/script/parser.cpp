@@ -114,7 +114,7 @@ std::vector<Node*>* Parser::parse(std::vector<Token>* toks)
         current = peekCurrent();
     };
 
-    ret->push_back(block());
+    ret->push_back(scriptBlock());
 
     if (end()) {
         for (Node* n : *ret) {
@@ -324,13 +324,16 @@ Node* Parser::declaration()
     return statement();
 }
 
+static std::set<TokenType> ifBlockDelimiters   = { TokenType::Elseif, TokenType::Else, TokenType::Endif };
+static std::set<TokenType> elseBlockDelimiters = { TokenType::Endif };
+
 Node* Parser::ifStatement()
 {
     Node* condition = expression();
     while (advanceMatches(TokenType::Newline)) { }
     log_debug("%s", TokenEnumToString(peekCurrent().type));
 
-    Node* body = statement();
+    Node* body = statementBlock(ifBlockDelimiters);
 
     log_debug("%s", TokenEnumToString(peekCurrent().type));
 
@@ -341,7 +344,7 @@ Node* Parser::ifStatement()
         Node* elifCondition = expression();
         while (advanceMatches(TokenType::Newline)) { };
 
-        Node* elifBody = statement();
+        Node* elifBody = statementBlock(ifBlockDelimiters);
         elifs.push_back(std::make_pair(elifCondition, elifBody));
     }
 
@@ -352,7 +355,7 @@ Node* Parser::ifStatement()
         advance();
         while (advanceMatches(TokenType::Newline)) { };
 
-        elseBody = statement();
+        elseBody = statementBlock(elseBlockDelimiters);
     }
 
     check(TokenType::Endif, "Expected endif keyword");
@@ -412,7 +415,7 @@ Node* Parser::blocktype()
     return new BlockTypeStatement(blocktype, blocktypeArg);
 };
 
-Node* Parser::block()
+Node* Parser::scriptBlock()
 {
     std::vector<Node*>* ret     = new std::vector<Node*>();
     Node*               retNode = nullptr;
@@ -435,7 +438,7 @@ Node* Parser::block()
             ret->emplace_back(statement());
         }
 
-        retNode = new Block(type, ret);
+        retNode = new ScriptBlock(type, ret);
 
     } catch (std::runtime_error& e) {
         int size = ret->size();
@@ -448,5 +451,26 @@ Node* Parser::block()
     }
 
     return retNode;
+}
+
+Node* Parser::statementBlock(std::set<TokenType>& delimiters)
+{
+    std::vector<Node*>* statements = new std::vector<Node*>();
+    try {
+
+        while (delimiters.count(peekCurrent().type) == 0) {
+            while (advanceMatches(TokenType::Newline)) { }
+            statements->emplace_back(statement());
+        }
+    } catch (std::runtime_error& e) {
+        int size = statements->size();
+        for (int i = 0; i < size; i++) {
+            delete statements->at(i);
+        }
+        delete statements;
+
+        throw e;
+    }
+    return new StatementBlock(statements);
 }
 };

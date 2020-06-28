@@ -100,23 +100,21 @@ public:
     friend class Compiler;
 
     bool operator==(const Token& other) const
+    {
+        return this->type == other.type;
+    }
 
-        return this->type
-        == other.type;
-}
+    bool operator<(const Token& other) const
+    {
+        return this->type < other.type;
+    }
 
-bool
-operator<(const Token& other) const
-{
-    return this->type < other.type;
-}
-
-TokenType type;
+    TokenType type;
 
 private:
-uint32_t    line;
-uint32_t    column;
-std::string literal;
+    uint32_t    line;
+    uint32_t    column;
+    std::string literal;
 };
 
 class Tokenizer {
@@ -244,5 +242,4 @@ private:
     std::string source;
     bool        tokenizeError;
 };
-}
-;
+};

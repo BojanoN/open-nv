@@ -124,7 +124,8 @@ private:
     Node* ifStatement();
     Node* scriptName();
     Node* blocktype();
-    Node* block();
+    Node* scriptBlock();
+    Node* statementBlock(std::set<TokenType>& delim);
 
     Node* functionCall();
     Node* assignment();

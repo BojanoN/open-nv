@@ -20,8 +20,9 @@ class Object;
     X(IfStatement)         \
     X(ScriptName)          \
     X(Blocktype)           \
-    X(Block)               \
+    X(ScriptBlock)         \
     X(ReferenceAccessExpr) \
+    X(StatementBlock)      \
     X(Variable)
 
 #define X(name) name,
@@ -309,13 +310,13 @@ public:
     std::string variableName;
 };
 
-class Block : public Node {
+class ScriptBlock : public Node {
 public:
-    Block(Node* t, std::vector<Node*>* ns)
-        : Node(NodeType::Block)
+    ScriptBlock(Node* t, std::vector<Node*>* ns)
+        : Node(NodeType::ScriptBlock)
         , type(t)
         , nodes(ns) {};
-    ~Block()
+    ~ScriptBlock()
     {
         uint32_t size = nodes->size();
 
@@ -336,6 +337,33 @@ public:
 
     std::vector<Node*>* nodes;
     Node*               type;
+};
+
+class StatementBlock : public Node {
+public:
+    StatementBlock(std::vector<Node*>* ns)
+        : Node(NodeType::StatementBlock)
+        , nodes(ns) {};
+
+    ~StatementBlock()
+    {
+        uint32_t size = nodes->size();
+
+        for (uint32_t i = 0; i < size; i++) {
+            delete nodes->at(i);
+        }
+
+        delete nodes;
+    }
+
+    void print()
+    {
+        for (Node* n : *nodes) {
+            n->print();
+        }
+    }
+
+    std::vector<Node*>* nodes;
 };
 
 }
