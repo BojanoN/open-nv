@@ -27,6 +27,9 @@ static std::set<Script::TokenType> varTypeMatch = {
 
 static std::set<Script::TokenType> functionCallArgType = {
     Script::TokenType::IntegerConstant,
+    Script::TokenType::FloatConstant,
+    Script::TokenType::Reference,
+    Script::TokenType::Integer,
     Script::TokenType::Float,
     Script::TokenType::Identifier,
 };
@@ -276,6 +279,9 @@ inline Node* Parser::statement()
 {
     if (advanceMatches(TokenType::If))
         return ifStatement();
+
+    if (advanceMatches(varTypeMatch))
+        return declaration();
 
     return expressionStatement();
 }

@@ -19,6 +19,8 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "getsecondspassed", { 0x100C, "GetSecondsPassed", "", "" } },
     { "activate", { 0x100D, "Activate", "", "" } },
     { "getactorvalue", { 0x100E, "GetActorValue", "GetAV", "Get an actor value. [player.getav luck]" } },
+    { "getav", { 0x100E, "GetActorValue", "GetAV", "Get an actor value. [player.getav luck]" } },
+
     { "setactorvalue", { 0x100F, "SetActorValue", "SetAV", "Set an actor value. [player.setav luck, 75]" } },
     { "modactorvalue", { 0x1010, "ModActorValue", "ModAV", "Modify an actor value. [player.modav luck, -10]" } },
     { "setatstart", { 0x1011, "SetAtStart", "", "" } },
@@ -478,6 +480,8 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "getdestructionstage", { 0x11D7, "GetDestructionStage", "", "" } },
     { "cleardestruction", { 0x11D8, "ClearDestruction", "", "" } },
     { "castimmediateonself", { 0x11D9, "CastImmediateOnSelf", "cios", "" } },
+    { "cios", { 0x11D9, "CastImmediateOnSelf", "cios", "" } },
+
     { "getisalignment", { 0x11DA, "GetIsAlignment", "", "" } },
     { "resetquest", { 0x11DB, "ResetQuest", "", "" } },
     { "setquestdelay", { 0x11DC, "SetQuestDelay", "", "" } },
@@ -550,7 +554,11 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "sqrt", { 0x121F, "Sqrt", "", "" } },
     { "log", { 0x1220, "Log", "", "" } },
     { "abs", { 0x1221, "Abs", "", "" } },
+    { "moveto", { 0x0000, "MoveTo", "", "" } },
     { "getquestcompleted", { 0x1222, "GetQuestCompleted", "GetQC", "" } },
+
+    { "getqc", { 0x1222, "GetQuestCompleted", "GetQC", "" } },
+
     { "forceterminalback", { 0x1223, "ForceTerminalBack", "", "" } },
     { "pipboyradiooff", { 0x1224, "PipBoyRadioOff", "", "" } },
     { "autodisplayobjectives", { 0x1225, "AutoDisplayObjectives", "", "" } },
@@ -567,6 +575,33 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "setlastextdooractivated", { 0x1230, "SetLastExtDoorActivated", "", "" } },
     { "killquestupdates", { 0x1231, "KillQuestUpdates", "KQU", "" } },
     { "isimagespaceactive", { 0x1232, "IsImageSpaceActive", "", "" } },
+    { "getchallengecompleted", { 0x0000, "getchallengecompleted", "", "" } },
+    { "getownerlasttarget", { 0x0000, "getownerlasttarget", "", "" } },
+    { "getreputation", { 0x0000, "getreputation", "", "" } },
+    { "getreputationpct", { 0x0000, "getreputationpct", "", "" } },
+    { "getreputationthreshold", { 0x0000, "getreputationthreshold", "", "" } },
+    { "incrementscriptedchallenge", { 0x0000, "incrementscriptedchallenge", "", "" } },
+    { "isactorsaioff", { 0x0000, "isactorsaioff", "", "" } },
+    { "ishardcore", { 0x0000, "ishardcore", "", "" } },
+    { "isplayerinregion", { 0x0000, "isplayerinregion", "", "" } },
+    { "movetomarkerwithfade", { 0x0000, "movetomarkerwithfade", "", "" } },
+    { "objectunderreticle", { 0x0000, "objectunderreticle", "", "" } },
+    { "placeatreticle", { 0x0000, "placeatreticle", "", "" } },
+    { "removealltypeditems", { 0x0000, "removealltypeditems", "", "" } },
+    { "removerecurringfromchallenge", { 0x0000, "removerecurringfromchallenge", "", "" } },
+    { "removereputation", { 0x0000, "removereputation", "", "" } },
+    { "removereputationexact", { 0x0000, "removereputationexact", "", "" } },
+    { "setactorrefessential", { 0x0000, "setactorrefessential", "", "" } },
+    { "sethardcore", { 0x0000, "sethardcore", "", "" } },
+    { "setsecuritronexpression", { 0x0000, "setsecuritronexpression", "", "" } },
+    { "showcaravanmenu", { 0x0000, "showcaravanmenu", "", "" } },
+    { "showlovetestermenuparams", { 0x0000, "showlovetestermenuparams", "", "" } },
+    { "showrecipemenu", { 0x0000, "showrecipemenu", "", "" } },
+    { "showtraitmenu", { 0x0000, "showtraitmenu", "", "" } },
+    { "swaptextureonref", { 0x0000, "swaptextureonref", "", "" } },
+    { "unlockchallenge", { 0x0000, "unlockchallenge", "", "" } },
+    { "addreputation", { 0x0000, "AddReputation", "", "" } },
+
 });
 
 std::unordered_map<uint16_t, std::string> FunctionResolver::opcodeFuncs = {

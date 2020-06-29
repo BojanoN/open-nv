@@ -89,6 +89,10 @@ private:
             return;
         }
 
+        if (type == TokenType::Newline && tok.type == TokenType::Eof) {
+            return;
+        }
+
         error(errorMsg, tok);
     }
 

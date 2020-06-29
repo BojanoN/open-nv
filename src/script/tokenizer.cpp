@@ -167,9 +167,9 @@ std::vector<Token>* Tokenizer::getTokens(std::string& src)
             this->currentLine++;
             break;
         case ('\n'):
+            ADD_EMPTY_TOKEN(TokenType::Newline);
             this->currentLine++;
             this->currentColumn = 0;
-            ADD_EMPTY_TOKEN(TokenType::Newline);
             break;
         case (' '):
         case ('\r'):
