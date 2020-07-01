@@ -12,6 +12,7 @@ class Object;
 
 #define NODE_ENUM          \
     X(BinaryExpr)          \
+    X(UnaryExpr)           \
     X(Assignment)          \
     X(GroupingExpr)        \
     X(LiteralExpr)         \
@@ -23,6 +24,7 @@ class Object;
     X(ScriptBlock)         \
     X(ReferenceAccessExpr) \
     X(StatementBlock)      \
+    X(ReturnStatement)     \
     X(Variable)
 
 #define X(name) name,
@@ -74,6 +76,29 @@ public:
 
     Token op;
     Node* left;
+    Node* right;
+};
+
+class UnaryExpr : public Node {
+public:
+    UnaryExpr(Token& opr, Node* r)
+        : op(opr)
+        , right(r)
+        , Node(NodeType::UnaryExpr)
+    {
+    }
+
+    void print()
+    {
+        std::cout << "()\n";
+    }
+
+    ~UnaryExpr()
+    {
+        delete right;
+    }
+
+    Token op;
     Node* right;
 };
 
@@ -339,6 +364,18 @@ public:
 
     std::vector<Node*>* nodes;
     Node*               type;
+};
+
+class ReturnStatement : public Node {
+public:
+    ReturnStatement()
+        : Node(NodeType::ScriptBlock) {};
+    ~ReturnStatement() { }
+
+    void print()
+    {
+        std::cout << "return\n";
+    }
 };
 
 class StatementBlock : public Node {

@@ -56,6 +56,7 @@ namespace Script {
                             \
     X(Newline)              \
     X(Identifier)           \
+    X(Return)               \
     X(Eof)                  \
     X(Comma)
 

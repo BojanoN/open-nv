@@ -601,6 +601,9 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "swaptextureonref", { 0x0000, "swaptextureonref", "", "" } },
     { "unlockchallenge", { 0x0000, "unlockchallenge", "", "" } },
     { "addreputation", { 0x0000, "AddReputation", "", "" } },
+    { "showroulettemenuparams", { 0x0000, "ShowRouletteMenuParams", "", "" } },
+    { "showslotmachinemenuparams", { 0x0000, "ShowSlotMachineMenuParams", "", "" } },
+    { "setreputation", { 0x0000, "SetReputation", "", "" } },
 
 });
 
@@ -1264,6 +1267,9 @@ std::unordered_map<std::string, std::string> FunctionResolver::functionAliases({
     { "sqs", "showqueststages" },
     { "frsu", "forceradiostationupdate" },
     { "kqu", "killquestupdates" },
+    { "srmp", "showroulettemenuparams" },
+    { "sslmp", "showslotmachinemenuparams" },
+
 });
 
 bool FunctionResolver::callFunction(uint16_t opcode)

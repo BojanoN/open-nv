@@ -195,15 +195,30 @@ inline Node* Parser::multiplication()
     log_debug("%s", "multiplication");
 #endif
 
-    Node* ret = this->functionCall();
+    Node* ret = this->unary();
 
     while (this->advanceMatches(multiplicationMatch)) {
         Token& op            = this->previous();
-        Node*  rightHandExpr = this->baseType();
+        Node*  rightHandExpr = this->unary();
         ret                  = new BinaryExpr(op, ret, rightHandExpr);
     }
 
     return ret;
+}
+
+inline Node* Parser::unary()
+{
+#ifdef DEBUG
+    log_debug("%s", "unary");
+#endif
+
+    if (this->advanceMatches(TokenType::Minus)) {
+        Token& op            = this->previous();
+        Node*  rightHandExpr = this->unary();
+        return new UnaryExpr(op, rightHandExpr);
+    }
+
+    return this->functionCall();
 }
 
 inline Node* Parser::functionCall()
@@ -261,6 +276,8 @@ parse_args:
 
     while (functionCallArgType.count(peekCurrent().type)) {
         arguments.push_back(expression());
+        if (peekCurrent().type == TokenType::Comma)
+            advance();
     }
 
     return new FunctionCallExpr(funcOrRefIdentifier, reference, arguments);
@@ -301,6 +318,9 @@ inline Node* Parser::statement()
 
     if (advanceMatches(varTypeMatch))
         return declaration();
+
+    if (advanceMatches(TokenType::Return))
+        return new ReturnStatement();
 
     return expressionStatement();
 }
@@ -370,7 +390,7 @@ inline Node* Parser::declaration()
 }
 
 static std::set<TokenType> ifBlockDelimiters   = { TokenType::Elseif, TokenType::Else, TokenType::Endif };
-static std::set<TokenType> elseBlockDelimiters = { TokenType::Endif };
+static std::set<TokenType> elseBlockDelimiters = { TokenType::Endif, TokenType::Return };
 
 inline Node* Parser::ifStatement()
 {
@@ -392,8 +412,8 @@ inline Node* Parser::ifStatement()
         Node* elifBody = statementBlock(ifBlockDelimiters);
         elifs.push_back(std::make_pair(elifCondition, elifBody));
     }
-
     Node* elseBody = nullptr;
+
     log_debug("PENIS: %s", TokenEnumToString(peekCurrent().type));
 
     if (peekCurrent().type == TokenType::Else) {
@@ -401,9 +421,19 @@ inline Node* Parser::ifStatement()
         while (advanceMatches(TokenType::Newline)) { };
 
         elseBody = statementBlock(elseBlockDelimiters);
+
+        // What the fuck, why
+        if (peekCurrent().type == TokenType::Return) {
+            advance();
+            while (advanceMatches(TokenType::Newline)) { };
+
+            if (peekCurrent().type == TokenType::Endif) {
+                ((StatementBlock*)elseBody)->nodes->emplace_back(new ReturnStatement());
+            }
+        }
     }
 
-    check(TokenType::Endif, "Expected endif keyword");
+    check(elseBlockDelimiters, "Expected endif or return");
 
     return new IfStatement(condition, body, elifs, elseBody);
 }

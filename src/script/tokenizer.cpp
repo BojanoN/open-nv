@@ -56,6 +56,11 @@ void Tokenizer::parseNumber()
 
     this->startCharOffset = this->currentCharOffset;
 
+    if (peekCurrent() == '.') {
+        isFloat = true;
+        advance();
+    }
+
     while (this->isDigit(this->peekNext())) {
         this->advance();
     }
@@ -112,9 +117,14 @@ std::vector<Token>* Tokenizer::getTokens(std::string& src)
         case ('*'):
             ADD_TOKEN(TokenType::Asterisk, "*");
             break;
-        case ('.'):
-            ADD_TOKEN(TokenType::Dot, ".");
+        case ('.'): {
+            if (isDigit(peekNext())) {
+                parseNumber();
+            } else {
+                ADD_TOKEN(TokenType::Dot, ".");
+            }
             break;
+        }
         case ('('):
             ADD_EMPTY_TOKEN(TokenType::LeftParenthesis);
             break;
@@ -217,6 +227,7 @@ std::unordered_map<std::string, TokenType> Tokenizer::keywords = {
     { "long", TokenType::Long },
     { "short", TokenType::Short },
     { "float", TokenType::Float },
+    { "return", TokenType::Return },
 
 };
 };

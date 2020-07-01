@@ -137,6 +137,7 @@ private:
     Node* equals();
     Node* comparison();
     Node* addition();
+    Node* unary();
     Node* multiplication();
     Node* baseType();
 };
