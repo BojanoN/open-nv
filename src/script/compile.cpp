@@ -221,7 +221,7 @@ int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
     FunctionCallExpr* func    = dynamic_cast<FunctionCallExpr*>(node);
     uint32_t          begSize = out->getSize();
 
-    FunctionInfo& info = FunctionResolver::functions[func->functionName];
+    FunctionInfo& info = FunctionResolver::getFunctionInfo(func->functionName);
 
     // Reference function call
     if (func->reference.size()) {

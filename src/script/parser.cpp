@@ -209,20 +209,39 @@ inline Node* Parser::multiplication()
 inline Node* Parser::functionCall()
 {
 
-    std::string  reference           = "";
-    Token&       funcOrRefToken      = peekCurrent();
-    std::string& funcOrRefIdentifier = funcOrRefToken.literal;
+    bool        isFunction          = false;
+    std::string reference           = "";
+    Token&      funcOrRefToken      = peekCurrent();
+    std::string funcOrRefIdentifier = funcOrRefToken.literal;
     log_info("DEBUG: %s", funcOrRefIdentifier.c_str());
 
-    if (FunctionResolver::functions.count(funcOrRefIdentifier) == 0) {
+    if (FunctionResolver::isFunction(funcOrRefIdentifier)) {
+        isFunction = true;
+    } else if (FunctionResolver::isFunctionAlias(funcOrRefIdentifier)) {
+        isFunction          = true;
+        funcOrRefIdentifier = FunctionResolver::getFunctionByAlias(funcOrRefIdentifier);
+    }
+
+    if (!isFunction) {
         // Check for reference access
         if (peekNext().type == TokenType::Dot) {
             reference = peekCurrent().literal;
             advance();
 
             std::string& fieldOrFuncIdentifier = peekNext().literal;
+
+            isFunction = false;
+
             // If the identifier right of the dot is not a function treat it as a reference access
-            if (FunctionResolver::functions.count(fieldOrFuncIdentifier) == 0) {
+
+            if (FunctionResolver::isFunction(fieldOrFuncIdentifier)) {
+                isFunction = true;
+            } else if (FunctionResolver::isFunctionAlias(fieldOrFuncIdentifier)) {
+                isFunction            = true;
+                fieldOrFuncIdentifier = FunctionResolver::getFunctionByAlias(fieldOrFuncIdentifier);
+            }
+
+            if (!isFunction) {
                 advance();
                 advance();
                 return new ReferenceAccessExpr(reference, fieldOrFuncIdentifier);
@@ -235,7 +254,7 @@ inline Node* Parser::functionCall()
         }
     }
 
-    // Plain function call
+// Plain function call
 parse_args:
     advance();
     std::vector<Node*> arguments;

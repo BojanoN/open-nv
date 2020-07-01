@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace Script {
 struct FunctionInfo {
@@ -12,15 +13,20 @@ struct FunctionInfo {
 
 class FunctionResolver {
 public:
-    static bool callFunction(uint16_t functionID);
-    static bool lookupFunction(uint16_t functionID);
+    static bool         callFunction(uint16_t functionID);
+    static bool         lookupFunction(uint16_t functionID);
+    static bool         isFunction(std::string& name);
+    static bool         isFunctionAlias(std::string& name);
+    static std::string& getFunctionByAlias(std::string& name);
+
+    static FunctionInfo& getFunctionInfo(std::string& name);
 
     // TODO: this is just a dummy implemetation.
     // When the engine matures enough there should be an interface for all functions.
     // The lookup function should return a function pointer/handle to avoid redundant calls
-    static std::unordered_map<std::string, FunctionInfo> functions;
-
 private:
-    static std::unordered_map<uint16_t, std::string> opcodeFuncs;
+    static std::unordered_map<std::string, FunctionInfo> functions;
+    static std::unordered_map<uint16_t, std::string>     opcodeFuncs;
+    static std::unordered_map<std::string, std::string>  functionAliases;
 };
 }

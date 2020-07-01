@@ -1170,6 +1170,102 @@ std::unordered_map<uint16_t, std::string> FunctionResolver::opcodeFuncs = {
     { 0x1232, "IsImageSpaceActive" },
 };
 
+std::unordered_map<std::string, std::string> FunctionResolver::functionAliases({
+    { "getav", "getactorvalue" },
+    { "setav", "setactorvalue" },
+    { "modav", "modactorvalue" },
+    { "getlos", "getlineofsight" },
+    { "getqr", "getquestrunning" },
+    { "evp", "evaluatepackage" },
+    { "getfatigue", "getfatiguepercentage" },
+    { "kill", "killactor" },
+    { "resurrect", "resurrectactor" },
+    { "getwalk", "getwalkspeed" },
+    { "getweatherpct", "getcurrentweatherpercent" },
+    { "getweather", "getiscurrentweather" },
+    { "moveto", "movetomarker" },
+    { "csize", "setsize" },
+    { "setcs", "setcombatstyle" },
+    { "spspell", "selectplayerspell" },
+    { "setpublic", "setcellpublicflag" },
+    { "getar", "getactionref" },
+    { "this", "getself" },
+    { "advskill", "advancepcskill" },
+    { "advlevel", "advancepclevel" },
+    { "equipobject", "equipitem" },
+    { "unequipobject", "unequipitem" },
+    { "flee", "forceflee" },
+    { "getgs", "getgamesetting" },
+    { "scaonactor", "stopcombatalarmonactor" },
+    { "sw", "setweather" },
+    { "takecover", "forcetakecover" },
+    { "forceav", "forceactorvalue" },
+    { "modpcs", "modpcskill" },
+    { "modpca", "modpcattribute" },
+    { "enablefast", "enablefasttravel" },
+    { "getbaseav", "getbaseactorvalue" },
+    { "spdur", "setpackduration" },
+    { "pms", "playmagicshadervisuals" },
+    { "pme", "playmagiceffectvisuals" },
+    { "sms", "stopmagicshadervisuals" },
+    { "sme", "stopmagiceffectvisuals" },
+    { "saa", "setactoralpha" },
+    { "fw", "forceweather" },
+    { "modpcms", "modpcmiscstat" },
+    { "getpcms", "getpcmiscstat" },
+    { "killall", "killallactors" },
+    { "ths", "triggerhitshader" },
+    { "sifh", "setignorefriendlyhits" },
+    { "gifh", "getignorefriendlyhits" },
+    { "sar", "setactorrefraction" },
+    { "svs", "showviewerstrings" },
+    { "rwo", "releaseweatheroverride" },
+    { "do", "damageobject" },
+    { "sbm", "showbartermenu" },
+    { "shmg", "showhackingminigame" },
+    { "ssmg", "showsurgerymenu" },
+    { "srm", "showrepairmenu" },
+    { "unused", "functionunused19" },
+    { "an", "addnote" },
+    { "rn", "removenote" },
+    { "getn", "gethasnote" },
+    { "addfac", "addtofaction" },
+    { "removefac", "removefromfaction" },
+    { "damageav", "damageactorvalue" },
+    { "restoreav", "restoreactorvalue" },
+    { "hudsh", "triggerhudshudder" },
+    { "setdisp", "setdisposition" },
+    { "sci", "showcomputersinterface" },
+    { "sgtm", "setglobaltimemultiplier" },
+    { "pc1st", "ispc1stperson" },
+    { "pcb", "purgecellbuffers" },
+    { "imod", "applyimagespacemodifier" },
+    { "rimod", "removeimagespacemodifier" },
+    { "scgm", "showchargenmenu" },
+    { "esc", "evaluatespellconditions" },
+    { "tmb", "togglemotionblur" },
+    { "prad", "pipboyradio" },
+    { "disaa", "disableallactors" },
+    { "sam", "setaudiomultithreading" },
+    { "scgmp", "showchargenmenuparams" },
+    { "exit", "exitgame" },
+    { "snr", "setnpcradio" },
+    { "slpm", "showlockpickmenu" },
+    { "cios", "castimmediateonself" },
+    { "ssbm", "showspecialbookmenu" },
+    { "ssbmp", "showspecialbookmenuparams" },
+    { "getpermav", "getpermanentactorvalue" },
+    { "tmm", "showallmapmarkers" },
+    { "scgmod", "showchargenmenumodvalues" },
+    { "tsb", "triggerscreenblood" },
+    { "slpmd", "showlockpickmenudebug" },
+    { "getqc", "getquestcompleted" },
+    { "fsfx", "fadesfx" },
+    { "sqs", "showqueststages" },
+    { "frsu", "forceradiostationupdate" },
+    { "kqu", "killquestupdates" },
+});
+
 bool FunctionResolver::callFunction(uint16_t opcode)
 {
     // TODO: see todo in function.hpp
@@ -1186,4 +1282,24 @@ bool FunctionResolver::lookupFunction(uint16_t opcode)
     log_debug("DEBUG: funcID 0x%.2x", opcode);
     return FunctionResolver::opcodeFuncs.count(opcode);
 }
+
+bool FunctionResolver::isFunction(std::string& name)
+{
+    return functions.count(name);
+}
+bool FunctionResolver::isFunctionAlias(std::string& name)
+{
+    return functionAliases.count(name);
+}
+
+std::string& FunctionResolver::getFunctionByAlias(std::string& name)
+{
+    return functionAliases[name];
+}
+
+FunctionInfo& FunctionResolver::getFunctionInfo(std::string& name)
+{
+    return functions[name];
+}
+
 }
