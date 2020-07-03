@@ -119,7 +119,14 @@ std::vector<Token>* Tokenizer::getTokens(std::string& src)
             break;
         case ('.'): {
             if (isDigit(peekNext())) {
-                parseNumber();
+                // Reference access hack
+                if (isAlpha(previous())) {
+                    advance();
+                    ADD_TOKEN(TokenType::Dot, ".");
+                    parseLiteral();
+                } else {
+                    parseNumber();
+                }
             } else {
                 ADD_TOKEN(TokenType::Dot, ".");
             }
@@ -193,7 +200,11 @@ std::vector<Token>* Tokenizer::getTokens(std::string& src)
             break;
         default:
             if (this->isDigit(current)) {
-                this->parseNumber();
+                if (isAlpha(peekNext())) {
+                    parseLiteral();
+                } else {
+                    this->parseNumber();
+                }
             } else if (this->isAlpha(current)) {
                 this->parseLiteral();
             } else {

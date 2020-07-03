@@ -20,7 +20,6 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "activate", { 0x100D, "Activate", "", "" } },
     { "getactorvalue", { 0x100E, "GetActorValue", "GetAV", "Get an actor value. [player.getav luck]" } },
     { "getav", { 0x100E, "GetActorValue", "GetAV", "Get an actor value. [player.getav luck]" } },
-
     { "setactorvalue", { 0x100F, "SetActorValue", "SetAV", "Set an actor value. [player.setav luck, 75]" } },
     { "modactorvalue", { 0x1010, "ModActorValue", "ModAV", "Modify an actor value. [player.modav luck, -10]" } },
     { "setatstart", { 0x1011, "SetAtStart", "", "" } },
@@ -481,7 +480,6 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "cleardestruction", { 0x11D8, "ClearDestruction", "", "" } },
     { "castimmediateonself", { 0x11D9, "CastImmediateOnSelf", "cios", "" } },
     { "cios", { 0x11D9, "CastImmediateOnSelf", "cios", "" } },
-
     { "getisalignment", { 0x11DA, "GetIsAlignment", "", "" } },
     { "resetquest", { 0x11DB, "ResetQuest", "", "" } },
     { "setquestdelay", { 0x11DC, "SetQuestDelay", "", "" } },
@@ -556,9 +554,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "abs", { 0x1221, "Abs", "", "" } },
     { "moveto", { 0x0000, "MoveTo", "", "" } },
     { "getquestcompleted", { 0x1222, "GetQuestCompleted", "GetQC", "" } },
-
     { "getqc", { 0x1222, "GetQuestCompleted", "GetQC", "" } },
-
     { "forceterminalback", { 0x1223, "ForceTerminalBack", "", "" } },
     { "pipboyradiooff", { 0x1224, "PipBoyRadioOff", "", "" } },
     { "autodisplayobjectives", { 0x1225, "AutoDisplayObjectives", "", "" } },
@@ -604,6 +600,9 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "showroulettemenuparams", { 0x0000, "ShowRouletteMenuParams", "", "" } },
     { "showslotmachinemenuparams", { 0x0000, "ShowSlotMachineMenuParams", "", "" } },
     { "setreputation", { 0x0000, "SetReputation", "", "" } },
+    { "enableloadingmenu", { 0x0000, "EnableLoadingMenu", "", "" } },
+    { "movetofade", { 0x0000, "MoveToFade", "", "" } },
+    { "showblackjackmenuparams", { 0x0000, "ShowBlackjackMenuParams", "", "" } },
 
 });
 

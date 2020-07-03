@@ -106,6 +106,11 @@ std::vector<Node*>* Parser::parse(std::vector<Token>* toks)
 
     ret->push_back(scriptName());
 
+    // Empty scripts are allowed
+    if (end()) {
+        return ret;
+    }
+
     while (advanceMatches(TokenType::Newline)) { };
     current = peekCurrent();
 
@@ -416,6 +421,8 @@ inline Node* Parser::ifStatement()
 
     log_debug("PENIS: %s", TokenEnumToString(peekCurrent().type));
 
+    bool blockEnd = false;
+
     if (peekCurrent().type == TokenType::Else) {
         advance();
         while (advanceMatches(TokenType::Newline)) { };
@@ -424,16 +431,19 @@ inline Node* Parser::ifStatement()
 
         // What the fuck, why
         if (peekCurrent().type == TokenType::Return) {
+            blockEnd = true;
             advance();
             while (advanceMatches(TokenType::Newline)) { };
 
             if (peekCurrent().type == TokenType::Endif) {
                 ((StatementBlock*)elseBody)->nodes->emplace_back(new ReturnStatement());
+                advance();
             }
         }
     }
 
-    check(elseBlockDelimiters, "Expected endif or return");
+    if (!blockEnd)
+        check(elseBlockDelimiters, "Expected endif or return");
 
     return new IfStatement(condition, body, elifs, elseBody);
 }
@@ -453,7 +463,8 @@ inline Node* Parser::scriptName()
     }
 
     std::string scriptName = current.literal;
-    checkNext(TokenType::Newline, "Expected newline");
+    advance();
+    check(TokenType::Newline, "Expected newline");
 
     return new ScriptNameStatement(scriptName);
 };

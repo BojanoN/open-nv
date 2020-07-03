@@ -162,6 +162,14 @@ private:
         return this->source[currentCharOffset + 1];
     }
 
+    char previous()
+    {
+        if (this->currentCharOffset - 1 > 0) {
+            return this->source[this->currentCharOffset - 1];
+        }
+        return 0;
+    }
+
     char peekCurrent()
     {
         return this->source[currentCharOffset];
