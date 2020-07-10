@@ -3,8 +3,11 @@
 #include "node.hpp"
 #include "stdio.h"
 
-#define BYTE_SWAP_SHORT(value) \
-    (((value)&0xFF) << 8 | ((value)&0xFF00) >> 8)
+#define CHECK_NULL(var)                                            \
+    if (var == nullptr) {                                          \
+        log_fatal("Null pointer encountered in value " #var "\n"); \
+        return -1;                                                 \
+    }
 
 namespace Script {
 
@@ -43,6 +46,8 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
 
     log_debug("%s", NodeEnumToString(node->type));
 
+    CHECK_NULL(node);
+
     switch (node->type) {
     case NodeType::BinaryExpr:
         return compileBinaryExpr(node, out);
@@ -70,6 +75,8 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
         return compileVariable(node, out);
     case NodeType::ScriptBlock:
         return compileScriptBlock(node, out);
+    case NodeType::ReferenceAccessExpr:
+        return compileReferenceAccess(node, out);
     default:
         return error("Unknown node type");
     }
@@ -78,6 +85,8 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
 
 int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
 {
+    CHECK_NULL(node);
+
     ScriptBlock* block = dynamic_cast<ScriptBlock*>(node);
     int          size  = block->nodes->size();
 
@@ -119,6 +128,8 @@ int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
 
 int Compiler::compileBinaryExpr(Node* node, CompiledScript* out)
 {
+    CHECK_NULL(node);
+
     BinaryExpr* expr    = dynamic_cast<BinaryExpr*>(node);
     uint32_t    begSize = out->getSize();
     int         ret;
@@ -141,6 +152,9 @@ int Compiler::compileBinaryExpr(Node* node, CompiledScript* out)
 
 int Compiler::compileAssignment(Node* node, CompiledScript* out)
 {
+
+    CHECK_NULL(node);
+
     Assignment* expr    = dynamic_cast<Assignment*>(node);
     uint32_t    begSize = out->getSize();
 
@@ -167,11 +181,15 @@ int Compiler::compileAssignment(Node* node, CompiledScript* out)
 
 int Compiler::compileGroupingExpr(Node* node, CompiledScript* out)
 {
+    CHECK_NULL(node);
+
     return compileNode(dynamic_cast<GroupingExpr*>(node)->expression, out);
 };
 
 int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
 {
+    CHECK_NULL(node);
+
     LiteralExpr* expr    = dynamic_cast<LiteralExpr*>(node);
     uint32_t     begSize = out->getSize();
 
@@ -218,12 +236,14 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
 
 int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
 {
+    CHECK_NULL(node);
+
     FunctionCallExpr* func    = dynamic_cast<FunctionCallExpr*>(node);
     uint32_t          begSize = out->getSize();
 
     FunctionInfo& info = FunctionResolver::getFunctionInfo(func->functionName);
 
-    // Reference function call
+    // Reference function call, inside an expression
     if (func->reference.size()) {
         out->writeByte(ExprCodes::REF_FUNC_PARAM);
         uint16_t index = ctx.SCROLookup(func->reference);
@@ -288,6 +308,8 @@ int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
 
 int Compiler::compileScriptName(Node* node, CompiledScript* out)
 {
+    CHECK_NULL(node);
+
     ScriptNameStatement* scriptName = dynamic_cast<ScriptNameStatement*>(node);
 
     this->ctx.scriptName = scriptName->name;
@@ -301,12 +323,16 @@ int Compiler::compileScriptName(Node* node, CompiledScript* out)
 
 int Compiler::compileExpressionStatement(Node* node, CompiledScript* out)
 {
+    CHECK_NULL(node);
+
     ExpressionStatement* expr = dynamic_cast<ExpressionStatement*>(node);
     return compileNode(expr->expression, out);
 };
 
 int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 {
+    CHECK_NULL(node);
+
     IfStatement* ifStmt    = dynamic_cast<IfStatement*>(node);
     uint32_t     begOffset = out->getSize();
 
@@ -408,8 +434,25 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 
     return out->getSize() - begOffset;
 };
+
+int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
+{
+    CHECK_NULL(node);
+
+    ReferenceAccessExpr* refAccess = dynamic_cast<ReferenceAccessExpr*>(node);
+    uint32_t             begOffset = out->getSize();
+
+    out->writeByte(ExprCodes::REF_FUNC_PARAM);
+    uint16_t index = ctx.SCROLookup(refAccess->reference);
+    out->write((uint8_t*)&index, sizeof(uint16_t));
+
+    return out->getSize() - begOffset;
+}
+
 int Compiler::compileVariable(Node* node, CompiledScript* out)
 {
+    CHECK_NULL(node);
+
     Variable* var = dynamic_cast<Variable*>(node);
 
     this->ctx.declareVar(var->variableName, var->variableType);
