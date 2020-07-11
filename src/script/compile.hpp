@@ -234,7 +234,7 @@ private:
     int compileAssignment(Node* node, CompiledScript* out);
     int compileGroupingExpr(Node* node, CompiledScript* out);
     int compileLiteralExpr(Node* node, CompiledScript* out);
-    int compileFunctionCallExpr(Node* node, CompiledScript* out);
+    int compileFunctionCall(Node* node, CompiledScript* out);
     int compileScriptBlock(Node* node, CompiledScript* out);
 
     int compileScriptName(Node* node, CompiledScript* out);
@@ -242,6 +242,8 @@ private:
     int compileExpressionStatement(Node* node, CompiledScript* out);
     int compileIfStatement(Node* node, CompiledScript* out);
     int compileVariable(Node* node, CompiledScript* out);
+    int compileReferenceAccess(Node* node, CompiledScript* out);
+    int compileStatementBlock(Node* node, CompiledScript* out);
 
     int error(std::string cause)
     {

@@ -61,8 +61,8 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
     case NodeType::LiteralExpr:
         return compileLiteralExpr(node, out);
 
-    case NodeType::FunctionCallExpr:
-        return compileFunctionCallExpr(node, out);
+    case NodeType::FunctionCall:
+        return compileFunctionCall(node, out);
 
     case NodeType::ExpressionStatement:
         return compileExpressionStatement(node, out);
@@ -73,9 +73,11 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
         return compileScriptName(node, out);
     case NodeType::Variable:
         return compileVariable(node, out);
+    case NodeType::StatementBlock:
+        return compileStatementBlock(node, out);
     case NodeType::ScriptBlock:
         return compileScriptBlock(node, out);
-    case NodeType::ReferenceAccessExpr:
+    case NodeType::ReferenceAccess:
         return compileReferenceAccess(node, out);
     default:
         return error("Unknown node type");
@@ -234,20 +236,25 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
     return out->getSize() - begSize;
 };
 
-int Compiler::compileFunctionCallExpr(Node* node, CompiledScript* out)
+int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    FunctionCallExpr* func    = dynamic_cast<FunctionCallExpr*>(node);
-    uint32_t          begSize = out->getSize();
+    FunctionCall* func    = dynamic_cast<FunctionCall*>(node);
+    uint32_t      begSize = out->getSize();
 
     FunctionInfo& info = FunctionResolver::getFunctionInfo(func->functionName);
 
     // Reference function call, inside an expression
+    // TODO: check the esm file for confirmation
     if (func->reference.size()) {
         out->writeByte(ExprCodes::REF_FUNC_PARAM);
         uint16_t index = ctx.SCROLookup(func->reference);
         out->write((uint8_t*)&index, sizeof(uint16_t));
+    }
+
+    if (func->context == NodeContext::Expression) {
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
     }
 
     uint16_t funcCode = info.opcode;
@@ -439,10 +446,10 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    ReferenceAccessExpr* refAccess = dynamic_cast<ReferenceAccessExpr*>(node);
-    uint32_t             begOffset = out->getSize();
+    ReferenceAccess* refAccess = dynamic_cast<ReferenceAccess*>(node);
+    uint32_t         begOffset = out->getSize();
 
-    out->writeByte(ExprCodes::REF_FUNC_PARAM);
+    out->writeByte((refAccess->context == NodeContext::Expression) ? ExprCodes::REF_FUNC_PARAM : OutputCodes::REF_ACCESS);
     uint16_t index = ctx.SCROLookup(refAccess->reference);
     out->write((uint8_t*)&index, sizeof(uint16_t));
 
@@ -459,4 +466,24 @@ int Compiler::compileVariable(Node* node, CompiledScript* out)
 
     return 0;
 };
+
+int Compiler::compileStatementBlock(Node* node, CompiledScript* out)
+{
+
+    StatementBlock* block = dynamic_cast<StatementBlock*>(node);
+
+    uint32_t begSize = out->getSize();
+    uint32_t n       = block->nodes->size();
+    int      err;
+
+    for (uint32_t i = 0; i < n; i++) {
+        err = compileNode(block->nodes->at(i), out);
+        if (err < 0) {
+            return -1;
+        }
+    }
+
+    return out->getSize() - begSize;
+}
+
 };

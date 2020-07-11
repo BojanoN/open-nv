@@ -223,10 +223,10 @@ inline Node* Parser::unary()
         return new UnaryExpr(op, rightHandExpr);
     }
 
-    return this->functionCall();
+    return this->functionCall(NodeContext::Expression);
 }
 
-inline Node* Parser::functionCall()
+inline Node* Parser::functionCall(NodeContext context)
 {
 
     bool        isFunction          = false;
@@ -253,7 +253,6 @@ inline Node* Parser::functionCall()
             isFunction = false;
 
             // If the identifier right of the dot is not a function treat it as a reference access
-
             if (FunctionResolver::isFunction(fieldOrFuncIdentifier)) {
                 isFunction = true;
             } else if (FunctionResolver::isFunctionAlias(fieldOrFuncIdentifier)) {
@@ -264,13 +263,15 @@ inline Node* Parser::functionCall()
             if (!isFunction) {
                 advance();
                 advance();
-                return new ReferenceAccessExpr(reference, fieldOrFuncIdentifier);
+                return new ReferenceAccess(reference, fieldOrFuncIdentifier, context);
             }
             advance();
             funcOrRefIdentifier = fieldOrFuncIdentifier;
             goto parse_args;
-        } else {
+        } else if (context == NodeContext::Expression) {
             return baseType();
+        } else {
+            error("Unknown function", peekCurrent());
         }
     }
 
@@ -285,7 +286,7 @@ parse_args:
             advance();
     }
 
-    return new FunctionCallExpr(funcOrRefIdentifier, reference, arguments);
+    return new FunctionCall(funcOrRefIdentifier, reference, arguments, context);
 }
 
 inline Node* Parser::baseType()
@@ -327,7 +328,10 @@ inline Node* Parser::statement()
     if (advanceMatches(TokenType::Return))
         return new ReturnStatement();
 
-    return expressionStatement();
+    if (advanceMatches(TokenType::Set))
+        return assignment();
+
+    return functionCall(NodeContext::Statement);
 }
 
 inline Node* Parser::expressionStatement()
@@ -364,7 +368,6 @@ inline Node* Parser::varDeclaration()
 
 inline Node* Parser::assignment()
 {
-    check(TokenType::Set, "Expected set keyword");
     Token& varOrRefToken = peekCurrent();
 
     std::string variable;

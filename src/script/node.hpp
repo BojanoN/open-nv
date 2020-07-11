@@ -7,22 +7,19 @@
 
 namespace Script {
 
-class Context;
-class Object;
-
 #define NODE_ENUM          \
     X(BinaryExpr)          \
     X(UnaryExpr)           \
     X(Assignment)          \
     X(GroupingExpr)        \
     X(LiteralExpr)         \
-    X(FunctionCallExpr)    \
+    X(FunctionCall)        \
     X(ExpressionStatement) \
     X(IfStatement)         \
     X(ScriptName)          \
     X(Blocktype)           \
     X(ScriptBlock)         \
-    X(ReferenceAccessExpr) \
+    X(ReferenceAccess)     \
     X(StatementBlock)      \
     X(ReturnStatement)     \
     X(Variable)
@@ -47,13 +44,19 @@ constexpr const char* NodeEnumToString(NodeType e) noexcept
 #undef X
 }
 
+enum class NodeContext : uint8_t {
+    Expression,
+    Statement
+};
+
 class Node {
 public:
     Node(NodeType t)
         : type(t) {};
     virtual ~Node() {};
     virtual void print() = 0;
-    NodeType     type;
+
+    NodeType type;
 };
 
 class BinaryExpr : public Node {
@@ -160,18 +163,19 @@ public:
     Type        valueType;
 };
 
-class FunctionCallExpr : public Node {
+class FunctionCall : public Node {
 public:
-    FunctionCallExpr(std::string& name, std::string& ref, std::vector<Node*>& args)
+    FunctionCall(std::string& name, std::string& ref, std::vector<Node*>& args, NodeContext ctx)
         : functionName(name)
         , reference(ref)
         , arguments(args)
-        , Node(NodeType::FunctionCallExpr)
+        , context(ctx)
+        , Node(NodeType::FunctionCall)
 
     {
     }
 
-    ~FunctionCallExpr()
+    ~FunctionCall()
     {
         for (Node* e : arguments) {
             delete e;
@@ -195,18 +199,20 @@ public:
     std::string        functionName;
     std::string        reference;
     std::vector<Node*> arguments;
+    NodeContext        context;
 };
 
-class ReferenceAccessExpr : public Node {
+class ReferenceAccess : public Node {
 public:
-    ReferenceAccessExpr(std::string& ref, std::string& f)
-        : Node(NodeType::ReferenceAccessExpr)
+    ReferenceAccess(std::string& ref, std::string& f, NodeContext ctx)
+        : Node(NodeType::ReferenceAccess)
         , reference(ref)
         , field(f)
+        , context(ctx)
     {
     }
 
-    ~ReferenceAccessExpr() {};
+    ~ReferenceAccess() {};
 
     void print()
     {
@@ -215,6 +221,7 @@ public:
 
     std::string reference;
     std::string field;
+    NodeContext context;
 };
 
 class ExpressionStatement : public Node {
@@ -404,5 +411,4 @@ public:
 
     std::vector<Node*>* nodes;
 };
-
 }

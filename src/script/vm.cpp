@@ -456,7 +456,7 @@ VMStatusCode VM::handleAssign()
     log_debug("SIZE: 0x%x", varnameLen);
     var.reserve(varnameLen + 1);
 
-    if (!script->readString(varnameLen, var.data())) {
+    if (!script->readString(varnameLen, (char*)var.data())) {
         log_fatal("Unexpected end of script");
         return VMStatusCode::VM_UNEXP_EOF;
     }

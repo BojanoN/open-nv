@@ -131,7 +131,7 @@ private:
     Node* scriptBlock();
     Node* statementBlock(std::set<TokenType>& delim);
 
-    Node* functionCall();
+    Node* functionCall(NodeContext context);
     Node* assignment();
     Node* expression();
     Node* equals();
