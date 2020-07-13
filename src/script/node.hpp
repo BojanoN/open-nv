@@ -376,7 +376,7 @@ public:
 class ReturnStatement : public Node {
 public:
     ReturnStatement()
-        : Node(NodeType::ScriptBlock) {};
+        : Node(NodeType::ReturnStatement) {};
     ~ReturnStatement() { }
 
     void print()

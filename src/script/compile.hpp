@@ -7,7 +7,7 @@
 #include <string.h>
 #include <vector>
 
-#define DEFAULT_ARR_SIZE 512
+#define DEFAULT_ARR_SIZE (4096)
 
 namespace Script {
 
@@ -23,12 +23,12 @@ public:
         , currentReadOffset(0)
         , capacity(DEFAULT_ARR_SIZE)
     {
-        bytecode = new uint8_t[DEFAULT_ARR_SIZE];
+        bytecode = (uint8_t*)malloc(DEFAULT_ARR_SIZE);
     }
 
     ~CompiledScript()
     {
-        delete[] bytecode;
+        free(bytecode);
     }
 
     bool write(uint8_t* source, uint32_t n)
@@ -188,6 +188,11 @@ public:
         return currentSize;
     };
 
+    uint8_t readAt(uint32_t i)
+    {
+        return bytecode[i];
+    }
+
     Value getLocalVariable(uint16_t index)
     {
         Value ret;
@@ -219,10 +224,10 @@ private:
 
 class Compiler {
 public:
-    Compiler(std::vector<Node*>* n)
-        : nodes(n) {};
+    Compiler()
+        : nodes(nullptr) {};
 
-    CompiledScript* compile();
+    CompiledScript* compile(std::vector<Node*>* ns);
 
 private:
     Context             ctx;
@@ -244,6 +249,7 @@ private:
     int compileVariable(Node* node, CompiledScript* out);
     int compileReferenceAccess(Node* node, CompiledScript* out);
     int compileStatementBlock(Node* node, CompiledScript* out);
+    int compileReturnStatement(Node* node, CompiledScript* out);
 
     int error(std::string cause)
     {

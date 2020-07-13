@@ -22,9 +22,10 @@ void CompiledScript::print()
     printf("\n");
 };
 
-CompiledScript* Compiler::compile()
+CompiledScript* Compiler::compile(std::vector<Node*>* ns)
 {
 
+    this->nodes         = ns;
     CompiledScript* ret = new CompiledScript();
 
     uint32_t n = nodes->size();
@@ -34,9 +35,12 @@ CompiledScript* Compiler::compile()
         err = compileNode(nodes->at(i), ret);
         if (err < 0) {
             delete ret;
+            this->nodes = nullptr;
             return nullptr;
         }
     }
+
+    this->nodes = nullptr;
 
     return ret;
 }
@@ -51,24 +55,18 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
     switch (node->type) {
     case NodeType::BinaryExpr:
         return compileBinaryExpr(node, out);
-
     case NodeType::Assignment:
         return compileAssignment(node, out);
-
     case NodeType::GroupingExpr:
         return compileGroupingExpr(node, out);
-
     case NodeType::LiteralExpr:
         return compileLiteralExpr(node, out);
-
     case NodeType::FunctionCall:
         return compileFunctionCall(node, out);
-
     case NodeType::ExpressionStatement:
         return compileExpressionStatement(node, out);
     case NodeType::IfStatement:
         return compileIfStatement(node, out);
-
     case NodeType::ScriptName:
         return compileScriptName(node, out);
     case NodeType::Variable:
@@ -77,6 +75,8 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
         return compileStatementBlock(node, out);
     case NodeType::ScriptBlock:
         return compileScriptBlock(node, out);
+    case NodeType::ReturnStatement:
+        return compileReturnStatement(node, out);
     case NodeType::ReferenceAccess:
         return compileReferenceAccess(node, out);
     default:
@@ -469,7 +469,6 @@ int Compiler::compileVariable(Node* node, CompiledScript* out)
 
 int Compiler::compileStatementBlock(Node* node, CompiledScript* out)
 {
-
     StatementBlock* block = dynamic_cast<StatementBlock*>(node);
 
     uint32_t begSize = out->getSize();
@@ -484,6 +483,17 @@ int Compiler::compileStatementBlock(Node* node, CompiledScript* out)
     }
 
     return out->getSize() - begSize;
+}
+
+int Compiler::compileReturnStatement(Node* node, CompiledScript* out)
+{
+    ReturnStatement* retStmt = dynamic_cast<ReturnStatement*>(node);
+
+    uint8_t retcode[4] = { 0x1E, 0, 0, 0 };
+
+    out->write(retcode, sizeof(retcode));
+
+    return sizeof(retcode);
 }
 
 };

@@ -32,7 +32,7 @@ public:
 
     int SCROLookup(std::string& formid)
     {
-        log_info("SCROLookup called");
+        log_info("SCROLookup: %s", formid.c_str());
         return 0;
     }
 

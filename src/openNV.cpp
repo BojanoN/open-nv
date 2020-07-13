@@ -41,12 +41,12 @@ int main(int argc, char** argv)
 
     for (auto& n : scriptMap) {
 
-        std::string   filename = std::to_string(n.first) + ".scpt";
+        std::string   filename = std::to_string(n.first) + ".bin";
         std::ofstream out { "./dump/" + filename };
 
-        std::string& source = n.second->data.scriptSource;
+        std::vector<uint8_t>& source = n.second->data.compiledSource;
 
-        out.write(source.data(), source.size());
+        out.write((char*)source.data(), source.size());
         out.close();
     }
 
