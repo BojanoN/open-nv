@@ -206,6 +206,7 @@ int main(int argc, char** argv)
 
                     if (!compareCompiled(out, original.data(), original.size())) {
                         log_fatal("Compiled script differs from original");
+                        out->dumpToFile("./failed.bin");
                     }
 
                     delete out;

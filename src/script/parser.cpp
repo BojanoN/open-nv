@@ -110,7 +110,7 @@ std::vector<Node*>* Parser::parse(std::vector<Token>* toks)
     if (end()) {
         return ret;
     }
-
+    /*
     while (advanceMatches(TokenType::Newline)) { };
     current = peekCurrent();
 
@@ -122,23 +122,22 @@ std::vector<Node*>* Parser::parse(std::vector<Token>* toks)
         current = peekCurrent();
     };
     while (advanceMatches(TokenType::Newline)) { };
+*/
 
-    // This allows scripts which only declare variables, without a script body
-    // The use case is fairly common
-    if (end()) {
-        return ret;
+    while (!end()) {
+        while (advanceMatches(TokenType::Newline)) { };
+        ret->push_back(scriptBlock());
+        while (advanceMatches(TokenType::Newline)) { };
     }
 
-    ret->push_back(scriptBlock());
+    /*if (end()) {
+      for (Node* n : *ret) {
+        delete n;
+      }
+      delete ret;
 
-    if (end()) {
-        for (Node* n : *ret) {
-            delete n;
-        }
-        delete ret;
-
-        this->error("Missing End keyword", peekCurrent());
-    }
+      this->error("Missing End keyword", peekCurrent());
+      }*/
 
     return ret;
 }
@@ -322,8 +321,8 @@ inline Node* Parser::statement()
     if (advanceMatches(TokenType::If))
         return ifStatement();
 
-    if (advanceMatches(varTypeMatch))
-        return declaration();
+    if (varTypeMatch.count(peekCurrent().type))
+        return varDeclaration();
 
     if (advanceMatches(TokenType::Return))
         return new ReturnStatement();
@@ -390,11 +389,6 @@ inline Node* Parser::assignment()
     Node* expr = this->expression();
 
     return new Assignment(variable, reference, expr);
-}
-
-inline Node* Parser::declaration()
-{
-    return statement();
 }
 
 static std::set<TokenType> ifBlockDelimiters   = { TokenType::Elseif, TokenType::Else, TokenType::Endif };
@@ -510,13 +504,32 @@ inline Node* Parser::scriptBlock()
     Node*               retNode = nullptr;
     Token&              current = peekCurrent();
 
+    while (advanceMatches(TokenType::Newline)) { };
+    current = peekCurrent();
+
+    // Variable declaration block
+    while (varTypeMatch.count(current.type)) {
+        Node* tmp = varDeclaration();
+        ret->push_back(tmp);
+        while (advanceMatches(TokenType::Newline)) { };
+        current = peekCurrent();
+    };
+
+    while (advanceMatches(TokenType::Newline)) { };
+
+    // This allows scripts which only declare variables, without a script body
+    // The use case is fairly common
+    if (end()) {
+        return new ScriptBlock(nullptr, ret);
+    }
+
     try {
         Node* type = blocktype();
 
         bool hasEndBlock = false;
         current          = advance();
 
-        while (!end()) {
+        while (peekCurrent().type != TokenType::End) {
 
             while (advanceMatches(TokenType::Newline)) { }
 
@@ -538,6 +551,8 @@ inline Node* Parser::scriptBlock()
 
         throw e;
     }
+
+    check(TokenType::End, "Expected end keyword");
 
     return retNode;
 }

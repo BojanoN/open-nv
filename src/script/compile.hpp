@@ -4,6 +4,7 @@
 #include "opcode.hpp"
 #include "types/base.hpp"
 #include <cstdlib>
+#include <fstream>
 #include <string.h>
 #include <vector>
 
@@ -200,6 +201,13 @@ public:
         // TODO: local var lookup
 
         return ret;
+    }
+
+    void dumpToFile(char* path)
+    {
+        std::ofstream out { path };
+
+        out.write((char*)bytecode, currentSize);
     }
 
     void print();
