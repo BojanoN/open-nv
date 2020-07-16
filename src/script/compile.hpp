@@ -258,6 +258,7 @@ private:
     int compileReferenceAccess(Node* node, CompiledScript* out);
     int compileStatementBlock(Node* node, CompiledScript* out);
     int compileReturnStatement(Node* node, CompiledScript* out);
+    int compileVariableAccess(Node* node, CompiledScript* out);
 
     int error(std::string cause)
     {

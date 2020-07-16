@@ -79,6 +79,8 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
         return compileReturnStatement(node, out);
     case NodeType::ReferenceAccess:
         return compileReferenceAccess(node, out);
+    case NodeType::VariableAccess:
+        return compileVariableAccess(node, out);
     default:
         return error("Unknown node type");
     }
@@ -164,9 +166,16 @@ int Compiler::compileAssignment(Node* node, CompiledScript* out)
     uint8_t exprLenPlaceholder[] = { 0x00, 0x00 };
 
     out->write(set, 2);
-    uint16_t nameLen = expr->variable.size();
-    out->write((uint8_t*)&nameLen, sizeof(uint16_t));
-    out->write((uint8_t*)expr->variable.data(), nameLen);
+    uint16_t length = 0;
+    uint32_t lengthOffset;
+
+    lengthOffset = out->getSize();
+    out->write((uint8_t*)&length, sizeof(uint16_t));
+
+    int varLen = compileNode(expr->variable, out);
+    if (varLen < 0) {
+        return -1;
+    }
 
     uint32_t exprLenOffset = out->getSize();
     out->write(exprLenPlaceholder, 2);
@@ -177,6 +186,9 @@ int Compiler::compileAssignment(Node* node, CompiledScript* out)
     }
     uint16_t exprLenOut = (uint16_t)exprLen;
     out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(exprLenOut));
+
+    length = varLen + sizeof(uint16_t) + exprLenOut;
+    out->writeAt(lengthOffset, (uint8_t*)&length, sizeof(length));
 
     return out->getSize() - begSize;
 };
@@ -203,9 +215,9 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
         // Check if defined locally
         if (ctx.varExists(expr->value)) {
 
-            std::pair<Type, int> varInfo = ctx.getVar(expr->value);
-            varIndex                     = varInfo.second;
-            switch (varInfo.first) {
+            std::pair<VariableInfo, bool> varInfo = ctx.getVar(expr->value);
+            varIndex                              = varInfo.first.index;
+            switch (varInfo.first.type) {
             case (Type::Reference):
             case (Type::Float):
                 typeCode = static_cast<uint8_t>(ExprCodes::FLOAT_REF_LOCAL);
@@ -462,10 +474,17 @@ int Compiler::compileVariable(Node* node, CompiledScript* out)
 
     Variable* var = dynamic_cast<Variable*>(node);
 
-    this->ctx.declareVar(var->variableName, var->variableType);
+    if (!ctx.varExists(var->variableName))
+        this->ctx.declareVar(var->variableName, var->variableType);
 
     return 0;
 };
+
+int Compiler::compileVariableAccess(Node* node, CompiledScript* out)
+{
+
+    return 0;
+}
 
 int Compiler::compileStatementBlock(Node* node, CompiledScript* out)
 {

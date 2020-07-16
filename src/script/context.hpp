@@ -7,6 +7,11 @@
 
 namespace Script {
 
+struct VariableInfo {
+    Type     type;
+    uint16_t index;
+};
+
 class Context {
 public:
     bool varExists(std::string& var)
@@ -16,21 +21,31 @@ public:
 
     void declareVar(std::string& name, Type type)
     {
-        variables[name] = std::make_pair(type, variableIndex);
-        variableIndex++;
+        log_debug("VarDeclare: %s, %d", name.c_str(), variableIndex);
+        VariableInfo info = { type, variableIndex++ };
+        variables[name]   = info;
     }
 
-    std::pair<Type, int>& getVar(std::string& name)
+    std::pair<VariableInfo, bool> getVar(std::string& name)
     {
-        return variables[name];
+        std::pair<VariableInfo, bool> ret;
+        ret.second = false;
+
+        if (variables.count(name)) {
+            ret.second = true;
+            ret.first  = variables[name];
+        }
+
+        return ret;
     }
+
     Context()
         : variableIndex(0)
     {
     }
     ~Context() {};
 
-    int SCROLookup(std::string& formid)
+    uint32_t SCROLookup(std::string& formid)
     {
         log_info("SCROLookup: %s", formid.c_str());
         return 0;
@@ -39,8 +54,8 @@ public:
     std::string scriptName;
 
 private:
-    std::unordered_map<std::string, std::pair<Type, int>> variables;
-    int                                                   variableIndex;
+    std::unordered_map<std::string, VariableInfo> variables;
+    uint16_t                                      variableIndex;
 };
 
 };

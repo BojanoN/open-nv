@@ -369,26 +369,29 @@ inline Node* Parser::assignment()
 {
     Token& varOrRefToken = peekCurrent();
 
-    std::string variable;
+    std::string varName;
     std::string reference;
+
+    Node* variable;
 
     // Reference access
     if (peekNext().type == TokenType::Dot) {
         reference = varOrRefToken.literal;
         advance();
         advance();
-        variable = peekCurrent().literal;
-
+        varName  = peekCurrent().literal;
+        variable = new ReferenceAccess(reference, varName, NodeContext::Statement);
         // Plain var access
     } else {
-        variable = varOrRefToken.literal;
+        varName  = varOrRefToken.literal;
+        variable = new VariableAccess(varName);
     }
 
     advance();
     check(TokenType::To, "Expected to keyword");
     Node* expr = this->expression();
 
-    return new Assignment(variable, reference, expr);
+    return new Assignment(variable, expr);
 }
 
 static std::set<TokenType> ifBlockDelimiters   = { TokenType::Elseif, TokenType::Else, TokenType::Endif };

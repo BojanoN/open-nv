@@ -22,6 +22,7 @@ namespace Script {
     X(ReferenceAccess)     \
     X(StatementBlock)      \
     X(ReturnStatement)     \
+    X(VariableAccess)      \
     X(Variable)
 
 #define X(name) name,
@@ -107,27 +108,27 @@ public:
 
 class Assignment : public Node {
 public:
-    Assignment(std::string& var, std::string& ref, Node* expr)
+    Assignment(Node* var, Node* expr)
         : variable(var)
-        , reference(ref)
         , expression(expr)
         , Node(NodeType::Assignment) {};
 
     ~Assignment()
     {
         delete expression;
+        delete variable;
     };
 
     void print()
     {
-        std::cout << "(set " << variable << " to ";
+        std::cout << "(set ";
+        variable->print();
         expression->print();
         std::cout << ")\n";
     }
 
-    std::string variable;
-    std::string reference;
-    Node*       expression;
+    Node* variable;
+    Node* expression;
 };
 
 class GroupingExpr : public Node {
@@ -341,6 +342,21 @@ public:
     }
 
     Type        variableType;
+    std::string variableName;
+};
+
+class VariableAccess : public Node {
+public:
+    VariableAccess(std::string varName)
+        : variableName(varName)
+        , Node(NodeType::VariableAccess) {};
+    ~VariableAccess() {};
+
+    void print()
+    {
+        std::cout << variableName;
+    }
+
     std::string variableName;
 };
 
