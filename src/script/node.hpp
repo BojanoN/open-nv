@@ -45,6 +45,65 @@ constexpr const char* NodeEnumToString(NodeType e) noexcept
 #undef X
 }
 
+#define BLOCKTYPE_ENUM          \
+    X(Function)                 \
+    X(GameMode)                 \
+    X(MenuMode)                 \
+    X(OnActivate)               \
+    X(OnActorEquip)             \
+    X(OnActorUnequip)           \
+    X(OnAdd)                    \
+    X(OnClose)                  \
+    X(OnCombatEnd)              \
+    X(OnDeath)                  \
+    X(OnDestructionStageChange) \
+    X(OnDrop)                   \
+    X(OnEquip)                  \
+    X(OnFire)                   \
+    X(OnGrab)                   \
+    X(OnHit)                    \
+    X(OnHitWith)                \
+    X(OnLoad)                   \
+    X(OnMagicEffectHit)         \
+    X(OnMurder)                 \
+    X(OnNPCActivate)            \
+    X(OnOpen)                   \
+    X(OnPackageChange)          \
+    X(OnPackageDone)            \
+    X(OnPackageStart)           \
+    X(OnRelease)                \
+    X(OnReset)                  \
+    X(OnSell)                   \
+    X(OnStartCombat)            \
+    X(OnTrigger)                \
+    X(OnTriggerEnter)           \
+    X(OnTriggerLeave)           \
+    X(OnUnequip)                \
+    X(SayToDone)                \
+    X(ScriptEffectFinish)       \
+    X(ScriptEffectStart)        \
+    X(ScriptEffectUpdate)
+
+#define X(name) name,
+
+enum class BlockType : uint8_t {
+    BLOCKTYPE_ENUM
+};
+
+#undef X
+
+constexpr const char* BlockTypeEnumToString(BlockType e) noexcept
+{
+#define X(name)             \
+    case (BlockType::name): \
+        return #name;
+
+    switch (e) {
+        BLOCKTYPE_ENUM
+    }
+#undef X
+}
+
 enum class NodeContext : uint8_t {
     Expression,
     Statement
@@ -260,19 +319,18 @@ public:
 };
 class BlockTypeStatement : public Node {
 public:
-    BlockTypeStatement(std::string& t, std::string& a)
+    BlockTypeStatement(BlockType t, std::string& a)
         : Node(NodeType::Blocktype)
-        , type(t)
+        , blocktype(t)
         , arg(a) {};
     ~BlockTypeStatement() {};
 
     void print()
     {
-        std::cout << "(blocktype " << type << " " << arg << ")\n";
+        std::cout << "(blocktype " << arg << ")\n";
     }
 
-private:
-    std::string type;
+    BlockType   blocktype;
     std::string arg;
 };
 
@@ -347,8 +405,9 @@ public:
 
 class VariableAccess : public Node {
 public:
-    VariableAccess(std::string varName)
+    VariableAccess(std::string varName, NodeContext ctx)
         : variableName(varName)
+        , context(ctx)
         , Node(NodeType::VariableAccess) {};
     ~VariableAccess() {};
 
@@ -357,6 +416,7 @@ public:
         std::cout << variableName;
     }
 
+    NodeContext context;
     std::string variableName;
 };
 

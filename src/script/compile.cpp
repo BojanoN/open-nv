@@ -87,6 +87,17 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
     return 0;
 }
 
+int compileBlocktype(BlockTypeStatement* node, CompiledScript* out)
+{
+
+    switch (node->blocktype) {
+    default:
+        log_fatal("Unknown blocktype %s", BlockTypeEnumToString(node->blocktype));
+        return -1;
+    }
+    return 0;
+}
+
 int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
@@ -483,7 +494,36 @@ int Compiler::compileVariable(Node* node, CompiledScript* out)
 int Compiler::compileVariableAccess(Node* node, CompiledScript* out)
 {
 
-    return 0;
+    VariableAccess* var     = dynamic_cast<VariableAccess*>(node);
+    uint32_t        begSize = out->getSize();
+
+    uint8_t  typeCode;
+    uint16_t varIndex;
+
+    if (var->context == NodeContext::Expression)
+        out->writeByte(ExprCodes::PUSH);
+
+    std::pair<VariableInfo, bool> varInfo = ctx.getVar(var->variableName);
+    varIndex                              = varInfo.first.index;
+
+    switch (varInfo.first.type) {
+    case (Type::Reference):
+    case (Type::Float):
+        typeCode = static_cast<uint8_t>(ExprCodes::FLOAT_REF_LOCAL);
+        break;
+    case (Type::Short):
+    case (Type::Integer):
+        typeCode = static_cast<uint8_t>(ExprCodes::INT_LOCAL);
+        break;
+    default:
+        return -1;
+        break;
+    }
+
+    out->writeByte(typeCode);
+    out->write((uint8_t*)&varIndex, sizeof(uint16_t));
+
+    return out->getSize() - begSize;
 }
 
 int Compiler::compileStatementBlock(Node* node, CompiledScript* out)
@@ -514,5 +554,4 @@ int Compiler::compileReturnStatement(Node* node, CompiledScript* out)
 
     return sizeof(retcode);
 }
-
 };

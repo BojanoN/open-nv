@@ -44,6 +44,46 @@ static std::unordered_map<Script::TokenType, Script::Type> tokenTypeToVarType = 
     { Script::TokenType::Identifier, Script::Type::Identifier }
 };
 
+static std::unordered_map<std::string, Script::BlockType> stringToBlockType = {
+    { "function", Script::BlockType::Function },
+    { "gamemode", Script::BlockType::GameMode },
+    { "menumode", Script::BlockType::MenuMode },
+    { "onactivate", Script::BlockType::OnActivate },
+    { "onactorequip", Script::BlockType::OnActorEquip },
+    { "onactorunequip", Script::BlockType::OnActorUnequip },
+    { "onadd", Script::BlockType::OnAdd },
+    { "onclose", Script::BlockType::OnClose },
+    { "oncombatend", Script::BlockType::OnCombatEnd },
+    { "ondeath", Script::BlockType::OnDeath },
+    { "ondestructionstagechange", Script::BlockType::OnDestructionStageChange },
+    { "ondrop", Script::BlockType::OnDrop },
+    { "onequip", Script::BlockType::OnEquip },
+    { "onfire", Script::BlockType::OnFire },
+    { "ongrab", Script::BlockType::OnGrab },
+    { "onhit", Script::BlockType::OnHit },
+    { "onhitwith", Script::BlockType::OnHitWith },
+    { "onload", Script::BlockType::OnLoad },
+    { "onmagiceffecthit", Script::BlockType::OnMagicEffectHit },
+    { "onmurder", Script::BlockType::OnMurder },
+    { "onnpcactivate", Script::BlockType::OnNPCActivate },
+    { "onopen", Script::BlockType::OnOpen },
+    { "onpackagechange", Script::BlockType::OnPackageChange },
+    { "onpackagedone", Script::BlockType::OnPackageDone },
+    { "onpackagestart", Script::BlockType::OnPackageStart },
+    { "onrelease", Script::BlockType::OnRelease },
+    { "onreset", Script::BlockType::OnReset },
+    { "onsell", Script::BlockType::OnSell },
+    { "onstartcombat", Script::BlockType::OnStartCombat },
+    { "ontrigger", Script::BlockType::OnTrigger },
+    { "ontriggerenter", Script::BlockType::OnTriggerEnter },
+    { "ontriggerleave", Script::BlockType::OnTriggerLeave },
+    { "onunequip", Script::BlockType::OnUnequip },
+    { "saytodone", Script::BlockType::SayToDone },
+    { "scripteffectfinish", Script::BlockType::ScriptEffectFinish },
+    { "scripteffectstart", Script::BlockType::ScriptEffectStart },
+    { "scripteffectupdate", Script::BlockType::ScriptEffectUpdate },
+};
+
 namespace Script {
 
 std::set<std::string> Parser::blocktypes = {
@@ -381,10 +421,11 @@ inline Node* Parser::assignment()
         advance();
         varName  = peekCurrent().literal;
         variable = new ReferenceAccess(reference, varName, NodeContext::Statement);
+
         // Plain var access
     } else {
         varName  = varOrRefToken.literal;
-        variable = new VariableAccess(varName);
+        variable = new VariableAccess(varName, NodeContext::Statement);
     }
 
     advance();
@@ -498,7 +539,7 @@ inline Node* Parser::blocktype()
         advance();
     }
 
-    return new BlockTypeStatement(blocktype, blocktypeArg);
+    return new BlockTypeStatement(stringToBlockType[blocktype], blocktypeArg);
 };
 
 inline Node* Parser::scriptBlock()
