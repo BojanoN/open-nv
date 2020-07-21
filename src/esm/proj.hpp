@@ -53,7 +53,6 @@ struct ProjectileData {
 };
 
 struct Projectile : public Record {
-    std::string          editorId;
     ObjectBounds         objectBounds;
     std::string          name;
     ModelData            modelData;

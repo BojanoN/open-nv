@@ -5,7 +5,6 @@
 namespace ESM {
 
 struct LeveledItem : public Record {
-    std::string                   editorId;
     ObjectBounds                  objectBounds;
     uint8_t                       chanceNone;
     LVLFFlag                      flags;

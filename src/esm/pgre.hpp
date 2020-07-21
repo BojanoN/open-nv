@@ -7,7 +7,6 @@ namespace ESM {
 class ESMReader;
 
 struct PlacedGrenade : public Record {
-    std::string editorId;
     formid      base; //CREA
     formid      encounterZone; //ECZN
     //ragdoll data

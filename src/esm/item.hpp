@@ -6,7 +6,6 @@ namespace ESM {
 class ESMReader;
 
 struct Item : public Record {
-    std::string     editorId;
     ObjectBounds    objectBounds;
     std::string     name;
     ModelData       modelData;

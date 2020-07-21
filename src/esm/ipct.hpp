@@ -26,7 +26,6 @@ struct ImpactData {
 
 struct Impact : public Record {
 
-    std::string  editorId;
     ModelData	 modelData;
     ImpactData   data;
     DecalData    decalData;

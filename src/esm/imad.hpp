@@ -74,7 +74,6 @@ struct ImageSpaceAdapterColor {
 };
 
 struct ImageSpaceAdapter : public Record {
-    std::string                         editorId;
     ImageSpaceAdapterCounts             counts;
     std::vector<ImageSpaceAdapterTime>  blurRadius;
     std::vector<ImageSpaceAdapterTime>  doubleVisionStrength;

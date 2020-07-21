@@ -24,7 +24,6 @@ struct ExplosionData {
 };
 
 struct Explosion : public Record {
-    std::string   editorId;
     ObjectBounds  objectBounds;
     std::string   name;
     ModelData     modelData;

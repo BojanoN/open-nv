@@ -28,7 +28,6 @@ struct AmmoEffectData {
 };
 
 struct AmmoEffect : public Record {
-    std::string    editorId;
     std::string    name;
     AmmoEffectData data;
 

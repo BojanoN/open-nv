@@ -21,7 +21,6 @@ struct LightingTemplateData {
 
 struct LightingTemplate : public Record {
 
-    std::string  		 editorId;
     LightingTemplateData data;
 
     LightingTemplate(ESMReader& reader);

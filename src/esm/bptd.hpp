@@ -78,7 +78,6 @@ struct BodyPartNode {
 };
 
 struct BodyPartData : public Record {
-    std::string               editorId;
     ModelData                 modelData;
     std::vector<BodyPartNode> nodes;
     formid                    ragdoll;

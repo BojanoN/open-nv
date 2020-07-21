@@ -14,7 +14,6 @@ struct IdleMarkerData {
 };
 
 struct IdleMarker : public Record {
-    std::string         editorId;
     ObjectBounds        objectBounds;
     IdleMarkerFlags     flags;
     IdleMarkerData      data;

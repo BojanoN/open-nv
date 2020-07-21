@@ -7,7 +7,6 @@ namespace ESM {
 class ESMReader;
 
 struct CaravanDeck : public Record {
-    std::string editorId;
     std::string name;
 
     std::vector<formid> cards;

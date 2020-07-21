@@ -83,7 +83,6 @@ public:
 
 struct Cell : public Record {
 
-    std::string         editorId;
     std::string         name;
     CellFlags           flags;
     CellGrid            grid;

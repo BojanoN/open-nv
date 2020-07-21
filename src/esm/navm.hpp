@@ -53,7 +53,6 @@ struct NavigationMeshGrid {
 };
 
 struct NavigationMesh : public Record {
-    std::string           editorId;
     uint32_t              version;
     NavigationMeshData    data;
     std::vector<Vertex>   vertices;

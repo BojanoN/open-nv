@@ -44,7 +44,6 @@ struct DefaultObjects {
 
 struct DefaultObjectManager : public Record {
 
-    std::string  editorId;
     DefaultObjects objects;
 
     DefaultObjectManager(ESMReader& reader);

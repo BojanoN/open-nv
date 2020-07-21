@@ -21,7 +21,6 @@ struct StaticCollectionPart {
 };
 
 struct StaticCollection : public Record {
-    std::string                       editorId;
     ObjectBounds                      objectBounds;
     ModelData                         modelData;
     std::vector<StaticCollectionPart> parts;

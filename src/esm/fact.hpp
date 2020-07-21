@@ -23,7 +23,6 @@ struct FactionRank {
 
 struct Faction : public Record {
 
-    std::string                   editorId;
     std::string                   name;
     std::vector<FactRaceRelation> relations;
     FactionData                   factionData;

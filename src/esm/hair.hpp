@@ -10,7 +10,6 @@ class ESMReader;
 
 struct Hair : public Record {
 
-    std::string editorId;
     std::string name;
     ModelData   modelData;
     std::string texture;

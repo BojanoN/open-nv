@@ -17,7 +17,6 @@ struct RecipeItem {
 };
 
 struct Recipe : public Record {
-    std::string     editorId;
     std::string     name;
     std::vector<Condition> conditions;
     RecipeData	data;

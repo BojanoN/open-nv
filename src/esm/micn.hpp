@@ -8,7 +8,6 @@ class ESMReader;
 
 struct MenuIcon : public Record {
 
-	std::string editorId;
 	std::string largeIconFilename;
 	std::string smallIconFilename;
 

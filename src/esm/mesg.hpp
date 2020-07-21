@@ -19,7 +19,6 @@ struct MenuButton {
 
 struct Message : public Record {
 
-    std::string  			editorId;
     std::string  			description;
     std::string  			name;
     formid 		 			icon; //MICN

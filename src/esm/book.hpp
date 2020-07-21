@@ -18,7 +18,6 @@ struct __attribute__((packed)) BookData {
 };
 
 struct Book : public Record {
-    std::string     editorId;
     ObjectBounds    objectBounds;
     std::string     name;
     ModelData       modelData;

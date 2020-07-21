@@ -26,7 +26,6 @@ struct BillboardDimensions {
 
 struct Tree : public Record {
 
-	std::string editorId;
 	ObjectBounds objectBounds;
 	ModelData modelData;
 	std::string largeIconFilename;

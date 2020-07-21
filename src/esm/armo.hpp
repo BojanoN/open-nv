@@ -17,7 +17,6 @@ struct AnimationSound {
 
 struct Armor : public Record {
 
-	std::string editorId;
 	ObjectBounds objectBounds;
 	std::string name;
 	formid script;

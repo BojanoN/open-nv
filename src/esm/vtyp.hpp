@@ -11,7 +11,6 @@ enum class VoiceTypeFlags : uint8_t {
 
 struct VoiceType : public Record {
 
-    std::string    editorId;
     VoiceTypeFlags flags;
 
     VoiceType(ESMReader& reader);

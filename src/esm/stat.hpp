@@ -20,7 +20,6 @@ enum class BushPassthroughSound : int8_t {
 };
 
 struct Static : public Record {
-    std::string          editorId;
     ObjectBounds         objectBounds;
     ModelData            model;
     BushPassthroughSound sound;

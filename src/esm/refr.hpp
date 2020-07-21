@@ -181,7 +181,6 @@ struct OcclusionPlaneData {
 };
 
 struct PlacedObject : public Record {
-    std::string          editorId;
     LinkedReferenceColor linkedReferenceColor;
     formid               base;
     formid               encounterZone;

@@ -24,7 +24,6 @@ enum class MediaSetEnableFlags : uint8_t {
 };
 
 struct MediaSet : public Record {
-    std::string  editorId;
     std::string  name;
     MediaSetType type;
     std::string  loopBattleDayOuter;

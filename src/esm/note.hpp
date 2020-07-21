@@ -14,7 +14,6 @@ enum class NoteType : uint8_t {
 };
 
 struct Note : public Record {
-    std::string                       editorId;
     ObjectBounds                      objectBounds;
     std::string                       name;
     ModelData                         modelData;

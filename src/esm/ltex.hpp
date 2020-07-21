@@ -12,7 +12,6 @@ struct __attribute__((packed)) HavokData {
 };
 
 struct LandscapeTexture : public Record {
-    std::string editorId;
     std::string largeIconFilename;
     std::string smallIconFilename;
     // TXST

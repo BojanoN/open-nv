@@ -7,9 +7,8 @@ namespace ESM {
 
 struct PlacedCreature : public Record {
 
-    std::string editorId;
-    formid      base; //CREA
-    formid      encounterZone; //ECZN
+    formid base; //CREA
+    formid encounterZone; //ECZN
     //ragdoll data
     //ragdoll biped data
     PatrolData                  patrolData;

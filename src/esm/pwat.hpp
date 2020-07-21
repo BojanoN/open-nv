@@ -36,7 +36,6 @@ struct PlaceableWaterData {
 };
 
 struct PlaceableWater : public Record {
-    std::string     editorId;
     ObjectBounds    objectBounds;
     ModelData       modelData;
     PlaceableWaterData data;

@@ -9,7 +9,6 @@ enum class RecipeCategoryFlags : uint8_t {
 };
 
 struct RecipeCategory : public Record {
-    std::string     editorId;
     std::string     name;
     RecipeCategoryFlags flags;
 

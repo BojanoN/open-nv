@@ -5,7 +5,6 @@
 namespace ESM {
 
 struct ItemMod : public Record {
-    std::string     editorId;
     ObjectBounds    objectBounds;
     std::string     name;
     ModelData       modelData;

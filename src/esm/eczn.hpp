@@ -20,7 +20,6 @@ struct EncounterZoneData {
 
 struct EncounterZone : public Record {
 
-    std::string  editorId;
     EncounterZoneData data;
 
     EncounterZone(ESMReader& reader);

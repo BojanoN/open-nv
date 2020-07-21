@@ -48,7 +48,6 @@ struct ImageSpaceData {
 };
 
 struct ImageSpace : public Record {
-    std::string    editorId;
     ImageSpaceData data;
     ImageSpace(ESMReader& reader);
 };

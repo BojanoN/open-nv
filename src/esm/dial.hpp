@@ -39,7 +39,6 @@ struct DialogueTopicData {
 
 
 struct DialogueTopic : public Record {
-    std::string             editorId;
     std::vector<AddedQuest> addedQuests;
     std::vector<formid>     removedQuests;
     //unused collection of INFC and INFX subrecords (like SharedInfo)

@@ -243,12 +243,12 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
             }
         } else {
             // If not present locally leave for reference checking later
-            // TODO: SCRO lookup
-
-            typeCode          = static_cast<uint8_t>(ExprCodes::REF_GLOBAL);
-            std::string& form = expr->value;
-            // Dummy SCRO lookup for now
-            varIndex = ctx.SCROLookup(form);
+            typeCode              = static_cast<uint8_t>(ExprCodes::REF_GLOBAL);
+            std::string& editorId = expr->value;
+            varIndex              = ctx.SCROLookup(editorId);
+            if (varIndex == 0) {
+                return -1;
+            }
         }
         out->writeByte(typeCode);
         out->write((uint8_t*)&varIndex, sizeof(uint16_t));
@@ -486,7 +486,7 @@ int Compiler::compileVariable(Node* node, CompiledScript* out)
     Variable* var = dynamic_cast<Variable*>(node);
 
     if (!ctx.varExists(var->variableName))
-        this->ctx.declareVar(var->variableName, var->variableType);
+        this->ctx.declareVar(var->variableName, var->variableType, VariableScope::Local);
 
     return 0;
 };

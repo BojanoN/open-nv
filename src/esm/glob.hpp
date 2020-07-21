@@ -8,7 +8,6 @@ namespace ESM {
 
 struct GlobalVariable : public Record {
 
-	std::string editorId;
 	uint8_t type;
 	std::variant<int32_t, int16_t, float> value;
 

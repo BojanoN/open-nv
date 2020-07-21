@@ -60,7 +60,6 @@ struct BlackjackTexture {
 };
 
 struct Casino : public Record {
-    std::string      editorId;
     std::string      name;
     CasinoData       data;
     CasinoChipModel  chipModel;

@@ -33,7 +33,6 @@ struct ClassData {
 
 struct Class : public Record {
 
-    std::string editorId;
     std::string name;
     std::string description;
     std::string largeIconFilename;

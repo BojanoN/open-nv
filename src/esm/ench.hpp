@@ -17,7 +17,6 @@ struct ObjectEffectData {
 
 struct ObjectEffect : public Record {
 
-    std::string editorId;
     std::string name;
     ObjectEffectData data;
     std::vector<Effect> effects;

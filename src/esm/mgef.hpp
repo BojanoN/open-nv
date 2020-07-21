@@ -117,7 +117,6 @@ struct __attribute__((packed)) MagicEffectData {
 };
 
 struct MagicEffect : public Record {
-    std::string            editorId;
     std::string            name;
     std::string            description;
     std::string            largeIconFilename;

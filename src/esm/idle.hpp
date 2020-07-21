@@ -50,7 +50,6 @@ struct IdleAnimationData {
 
 struct IdleAnimation : public Record {
 
-    std::string            editorId;
     ModelData              modelData;
     std::vector<Condition> conditions;
     RelatedIdleAnimations  relatedIdleAnimations;

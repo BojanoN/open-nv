@@ -9,7 +9,6 @@ namespace ESM {
 
 struct TextureSet : public Record {
 
-	std::string editorId;
 	ObjectBounds objectBounds;
 	std::string baseImage_transparency;
 	std::string normalMap_specular;

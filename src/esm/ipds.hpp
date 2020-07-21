@@ -23,7 +23,6 @@ struct ImpactList {
 
 struct ImpactDataset : public Record {
 
-    std::string  editorId;
     ImpactList   impacts;
 
     ImpactDataset(ESMReader& reader);

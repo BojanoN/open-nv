@@ -46,7 +46,6 @@ enum IsInterior : uint32_t {
 };
 
 struct AcousticSpace : public Record {
-    std::string  editorId;
     ObjectBounds objectBounds;
     formid       dawn_default; //SOUN
     formid       afternoon; //SOUN

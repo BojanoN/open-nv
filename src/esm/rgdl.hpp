@@ -52,7 +52,6 @@ struct RagdollPoseMatchingData {
 
 struct Ragdoll : public Record {
 
-    std::string  editorId;
     uint32_t version;
     RagdollData data;
     formid  actorBase; //CREA, NPC_

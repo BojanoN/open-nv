@@ -41,7 +41,6 @@ struct __attribute__((packed)) GrassData {
 };
 
 struct Grass : public Record {
-    std::string  editorId;
     ObjectBounds objectBounds;
     ModelData    modelData;
     GrassData    data;

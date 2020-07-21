@@ -40,7 +40,6 @@ struct ChallengeData {
 };
 
 struct Challenge : public Record {
-    std::string   editorId;
     std::string   name;
     std::string   pipboyTexture;
     std::string   cornerTexture;

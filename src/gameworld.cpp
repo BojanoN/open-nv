@@ -28,16 +28,11 @@ void GameWorld::load(ESM::ESMReader& reader)
     while (reader.hasMoreBytes()) {
         reader.readNextGroupHeader();
 
-        /*if (reader.groupType() != ESM::GroupType::TopLevel) {
-            reader.skipGroup();
-            log_debug("Skipping non-toplevel group..");
-        }*/
         if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::CELL) {
             parseCellGroup(reader);
             continue;
         }
         if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::WRLD) {
-            //reader.skipGroup();
             parseWorldspaceGroup(reader);
             continue;
         }

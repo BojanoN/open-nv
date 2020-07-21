@@ -17,7 +17,6 @@ enum class CameraZoom : uint8_t {
 
 struct CameraPath : public Record {
 
-    std::string   editorId;
     std::vector<Condition> conditions;
     RelatedCameraPaths relatedCameraPaths;
     CameraZoom 			zoom;

@@ -12,7 +12,6 @@ struct StageData {
 };
 
 struct DehydrationStage : public Record {
-    std::string editorId;
     StageData   data;
 
     DehydrationStage(ESMReader& reader);

@@ -17,7 +17,6 @@ struct ActorEffectData {
 
 struct ActorEffect : public Record {
 
-    std::string editorId;
     std::string name;
     ActorEffectData data;
     std::vector<Effect> effects;

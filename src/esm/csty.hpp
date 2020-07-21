@@ -104,7 +104,6 @@ struct Simple {
 };
 
 struct CombatStyle : public Record {
-    std::string editorId;
     Standard    standard;
     Advanced    advanced;
     Simple      simple;

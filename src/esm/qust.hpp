@@ -68,7 +68,6 @@ struct QuestObjective {
 
 
 struct Quest : public Record {
-    std::string                 editorId;
     formid                      script;
     std::string                 name;
     std::string                 largeIconFilename;

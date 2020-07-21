@@ -11,7 +11,6 @@ struct RadiationStageData {
 
 struct RadiationStage : public Record {
 
-    std::string   editorId;
     RadiationStageData data;
     
     RadiationStage(ESMReader& reader);

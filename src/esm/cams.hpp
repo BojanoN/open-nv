@@ -41,7 +41,6 @@ struct CameraShotData {
 
 struct CameraShot : public Record {
 
-    std::string   editorId;
     ModelData     modelData;
     CameraShotData data;
     formid 		   imageSpaceModifier; //IMAD

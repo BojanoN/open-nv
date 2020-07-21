@@ -36,7 +36,6 @@ struct LightData {
 
 struct Light : public Record {
 
-	std::string editorId;
 	ObjectBounds objectBounds;
 	ModelData modelData;
 	formid script;

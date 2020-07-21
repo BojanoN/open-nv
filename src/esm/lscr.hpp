@@ -16,7 +16,6 @@ struct LoadingScreenLocation {
 };
 
 struct LoadingScreen : public Record {
-    std::string                        editorId;
     std::string                        largeIconFilename;
     std::string                        smallIconFilename;
     std::string                        description;

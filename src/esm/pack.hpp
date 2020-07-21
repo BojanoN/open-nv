@@ -220,7 +220,6 @@ struct PackageLocation {
 
 struct Package : public Record {
 
-	std::string               editorId;
 	PackageData               data;
 	PackageLocation 		  location_1;
 	PackageLocation 		  location_2; //navodno moze biti na 2 razlicita mjesta u recordu

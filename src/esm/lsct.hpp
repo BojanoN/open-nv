@@ -39,7 +39,6 @@ struct __attribute__((packed)) LoadingScreenTypeData {
 };
 
 struct LoadingScreenType : public Record {
-    std::string           editorId;
     LoadingScreenTypeData data;
 
     LoadingScreenType(ESMReader& reader);

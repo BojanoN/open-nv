@@ -12,7 +12,6 @@ struct __attribute__((packages)) NavigationMapInfo {
     std::vector<uint8_t> unknown;
 };
 struct NavigationMeshInfoMap : public Record {
-    std::string editorId;
     uint32_t    version;
 };
 }

@@ -6,7 +6,6 @@
 namespace ESM {
 
 struct AnimatedObject : public Record {
-	std::string editorId;
 	ModelData 	modelData;
 	formid      animation; //IDLE
 

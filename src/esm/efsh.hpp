@@ -153,7 +153,6 @@ struct __attribute__((packed)) EffectShaderData {
 };
 
 struct EffectShader : public Record {
-    std::string      editorId;
     std::string      fillTexture;
     std::string      particleShaderTexture;
     std::string      holesTexture;

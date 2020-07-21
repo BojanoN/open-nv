@@ -44,7 +44,6 @@ struct SoundData {
 };
 
 struct Sound : public Record {
-    std::string  editorId;
     ObjectBounds objectBounds;
     std::string  soundFilename;
     uint8_t      randomChangePercentage;

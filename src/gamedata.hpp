@@ -22,16 +22,18 @@ template <class T>
 class GameData : public GameDataBase {
 private:
     //std::unordered_map<formid, std::shared_ptr<T>> dataMap;
-    std::unordered_map<formid, T*> dataMap;
-    void                           raiseError(formid id) const;
+    std::unordered_map<formid, T*>          dataMap;
+    std::unordered_map<std::string, formid> editorIdMap;
+    void                                    raiseError(formid id) const;
 
 public:
     virtual ssize_t                 size() { return dataMap.size(); }
     virtual void                    load(ESM::ESMReader& reader);
     std::unordered_map<formid, T*>& getMap() { return this->dataMap; };
 
-    T&   get(formid id);
-    void insert(T* data);
+    T&     get(formid id);
+    formid get(std::string& editorId);
+    void   insert(T* data);
     virtual ~GameData();
 };
 
@@ -55,13 +57,31 @@ T& GameData<T>::get(formid id)
 }
 
 template <class T>
+formid GameData<T>::get(std::string& editorId)
+{
+    typename std::unordered_map<std::string, formid>::const_iterator it = editorIdMap.find(editorId);
+
+    if (it == editorIdMap.end()) {
+        raiseError(0);
+    }
+    return it->second;
+}
+
+template <class T>
 void GameData<T>::insert(T* record)
 {
 #ifdef DEBUG
     auto it = dataMap.insert(std::make_pair(record->id, record));
     assert(it.second);
+    if (record->editorId.size()) {
+        editorIdMap.insert(std::make_pair(record->editorId, record->id));
+    }
+
 #else
     dataMap.insert(std::make_pair(record->id, record));
+    if (record->editorId.size()) {
+        editorIdMap.insert(std::make_pair(record->editorId, record->id));
+    }
 #endif
 }
 

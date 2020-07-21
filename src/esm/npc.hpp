@@ -50,7 +50,6 @@ struct __attribute__((packed)) NPCSkills {
 };
 
 struct NPC : public Record {
-    std::string                                     editorId;
     ObjectBounds                                    objectBounds;
     std::string                                     name;
     ModelData                                       modelData;

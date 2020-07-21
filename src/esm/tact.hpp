@@ -10,7 +10,6 @@ namespace ESM {
 
 struct TalkingActivator : public Record {
 
-	std::string editorId;
 	ObjectBounds objectBounds;
 	std::string name;
 	ModelData modelData;

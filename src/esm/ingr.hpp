@@ -17,7 +17,6 @@ struct __attribute__((packed)) IngredientEffectData {
 };
 
 struct Ingredient : public Record {
-    std::string          editorId;
     ObjectBounds         objectBounds;
     std::string          name;
     ModelData            modelData;

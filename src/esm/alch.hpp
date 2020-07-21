@@ -19,7 +19,7 @@ struct IngestibleEffectData {
 };
 
 struct Ingestible : public Record {
-    std::string          editorId;
+
     ObjectBounds         objectBounds;
     std::string          name;
     ModelData            modelData;

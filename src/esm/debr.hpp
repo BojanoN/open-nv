@@ -25,7 +25,6 @@ struct DebrisModel {
 };
 
 struct Debris : public Record {
-    std::string              editorId;
     std::vector<DebrisModel> debrisModels;
 
     Debris(ESMReader& reader);

@@ -91,7 +91,6 @@ struct ModelPart {
 
 struct Race : public Record {
 
-    std::string                   editorId;
     std::string                   name;
     std::string                   description;
     std::vector<FactRaceRelation> relations;

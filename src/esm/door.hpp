@@ -15,7 +15,6 @@ enum class DoorFlags : uint8_t {
 };
 
 struct Door : public Record {
-    std::string     editorId;
     ObjectBounds    objectBounds;
     std::string     name;
     ModelData       modelData;

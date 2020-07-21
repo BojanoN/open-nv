@@ -20,7 +20,6 @@ struct __attribute__((packed)) ClimateTiming {
 };
 
 struct Climate : public Record {
-    std::string               editorId;
     std::vector<WeatherTypes> weatherTypes;
     std::string               sunTexture;
     std::string               sunGlareTexture;

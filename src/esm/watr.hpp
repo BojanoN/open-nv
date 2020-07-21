@@ -82,7 +82,6 @@ struct RelatedWaters {
 };
 
 struct Water : public Record {
-    std::string     editorId;
     std::string     name;
     std::string     noiseMap;
     uint8_t			opacity;

@@ -32,7 +32,6 @@ enum class CardValues : uint32_t {
 };
 
 struct CaravanCard : public Record {
-    std::string  editorId;
     ObjectBounds objectBounds;
     std::string  name;
     ModelData    modelData;

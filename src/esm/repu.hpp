@@ -5,7 +5,6 @@
 namespace ESM {
 
 struct Reputation : public Record {
-    std::string     editorId;
     std::string     name;
     std::string     largeIconFilename;
     std::string     smallIconFilename;

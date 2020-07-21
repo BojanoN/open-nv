@@ -7,7 +7,7 @@ namespace ESM {
 class ESMReader;
 
 struct MediaLocationController : public Record {
-    std::string editorId;
+
     std::string name;
 
     float    locationDelay;

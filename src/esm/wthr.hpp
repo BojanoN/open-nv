@@ -75,7 +75,6 @@ struct WeatherSound {
 };
 
 struct Weather : public Record {
-    std::string editorId;
     formid      sunriseImageModifier;
     formid      dayImageModifier;
     formid      sunsetImageModifier;

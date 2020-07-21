@@ -152,7 +152,6 @@ struct __attribute__((packed)) PerkData {
 };
 
 struct Perk : public Record {
-    std::string             editorId;
     std::string             name;
     std::string             description;
     std::string             largeIconFilename;

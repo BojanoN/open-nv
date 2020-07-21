@@ -232,8 +232,9 @@ private:
 
 class Compiler {
 public:
-    Compiler()
-        : nodes(nullptr) {};
+    Compiler(GameWorld::GameData<ESM::Script>* store)
+        : nodes(nullptr)
+        , ctx(store) {};
 
     CompiledScript* compile(std::vector<Node*>* ns);
 

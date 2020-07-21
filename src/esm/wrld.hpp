@@ -57,7 +57,6 @@ struct WorldspaceSwappedImpact {
 };
 
 struct Worldspace : public Record {
-    std::string                          editorId;
     std::string                          name;
     formid                               encounterZone; // ECZN
     formid                               parentWorldspace; // WRLD

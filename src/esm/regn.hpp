@@ -114,7 +114,6 @@ struct __attribute__((packed)) RegionDataEntry {
 };
 
 struct Region : public Record {
-    std::string                  editorId;
     std::string                  largeIconFilename;
     std::string                  smallIconFilename;
     rgba                         mapColor;

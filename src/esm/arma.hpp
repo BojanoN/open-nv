@@ -6,7 +6,6 @@ namespace ESM {
 
 struct ArmorAddon : public Record {
 
-	std::string editorId;
 	ObjectBounds objectBounds;
 	std::string name;
 	BipedalData bipedData;
