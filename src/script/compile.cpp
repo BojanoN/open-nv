@@ -87,15 +87,48 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
     return 0;
 }
 
-int compileBlocktype(BlockTypeStatement* node, CompiledScript* out)
+int Compiler::compileBlocktype(Node* node, CompiledScript* out)
 {
 
-    switch (node->blocktype) {
+    BlockTypeStatement* blocktype = dynamic_cast<BlockTypeStatement*>(node);
+
+    uint32_t begSize = out->getSize();
+    // blocktype ID placeholder
+    out->writeZeros(sizeof(uint16_t));
+    // block size placeholder
+    out->writeZeros(sizeof(uint32_t));
+
+    switch (blocktype->blocktype) {
+    case BlockType::OnTriggerEnter: {
+        uint8_t  onTriggerEnterID[] = { 0x1A, 0x00 };
+        uint16_t flags              = 0x0001;
+        uint16_t varIndex           = 0;
+
+        if (blocktype->arg.size() == 0) {
+            log_fatal("OnTriggerEnter blocktype requires an argument");
+            return -1;
+        }
+
+        out->writeAt(begSize, onTriggerEnterID, sizeof(uint16_t));
+        out->write((uint8_t*)&flags, sizeof(flags));
+
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+        varIndex = ctx.SCROLookup(blocktype->arg);
+        if (varIndex == 0) {
+            return -1;
+        }
+        out->write((uint8_t*)&varIndex, sizeof(varIndex));
+
+        break;
+    }
+
     default:
-        log_fatal("Unknown blocktype %s", BlockTypeEnumToString(node->blocktype));
+        log_fatal("Unknown blocktype %s", BlockTypeEnumToString(blocktype->blocktype));
         return -1;
     }
-    return 0;
+
+    return out->getSize() - begSize;
 }
 
 int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
@@ -106,21 +139,42 @@ int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
     int          size  = block->nodes->size();
 
     uint8_t beg[] = {
-        static_cast<uint8_t>(OutputCodes::BEGIN), 0x00, 0x06, 0x00,
-        0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00
-    };
-    uint8_t end[] = {
-        static_cast<uint8_t>(OutputCodes::END), 0x00, 0x00, 0x00
+        OutputCodes::BEGIN, 0x00
     };
 
-    uint32_t totalWrite      = out->getSize();
-    uint32_t totalBlocksize  = 0;
-    uint32_t blocksizeOffset = out->getSize() + 6;
+    uint8_t end[] = { OutputCodes::END, 0x00, 0x00, 0x00 };
 
+    uint32_t totalWrite = out->getSize();
     out->write(beg, sizeof(beg));
 
-    for (int i = 0; i < size; i++) {
+    uint32_t currentNodeOffset = 0;
+
+    // Variable declarations
+    while (block->nodes->at(currentNodeOffset)->type == NodeType::Variable) {
+        int compiledBytes = compileNode(block->nodes->at(currentNodeOffset), out);
+
+        if (compiledBytes < 0) {
+            return -1;
+        }
+        currentNodeOffset++;
+    }
+
+    int      blocktypeSize;
+    uint32_t blocktypeSizeOffset = out->getSize();
+    uint32_t totalBlocksize      = 0;
+
+    out->writeZeros(sizeof(uint16_t));
+
+    blocktypeSize = compileBlocktype(block->type, out);
+    if (blocktypeSize < 0) {
+        return -1;
+    }
+
+    out->writeAt(blocktypeSizeOffset, (uint8_t*)&blocktypeSize, sizeof(uint16_t));
+
+    uint32_t blocksizeOffset = blocktypeSizeOffset + sizeof(uint16_t) + sizeof(uint16_t);
+
+    for (int i = currentNodeOffset; i < size; i++) {
         int compiledBytes = compileNode(block->nodes->at(i), out);
 
         if (compiledBytes < 0) {
@@ -244,7 +298,7 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
         } else {
             // If not present locally leave for reference checking later
             typeCode              = static_cast<uint8_t>(ExprCodes::REF_GLOBAL);
-            std::string& editorId = expr->value;
+            std::string& editorId = expr->original;
             varIndex              = ctx.SCROLookup(editorId);
             if (varIndex == 0) {
                 return -1;
@@ -366,9 +420,10 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     IfStatement* ifStmt    = dynamic_cast<IfStatement*>(node);
     uint32_t     begOffset = out->getSize();
 
-    uint8_t ifBegin[]   = { static_cast<uint8_t>(OutputCodes::IF), 0x00 };
-    uint8_t elifBegin[] = { static_cast<uint8_t>(OutputCodes::ELIF), 0x00 };
-    uint8_t elseBegin[] = { static_cast<uint8_t>(OutputCodes::ELSE), 0x00, 0x02, 0x00 };
+    uint8_t ifBegin[]   = { OutputCodes::IF, 0x00 };
+    uint8_t elifBegin[] = { OutputCodes::ELIF, 0x00 };
+    uint8_t elseBegin[] = { OutputCodes::ELSE, 0x00, 0x02, 0x00 };
+    uint8_t endif[]     = { OutputCodes::ENDIF, 0x00, 0x00, 0x00 };
 
     int      exprLen, compLen, bodyLen;
     uint16_t exprLenOut, compLenOut, jumpOps;
@@ -402,7 +457,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     }
 
     jumpOps    = bodyLen;
-    compLenOut = exprLenOut + sizeof(uint16_t);
+    compLenOut = exprLenOut + sizeof(uint16_t) + sizeof(uint16_t);
 
     out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
     out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
@@ -462,6 +517,8 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
         out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
     }
 
+    out->write(endif, sizeof(endif));
+
     return out->getSize() - begOffset;
 };
 
@@ -472,9 +529,22 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
     ReferenceAccess* refAccess = dynamic_cast<ReferenceAccess*>(node);
     uint32_t         begOffset = out->getSize();
 
-    out->writeByte((refAccess->context == NodeContext::Expression) ? ExprCodes::REF_FUNC_PARAM : OutputCodes::REF_ACCESS);
+    if (refAccess->context == NodeContext::Expression) {
+        out->writeByte(ExprCodes::PUSH);
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+    } else if (refAccess->context == NodeContext::Assignment) {
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+    } else {
+        out->writeByte(OutputCodes::REF_ACCESS);
+    }
+
     uint16_t index = ctx.SCROLookup(refAccess->reference);
     out->write((uint8_t*)&index, sizeof(uint16_t));
+
+    // TODO: access to other script's variables
+    // Variable type placeholder
+    out->writeZeros(3);
 
     return out->getSize() - begOffset;
 }

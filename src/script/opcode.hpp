@@ -12,6 +12,7 @@ namespace Script {
     X(IF, 0x16)           \
     X(ELSE, 0x17)         \
     X(ELIF, 0x18)         \
+    X(ENDIF, 0x19)        \
     X(ASSIGN, 0x15)       \
     X(REF_ACCESS, 0x1C)   \
     X(SET_GLOBAL, 0x47)

@@ -84,7 +84,8 @@ void Tokenizer::parseLiteral()
     while (this->isAlphaNum(this->peekNext())) {
         advance();
     }
-    std::string value = this->substring(this->source, this->startCharOffset, this->currentCharOffset + 1);
+    std::string value    = this->substring(this->source, this->startCharOffset, this->currentCharOffset + 1);
+    std::string original = value;
     this->toLowerCase(value);
 
     if (Tokenizer::keywords.count(value)) {
@@ -92,6 +93,7 @@ void Tokenizer::parseLiteral()
         ADD_TOKEN(tmp, value);
     } else {
         ADD_TOKEN(TokenType::Identifier, value);
+        this->tokens->back().original = original;
     }
 }
 

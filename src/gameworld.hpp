@@ -149,7 +149,20 @@ public:
         initDataStoreMap();
     }
 
-    void          load(ESM::ESMReader& reader);
+    void   load(ESM::ESMReader& reader);
+    formid getByEditorID(std::string& editorId)
+    {
+        formid ret;
+
+        for (auto& entry : dataStores) {
+            ret = entry.second->get(editorId);
+            if (ret) {
+                return ret;
+            }
+        }
+
+        return 0;
+    };
     GameDataBase* getDataStore(uint32_t type);
 };
 

@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../esm/records.hpp"
-#include "../esm/types.hpp"
-#include "../gamedata.hpp"
+//#include "../gameworld.hpp"
 #include "types/base.hpp"
 #include <string>
 #include <unordered_map>
@@ -48,9 +46,10 @@ public:
         return ret;
     }
 
-    Context(GameWorld::GameData<ESM::Script>* store)
-        : variableIndex(0)
-        , scriptStore(store)
+    //    Context(GameWorld::GameWorld* w)
+    Context()
+        : variableIndex(1)
+    //  , world(w)
     {
     }
     ~Context() {};
@@ -59,16 +58,22 @@ public:
     {
         log_info("SCROLookup: %s", editorId.c_str());
 
-        // TODO: save formids
-        formid ref;
+        if (!varExists(editorId)) {
 
-        try {
-            ref = this->scriptStore->get(editorId);
-        } catch (std::runtime_error& e) {
-            log_fatal("No such editorId: %s", editorId.c_str());
-            return 0;
+            declareVar(editorId, Type::Reference, VariableScope::Global);
+
+            // TODO: save formids
+            // This is just a dummy lookup used for testing the compiler
+            //        formid ref = world->getByEditorID(editorId);
+            uint32_t ref = 1;
+
+            if (!ref) {
+                log_fatal("No such editorId: %s", editorId.c_str());
+                return 0;
+            }
         }
-        return variableIndex++;
+
+        return variables[editorId].index;
     }
 
     std::string scriptName;
@@ -76,7 +81,7 @@ public:
 private:
     std::unordered_map<std::string, VariableInfo> variables;
     uint16_t                                      variableIndex;
-    GameWorld::GameData<ESM::Script>*             scriptStore;
+    // GameWorld::GameWorld*                         world;
 };
 
 };

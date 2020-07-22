@@ -15,6 +15,7 @@ class GameDataBase {
 public:
     virtual void    load(ESM::ESMReader& reader) = 0;
     virtual ssize_t size()                       = 0;
+    virtual formid  get(std::string& editorId)   = 0;
     virtual ~GameDataBase() { }
 };
 
@@ -62,7 +63,7 @@ formid GameData<T>::get(std::string& editorId)
     typename std::unordered_map<std::string, formid>::const_iterator it = editorIdMap.find(editorId);
 
     if (it == editorIdMap.end()) {
-        raiseError(0);
+        return 0;
     }
     return it->second;
 }
@@ -80,7 +81,7 @@ void GameData<T>::insert(T* record)
 #else
     dataMap.insert(std::make_pair(record->id, record));
     if (record->editorId.size()) {
-        editorIdMap.insert(std::make_pair(record->editorId, record->id));
+        editorIdMap.insert(std::make_pair(record->editorId., record->id));
     }
 #endif
 }

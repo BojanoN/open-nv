@@ -336,7 +336,7 @@ inline Node* Parser::baseType()
 
     if (advanceMatches(baseTypeMatch)) {
         Token& tmp = previous();
-        return new LiteralExpr(tmp.literal, tokenTypeToVarType[tmp.type]);
+        return new LiteralExpr(tmp, tokenTypeToVarType[tmp.type]);
     }
 
     if (advanceMatches(TokenType::LeftParenthesis)) {
@@ -420,7 +420,7 @@ inline Node* Parser::assignment()
         advance();
         advance();
         varName  = peekCurrent().literal;
-        variable = new ReferenceAccess(reference, varName, NodeContext::Statement);
+        variable = new ReferenceAccess(reference, varName, NodeContext::Assignment);
 
         // Plain var access
     } else {

@@ -16,8 +16,6 @@ class Node;
 
 class CompiledScript {
 
-    // TODO: fix out of bounds read error        case VMStatusCode::VM_END:
-
 public:
     CompiledScript()
         : currentSize(0)
@@ -232,9 +230,10 @@ private:
 
 class Compiler {
 public:
-    Compiler(GameWorld::GameData<ESM::Script>* store)
+    //    Compiler(GameWorld::GameWorld* store)
+    Compiler()
         : nodes(nullptr)
-        , ctx(store) {};
+        , ctx() {};
 
     CompiledScript* compile(std::vector<Node*>* ns);
 

@@ -106,7 +106,8 @@ constexpr const char* BlockTypeEnumToString(BlockType e) noexcept
 
 enum class NodeContext : uint8_t {
     Expression,
-    Statement
+    Statement,
+    Assignment
 };
 
 class Node {
@@ -206,12 +207,15 @@ public:
 
 class LiteralExpr : public Node {
 public:
-    LiteralExpr(std::string val, Type t)
-        : value(val)
-        , valueType(t)
+    LiteralExpr(Token tok, Type t)
+        : valueType(t)
+        , value(tok.literal)
         , Node(NodeType::LiteralExpr)
 
     {
+        if (t == Type::Identifier) {
+            original = tok.original;
+        }
     }
 
     void print()
@@ -220,6 +224,7 @@ public:
     }
 
     std::string value;
+    std::string original = "";
     Type        valueType;
 };
 
