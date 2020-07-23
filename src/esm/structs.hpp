@@ -864,8 +864,8 @@ enum LocalVariableDataFlags : uint8_t {
 struct __attribute__((packed)) LocalVariableData {
     uint32_t index;
     uint8_t  unusedBytes_1[12];
-    uint8_t  flags;
-    uint8_t  unusedBytes_2[7];
+    uint32_t type;
+    uint8_t  unusedBytes_2[4];
 };
 
 struct __attribute__((packed)) LocalVariable {

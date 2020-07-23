@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "../gameworld.hpp"
+#include "../gameworld.hpp"
 #include "types/base.hpp"
 #include <string>
 #include <unordered_map>
@@ -46,11 +46,65 @@ public:
         return ret;
     }
 
-    //    Context(GameWorld::GameWorld* w)
-    Context()
-        : variableIndex(1)
-    //  , world(w)
+    std::pair<VariableInfo, bool> getScriptLocalVar(std::string& scriptEditorId, std::string& variable)
     {
+        std::pair<VariableInfo, bool> ret;
+        Script*                       script;
+        uint32_t                      form;
+
+        ret.second = false;
+
+        form = this->scriptStore->get(scriptEditorId);
+        if (form) {
+            script = this->scriptStore->get(form);
+
+            std::vector<LocalVariable>& variables = script->data.localVariables;
+            uint32_t                    size      = variables.size();
+            LocalVariableData&          targetVarData;
+            bool                        found = false;
+
+            for (uint32_t i = 0; i < size; i++) {
+                if (!strcmp(editorId, variables[i].name)) {
+                    found         = true;
+                    targetVarData = variables[i].data;
+                    break;
+                }
+            }
+
+            if (!found) {
+                log_fatal("Variable %s does not exists in script %s", variable.c_str(), scriptEditorId.c_str());
+                return 0;
+            }
+
+            switch (targetVarData.type) {
+            case (0):
+                ret.first.type = Type::Float;
+                break;
+            case (1):
+                ret.first.type = Type::Integer;
+                break;
+            default:
+                log_warn("Unknown value 0x%x encountered in SLSD subrecord, assuming variable type is int...", targetVarData.type);
+                ret.type = Type::Integer;
+                break;
+            }
+
+            ret.first.index = targetVarData.index;
+            ret.second      = true;
+            return ret;
+        } else {
+            log_fatal("No such script with editorId %s", scriptEditorId.c_str());
+            return ret;
+        }
+
+        return ret;
+    }
+
+    Context(GameWorld::GameWorld* w)
+        : variableIndex(1)
+        , world(w)
+    {
+        this->scriptStore = w->getDataStore(ESM::ESMType::SCPT);
     }
     ~Context() {};
 
@@ -81,7 +135,7 @@ public:
 private:
     std::unordered_map<std::string, VariableInfo> variables;
     uint16_t                                      variableIndex;
-    // GameWorld::GameWorld*                         world;
+    GameWorld::GameWorld*                         world;
+    GameWorld::GameData<ESM::Script>*             scriptStore;
 };
-
 };

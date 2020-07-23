@@ -1,5 +1,5 @@
 #include "compile.hpp"
-//#include "../gameworld.hpp"
+#include "../gameworld.hpp"
 #include "logc/log.h"
 #include "parser.hpp"
 #include "tokenizer.hpp"
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
     const char*    fname = argv[1];
 
     std::string path = "../../bin/esm/FalloutNV.esm";
-    /*
+
     GameWorld::GameWorld world;
     try {
         ESM::ESMReader reader(path);
@@ -42,10 +42,12 @@ int main(int argc, char** argv)
     } catch (std::runtime_error& e) {
         log_fatal(e.what());
     }
-*/
+
+    GameWorld::GameData<ESM::Script>* scriptStore = (GameWorld::GameData<ESM::Script>*)world.getDataStore(ESM::ESMType::SCPT);
+
     Script::Tokenizer* tok      = new Script::Tokenizer();
     Script::Parser*    parser   = new Script::Parser();
-    Script::Compiler*  compiler = new Script::Compiler();
+    Script::Compiler*  compiler = new Script::Compiler(scriptStore);
 
     while ((c = getopt(argc, argv, "s:")) != -1) {
         switch (c) {

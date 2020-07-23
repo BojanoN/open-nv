@@ -433,13 +433,13 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 
     // TODO: check .esm files for source and see what this is supposed to be
     compLenOut = 0;
-    jumpOps    = 0;
+    jumpOps    = dynamic_cast<StatementBlock*>(ifStmt->body)->nodes->size();
     exprLenOut = 0;
 
     compLenOffset = out->getSize();
     out->write((uint8_t*)&compLenOut, sizeof(uint16_t));
 
-    jumpOpsOffset = out->getSize();
+    //    jumpOpsOffset = out->getSize();
     out->write((uint8_t*)&jumpOps, sizeof(uint16_t));
 
     exprLenOffset = out->getSize();
@@ -456,11 +456,11 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
         return -1;
     }
 
-    jumpOps    = bodyLen;
+    //    jumpOps    = bodyLen;
     compLenOut = exprLenOut + sizeof(uint16_t) + sizeof(uint16_t);
 
     out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
-    out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
+    //out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
     out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(uint16_t));
 
     uint32_t elifsSize = ifStmt->elseIfs.size();
@@ -470,13 +470,12 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
             out->write(elifBegin, 2);
 
             compLenOut = 0;
-            jumpOps    = 0;
+            jumpOps    = dynamic_cast<StatementBlock*>(ifStmt->elseIfs[i].second)->nodes->size();
             exprLenOut = 0;
 
             compLenOffset = out->getSize();
             out->write((uint8_t*)&compLenOut, sizeof(uint16_t));
 
-            jumpOpsOffset = out->getSize();
             out->write((uint8_t*)&jumpOps, sizeof(uint16_t));
 
             exprLenOffset = out->getSize();
@@ -493,11 +492,9 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
                 return -1;
             }
 
-            jumpOps    = bodyLen;
-            compLenOut = exprLenOut + sizeof(uint16_t);
+            compLenOut = exprLenOut + sizeof(uint16_t) + sizeof(uint16_t);
 
             out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
-            out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
             out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(uint16_t));
         }
     }
@@ -544,7 +541,31 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
 
     // TODO: access to other script's variables
     // Variable type placeholder
-    out->writeZeros(3);
+
+    std::pair<VariableInfo, bool> retPair = this->ctx.getScriptLocalVar(refAccess->reference, refAccess->field);
+
+    if (!retPair.second) {
+        return -1;
+    }
+
+    uint8_t targetVarTypeCode;
+
+    switch (retPair.first.type) {
+    case (Type::Reference):
+    case (Type::Float):
+        targetVarTypeCode = ExprCodes::FLOAT_REF_LOCAL;
+        break;
+    case (Type::Short):
+    case (Type::Integer):
+        targetVarTypeCode = ExprCodes::INT_LOCAL;
+        break;
+    default:
+        return -1;
+        break;
+    }
+
+    out->writeByte(targetVarTypeCode);
+    out->write((uint8_t*)retPair.first.index, sizeof(uint16_t));
 
     return out->getSize() - begOffset;
 }
