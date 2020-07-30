@@ -43,11 +43,9 @@ int main(int argc, char** argv)
         log_fatal(e.what());
     }
 
-    GameWorld::GameData<ESM::Script>* scriptStore = (GameWorld::GameData<ESM::Script>*)world.getDataStore(ESM::ESMType::SCPT);
-
     Script::Tokenizer* tok      = new Script::Tokenizer();
     Script::Parser*    parser   = new Script::Parser();
-    Script::Compiler*  compiler = new Script::Compiler(scriptStore);
+    Script::Compiler*  compiler = new Script::Compiler(&world);
 
     while ((c = getopt(argc, argv, "s:")) != -1) {
         switch (c) {

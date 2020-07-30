@@ -539,9 +539,6 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
     uint16_t index = ctx.SCROLookup(refAccess->reference);
     out->write((uint8_t*)&index, sizeof(uint16_t));
 
-    // TODO: access to other script's variables
-    // Variable type placeholder
-
     std::pair<VariableInfo, bool> retPair = this->ctx.getScriptLocalVar(refAccess->reference, refAccess->field);
 
     if (!retPair.second) {
@@ -565,7 +562,7 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
     }
 
     out->writeByte(targetVarTypeCode);
-    out->write((uint8_t*)retPair.first.index, sizeof(uint16_t));
+    out->write((uint8_t*)&retPair.first.index, sizeof(uint16_t));
 
     return out->getSize() - begOffset;
 }

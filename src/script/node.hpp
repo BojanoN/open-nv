@@ -211,7 +211,6 @@ public:
         : valueType(t)
         , value(tok.literal)
         , Node(NodeType::LiteralExpr)
-
     {
         if (t == Type::Identifier) {
             original = tok.original;

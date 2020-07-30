@@ -284,10 +284,12 @@ inline Node* Parser::functionCall(NodeContext context)
     if (!isFunction) {
         // Check for reference access
         if (peekNext().type == TokenType::Dot) {
-            reference = peekCurrent().literal;
+            reference                = peekCurrent().literal;
+            std::string& refOriginal = peekCurrent().original;
             advance();
 
             std::string& fieldOrFuncIdentifier = peekNext().literal;
+            std::string& fieldOriginal         = peekNext().original;
 
             isFunction = false;
 
@@ -302,7 +304,7 @@ inline Node* Parser::functionCall(NodeContext context)
             if (!isFunction) {
                 advance();
                 advance();
-                return new ReferenceAccess(reference, fieldOrFuncIdentifier, context);
+                return new ReferenceAccess(refOriginal, fieldOriginal, context);
             }
             advance();
             funcOrRefIdentifier = fieldOrFuncIdentifier;
@@ -416,10 +418,10 @@ inline Node* Parser::assignment()
 
     // Reference access
     if (peekNext().type == TokenType::Dot) {
-        reference = varOrRefToken.literal;
+        reference = varOrRefToken.original;
         advance();
         advance();
-        varName  = peekCurrent().literal;
+        varName  = peekCurrent().original;
         variable = new ReferenceAccess(reference, varName, NodeContext::Assignment);
 
         // Plain var access

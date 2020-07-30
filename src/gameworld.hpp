@@ -163,6 +163,11 @@ public:
 
         return 0;
     };
+
+    formid searchCellChildren(std::string& editorId)
+    {
+        return 0;
+    }
     GameDataBase* getDataStore(uint32_t type);
 };
 

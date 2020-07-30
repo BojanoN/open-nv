@@ -230,8 +230,8 @@ private:
 
 class Compiler {
 public:
-    //    Compiler(GameWorld::GameWorld* store)
-    Compiler(GameWorld::GameData<ESM::Script>* store)
+    Compiler(GameWorld::GameWorld* store)
+        //Compiler(GameWorld::GameData<ESM::Script>* store)
         : nodes(nullptr)
         , ctx(store) {};
 
