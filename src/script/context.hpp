@@ -49,22 +49,20 @@ public:
     std::pair<VariableInfo, bool> getScriptLocalVar(std::string& scriptEditorId, std::string& variable)
     {
         std::pair<VariableInfo, bool> ret;
-        Script*                       script;
         uint32_t                      form;
 
         ret.second = false;
 
-        form = this->scriptStore->get(scriptEditorId);
+        form = this->world->getByEditorID(scriptEditorId);
         if (form) {
-            script = this->scriptStore->get(form);
 
-            std::vector<LocalVariable>& variables = script->data.localVariables;
-            uint32_t                    size      = variables.size();
-            LocalVariableData&          targetVarData;
-            bool                        found = false;
+            std::vector<ESM::LocalVariable>& variables = this->scriptStore->get(form).data.localVariables;
+            uint32_t                         size      = variables.size();
+            ESM::LocalVariableData           targetVarData;
+            bool                             found = false;
 
             for (uint32_t i = 0; i < size; i++) {
-                if (!strcmp(editorId, variables[i].name)) {
+                if (!strcmp(scriptEditorId.c_str(), variables[i].name.c_str())) {
                     found         = true;
                     targetVarData = variables[i].data;
                     break;
@@ -73,7 +71,7 @@ public:
 
             if (!found) {
                 log_fatal("Variable %s does not exists in script %s", variable.c_str(), scriptEditorId.c_str());
-                return 0;
+                return ret;
             }
 
             switch (targetVarData.type) {
@@ -85,7 +83,7 @@ public:
                 break;
             default:
                 log_warn("Unknown value 0x%x encountered in SLSD subrecord, assuming variable type is int...", targetVarData.type);
-                ret.type = Type::Integer;
+                ret.first.type = Type::Integer;
                 break;
             }
 
@@ -104,7 +102,7 @@ public:
         : variableIndex(1)
         , world(w)
     {
-        this->scriptStore = w->getDataStore(ESM::ESMType::SCPT);
+        this->scriptStore = (GameWorld::GameData<ESM::Script>*)w->getDataStore(ESM::ESMType::SCPT);
     }
     ~Context() {};
 
