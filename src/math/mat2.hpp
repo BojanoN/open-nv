@@ -1,4 +1,5 @@
 #pragma once
+#include "types.hpp"
 
 inline void mat2_copy(mat2 src, mat2 dst)
 {

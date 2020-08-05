@@ -1,11 +1,18 @@
+#pragma once
+
+#include "types.hpp"
 #include <math.h>
 #include <stdio.h>
+
 inline void vec3_init(float* in, vec3 vec)
 {
     vec[0] = in[0];
     vec[1] = in[1];
     vec[2] = in[2];
 }
+
+#define vec3_copy(src, dst) vec3_init((src), (dst))
+
 inline void vec3_print(vec3 vec)
 {
     printf("( %f %f %f )\n", vec[0], vec[1], vec[2]);

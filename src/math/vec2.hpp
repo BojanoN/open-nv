@@ -1,5 +1,8 @@
+#pragma once
+#include "types.hpp"
 #include <math.h>
 #include <stdio.h>
+
 inline void vec2_init(float* in, vec2 vec)
 {
     vec[0] = in[0];

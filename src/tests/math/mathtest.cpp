@@ -1,6 +1,6 @@
+#include "mat2.hpp"
 #include "types.hpp"
 #include "vec2.hpp"
-#include "mat2.hpp"
 
 int main(void)
 {
