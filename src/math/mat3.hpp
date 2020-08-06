@@ -65,7 +65,7 @@ inline float mat3_det(mat3 mat)
     float m21 = mat[2][1];
     float m22 = mat[2][2];
 
-    return m00 * (m11 * m22 - m21 * m12) - m10 * (m01 * m22 - m02 * m21) + m20 * (m02 * m12 - m02 * m11);
+    return m00 * (m11 * m22 - m21 * m12) - m10 * (m01 * m22 - m02 * m21) + m20 * (m01 * m12 - m02 * m11);
 }
 
 inline void mat3_inv(mat3 mat)

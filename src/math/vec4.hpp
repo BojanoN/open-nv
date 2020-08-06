@@ -10,6 +10,9 @@ inline void vec4_init(float* in, vec4 vec)
     vec[2] = in[2];
     vec[3] = in[3];
 }
+
+#define vec4_copy(src, dst) vec4_init((src), (dst))
+
 inline void vec4_print(vec4 vec)
 {
     printf("( %f %f %f %f )\n", vec[0], vec[1], vec[2], vec[3]);
