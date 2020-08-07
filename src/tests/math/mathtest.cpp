@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <math.h>
 
-#define ASSERT_EQUALS_FLOAT(val1, val2) assert(abs((val1) - (val2)) < 10E-7)
+#define ASSERT_EQUALS_DOUBLE(val1, val2) assert(abs((val1) - (val2)) < 10E-7)
 
 int main(void)
 {
@@ -55,13 +55,13 @@ int main(void)
         { 25. / 228., 3. / 38., -9. / 1140., 7. / 285. }
     };
 
-    ASSERT_EQUALS_FLOAT(5., vec2_norm(v2));
-    ASSERT_EQUALS_FLOAT(13.45362404707371, vec3_norm(v3));
-    ASSERT_EQUALS_FLOAT(19.899748, vec4_norm(v4));
+    ASSERT_EQUALS_DOUBLE(5., vec2_norm(v2));
+    ASSERT_EQUALS_DOUBLE(13.45362404707371, vec3_norm(v3));
+    ASSERT_EQUALS_DOUBLE(19.899748, vec4_norm(v4));
 
-    ASSERT_EQUALS_FLOAT(-10., mat2_det(m2));
-    ASSERT_EQUALS_FLOAT(28., mat3_det(m3));
-    ASSERT_EQUALS_FLOAT(1140., mat4_det(m4));
+    ASSERT_EQUALS_DOUBLE(-10., mat2_det(m2));
+    ASSERT_EQUALS_DOUBLE(28., mat3_det(m3));
+    ASSERT_EQUALS_DOUBLE(1140., mat4_det(m4));
 
     mat2_inv(m2);
     mat3_inv(m3);

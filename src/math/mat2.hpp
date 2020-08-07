@@ -9,8 +9,11 @@ inline void mat2_copy(mat2 src, mat2 dst)
     dst[1][1] = src[1][1];
 }
 
-inline void mat2_diag(mat2 mat, float val)
+inline void mat2_diag(mat2 mat, double val)
 {
+    mat[0][1] = 0.;
+    mat[1][0] = 0.;
+
     mat[0][0] = val;
     mat[1][1] = val;
 }
@@ -31,15 +34,15 @@ inline void mat2_vec_mul(vec2 a, mat2 b, vec2 dst)
     dst[1] = a[0] * b[0][1] + a[1] * b[1][1];
 }
 
-inline float mat2_det(mat2 mat)
+inline double mat2_det(mat2 mat)
 {
     return mat[0][0] * mat[1][1] - mat[1][0] * mat[0][1];
 }
 
 inline void mat2_inv(mat2 mat)
 {
-    float det = mat2_det(mat);
-    float tmp = mat[0][0];
+    double det = mat2_det(mat);
+    double tmp = mat[0][0];
 
     mat[1][0] = (-mat[1][0]) / det;
     mat[0][1] = (-mat[0][1]) / det;
@@ -49,13 +52,13 @@ inline void mat2_inv(mat2 mat)
 
 inline void mat2_trans(mat2 mat)
 {
-    float tmp = mat[1][0];
+    double tmp = mat[1][0];
 
     mat[1][0] = mat[0][1];
     mat[0][1] = tmp;
 }
 
-inline void mat2_scale(mat2 src, float val)
+inline void mat2_scale(mat2 src, double val)
 {
     src[0][0] *= val;
     src[0][1] *= val;
