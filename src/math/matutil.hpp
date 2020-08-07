@@ -23,6 +23,18 @@ inline void perspective_mat(mat4 mat, double fovy, double aspect, double near, d
     double diff = near - far;
     double f    = 1. / tan(fovy * 0.5);
 
+    mat[0][1] = 0.;
+    mat[0][2] = 0.;
+    mat[0][3] = 0.;
+    mat[1][0] = 0.;
+    mat[1][2] = 0.;
+    mat[1][3] = 0.;
+    mat[2][0] = 0.;
+    mat[2][1] = 0.;
+    mat[2][3] = 0.;
+    mat[3][0] = 0.;
+    mat[3][1] = 0.;
+
     mat[0][0] = f / aspect;
     mat[1][1] = f;
     mat[2][2] = (far + near) / diff;
@@ -54,6 +66,12 @@ inline void lookat_mat(mat4 mat, vec3 eye, vec3 center, vec3 up)
     vec3_copy(F, mat[1]);
     vec3_copy(u, mat[2]);
 
+    mat[0][3] = 0.;
+    mat[1][3] = 0.;
+    mat[2][3] = 0.;
+    mat[3][0] = 0.;
+    mat[3][1] = 0.;
+
     mat[3][3] = 1.;
 }
 
@@ -66,6 +84,16 @@ inline void ortho_mat(mat4 mat, double left, double right, double bottom, double
     double tx = -(right + left) / rl_diff;
     double ty = -(top + bottom) / tb_diff;
     double tz = -(far + near) / fn_diff;
+
+    mat[0][1] = 0.;
+    mat[0][2] = 0.;
+    mat[1][0] = 0.;
+    mat[1][2] = 0.;
+    mat[2][0] = 0.;
+    mat[2][1] = 0.;
+    mat[3][0] = 0.;
+    mat[3][1] = 0.;
+    mat[3][2] = 0.;
 
     mat[0][0] = 2. / rl_diff;
     mat[1][1] = 2. / tb_diff;
@@ -85,6 +113,17 @@ inline void ortho2D_mat(mat4 mat, double left, double right, double bottom, doub
 
     double tx = -(right + left) / rl_diff;
     double ty = -(top + bottom) / tb_diff;
+
+    mat[0][1] = 0.;
+    mat[0][2] = 0.;
+    mat[1][0] = 0.;
+    mat[1][2] = 0.;
+    mat[2][0] = 0.;
+    mat[2][1] = 0.;
+    mat[2][3] = 0.;
+    mat[3][0] = 0.;
+    mat[3][1] = 0.;
+    mat[3][2] = 0.;
 
     mat[0][0] = 2. / rl_diff;
     mat[1][1] = 2. / tb_diff;
