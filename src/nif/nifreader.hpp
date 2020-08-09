@@ -1,5 +1,6 @@
 #pragma once
 
+<<<<<<< a3c8b8e7d299c1e76723a2121f70dd14fb2ab692
 //#include "nifdata.hpp"
 
 #include "nifactory.hpp"
@@ -16,10 +17,9 @@
 
 class NiObject;
 
-class NifReader /*: public File::Reader */{
+class NifReader {
 
 private:
-	//InputStream* file;
 	FILE* file;
 
 	//Major engine version
@@ -36,7 +36,6 @@ private:
 	uint16_t numBlockTypes;
 	std::vector<int16_t> blockTypeIndices;
 	std::vector<char*> blockTypes;
-
 	// Strings of the Nif file
 	uint32_t numStrings;
 	uint32_t maxStringLength;

@@ -1,4 +1,5 @@
 #include "nifreader.hpp"
+
 NifReader::NifReader(const char* filePath) {
 	file = std::fopen(filePath, "rb");
 	if(file == NULL) {
@@ -19,7 +20,7 @@ NifReader::~NifReader() {
 
 void NifReader::readNifHeader() {
 	if(skipTerminatedString('\n') == -1) { //Skip header version string.
-		throw std::invalid_argument(std::string("Invalid file"));
+		throw std::invalid_argument(std::string("Invalid file: ") + std::string(filePath))
 	}
 	std::fread(&version, sizeof(uint32_t), 1, file);
 	std::fseek(file, sizeof(uint8_t), SEEK_CUR); //Skip endianness.
@@ -51,6 +52,14 @@ void NifReader::readNifHeader() {
 	std::vector<uint32_t> blockSizes(numBlocks); // Temporary.
 	std::fread(&blockSizes[0], sizeof(uint32_t), numBlocks, file);
 
+	std::fread(&numBlockTypes, sizeof(uint32_t), 1, file);
+	blockTypes = new char*[numBlockTypes];
+
+	for(unsigned int i = 0; i < numBlockTypes; i++) {
+		loadSizedString(blockTypes[i]);
+	}
+
+
 	std::fread(&numStrings, sizeof(uint32_t), 1, file);
 	std::fread(&maxStringLength, sizeof(uint32_t), 1, file);
 
@@ -67,11 +76,10 @@ void NifReader::readNifHeader() {
 }
 
 
-NiObject* NifReader::readBlock(uint32_t index) {
-	const char* type = blockTypes[blockTypeIndices[index]];
-	//typename std::unordered_map<std::string, NiObject* (*)(FILE*)>::const_iterator mapIterator = NiFactory::creatorMap.find(type);
-	auto mapIterator = NiFactory::creatorMap.find(type);
-	if(mapIterator == NiFactory::creatorMap.end()) {
+NiObject* NifReader::readBlock(uint32_t index, NiObject* dst) {
+	const char* type = blockTypes[blockTypeIndex[index]];
+	typename std::unordered_map<std::string, NiObject* (*)(FILE*)>::const_iterator mapIterator = NiFactory::creatorMap.find(type);
+	if(mapIterator == NiFunctionMaps::creatorMap.end()) {
 			std::printf("Cannot find factory function for: %s\n", type);
 			return NULL;
 	}
