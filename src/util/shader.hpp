@@ -2,6 +2,13 @@
 
 #include "logc/log.h"
 
+#include "mat2.hpp"
+#include "mat3.hpp"
+#include "mat4.hpp"
+#include "vec2.hpp"
+#include "vec3.hpp"
+#include "vec4.hpp"
+
 #include <cstring>
 #include <errno.h>
 #include <fstream>
@@ -93,7 +100,37 @@ public:
     void setVec2(std::string& varName, vec2& vec)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
-        glUniform2fv(u, 1, &vec);
+        glUniform2fv(u, 1, reinterpret_cast<GLfloat*>(&vec));
+    }
+
+    void setVec3(std::string& varName, vec3& vec)
+    {
+        GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
+        glUniform3fv(u, 1, reinterpret_cast<GLfloat*>(&vec));
+    }
+
+    void setVec4(std::string& varName, vec4& vec)
+    {
+        GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
+        glUniform4fv(u, 1, reinterpret_cast<GLfloat*>(&vec));
+    }
+
+    void setMat2(std::string& varName, mat2& mat, bool transpose)
+    {
+        GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
+        glUniformMatrix2fv(u, 1, transpose, reinterpret_cast<GLfloat*>(&mat));
+    }
+
+    void setMat3(std::string& varName, mat3& mat, bool transpose)
+    {
+        GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
+        glUniformMatrix3fv(u, 1, transpose, reinterpret_cast<GLfloat*>(&mat));
+    }
+
+    void setMat4(std::string& varName, mat4& mat, bool transpose)
+    {
+        GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
+        glUniformMatrix4fv(u, 1, transpose, reinterpret_cast<GLfloat*>(&mat));
     }
 
     unsigned int shaderProgramID;
