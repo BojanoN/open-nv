@@ -1,5 +1,6 @@
 #include "nifdata.hpp"
-#include "main/NiObject.hpp"
+
+
 
 NifData::NifData(const char* filePath) {
 
@@ -33,9 +34,6 @@ NifData::NifData(const char* filePath) {
 
 
 NifData::~NifData() {
-	if(numBlocks > 50) {
-		int a = 5;
-	}
 
 	for(unsigned int i = 0; i < numBlocks; i++) {
 		delete blocks[i];

@@ -11,6 +11,9 @@ struct NiObject;
 #include <cstdlib>
 #include <stdexcept>
 #include <memory>
+#include <string>
+#include <cstdio>
+#include <cstdlib>
 
 class NifData {
 

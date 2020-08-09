@@ -3,11 +3,12 @@
 #include "nifdata.hpp"
 #include "nifreader.hpp"
 
+
 template <typename T>
 class NifPointer {
 
 private:
-	
+
 	union {
 		uint64_t index;
 		T* pointer;
@@ -15,6 +16,8 @@ private:
 
 	void resolve(T* actual);
 	uint64_t getIndex(); 
+
+	friend class NifData;
 
 public:
 
@@ -102,4 +105,8 @@ void NifPointerList<T>::resolve(NifData& data) {
 		}
 		this->pointers[i] = reinterpret_cast<T*>(data.getBlock(this->indices[i]));
 	}
+}
+
+uint64_t NifPointer::getIndex() {
+	return index;
 }
