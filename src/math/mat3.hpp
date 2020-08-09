@@ -31,7 +31,12 @@ struct mat3 {
         return mat[index];
     }
 
-    mat3 operator*(mat3& b)
+    const vec3& operator[](int index) const
+    {
+        return mat[index];
+    }
+
+    mat3 operator*(const mat3& b)
     {
 
         mat3 ret;
@@ -51,7 +56,7 @@ struct mat3 {
         return ret;
     }
 
-    vec3 operator*(vec3& b)
+    vec3 operator*(const vec3& b)
     {
         vec3 ret;
 

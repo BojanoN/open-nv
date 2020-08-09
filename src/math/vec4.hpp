@@ -11,6 +11,11 @@ struct vec4 {
         return arr[index];
     }
 
+    const double& operator[](int index) const
+    {
+        return arr[index];
+    }
+
     vec4()
     {
         arr[0] = 0.;
@@ -40,14 +45,14 @@ struct vec4 {
         printf("( %f %f %f %f )\n", arr[0], arr[1], arr[2], arr[3]);
     }
 
-    void operator=(vec3& vec)
+    void operator=(const vec3& vec)
     {
         arr[0] = vec[0];
         arr[1] = vec[1];
         arr[2] = vec[2];
     }
 
-    vec4 operator+(vec4& b)
+    vec4 operator+(const vec4& b)
     {
         vec4 ret;
 
@@ -70,7 +75,7 @@ struct vec4 {
 
         return ret;
     }
-    vec4 operator-(vec4& b)
+    vec4 operator-(const vec4& b)
     {
         vec4 ret;
 
@@ -93,7 +98,7 @@ struct vec4 {
 
         return ret;
     }
-    vec4 operator*(vec4& b)
+    vec4 operator*(const vec4& b)
     {
         vec4 ret;
 
@@ -117,7 +122,7 @@ struct vec4 {
         return ret;
     }
 
-    vec4 operator/(vec4& b)
+    vec4 operator/(const vec4& b)
     {
         vec4 ret;
 
@@ -140,7 +145,7 @@ struct vec4 {
         return ret;
     }
 
-    void operator+=(vec4& b)
+    void operator+=(const vec4& b)
     {
 
         arr[0] += b[0];
@@ -158,7 +163,7 @@ struct vec4 {
         arr[3] += val;
     }
 
-    void operator-=(vec4& b)
+    void operator-=(const vec4& b)
     {
         arr[0] -= b[0];
         arr[1] -= b[1];
@@ -174,7 +179,7 @@ struct vec4 {
         arr[3] -= val;
     }
 
-    void operator*=(vec4& b)
+    void operator*=(const vec4& b)
     {
         arr[0] *= b[0];
         arr[1] *= b[1];
@@ -190,7 +195,7 @@ struct vec4 {
         arr[3] *= val;
     }
 
-    void operator/=(vec4& b)
+    void operator/=(const vec4& b)
     {
         arr[0] /= b[0];
         arr[1] /= b[1];
@@ -207,7 +212,7 @@ struct vec4 {
         arr[3] /= val;
     }
 
-    double dot(vec4& b)
+    double dot(const vec4& b)
     {
         return arr[0] * b[0] + arr[1] * b[1] + arr[2] * b[2] + arr[3] * b[3];
     }
@@ -226,7 +231,19 @@ struct vec4 {
         arr[3] /= len;
     }
 
-    void operator-()
+    vec4 operator-()
+    {
+        vec4 ret;
+
+        ret[0] = -arr[0];
+        ret[1] = -arr[1];
+        ret[2] = -arr[2];
+        ret[3] = -arr[3];
+
+        return ret;
+    }
+
+    void negate()
     {
         arr[0] = -arr[0];
         arr[1] = -arr[1];

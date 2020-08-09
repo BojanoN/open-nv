@@ -66,7 +66,7 @@ inline mat4 lookat_mat(vec3& eye, vec3& center, vec3& up)
 
     s.normalize();
     u = s.cross(F);
-    -F;
+    F.negate();
 
     mat[1] = F;
     mat[2] = u;

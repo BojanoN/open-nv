@@ -27,6 +27,11 @@ struct vec2 {
         return arr[index];
     }
 
+    const double& operator[](int index) const
+    {
+        return arr[index];
+    }
+
     void print()
     {
         printf("( %f %f )\n", arr[0], arr[1]);
@@ -169,7 +174,17 @@ struct vec2 {
         arr[1] /= len;
     }
 
-    void operator-()
+    vec2 operator-()
+    {
+        vec2 ret;
+
+        ret[0] = -arr[0];
+        ret[1] = -arr[1];
+
+        return ret;
+    }
+
+    void negate()
     {
         arr[0] = -arr[0];
         arr[1] = -arr[1];

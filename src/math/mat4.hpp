@@ -39,6 +39,11 @@ struct mat4 {
         return mat[index];
     }
 
+    const vec4& operator[](int index) const
+    {
+        return mat[index];
+    }
+
     void scale(double val)
     {
         mat[0][0] *= val;
@@ -59,7 +64,7 @@ struct mat4 {
         mat[3][3] *= val;
     }
 
-    mat4 operator*(mat4& b)
+    mat4 operator*(const mat4& b)
     {
         mat4 ret;
 
@@ -82,6 +87,18 @@ struct mat4 {
         ret[3][1] = mat[3][0] * b[0][1] + mat[3][1] * b[1][1] + mat[3][2] * b[2][1] + mat[3][3] * b[3][1];
         ret[3][2] = mat[3][0] * b[0][2] + mat[3][1] * b[1][2] + mat[3][2] * b[2][2] + mat[3][3] * b[3][2];
         ret[3][3] = mat[3][0] * b[0][3] + mat[3][1] * b[1][3] + mat[3][2] * b[2][3] + mat[3][3] * b[3][3];
+
+        return ret;
+    }
+
+    vec4 operator*(const vec4& b)
+    {
+        vec4 ret;
+
+        ret[0] = b[0] * mat[0][0] + b[1] * mat[1][0] + b[2] * mat[2][0] + b[3] * mat[3][0];
+        ret[1] = b[0] * mat[0][1] + b[1] * mat[1][1] + b[2] * mat[2][1] + b[3] * mat[3][1];
+        ret[2] = b[0] * mat[0][2] + b[1] * mat[1][2] + b[2] * mat[2][2] + b[3] * mat[3][2];
+        ret[3] = b[0] * mat[0][3] + b[1] * mat[1][3] + b[2] * mat[2][3] + b[3] * mat[3][3];
 
         return ret;
     }

@@ -10,6 +10,11 @@ struct vec3 {
         return arr[index];
     }
 
+    const double& operator[](int index) const
+    {
+        return arr[index];
+    }
+
     vec3()
     {
         arr[0] = 0.;
@@ -36,7 +41,7 @@ struct vec3 {
         printf("( %f %f %f )\n", arr[0], arr[1], arr[2]);
     }
 
-    vec3 operator+(vec3& b)
+    vec3 operator+(const vec3& b)
     {
         vec3 ret;
 
@@ -57,7 +62,7 @@ struct vec3 {
 
         return ret;
     }
-    vec3 operator-(vec3& b)
+    vec3 operator-(const vec3& b)
     {
         vec3 ret;
 
@@ -77,7 +82,7 @@ struct vec3 {
 
         return ret;
     }
-    vec3 operator*(vec3& b)
+    vec3 operator*(const vec3& b)
     {
         vec3 ret;
 
@@ -98,7 +103,7 @@ struct vec3 {
 
         return ret;
     }
-    vec3 operator/(vec3& b)
+    vec3 operator/(const vec3& b)
     {
         vec3 ret;
 
@@ -120,7 +125,7 @@ struct vec3 {
         return ret;
     }
 
-    void operator+=(vec3& b)
+    void operator+=(const vec3& b)
     {
 
         arr[0] += b[0];
@@ -135,7 +140,7 @@ struct vec3 {
         arr[1] += val;
         arr[2] += val;
     }
-    void operator-=(vec3& b)
+    void operator-=(const vec3& b)
     {
 
         arr[0] -= b[0];
@@ -150,7 +155,7 @@ struct vec3 {
         arr[2] -= val;
     }
 
-    void operator*=(vec3& b)
+    void operator*=(const vec3& b)
     {
 
         arr[0] *= b[0];
@@ -165,7 +170,7 @@ struct vec3 {
         arr[1] *= val;
         arr[2] *= val;
     }
-    void operator/=(vec3& b)
+    void operator/=(const vec3& b)
     {
 
         arr[0] /= b[0];
@@ -181,7 +186,7 @@ struct vec3 {
         arr[2] /= val;
     }
 
-    double dot(vec3& b)
+    double dot(const vec3& b)
     {
         return arr[0] * b[0] + arr[1] * b[1] + arr[2] * b[2];
     }
@@ -189,6 +194,11 @@ struct vec3 {
     double norm()
     {
         return sqrt(arr[0] * arr[0] + arr[1] * arr[1] + arr[2] * arr[2]);
+    }
+
+    double normSquared()
+    {
+        return arr[0] * arr[0] + arr[1] * arr[1] + arr[2] * arr[2];
     }
 
     void normalize()
@@ -199,7 +209,7 @@ struct vec3 {
         arr[2] /= len;
     }
 
-    vec3 cross(vec3& b)
+    vec3 cross(const vec3& b)
     {
         vec3 ret;
 
@@ -210,7 +220,18 @@ struct vec3 {
         return ret;
     }
 
-    void operator-()
+    vec3 operator-()
+    {
+        vec3 ret;
+
+        ret[0] = -arr[0];
+        ret[1] = -arr[1];
+        ret[2] = -arr[2];
+
+        return ret;
+    }
+
+    void negate()
     {
         arr[0] = -arr[0];
         arr[1] = -arr[1];
