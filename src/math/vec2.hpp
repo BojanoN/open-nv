@@ -1,77 +1,179 @@
 #pragma once
-#include "types.hpp"
 #include <math.h>
 #include <stdio.h>
 
-inline void vec2_init(double* in, vec2 vec)
-{
-    vec[0] = in[0];
-    vec[1] = in[1];
-}
-inline void vec2_print(vec2 vec)
-{
-    printf("( %f %f )\n", vec[0], vec[1]);
-}
-inline void vec2_add(vec2 a, vec2 b, vec2 dst)
-{
-    dst[0] = a[0] + b[0];
-    dst[1] = a[1] + b[1];
-}
-inline void vec2_addc(vec2 a, vec2 dst, double val)
-{
-    dst[0] = a[0] + val;
-    dst[1] = a[1] + val;
-}
-inline void vec2_sub(vec2 a, vec2 b, vec2 dst)
-{
-    dst[0] = a[0] - b[0];
-    dst[1] = a[1] - b[1];
-}
-inline void vec2_subc(vec2 a, vec2 dst, double val)
-{
-    dst[0] = a[0] - val;
-    dst[1] = a[1] - val;
-}
-inline void vec2_mul(vec2 a, vec2 b, vec2 dst)
-{
-    dst[0] = a[0] * b[0];
-    dst[1] = a[1] * b[1];
-}
-inline void vec2_mulc(vec2 a, vec2 dst, double val)
-{
-    dst[0] = a[0] * val;
-    dst[1] = a[1] * val;
-}
-inline void vec2_div(vec2 a, vec2 b, vec2 dst)
-{
-    dst[0] = a[0] / b[0];
-    dst[1] = a[1] / b[1];
-}
-inline void vec2_divc(vec2 a, vec2 dst, double val)
-{
-    dst[0] = a[0] / val;
-    dst[1] = a[1] / val;
-}
+struct vec2 {
 
-inline double vec2_dot(vec2 a, vec2 b)
-{
-    return a[0] * b[0] + a[1] * b[1];
-}
+    vec2()
+    {
+        arr[0] = 0.;
+        arr[1] = 0.;
+    }
 
-inline double vec2_norm(vec2 a)
-{
-    return sqrt(a[0] * a[0] + a[1] * a[1]);
-}
+    vec2(double in[2])
+    {
+        arr[0] = in[0];
+        arr[1] = in[1];
+    }
 
-inline void vec2_normalize(vec2 a)
-{
-    double norm = vec2_norm(a);
-    a[0] /= norm;
-    a[1] /= norm;
-}
+    vec2(double x, double y)
+    {
+        arr[0] = x;
+        arr[1] = y;
+    }
 
-inline void vec2_neg(vec2 a)
-{
-    a[0] = -a[0];
-    a[1] = -a[1];
-}
+    double& operator[](int index)
+    {
+        return arr[index];
+    }
+
+    void print()
+    {
+        printf("( %f %f )\n", arr[0], arr[1]);
+    }
+
+    vec2 operator+(vec2& b)
+    {
+        vec2 ret;
+        ret[0] = arr[0] + b[0];
+        ret[1] = arr[1] + b[1];
+
+        return ret;
+    }
+
+    vec2 operator+(double val)
+    {
+        vec2 ret;
+
+        ret[0] = arr[0] + val;
+        ret[1] = arr[1] + val;
+
+        return ret;
+    }
+
+    vec2 operator-(vec2& b)
+    {
+        vec2 ret;
+        ret[0] = arr[0] - b[0];
+        ret[1] = arr[1] - b[1];
+        return ret;
+    }
+
+    vec2 operator-(double val)
+    {
+        vec2 ret;
+        ret[0] = arr[0] - val;
+        ret[1] = arr[1] - val;
+        return ret;
+    }
+
+    void operator+=(vec2& b)
+    {
+        arr[0] += b[0];
+        arr[1] += b[1];
+    }
+
+    void operator+=(double val)
+    {
+        arr[0] += val;
+        arr[1] += val;
+    }
+
+    void operator-=(vec2& b)
+    {
+        arr[0] -= b[0];
+        arr[1] -= b[1];
+    }
+
+    void operator-=(double val)
+    {
+        arr[0] -= val;
+        arr[1] -= val;
+    }
+
+    vec2 operator*(vec2& b)
+    {
+        vec2 ret;
+
+        ret[0] = arr[0] * b[0];
+        ret[1] = arr[1] * b[1];
+
+        return ret;
+    }
+
+    vec2 operator*(double val)
+    {
+        vec2 ret;
+
+        ret[0] = arr[0] * val;
+        ret[1] = arr[1] * val;
+
+        return ret;
+    }
+
+    vec2 operator/(vec2& b)
+    {
+        vec2 ret;
+
+        ret[0] = arr[0] / b[0];
+        ret[1] = arr[1] / b[1];
+
+        return ret;
+    }
+
+    vec2 operator/(double val)
+    {
+        vec2 ret;
+
+        ret[0] = arr[0] / val;
+        ret[1] = arr[1] / val;
+
+        return ret;
+    }
+
+    void operator*=(vec2& b)
+    {
+        arr[0] *= b[0];
+        arr[1] *= b[1];
+    }
+    void operator*=(double val)
+    {
+        arr[0] *= val;
+        arr[1] *= val;
+    }
+    void operator/=(vec2& b)
+    {
+        arr[0] /= b[0];
+        arr[1] /= b[1];
+    }
+    void operator/=(double val)
+    {
+        arr[0] /= val;
+        arr[1] /= val;
+    }
+
+    double dot(vec2 b)
+    {
+        return arr[0] * b[0] + arr[1] * b[1];
+    }
+
+    double norm()
+    {
+        return sqrt(arr[0] * arr[0] + arr[1] * arr[1]);
+    }
+
+    void normalize()
+    {
+        double len = norm();
+        arr[0] /= len;
+        arr[1] /= len;
+    }
+
+    void operator-()
+    {
+        arr[0] = -arr[0];
+        arr[1] = -arr[1];
+    }
+
+    double arr[2];
+};

@@ -1,99 +1,221 @@
 #pragma once
 
-#include "types.hpp"
 #include <math.h>
 #include <stdio.h>
 
-inline void vec3_init(double* in, vec3 vec)
-{
-    vec[0] = in[0];
-    vec[1] = in[1];
-    vec[2] = in[2];
-}
+struct vec3 {
 
-#define vec3_copy(src, dst) vec3_init((src), (dst))
+    double& operator[](int index)
+    {
+        return arr[index];
+    }
 
-inline void vec3_print(vec3 vec)
-{
-    printf("( %f %f %f )\n", vec[0], vec[1], vec[2]);
-}
-inline void vec3_add(vec3 a, vec3 b, vec3 dst)
-{
-    dst[0] = a[0] + b[0];
-    dst[1] = a[1] + b[1];
-    dst[2] = a[2] + b[2];
-}
-inline void vec3_addc(vec3 a, vec3 dst, double val)
-{
-    dst[0] = a[0] + val;
-    dst[1] = a[1] + val;
-    dst[2] = a[2] + val;
-}
-inline void vec3_sub(vec3 a, vec3 b, vec3 dst)
-{
-    dst[0] = a[0] - b[0];
-    dst[1] = a[1] - b[1];
-    dst[2] = a[2] - b[2];
-}
-inline void vec3_subc(vec3 a, vec3 dst, double val)
-{
-    dst[0] = a[0] - val;
-    dst[1] = a[1] - val;
-    dst[2] = a[2] - val;
-}
-inline void vec3_mul(vec3 a, vec3 b, vec3 dst)
-{
-    dst[0] = a[0] * b[0];
-    dst[1] = a[1] * b[1];
-    dst[2] = a[2] * b[2];
-}
-inline void vec3_mulc(vec3 a, vec3 dst, double val)
-{
-    dst[0] = a[0] * val;
-    dst[1] = a[1] * val;
-    dst[2] = a[2] * val;
-}
-inline void vec3_div(vec3 a, vec3 b, vec3 dst)
-{
-    dst[0] = a[0] / b[0];
-    dst[1] = a[1] / b[1];
-    dst[2] = a[2] / b[2];
-}
-inline void vec3_divc(vec3 a, vec3 dst, double val)
-{
-    dst[0] = a[0] / val;
-    dst[1] = a[1] / val;
-    dst[2] = a[2] / val;
-}
+    vec3()
+    {
+        arr[0] = 0.;
+        arr[1] = 0.;
+        arr[2] = 0.;
+    }
 
-inline double vec3_dot(vec3 a, vec3 b)
-{
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
+    vec3(double in[3])
+    {
+        arr[0] = in[0];
+        arr[1] = in[1];
+        arr[2] = in[2];
+    }
 
-inline double vec3_norm(vec3 a)
-{
-    return sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-}
+    vec3(double x, double y, double z)
+    {
+        arr[0] = x;
+        arr[1] = y;
+        arr[2] = z;
+    }
 
-inline void vec3_normalize(vec3 a)
-{
-    double norm = vec3_norm(a);
-    a[0] /= norm;
-    a[1] /= norm;
-    a[2] /= norm;
-}
+    void vec3_print()
+    {
+        printf("( %f %f %f )\n", arr[0], arr[1], arr[2]);
+    }
 
-inline void vec3_cross(vec3 a, vec3 b, vec3 dst)
-{
-    dst[0] = a[1] * b[2] - b[1] * a[2];
-    dst[1] = a[2] * b[0] - b[2] * a[0];
-    dst[2] = a[0] * b[1] - b[0] * a[1];
-}
+    vec3 operator+(vec3& b)
+    {
+        vec3 ret;
 
-inline void vec3_neg(vec3 a)
-{
-    a[0] = -a[0];
-    a[1] = -a[1];
-    a[2] = -a[2];
-}
+        ret[0] = arr[0] + b[0];
+        ret[1] = arr[1] + b[1];
+        ret[2] = arr[2] + b[2];
+
+        return ret;
+    }
+
+    vec3 operator+(double val)
+    {
+        vec3 ret;
+
+        ret[0] = arr[0] + val;
+        ret[1] = arr[1] + val;
+        ret[2] = arr[2] + val;
+
+        return ret;
+    }
+    vec3 operator-(vec3& b)
+    {
+        vec3 ret;
+
+        ret[0] = arr[0] - b[0];
+        ret[1] = arr[1] - b[1];
+        ret[2] = arr[2] - b[2];
+
+        return ret;
+    }
+    vec3 operator-(double val)
+    {
+        vec3 ret;
+
+        ret[0] = arr[0] - val;
+        ret[1] = arr[1] - val;
+        ret[2] = arr[2] - val;
+
+        return ret;
+    }
+    vec3 operator*(vec3& b)
+    {
+        vec3 ret;
+
+        ret[0] = arr[0] * b[0];
+        ret[1] = arr[1] * b[1];
+        ret[2] = arr[2] * b[2];
+
+        return ret;
+    }
+
+    vec3 operator*(double val)
+    {
+        vec3 ret;
+
+        ret[0] = arr[0] * val;
+        ret[1] = arr[1] * val;
+        ret[2] = arr[2] * val;
+
+        return ret;
+    }
+    vec3 operator/(vec3& b)
+    {
+        vec3 ret;
+
+        ret[0] = arr[0] / b[0];
+        ret[1] = arr[1] / b[1];
+        ret[2] = arr[2] / b[2];
+
+        return ret;
+    }
+
+    vec3 operator/(double val)
+    {
+        vec3 ret;
+
+        ret[0] = arr[0] / val;
+        ret[1] = arr[1] / val;
+        ret[2] = arr[2] / val;
+
+        return ret;
+    }
+
+    void operator+=(vec3& b)
+    {
+
+        arr[0] += b[0];
+        arr[1] += b[1];
+        arr[2] += b[2];
+    }
+
+    void operator+=(double val)
+    {
+
+        arr[0] += val;
+        arr[1] += val;
+        arr[2] += val;
+    }
+    void operator-=(vec3& b)
+    {
+
+        arr[0] -= b[0];
+        arr[1] -= b[1];
+        arr[2] -= b[2];
+    }
+    void operator-=(double val)
+    {
+
+        arr[0] -= val;
+        arr[1] -= val;
+        arr[2] -= val;
+    }
+
+    void operator*=(vec3& b)
+    {
+
+        arr[0] *= b[0];
+        arr[1] *= b[1];
+        arr[2] *= b[2];
+    }
+
+    void operator*=(double val)
+    {
+
+        arr[0] *= val;
+        arr[1] *= val;
+        arr[2] *= val;
+    }
+    void operator/=(vec3& b)
+    {
+
+        arr[0] /= b[0];
+        arr[1] /= b[1];
+        arr[2] /= b[2];
+    }
+
+    void operator/=(double val)
+    {
+
+        arr[0] /= val;
+        arr[1] /= val;
+        arr[2] /= val;
+    }
+
+    double dot(vec3& b)
+    {
+        return arr[0] * b[0] + arr[1] * b[1] + arr[2] * b[2];
+    }
+
+    double norm()
+    {
+        return sqrt(arr[0] * arr[0] + arr[1] * arr[1] + arr[2] * arr[2]);
+    }
+
+    void normalize()
+    {
+        double len = norm();
+        arr[0] /= len;
+        arr[1] /= len;
+        arr[2] /= len;
+    }
+
+    vec3 cross(vec3& b)
+    {
+        vec3 ret;
+
+        ret[0] = arr[1] * b[2] - b[1] * arr[2];
+        ret[1] = arr[2] * b[0] - b[2] * arr[0];
+        ret[2] = arr[0] * b[1] - b[0] * arr[1];
+
+        return ret;
+    }
+
+    void operator-()
+    {
+        arr[0] = -arr[0];
+        arr[1] = -arr[1];
+        arr[2] = -arr[2];
+    }
+
+    double arr[3];
+};

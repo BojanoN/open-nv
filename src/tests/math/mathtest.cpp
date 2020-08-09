@@ -1,7 +1,6 @@
 #include "mat2.hpp"
 #include "mat3.hpp"
 #include "mat4.hpp"
-#include "types.hpp"
 #include "vec2.hpp"
 #include "vec3.hpp"
 #include "vec4.hpp"
@@ -19,10 +18,7 @@ int main(void)
     vec3 v3 = { 1., 12., 6. };
     vec4 v4 = { 13., 5., 9., 11. };
 
-    mat2 m2 = {
-        { 1., 2. },
-        { 7., 4. }
-    };
+    mat2 m2 = { { 1., 2. }, { 7., 4. } };
 
     mat2 m2inv = {
         { -2. / 5., 1. / 5. },
@@ -41,12 +37,10 @@ int main(void)
         { -13. / 28., -3. / 14, 1. / 4. }
     };
 
-    mat4 m4 = {
-        { 3., 2., 1., 9. },
+    mat4 m4 { { 3., 2., 1., 9. },
         { 4., 5., 6., 13. },
         { 9., 8., 11., 13. },
-        { 3., 1., 12., 1. }
-    };
+        { 3., 1., 12., 1. } };
 
     mat4 m4inv = {
         { 41. / 114., -8. / 19., 97. / 570., 7. / 285. },
@@ -55,17 +49,17 @@ int main(void)
         { 25. / 228., 3. / 38., -9. / 1140., 7. / 285. }
     };
 
-    ASSERT_EQUALS_DOUBLE(5., vec2_norm(v2));
-    ASSERT_EQUALS_DOUBLE(13.45362404707371, vec3_norm(v3));
-    ASSERT_EQUALS_DOUBLE(19.899748, vec4_norm(v4));
+    ASSERT_EQUALS_DOUBLE(5., v2.norm());
+    ASSERT_EQUALS_DOUBLE(13.45362404707371, v3.norm());
+    ASSERT_EQUALS_DOUBLE(19.899748, v4.norm());
 
-    ASSERT_EQUALS_DOUBLE(-10., mat2_det(m2));
-    ASSERT_EQUALS_DOUBLE(28., mat3_det(m3));
-    ASSERT_EQUALS_DOUBLE(1140., mat4_det(m4));
+    ASSERT_EQUALS_DOUBLE(-10., m2.determinant());
+    ASSERT_EQUALS_DOUBLE(28., m3.determinant());
+    ASSERT_EQUALS_DOUBLE(1140., m4.determinant());
 
-    mat2_inv(m2);
-    mat3_inv(m3);
-    mat4_inv(m4);
+    m2.invert();
+    m3.invert();
+    m4.invert();
 
     assert(mat2_equal(m2, m2inv));
     assert(mat3_equal(m3, m3inv));
