@@ -382,6 +382,9 @@ basic_types = {
 }
 
 
+ptr_types = ['Ptr', 'Ref', 'nif_ptr_t', 'nif_ref_t']
+
+
 string_format_ids = {
     'uint8_t' : '%u',
     'uint16_t' : '%u',
@@ -443,6 +446,7 @@ def process_enum_name(name):
 ENUM_TYPES = set()
 ENUM_PREFIXES = dict()
 BITFIELD_TYPES = set()
+#FLAG_TYPES = set()
 
 def get_enums(document, version, flags=False):
     generated_enums = '#pragma once\n\nnamespace NiEnums {\n'
@@ -573,7 +577,7 @@ def get_bitfields(document, version):
                 assign_op += '\t' + member_name + ' = static_cast<NiEnums::'+member_type+'>(value & ' + member_mask + ');\n'
             bitwise_and_op += '\t\tresult += ((' + member_name +' & (b >> '+member_pos+')) << ' + member_pos + ') & '+member_mask+';\n'
 
-        new_bitfield += '\n\n\tvoid load(FILE* file);\n'
+        new_bitfield += '\n\n\t'+name+'(NifReader* reader);\n'
         new_bitfield += '\tvoid print();\n'
         new_bitfield += '\t' + name + '& operator=(const ' + storage + '& value);\n'
         new_bitfield += '\t' + name + '& operator=(int value) { return operator=(static_cast<'+storage+'>(value)); }\n'
@@ -581,8 +585,8 @@ def get_bitfields(document, version):
         bitwise_and_op += '\treturn result;\n\t}\n'
         new_bitfield += bitwise_and_op
         new_bitfield += '};\n'
-        loader_func = 'void ' + name + '::load(FILE* file) {\n'
-        loader_func += '\tstd::fread(this, sizeof(' + storage + '), 1, file);\n}\n'
+        loader_func = name + '::'+name+'(NifReader* reader) {\n'
+        loader_func += '\treader.read(this, sizeof(' + storage + '), 1);\n}\n'
         print_func += '}\n'
         assign_op += 'return *this;\n}\n'
         new_bitfield += loader_func
@@ -676,15 +680,19 @@ def load_string_vector(field_name, field_type, array_size):
 
 def load_basic_vector(field_name, field_type, array_size):
     cur_type = 'NiEnums::'+field_type if field_type in ENUM_TYPES else field_type
-    loader_func = '\t' + field_name + '.reserve(' + array_size + ' * sizeof(' + cur_type + '));\n'
-    loader_func += '\tstd::fread(&' + field_name + '[0], sizeof(' + cur_type + '), ' + array_size + ', file);\n'
+    #loader_func = '\t' + field_name + '.reserve(' + array_size + ' * sizeof(' + cur_type + '));\n'
+    loader_func = '\t' + field_name + ' = new ' + cur_type + '[' + array_size + '];\n'
+    #loader_func += '\tstd::fread(&' + field_name + '[0], sizeof(' + cur_type + '), ' + array_size + ', file);\n'
+    loader_func += '\treader.read(' + field_name + ', sizeof(' + cur_type + '), ' + array_size + ');\n'
     return loader_func
 
-def load_vector(field_name, array_size):
-    loader_func = '\t' + field_name + '.reserve(' + array_size + ');\n'
+def load_vector(field_name, field_type, array_size):
+    loader_func = '\t' + field_name + ' = new ' + field_type + '[' + array_size + '];\n'
+    #loader_func = '\t' + field_name + '.reserve(' + array_size + ');\n'
     loader_func += '\tfor(unsigned int i = 0, limit = ' + array_size + '; i < limit; i++) {\n'
-    loader_func += '\t\t' + field_name + '.emplace_back();\n'
-    loader_func += '\t\t' + field_name + '.back().load(file);\n'
+    #loader_func += '\t\t' + field_name + '.emplace_back();\n'
+    #loader_func += '\t\t' + field_name + '.back().load(file);\n'
+    loader_func += '\t\t' + field_name + '[i] = new ' + field_type + '(reader);\n' 
     loader_func += '\t}\n'
     return loader_func
 
@@ -693,11 +701,13 @@ def load_array(field_name, field_type, array_size, field):
     new_compound = ''
     loader_func = ''
     print_func = ''
+    destr_func = ''
     if array_size.isdecimal():
         actual_size = int(array_size)
         new_compound += '\t' + field_type + ' ' + field_name + '[' + str(actual_size) + '];\n'
         if field_type in basic_types.values():
-            loader_func += '\tstd::fread(&' + field_name + ', sizeof(' + field_type + '), ' + str(actual_size) + ', file);\n'
+            #loader_func += '\tstd::fread(&' + field_name + ', sizeof(' + field_type + '), ' + str(actual_size) + ', file);\n'
+            loader_func += '\treader.fread(&' + field_name + ', sizeof(' + field_type + '), ' + str(actual_size) + ');\n'
         else:
             loader_func += load_fixed_vector(field_name, array_size)
         print_func += print_basic_vector(field_name, field_type, array_size, is_fixed=True)
@@ -709,7 +719,9 @@ def load_array(field_name, field_type, array_size, field):
         elif field_type in ENUM_TYPES:
             new_compound += '\tstd::vector<NiEnums::' + field_type + '> ' + field_name + ';\n'
         else:
-            new_compound += '\tstd::vector<' + field_type + '> ' + field_name + ';\n'
+            #new_compound += '\tstd::vector<' + field_type + '> ' + field_name + ';\n'
+            new_compound += '\t' + field_type + '* ' + field_name + ';\n'
+            destr_func += '\t delete[] ' + field_name + ';\n'
 
         #array_size = ''.join(array_size.split(sep=' '))
         if field_type in basic_types.values() or field_type in ENUM_TYPES:
@@ -717,9 +729,9 @@ def load_array(field_name, field_type, array_size, field):
         elif field_type in string_types:
             loader_func += load_string_vector(field_name, field_type, array_size)
         else:
-            loader_func += load_vector(field_name, array_size)
+            loader_func += load_vector(field_name, field_type, array_size)
         print_func += print_basic_vector(field_name, field_type, array_size, is_fixed=False)
-    return new_compound, loader_func, print_func
+    return new_compound, loader_func, print_func, destr_func
 
 def get_prefix(enum_type):
     if enum_type not in ENUM_TYPES:
@@ -730,12 +742,15 @@ def load_single(field_name, field_type, field):
     new_compound = ''
     loader_func = ''
     print_func = ''
-    if field_type in string_types:
-        new_compound += '\tstd::string ' + field_name
+    destr_func = ''
+    if field_type in string_types or field_type == 'string':
+        new_compound += '\tchar* ' + field_name
     elif field_type in ENUM_TYPES:
         new_compound += '\tNiEnums::' + field_type + ' ' + field_name
-    else:
+    elif field_type in basic_types.values():
         new_compound += '\t' + field_type + ' ' + field_name
+    else:
+        new_compound += '\t' + field_type + '* ' + field_name
     if field.hasAttribute('default'):
         if field_type in ENUM_TYPES:
             default_value = field.getAttribute('default')
@@ -755,17 +770,23 @@ def load_single(field_name, field_type, field):
     if field_type == 'std::string':
         loader_func += '\tloadString(file, ' + field_name + ');\n'
     elif field_type == 'SizedString':
-        loader_func += '\tloadSizedString(file, ' + field_name + ');\n'
+        loader_func += '\treader.loadSizedString(' + field_name + ');\n'
     elif field_type == 'SizedString16':
         loader_func += '\tloadSizedString16(file, ' + field_name + ');\n'
     elif field_type == 'ExportString':
         loader_func += '\tloadExportString(file, ' + field_name + ');\n'
     elif field_type in basic_types.values() or field_type == 'T':
-        loader_func += '\tstd::fread(&' + field_name + ', sizeof(' + field_type + '), 1, file);\n'
+        #loader_func += '\tstd::fread(&' + field_name + ', sizeof(' + field_type + '), 1, file);\n'
+        loader_func += '\treader.read(&' + field_name + ', sizeof(' + field_type + '), 1);\n'
     elif field_type in ENUM_TYPES:
-        loader_func += '\tstd::fread(&' + field_name + ', sizeof(NiEnums::' + field_type + '), 1, file);\n'
+        #loader_func += '\tstd::fread(&' + field_name + ', sizeof(NiEnums::' + field_type + '), 1, file);\n'
+        loader_func += '\treader.read(&' + field_name + ', sizeof(NiEnums::' + field_type + '), 1);\n'
+    elif field_type == 'string':
+        loader_func += '\treader.readIndexedString(' + field_name + ');\n'
     else:
-        loader_func += '\t' + field_name + '.load(file);\n'
+        #loader_func += '\t' + field_name + '.load(file);\n'
+        loader_func += '\t' + field_name + ' = new ' + field_type + '(reader);\n'
+        destr_func += '\tdelete ' + field_name + ';\n' 
 
     if field_type in basic_types.values():
         print_func += '\tstd::printf("' + field_name + ': ' + string_format_ids[field_type] + '\\n", ' + field_name + ');\n'
@@ -780,8 +801,18 @@ def load_single(field_name, field_type, field):
         print_func += '\tstd::printf("' + field_name + ':\\n");\n'
         print_func += '\t' + field_name + '.print();\n'
 
-    return new_compound, loader_func, print_func
+    return new_compound, loader_func, print_func, destr_func
 
+
+def load_single_ptr(field_name, field_type, target_type, field):
+    new_compound = ''
+    loader_func = ''
+    print_func = ''
+    destr_func = ''
+    new_compound += '\tNifPointer<' + target_type + '> ' + field_name + ';\n'
+    loader_func += 'uint32_t ' + field_name + 'Index;\n'
+    loader_func += 'reader.read(&' + field_name + 'Index, sizeof(uint32_t), 1);\n'
+    return new_compound, loader_func, print_func, destr_func
 
 def is_correct_version(field):
     if field.hasAttribute('ver1'):
@@ -833,11 +864,15 @@ def get_compounds(document, version):
             new_compound += '\n*/\n'
         if template:
             new_compound += 'template <typename T>\n'
-            loader_func = 'template <typename T>\nvoid ' + name + '<T>::load(FILE* file) {\n'
+            #loader_func = 'template <typename T>\nvoid ' + name + '<T>::load(FILE* file) {\n'
+            loader_func = 'template <typename T>\n' + name + '<T>::' + name + '(NifReader* reader) {\n'
             print_func = 'template <typename T>\nvoid ' + name + '<T>::print() {\n'
+            destr_func = 'template <typename T>\n' + name + '<T>::~'+name+'() {\n'
         else:
-            loader_func = 'void ' + name + '::load(FILE* file) {\n'
+            #loader_func = 'void ' + name + '::load(FILE* file) {\n'
+            loader_func = name + '::' + name + '(NifReader* reader) {\n'
             print_func = 'void ' + name + '::print() {\n'
+            destr_func = name + '::~'+name+'() {\n'
         new_compound += 'struct ' + name + ' {\n'
         
         
@@ -860,6 +895,8 @@ def get_compounds(document, version):
                 field_desc = field.firstChild.nodeValue.strip()
             else:
                 field_desc = None
+
+            
             if field.hasAttribute('cond'):
                 new_compound += '\t// Condition: ' + field.getAttribute('cond') + '\n'
             if field_type == 'nif_ptr_t':
@@ -876,30 +913,54 @@ def get_compounds(document, version):
                 for part in desc_parts:
                     new_compound += '\t// ' + part + '\n'
 
+            condition = ''
             if field.hasAttribute('cond'):
                 loader_func += '\tif (' + str(Expression(field.getAttribute('cond'), name_filter=process_name)) + ') {\n'
                 print_func += '\tif (' + str(Expression(field.getAttribute('cond'), name_filter=process_name)) + ') {\n'
+                condition +=  '\tif(' + field.getAttribute('cond')
+                if field.hasAttribute('arr1'):
+                    array_size = process_array_size(field.getAttribute('arr1'))
+                    destr_func += process_name(condition)  + ' && ' + array_size + ' != 0) {\n'
+                elif field_type not in basic_types.values():
+                    destr_func += process_name(condition) + ') {\n'
 
             if field.hasAttribute('arr1'):
                 array_size = process_array_size(field.getAttribute('arr1'))
-                compound_ext, loader_ext, print_ext = load_array(field_name, field_type, array_size, field)
+                if len(condition) == 0:
+                    loader_func += '\tif(' + array_size + ' != 0) {\n'
+                    destr_func += '\tif(' + array_size + ' != 0) {\n'
+                compound_ext, loader_ext, print_ext, destr_ext = load_array(field_name, field_type, array_size, field)
 
             else:
-                compound_ext, loader_ext, print_ext = load_single(field_name, field_type, field)
+                if field_type in ptr_types:
+                    compound_ext, loader_ext, print_ext, destr_ext =  load_single_ptr(field_name, field_type, field.getAttribute('template'), field)
+                else:
+                    compound_ext, loader_ext, print_ext, destr_ext = load_single(field_name, field_type, field)
+
             new_compound += compound_ext
             loader_func += loader_ext
+            if len(condition) == 0 and field.hasAttribute('arr1'):
+                    loader_func += '\t}\n'
             print_func += print_ext
+            destr_func += destr_ext
+            if len(condition) == 0 and field.hasAttribute('arr1'):
+                    destr_func += '\t}\n'
+
             if field.hasAttribute('cond'):
                 loader_func += '\t}\n'
                 print_func += '\t}\n'
+                if field.hasAttribute('arr1') or field_type not in basic_types.values():
+                    destr_func += '\t}\n'
 
-        new_compound += '\n\n\tvoid load(FILE* file);\n'
+        new_compound += '\n\n\t'+name+'(NifData* container);\n'
         new_compound += '\tvoid print();\n'
         new_compound += '};\n\n'
         loader_func += '}\n'
+        destr_func += '}\n'
         print_func += '}\n\n'
         new_compound += loader_func
         new_compound += print_func
+        new_compound += destr_func
         generated_compounds += new_compound
     return generated_compounds
 
@@ -968,15 +1029,17 @@ def get_objects(document, version, modules):
         name = niobject.getAttribute('name')
         new_object += 'struct ' + name
 
-        loader_func = 'void ' + name + '::load(FILE* file) {\n'
+        loader_func = name + '::'+name+'(NifReader* reader)'
+        destr_func = name + '::~'+name+'() {\n'
         print_func = 'void ' + name + '::print() {\n'
         if niobject.hasAttribute('inherit'):
             parent = niobject.getAttribute('inherit')
             new_object += ' : public ' + parent + ' {\n'
-            loader_func += '\t' + parent + '::load(file);\n'
+            loader_func += ' : ' + parent + '(reader) {\n'
             print_func += '\t' + parent + '::print();\n\tstd::printf("' + name + ':--------------\\n");\n'
         else:
             new_object += ' {\n'
+            loader_func += ' {\n'
 
         fields = niobject.getElementsByTagName('field')
         for field in fields:
@@ -998,8 +1061,18 @@ def get_objects(document, version, modules):
                 field_desc = field.firstChild.nodeValue.strip()
             else:
                 field_desc = None
+
+            condition = ''
             if field.hasAttribute('cond'):
                 new_object += '\t// Condition: ' + field.getAttribute('cond') + '\n'
+                condition +=  '\tif(' + field.getAttribute('cond')
+                loader_func += process_name(condition) + ') {\n'
+                if field.hasAttribute('arr1'):
+                    array_size = process_array_size(field.getAttribute('arr1'))
+                    destr_func += process_name(condition)  + ' && ' + array_size + ' != 0' + ') {\n'
+                elif field_type not in basic_types.values():
+                    destr_func += process_name(condition) + ') {\n'
+
             if field.hasAttribute('range'):
                 new_object += '\t// Range: ' + field.getAttribute('range') + '\n'
 
@@ -1011,28 +1084,55 @@ def get_objects(document, version, modules):
 
             if field.hasAttribute('arr1'):
                 array_size = process_array_size(field.getAttribute('arr1'))
-                object_ext, loader_ext, print_ext = load_array(field_name, field_type, array_size, field)
+                if len(condition) == 0:
+                    loader_func += '\tif(' + array_size + ' != 0) {\n'
+                    destr_func += '\tif(' + array_size + ' != 0) {\n'
+                object_ext, loader_ext, print_ext, destr_ext = load_array(field_name, field_type, array_size, field)
+
             else:
-                object_ext, loader_ext, print_ext = load_single(field_name, field_type, field)
+                if field_type in ptr_types:
+                    compound_ext, loader_ext, print_ext, destr_ext =  load_single_ptr(field_name, field_type, field.getAttribute('template'), field)
+                else:
+                    object_ext, loader_ext, print_ext, destr_ext = load_single(field_name, field_type, field)
 
             new_object += object_ext
             loader_func += loader_ext
+            if len(condition) == 0 and field.hasAttribute('arr1'):
+                    loader_func += '\t}\n'
             print_func += print_ext
+            destr_func += destr_ext
+            if len(condition) == 0 and field.hasAttribute('arr1'):
+                    destr_func += '\t}\n'
 
-        new_object += '\n\n\tvoid load(FILE* file);\n'
-        new_object += '\tstatic NiObject* create(FILE* file){\n'
-        new_object += '\t\t' + name + '* objPtr = new ' + name + ';\n'
-        new_object += '\t\tobjPtr->load(file);\n\t\treturn objPtr;\n\t}\n'
+            if field.hasAttribute('cond'):
+                loader_func += '\t}\n'
+                if field.hasAttribute('arr1') or field_type not in basic_types.values():
+                    destr_func += '\t}\n'
+
+        new_object += '\n\n\t'+name+'(NifData* reader);\n'
+        new_object += '\n\n\tvirtual ~'+name+'();\n'
+        new_object += '\tstatic NiObject* create(NifReader* reader);\n'
+
+        creator_func = 'NiObject* ' + name + '::create(NifReader* reader) {\n'
+        creator_func += '\treturn new ' + name + '(reader);\n\t}\n'
+        #creator_func += '\t' + name + '* objPtr = new ' + name + ';\n'
+        #creator_func += '\tobjPtr->load(file);\n\treturn objPtr;\n}\n'
         global factory_factory
         factory_factory += '\t\tm["' + name + '"] = &' + name + '::create;\n'
         new_object += '\tvirtual void print();\n'
         new_object += '};\n\n'
         loader_func += '}\n'
+        destr_func += '}\n'
         print_func += '\tstd::printf("---------------\\n");\n'
         print_func += '}\n\n'
-        new_object += loader_func
-        new_object += print_func
-        modules[module_name] += new_object
+
+        cpp_data = loader_func + creator_func + print_func + destr_func
+
+        #new_object += loader_func
+        #new_object += destr_func
+        #new_object += creator_func
+        #new_object += print_func
+        modules[module_name].append((name, new_object, cpp_data))
     return modules
 
 includes_header = """
@@ -1053,10 +1153,11 @@ def get_modules(document):
     modules = dict()
     for module in document.getElementsByTagName('module'):
         name = module.getAttribute('name')
-        modules[name] = includes_header
-        if module.hasAttribute('depends'):
-            for dependency in module.getAttribute('depends').split(' '):
-                modules[name] += '#include "' + dependency + '.hpp"\n'
+        #modules[name] = includes_header
+        #if module.hasAttribute('depends'):
+        #    for dependency in module.getAttribute('depends').split(' '):
+        #        modules[name] += '#include "' + dependency + '.hpp"\n'
+        modules[name] = list()
     return modules
 
 
@@ -1115,9 +1216,17 @@ if __name__ == '__main__':
 
         modules = get_modules(document)
         objects = get_objects(document, version, modules)
-        for module, objects in objects.items():
-            with open(str(version.id) + '/' + module + '.hpp', 'w', encoding='utf-8') as f:
-                f.write(objects)    
+        for module, objs in objects.items():
+            if not os.path.exists(str(version.id) + '/' + module):
+                os.mkdir(str(version.id) + '/' + module )
+            for obj in objs:
+                with open(str(version.id) + '/' + module + '/' + obj[0] + '.hpp', 'w', encoding='utf-8') as f:
+                    f.write(obj[1])
+                with open(str(version.id) + '/' + module + '/' + obj[0] + '.cpp', 'w', encoding='utf-8') as f:
+                    f.write(obj[2])
+                
+            #with open(str(version.id) + '/' + module + '.hpp', 'w', encoding='utf-8') as f:
+            #    f.write(objects)    
 
         with open(str(version.id) + '/factory.hpp', 'w', encoding='utf-8') as f:
             f.write(factory_prefix+factory_factory+factory_suffix)
