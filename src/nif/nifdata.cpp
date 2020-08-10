@@ -14,6 +14,9 @@ NifData::NifData(const char* filePath) {
 	for(unsigned int i = 0; i < numBlocks; i++) {
 		reader.readBlock(i, blocks[i]);
 	}
+	for(unsigned int i = 0; i < numBlocks; i++) {
+		blocks[i]->resolvePointers(*this);
+	}
 }
 
 

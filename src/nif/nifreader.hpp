@@ -37,6 +37,4 @@ public:
 	inline uint32_t getNumBlocks() {
 		return numBlocks;
 	}
-
-
 };
