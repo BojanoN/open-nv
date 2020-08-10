@@ -14,4 +14,5 @@ public:
 	~NifData();
 	//char* getString(int index);
 	//int readData(uint32_t size);
+	NiObject* getBlock(uint32_t index) { return blocks[index]; }
 };

@@ -446,6 +446,7 @@ def process_enum_name(name):
 ENUM_TYPES = set()
 ENUM_PREFIXES = dict()
 BITFIELD_TYPES = set()
+BITFIELD_STORAGE = dict()
 #FLAG_TYPES = set()
 
 def get_enums(document, version, flags=False):
@@ -536,6 +537,7 @@ def get_bitfields(document, version):
         storage = basic_types[bitfield.getAttribute('storage')]
 
         BITFIELD_TYPES.add(name)
+        BITFIELD_STORAGE[name] = storage
         new_bitfield = ''
         new_bitfield += '/*\n' + description + '\nStorage type: ' + storage + '\n*/\n'
         new_bitfield += 'struct ' + name + ' {\n'
@@ -577,7 +579,7 @@ def get_bitfields(document, version):
                 assign_op += '\t' + member_name + ' = static_cast<NiEnums::'+member_type+'>(value & ' + member_mask + ');\n'
             bitwise_and_op += '\t\tresult += ((' + member_name +' & (b >> '+member_pos+')) << ' + member_pos + ') & '+member_mask+';\n'
 
-        new_bitfield += '\n\n\t'+name+'(NifReader* reader);\n'
+        new_bitfield += '\n\n\t'+name+'(NifReader& reader);\n'
         new_bitfield += '\tvoid print();\n'
         new_bitfield += '\t' + name + '& operator=(const ' + storage + '& value);\n'
         new_bitfield += '\t' + name + '& operator=(int value) { return operator=(static_cast<'+storage+'>(value)); }\n'
@@ -585,7 +587,7 @@ def get_bitfields(document, version):
         bitwise_and_op += '\treturn result;\n\t}\n'
         new_bitfield += bitwise_and_op
         new_bitfield += '};\n'
-        loader_func = name + '::'+name+'(NifReader* reader) {\n'
+        loader_func = name + '::'+name+'(NifReader& reader) {\n'
         loader_func += '\treader.read(this, sizeof(' + storage + '), 1);\n}\n'
         print_func += '}\n'
         assign_op += 'return *this;\n}\n'
@@ -689,12 +691,15 @@ def load_basic_vector(field_name, field_type, array_size):
 def load_vector(field_name, field_type, array_size):
     loader_func = '\t' + field_name + ' = new ' + field_type + '[' + array_size + '];\n'
     #loader_func = '\t' + field_name + '.reserve(' + array_size + ');\n'
-    loader_func += '\tfor(unsigned int i = 0, limit = ' + array_size + '; i < limit; i++) {\n'
+    loop_ext = '\tfor(unsigned int i = 0, limit = ' + array_size + '; i < limit; i++) {\n'
+    loader_func += loop_ext
+    resolve_func = loop_ext
     #loader_func += '\t\t' + field_name + '.emplace_back();\n'
     #loader_func += '\t\t' + field_name + '.back().load(file);\n'
     loader_func += '\t\t' + field_name + '[i] = new ' + field_type + '(reader);\n' 
     loader_func += '\t}\n'
-    return loader_func
+    resolve_func += '\t\t' + field_name + '[i]->resolvePointers(data);\n\t}\n'
+    return loader_func, resolve_func
 
 
 def load_array(field_name, field_type, array_size, field):
@@ -702,6 +707,7 @@ def load_array(field_name, field_type, array_size, field):
     loader_func = ''
     print_func = ''
     destr_func = ''
+    resolve_func = ''
     if array_size.isdecimal():
         actual_size = int(array_size)
         new_compound += '\t' + field_type + ' ' + field_name + '[' + str(actual_size) + '];\n'
@@ -729,9 +735,11 @@ def load_array(field_name, field_type, array_size, field):
         elif field_type in string_types:
             loader_func += load_string_vector(field_name, field_type, array_size)
         else:
-            loader_func += load_vector(field_name, field_type, array_size)
+            loader_ext, resolve_ext = load_vector(field_name, field_type, array_size)
+            loader_func += loader_ext
+            resolve_func += resolve_ext
         print_func += print_basic_vector(field_name, field_type, array_size, is_fixed=False)
-    return new_compound, loader_func, print_func, destr_func
+    return new_compound, loader_func, print_func, destr_func, resolve_func
 
 def get_prefix(enum_type):
     if enum_type not in ENUM_TYPES:
@@ -743,11 +751,12 @@ def load_single(field_name, field_type, field):
     loader_func = ''
     print_func = ''
     destr_func = ''
+    resolve_func = ''
     if field_type in string_types or field_type == 'string':
         new_compound += '\tchar* ' + field_name
     elif field_type in ENUM_TYPES:
         new_compound += '\tNiEnums::' + field_type + ' ' + field_name
-    elif field_type in basic_types.values():
+    elif field_type in basic_types.values() or field_type in BITFIELD_TYPES:
         new_compound += '\t' + field_type + ' ' + field_name
     else:
         new_compound += '\t' + field_type + '* ' + field_name
@@ -781,11 +790,14 @@ def load_single(field_name, field_type, field):
     elif field_type in ENUM_TYPES:
         #loader_func += '\tstd::fread(&' + field_name + ', sizeof(NiEnums::' + field_type + '), 1, file);\n'
         loader_func += '\treader.read(&' + field_name + ', sizeof(NiEnums::' + field_type + '), 1);\n'
+    elif field_type in BITFIELD_TYPES:
+        loader_func += '\treader.read(&' + field_name + ', sizeof(' + BITFIELD_STORAGE[field_type] + '), 1);\n'
     elif field_type == 'string':
         loader_func += '\treader.readIndexedString(' + field_name + ');\n'
     else:
         #loader_func += '\t' + field_name + '.load(file);\n'
         loader_func += '\t' + field_name + ' = new ' + field_type + '(reader);\n'
+        resolve_func += '\t' + field_name + '->resolvePointers(data);\n'
         destr_func += '\tdelete ' + field_name + ';\n' 
 
     if field_type in basic_types.values():
@@ -801,7 +813,7 @@ def load_single(field_name, field_type, field):
         print_func += '\tstd::printf("' + field_name + ':\\n");\n'
         print_func += '\t' + field_name + '.print();\n'
 
-    return new_compound, loader_func, print_func, destr_func
+    return new_compound, loader_func, print_func, destr_func, resolve_func
 
 
 def load_single_ptr(field_name, field_type, target_type, field):
@@ -810,9 +822,28 @@ def load_single_ptr(field_name, field_type, target_type, field):
     print_func = ''
     destr_func = ''
     new_compound += '\tNifPointer<' + target_type + '> ' + field_name + ';\n'
-    loader_func += 'uint32_t ' + field_name + 'Index;\n'
-    loader_func += 'reader.read(&' + field_name + 'Index, sizeof(uint32_t), 1);\n'
-    return new_compound, loader_func, print_func, destr_func
+    loader_func += '\tuint32_t ' + field_name + 'Index;\n'
+    loader_func += '\treader.read(&' + field_name + 'Index, sizeof(uint32_t), 1);\n'
+    loader_func += '\t' + field_name + ' = new NifPointer<'+target_type+'>(' + field_name + 'Index);\n'
+    resolve_func = '\t' + field_name + '->resolve(data);\n'
+    return new_compound, loader_func, print_func, destr_func, resolve_func
+
+def load_ptr_array(field_name, field_type, target_type, array_size, field):
+    new_compound = ''
+    loader_func = ''
+    print_func = ''
+    destr_func = ''
+    new_compound += '\tNifPointer<' + target_type + '>* ' + field_name + ';\n'
+    loader_func += '\t' + field_name + ' = new NifPointer<' + target_type + '>[' + array_size + '];\n'
+    loader_func += '\tuint32_t* ' + field_name + 'Indices = new uint32_t[' + array_size + '];\n'
+    loader_func += '\treader.read(' + field_name + 'Indices, sizeof(uint32_t), ' + array_size + ');\n'
+    loader_func += '\tfor(unsigned int i = 0; i < ' +array_size + '; i++) {\n '
+    loader_func += '\t\t' + field_name + '[i] = new NifPointer<'+target_type+'>(' + field_name + 'Indices[i]);\n\t}\n'
+    loader_func += '\tdelete[] ' + field_name + 'Indices;\n'
+
+    destr_func += '\tdelete[] ' + field_name + ';\n'
+    resolve_func = '\tfor(unsigned int i = 0; i < ' + array_size + '; i++) {\n\t' + field_name + '[i]->resolve(data);\n\t}\n'
+    return new_compound, loader_func, print_func, destr_func, resolve_func
 
 def is_correct_version(field):
     if field.hasAttribute('ver1'):
@@ -865,16 +896,17 @@ def get_compounds(document, version):
         if template:
             new_compound += 'template <typename T>\n'
             #loader_func = 'template <typename T>\nvoid ' + name + '<T>::load(FILE* file) {\n'
-            loader_func = 'template <typename T>\n' + name + '<T>::' + name + '(NifReader* reader) {\n'
+            loader_func = 'template <typename T>\n' + name + '<T>::' + name + '(NifReader& reader) {\n'
             print_func = 'template <typename T>\nvoid ' + name + '<T>::print() {\n'
             destr_func = 'template <typename T>\n' + name + '<T>::~'+name+'() {\n'
         else:
             #loader_func = 'void ' + name + '::load(FILE* file) {\n'
-            loader_func = name + '::' + name + '(NifReader* reader) {\n'
+            loader_func = name + '::' + name + '(NifReader& reader) {\n'
             print_func = 'void ' + name + '::print() {\n'
             destr_func = name + '::~'+name+'() {\n'
         new_compound += 'struct ' + name + ' {\n'
-        
+
+        resolve_func = 'void ' + name + '::resolvePointers(NifData& data) {\n'
         
 
         fields = compound.getElementsByTagName('field')
@@ -929,13 +961,16 @@ def get_compounds(document, version):
                 if len(condition) == 0:
                     loader_func += '\tif(' + array_size + ' != 0) {\n'
                     destr_func += '\tif(' + array_size + ' != 0) {\n'
-                compound_ext, loader_ext, print_ext, destr_ext = load_array(field_name, field_type, array_size, field)
+                if field_type in ptr_types:
+                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_ptr_array(field_name, field_type, field.getAttribute('template'), array_size, field)
+                else:
+                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_array(field_name, field_type, array_size, field)
 
             else:
                 if field_type in ptr_types:
-                    compound_ext, loader_ext, print_ext, destr_ext =  load_single_ptr(field_name, field_type, field.getAttribute('template'), field)
+                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext =  load_single_ptr(field_name, field_type, field.getAttribute('template'), field)
                 else:
-                    compound_ext, loader_ext, print_ext, destr_ext = load_single(field_name, field_type, field)
+                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_single(field_name, field_type, field)
 
             new_compound += compound_ext
             loader_func += loader_ext
@@ -946,21 +981,27 @@ def get_compounds(document, version):
             if len(condition) == 0 and field.hasAttribute('arr1'):
                     destr_func += '\t}\n'
 
+            resolve_func += resolve_ext
+
             if field.hasAttribute('cond'):
                 loader_func += '\t}\n'
                 print_func += '\t}\n'
                 if field.hasAttribute('arr1') or field_type not in basic_types.values():
                     destr_func += '\t}\n'
 
-        new_compound += '\n\n\t'+name+'(NifData* container);\n'
+        new_compound += '\n\n\t'+name+'(NifReader& reader);\n'
         new_compound += '\tvoid print();\n'
+        new_compound += '\tvoid resolvePointers(NifData& data);\n'
         new_compound += '};\n\n'
+        resolve_func += '}\n\n'
+
         loader_func += '}\n'
         destr_func += '}\n'
         print_func += '}\n\n'
         new_compound += loader_func
         new_compound += print_func
         new_compound += destr_func
+        new_compound += resolve_func
         generated_compounds += new_compound
     return generated_compounds
 
@@ -1029,9 +1070,10 @@ def get_objects(document, version, modules):
         name = niobject.getAttribute('name')
         new_object += 'struct ' + name
 
-        loader_func = name + '::'+name+'(NifReader* reader)'
+        loader_func = name + '::'+name+'(NifReader& reader)'
         destr_func = name + '::~'+name+'() {\n'
         print_func = 'void ' + name + '::print() {\n'
+        resolve_func = 'void ' + name + '::resolvePointers(NifData& data) {\n'
         if niobject.hasAttribute('inherit'):
             parent = niobject.getAttribute('inherit')
             new_object += ' : public ' + parent + ' {\n'
@@ -1042,6 +1084,10 @@ def get_objects(document, version, modules):
             loader_func += ' {\n'
 
         fields = niobject.getElementsByTagName('field')
+
+        contains_pointers = False
+        #resolve_func = ''
+
         for field in fields:
             if not is_correct_version(field):
                 continue
@@ -1087,13 +1133,17 @@ def get_objects(document, version, modules):
                 if len(condition) == 0:
                     loader_func += '\tif(' + array_size + ' != 0) {\n'
                     destr_func += '\tif(' + array_size + ' != 0) {\n'
-                object_ext, loader_ext, print_ext, destr_ext = load_array(field_name, field_type, array_size, field)
+
+                if field_type in ptr_types:
+                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_ptr_array(field_name, field_type, field.getAttribute('template'), array_size, field)
+                else:
+                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_array(field_name, field_type, array_size, field)
 
             else:
                 if field_type in ptr_types:
-                    compound_ext, loader_ext, print_ext, destr_ext =  load_single_ptr(field_name, field_type, field.getAttribute('template'), field)
+                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext =  load_single_ptr(field_name, field_type, field.getAttribute('template'), field)
                 else:
-                    object_ext, loader_ext, print_ext, destr_ext = load_single(field_name, field_type, field)
+                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_single(field_name, field_type, field)
 
             new_object += object_ext
             loader_func += loader_ext
@@ -1103,6 +1153,7 @@ def get_objects(document, version, modules):
             destr_func += destr_ext
             if len(condition) == 0 and field.hasAttribute('arr1'):
                     destr_func += '\t}\n'
+            resolve_func += resolve_ext
 
             if field.hasAttribute('cond'):
                 loader_func += '\t}\n'
@@ -1111,22 +1162,26 @@ def get_objects(document, version, modules):
 
         new_object += '\n\n\t'+name+'(NifData* reader);\n'
         new_object += '\n\n\tvirtual ~'+name+'();\n'
-        new_object += '\tstatic NiObject* create(NifReader* reader);\n'
+        new_object += '\tstatic NiObject* create(NifReader& reader);\n'
 
-        creator_func = 'NiObject* ' + name + '::create(NifReader* reader) {\n'
+        creator_func = 'NiObject* ' + name + '::create(NifReader& reader) {\n'
         creator_func += '\treturn new ' + name + '(reader);\n\t}\n'
         #creator_func += '\t' + name + '* objPtr = new ' + name + ';\n'
         #creator_func += '\tobjPtr->load(file);\n\treturn objPtr;\n}\n'
         global factory_factory
         factory_factory += '\t\tm["' + name + '"] = &' + name + '::create;\n'
         new_object += '\tvirtual void print();\n'
+
+        new_object += '\tvirtual void resolvePointers(NifData& data);\n'
+        resolve_func += '}\n\n'
+
         new_object += '};\n\n'
         loader_func += '}\n'
         destr_func += '}\n'
         print_func += '\tstd::printf("---------------\\n");\n'
         print_func += '}\n\n'
 
-        cpp_data = loader_func + creator_func + print_func + destr_func
+        cpp_data = loader_func + creator_func + print_func + destr_func + resolve_func
 
         #new_object += loader_func
         #new_object += destr_func
