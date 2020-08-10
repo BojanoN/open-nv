@@ -52,7 +52,7 @@ struct vec4 {
         arr[2] = vec[2];
     }
 
-    vec4 operator+(const vec4& b)
+    vec4 operator+(const vec4& b) const
     {
         vec4 ret;
 
@@ -64,7 +64,7 @@ struct vec4 {
         return ret;
     }
 
-    vec4 operator+(double val)
+    vec4 operator+(double val) const
     {
         vec4 ret;
 
@@ -75,7 +75,7 @@ struct vec4 {
 
         return ret;
     }
-    vec4 operator-(const vec4& b)
+    vec4 operator-(const vec4& b) const
     {
         vec4 ret;
 
@@ -87,7 +87,7 @@ struct vec4 {
         return ret;
     }
 
-    vec4 operator-(double val)
+    vec4 operator-(double val) const
     {
         vec4 ret;
 
@@ -98,7 +98,7 @@ struct vec4 {
 
         return ret;
     }
-    vec4 operator*(const vec4& b)
+    vec4 operator*(const vec4& b) const
     {
         vec4 ret;
 
@@ -110,7 +110,7 @@ struct vec4 {
         return ret;
     }
 
-    vec4 operator*(double val)
+    vec4 operator*(double val) const
     {
         vec4 ret;
 
@@ -122,7 +122,7 @@ struct vec4 {
         return ret;
     }
 
-    vec4 operator/(const vec4& b)
+    vec4 operator/(const vec4& b) const
     {
         vec4 ret;
 
@@ -133,7 +133,7 @@ struct vec4 {
 
         return ret;
     }
-    vec4 operator/(double val)
+    vec4 operator/(double val) const
     {
         vec4 ret;
 
@@ -212,12 +212,12 @@ struct vec4 {
         arr[3] /= val;
     }
 
-    double dot(const vec4& b)
+    double dot(const vec4& b) const
     {
         return arr[0] * b[0] + arr[1] * b[1] + arr[2] * b[2] + arr[3] * b[3];
     }
 
-    double norm()
+    double norm() const
     {
         return sqrt(arr[0] * arr[0] + arr[1] * arr[1] + arr[2] * arr[2] + arr[3] * arr[3]);
     }
@@ -229,6 +229,11 @@ struct vec4 {
         arr[1] /= len;
         arr[2] /= len;
         arr[3] /= len;
+    }
+
+    double cos(const vec4& vec) const
+    {
+        return this->dot(vec) / (this->norm() * vec.norm());
     }
 
     vec4 operator-()

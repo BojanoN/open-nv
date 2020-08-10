@@ -37,7 +37,7 @@ struct vec2 {
         printf("( %f %f )\n", arr[0], arr[1]);
     }
 
-    vec2 operator+(vec2& b)
+    vec2 operator+(const vec2& b) const
     {
         vec2 ret;
         ret[0] = arr[0] + b[0];
@@ -46,7 +46,7 @@ struct vec2 {
         return ret;
     }
 
-    vec2 operator+(double val)
+    vec2 operator+(double val) const
     {
         vec2 ret;
 
@@ -56,7 +56,7 @@ struct vec2 {
         return ret;
     }
 
-    vec2 operator-(vec2& b)
+    vec2 operator-(const vec2& b) const
     {
         vec2 ret;
         ret[0] = arr[0] - b[0];
@@ -64,7 +64,7 @@ struct vec2 {
         return ret;
     }
 
-    vec2 operator-(double val)
+    vec2 operator-(double val) const
     {
         vec2 ret;
         ret[0] = arr[0] - val;
@@ -96,7 +96,7 @@ struct vec2 {
         arr[1] -= val;
     }
 
-    vec2 operator*(vec2& b)
+    vec2 operator*(const vec2& b) const
     {
         vec2 ret;
 
@@ -106,7 +106,7 @@ struct vec2 {
         return ret;
     }
 
-    vec2 operator*(double val)
+    vec2 operator*(double val) const
     {
         vec2 ret;
 
@@ -116,7 +116,7 @@ struct vec2 {
         return ret;
     }
 
-    vec2 operator/(vec2& b)
+    vec2 operator/(const vec2& b) const
     {
         vec2 ret;
 
@@ -126,7 +126,7 @@ struct vec2 {
         return ret;
     }
 
-    vec2 operator/(double val)
+    vec2 operator/(double val) const
     {
         vec2 ret;
 
@@ -157,12 +157,12 @@ struct vec2 {
         arr[1] /= val;
     }
 
-    double dot(vec2 b)
+    double dot(const vec2& b) const
     {
         return arr[0] * b[0] + arr[1] * b[1];
     }
 
-    double norm()
+    double norm() const
     {
         return sqrt(arr[0] * arr[0] + arr[1] * arr[1]);
     }
@@ -172,6 +172,11 @@ struct vec2 {
         double len = norm();
         arr[0] /= len;
         arr[1] /= len;
+    }
+
+    double cos(const vec2& vec) const
+    {
+        return this->dot(vec) / (this->norm() * vec.norm());
     }
 
     vec2 operator-()

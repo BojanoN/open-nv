@@ -41,7 +41,7 @@ struct vec3 {
         printf("( %f %f %f )\n", arr[0], arr[1], arr[2]);
     }
 
-    vec3 operator+(const vec3& b)
+    vec3 operator+(const vec3& b) const
     {
         vec3 ret;
 
@@ -52,7 +52,7 @@ struct vec3 {
         return ret;
     }
 
-    vec3 operator+(double val)
+    vec3 operator+(double val) const
     {
         vec3 ret;
 
@@ -62,7 +62,7 @@ struct vec3 {
 
         return ret;
     }
-    vec3 operator-(const vec3& b)
+    vec3 operator-(const vec3& b) const
     {
         vec3 ret;
 
@@ -72,7 +72,7 @@ struct vec3 {
 
         return ret;
     }
-    vec3 operator-(double val)
+    vec3 operator-(double val) const
     {
         vec3 ret;
 
@@ -82,7 +82,7 @@ struct vec3 {
 
         return ret;
     }
-    vec3 operator*(const vec3& b)
+    vec3 operator*(const vec3& b) const
     {
         vec3 ret;
 
@@ -93,7 +93,7 @@ struct vec3 {
         return ret;
     }
 
-    vec3 operator*(double val)
+    vec3 operator*(double val) const
     {
         vec3 ret;
 
@@ -103,7 +103,7 @@ struct vec3 {
 
         return ret;
     }
-    vec3 operator/(const vec3& b)
+    vec3 operator/(const vec3& b) const
     {
         vec3 ret;
 
@@ -114,7 +114,7 @@ struct vec3 {
         return ret;
     }
 
-    vec3 operator/(double val)
+    vec3 operator/(double val) const
     {
         vec3 ret;
 
@@ -186,12 +186,12 @@ struct vec3 {
         arr[2] /= val;
     }
 
-    double dot(const vec3& b)
+    double dot(const vec3& b) const
     {
         return arr[0] * b[0] + arr[1] * b[1] + arr[2] * b[2];
     }
 
-    double norm()
+    double norm() const
     {
         return sqrt(arr[0] * arr[0] + arr[1] * arr[1] + arr[2] * arr[2]);
     }
@@ -209,7 +209,7 @@ struct vec3 {
         arr[2] /= len;
     }
 
-    vec3 cross(const vec3& b)
+    vec3 cross(const vec3& b) const
     {
         vec3 ret;
 
@@ -218,6 +218,11 @@ struct vec3 {
         ret[2] = arr[0] * b[1] - b[0] * arr[1];
 
         return ret;
+    }
+
+    double cos(const vec3& vec) const
+    {
+        return this->dot(vec) / (this->norm() * vec.norm());
     }
 
     vec3 operator-()
