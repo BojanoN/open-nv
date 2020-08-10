@@ -2,7 +2,6 @@
 #include "nifdata.hpp"
 
 
-
 template <typename T>
 class NifPointer {
 
@@ -15,13 +14,13 @@ private:
 	void resolve(T* actual);
 	uint64_t getIndex(); 
 
-	friend class NifData;
-
 public:
 
 	T* get(); 
 	NifPointer(uint64_t index) : index{index} {}
+	NifPointer(uint32_t index) : index{static_cast<uint64_t>(index)} {}
 
+	void resolve(NifData& data);
 };
 
 
@@ -38,4 +37,10 @@ void NifPointer::resolve(T* actual) {
 template <typename T>
 uint64_t NifPointer::getIndex() {
 	return index;
+}
+
+
+template <typename T>
+void resolve(NifData& data) {
+	this->pointer = reinterpret_cast<T*>data.getBlock(this->index);
 }
