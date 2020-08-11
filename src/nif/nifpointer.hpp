@@ -1,4 +1,6 @@
 #pragma once
+
+
 #include "nifdata.hpp"
 
 
@@ -25,22 +27,22 @@ public:
 
 
 template <typename T>
-T* NifPointer::get() {
+T* NifPointer<T>::get() {
 	return pointer;
 }
 
 template <typename T>
-void NifPointer::resolve(T* actual) {
+void NifPointer<T>::resolve(T* actual) {
 	pointer = actual;
 }
 
 template <typename T>
-uint64_t NifPointer::getIndex() {
+uint64_t NifPointer<T>::getIndex() {
 	return index;
 }
 
 
 template <typename T>
-void resolve(NifData& data) {
-	this->pointer = reinterpret_cast<T*>data.getBlock(this->index);
+void NifPointer<T>::resolve(NifData& data) {
+	this->pointer = reinterpret_cast<T*>(data.getBlock(this->index));
 }
