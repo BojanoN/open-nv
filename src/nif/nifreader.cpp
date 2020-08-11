@@ -151,3 +151,4 @@ char* NifReader::readIndexedString() {
 	std::strcpy(dst, strings[index]);
 	return dst;
 }
+
