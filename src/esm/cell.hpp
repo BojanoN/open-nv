@@ -78,7 +78,8 @@ class CellChildren {
 
 public:
     CellChildren();
-    void load(ESMReader& reader);
+    formid  getByEditorID(std::string& editorId);
+    Record* load(ESMReader& reader);
 };
 
 struct Cell : public Record {
@@ -110,6 +111,7 @@ struct Cell : public Record {
     Cell(ESMReader& reader);
     ~Cell();
     class CellChildren* getChildren(uint32_t groupType);
+    formid              getByEditorID(std::string& editorId);
 };
 
 };

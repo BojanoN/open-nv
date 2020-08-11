@@ -544,7 +544,7 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
     if (!retPair.second) {
         return -1;
     }
-
+    /*
     uint8_t targetVarTypeCode;
 
     switch (retPair.first.type) {
@@ -563,7 +563,7 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
 
     out->writeByte(targetVarTypeCode);
     out->write((uint8_t*)&retPair.first.index, sizeof(uint16_t));
-
+    */
     return out->getSize() - begOffset;
 }
 

@@ -49,7 +49,7 @@ struct __attribute__((packed)) NPCSkills {
     uint8_t unarmedOffset;
 };
 
-struct NPC : public Record {
+struct NPC : public ScriptableRecord {
     ObjectBounds                                    objectBounds;
     std::string                                     name;
     ModelData                                       modelData;
@@ -83,6 +83,8 @@ struct NPC : public Record {
     uint16_t                                        unknown;
     float                                           height;
     float                                           weight;
+
+    virtual formid getLinkedScript() { return script; }
 
     NPC(ESMReader& reader);
 };

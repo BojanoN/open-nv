@@ -54,9 +54,10 @@ public:
         ret.second = false;
 
         form = this->world->getByEditorID(scriptEditorId);
-        if (form) {
 
-            std::vector<ESM::LocalVariable>& variables = this->scriptStore->get(form).data.localVariables;
+        if (form) {
+            return ret;
+            std::vector<ESM::LocalVariable>& variables = this->scriptStore->get(form)->data.localVariables;
             uint32_t                         size      = variables.size();
             ESM::LocalVariableData           targetVarData;
             bool                             found = false;
@@ -91,7 +92,7 @@ public:
             ret.second      = true;
             return ret;
         } else {
-            log_fatal("No such script with editorId %s", scriptEditorId.c_str());
+            log_fatal("No scriptable record with editorId %s", scriptEditorId.c_str());
             return ret;
         }
 

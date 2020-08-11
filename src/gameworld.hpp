@@ -136,6 +136,8 @@ class GameWorld {
     std::unordered_map<uint32_t, GameDataBase*> dataStores;
     //std::unordered_map<formid, CellChildren*>&  getCellChildrenMap(uint32_t groupType);
 
+    std::unordered_map<std::string, formid> edidCells;
+
     void initDataStoreMap();
     void parseCellGroup(ESM::ESMReader& reader);
     //void loadCellChildren(ESM::ESMReader& reader, formid cellId, uint32_t& recordsLoaded, uint32_t& recordsSkipped);
@@ -149,16 +151,27 @@ public:
         initDataStoreMap();
     }
 
-    void   load(ESM::ESMReader& reader);
+    void load(ESM::ESMReader& reader);
+
     formid getByEditorID(std::string& editorId)
     {
         formid ret;
+        formid cellId;
 
-        for (auto& entry : dataStores) {
-            ret = entry.second->get(editorId);
-            if (ret) {
-                return ret;
-            }
+        auto it = edidCells.find(editorId);
+        if (it == edidCells.end()) {
+            return 0;
+        }
+        cellId = it->second;
+
+        ESM::Cell* cell;
+
+        cell = interiorCells.get(cellId);
+        cell = exteriorCells.get(cellId);
+
+        ret = cell->getByEditorID(editorId);
+        if (ret) {
+            return ret;
         }
 
         return 0;
