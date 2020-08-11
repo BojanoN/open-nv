@@ -118,11 +118,10 @@ int NifReader::read(void* dst, uint32_t size, uint32_t length) {
 	return std::fread(dst, size, length, file);
 }
 
-void NifReader::readIndexedString(char* dst) {
-	if(dst == NULL) {
-		dst = new char[maxStringLength];
-	}
+char* NifReader::readIndexedString() {
+	char* dst = new char[maxStringLength];
 	uint32_t index;
 	std::fread(&index, sizeof(uint32_t), 1, file);
-	std::memcpy(dst, &strings[index * (maxStringLength + 1)], maxStringLength);
+	std::strcpy(dst, strings[index]);
+	return dst;
 }

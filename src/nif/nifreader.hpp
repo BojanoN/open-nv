@@ -46,7 +46,7 @@ public:
 	void readNifHeader();
 
 	int read(void* dst, uint32_t size, uint32_t length);
-	void readIndexedString(char* dst);
+	char* readIndexedString();
 	int skipTerminatedString(char sep); 
 	void skipSizedString();
 	char* loadSizedString();
