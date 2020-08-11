@@ -10,24 +10,13 @@ NifData::NifData(const char* filePath) {
 
 	numBlocks = reader.getNumBlocks();
 	blocks = new NiObject*[numBlocks];
-	//blocks.reserve(numBlocks);
 
 	for(unsigned int i = 0; i < numBlocks; i++) {
 		blocks[i] = reader.readBlock(i);
-		
 		if(blocks[i] == NULL) {
-
-			for(unsigned int j = 0; j < i; j++) {
-				delete blocks[j];
-			}
-			delete[] blocks;
-
 			throw std::runtime_error("Cannot read block!");
 		}
-	}
-
-	for(unsigned int i = 0; i < numBlocks; i++) {
-		blocks[i]->resolvePointers(*this);
+		//reader.readBlock(i, blocks[i]);
 	}
 	for(unsigned int i = 0; i < numBlocks; i++) {
 		blocks[i]->resolvePointers(*this);

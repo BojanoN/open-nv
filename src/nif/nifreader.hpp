@@ -1,6 +1,5 @@
 #pragma once
 
-<<<<<<< a3c8b8e7d299c1e76723a2121f70dd14fb2ab692
 //#include "nifdata.hpp"
 
 #include "nifactory.hpp"
@@ -13,7 +12,7 @@
 #include <string>
 #include <cstring>
 #include <unordered_map>
-#include <memory>
+
 
 class NiObject;
 
@@ -34,6 +33,7 @@ private:
 	// Data about blocks
 	uint32_t numBlocks;
 	uint16_t numBlockTypes;
+
 	std::vector<int16_t> blockTypeIndices;
 	std::vector<char*> blockTypes;
 	// Strings of the Nif file
