@@ -1,5 +1,18 @@
 #pragma once
 
+//#include "nifdata.hpp"
+
+#include "nifactory.hpp"
+
+#include <cstdio>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+#include <cstring>
+#include <unordered_map>
+
+class NiObject;
+
 class NifReader {
 
 private:
@@ -16,23 +29,28 @@ private:
 
 	// Data about blocks
 	uint32_t numBlocks;
-	uint32_t numBlockTypes;
+	uint16_t numBlockTypes;
+	int16_t* blockTypeIndices;
 	char** blockTypes;
 
 	// Strings of the Nif file
 	uint32_t numStrings;
 	uint32_t maxStringLength;
-	char* strings;
+	char** strings;
 
 public:
 
 	NifReader(const char* filePath);
 	~NifReader();
 
-	void readNifHeader(NifData* data);
+	void readNifHeader();
 
 	int read(void* dst, uint32_t size, uint32_t length);
 	void readIndexedString(char* dst);
+	int skipTerminatedString(char sep); 
+	void skipSizedString();
+	char* loadSizedString();
+	NiObject* readBlock(uint32_t index);
 
 	inline uint32_t getNumBlocks() {
 		return numBlocks;
