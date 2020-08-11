@@ -16,9 +16,9 @@ NifReader::~NifReader() {
 	std::fclose(file);
 }
 
-void NifReader::readNifHeader(NifData* data) {
+void NifReader::readNifHeader() {
 	if(skipTerminatedString('\n') == -1) { //Skip header version string.
-		throw std::invalid_argument(std::string("Invalid file: ") + std::string(filePath))
+		throw std::invalid_argument(std::string("Invalid file"));
 	}
 	std::fread(&version, sizeof(uint32_t), 1, file);
 	std::fseek(file, sizeof(uint8_t), SEEK_CUR); //Skip endianness.
@@ -38,12 +38,15 @@ void NifReader::readNifHeader(NifData* data) {
 	}
 	//end BS header
 
-	std::fread(&numBlockTypes, sizeof(uint32_t), 1, file);
+	std::fread(&numBlockTypes, sizeof(uint16_t), 1, file);
 	blockTypes = new char*[numBlockTypes];
 
 	for(unsigned int i = 0; i < numBlockTypes; i++) {
-		loadSizedString(blockTypes[i]);
+		blockTypes[i] = loadSizedString();
 	}
+
+	blockTypeIndices = new int16_t[numBlocks];
+	std::fread(blockTypeIndices, sizeof(int16_t), numBlocks, file);
 
 	uint32_t* blockSizes = new uint32_t[numBlocks]; // Temporary.
 	std::fread(blockSizes, sizeof(uint32_t), numBlocks, file);
@@ -51,29 +54,31 @@ void NifReader::readNifHeader(NifData* data) {
 	std::fread(&numStrings, sizeof(uint32_t), 1, file);
 	std::fread(&maxStringLength, sizeof(uint32_t), 1, file);
 
-	strings = new char[numStrings * (maxStringLength + 1)];
+	strings = new char*[numStrings];
 	for(unsigned int i = 0; i < numStrings; i++) {
-		loadSizedString(&strings[i * (maxStringLength + 1)]);
+		strings[i] = loadSizedString();
+		//loadSizedString(&strings[i * (maxStringLength + 1)]);
 	}
 
 	uint32_t numGroups;
 	std::fread(&numGroups, sizeof(uint32_t), 1, file);
-	std::fseek(file, sizeof(uint32_t) * numGroups, file); // Skip groups for now.
+	std::fseek(file, sizeof(uint32_t) * numGroups, SEEK_CUR); // Skip groups for now.
 
 	delete[] blockSizes;
 }
 
 
-void NifReader::readBlock(uint32_t index, NiObject* dst) {
-	const char* type = blockTypes[blockTypeIndex[index]];
-	typename std::unordered_map<std::string, NiObject* (*)(FILE*)>::const_iterator mapIterator = NiFactory::creatorMap.find(type);
-	if(mapIterator == NiFunctionMaps::creatorMap.end()) {
+NiObject* NifReader::readBlock(uint32_t index) {
+	const char* type = blockTypes[blockTypeIndices[index]];
+	//typename std::unordered_map<std::string, NiObject* (*)(FILE*)>::const_iterator mapIterator = NiFactory::creatorMap.find(type);
+	auto mapIterator = NiFactory::creatorMap.find(type);
+	if(mapIterator == NiFactory::creatorMap.end()) {
 			std::printf("Cannot find factory function for: %s\n", type);
 			return NULL;
 	}
 
-	NiObject* (*factory)(FILE*) = mapIterator->second;
-	dst = factory(this);
+	NiObject* (*factory)(NifReader&) = mapIterator->second;
+	return factory(*this);
 }
 
 
@@ -81,10 +86,16 @@ int NifReader::skipTerminatedString(char sep) {
 	if(file == NULL) {
 		return -1;
 	}
-	while(int c = std::getc(file); c != EOF && c != sep);
+	while(true) {
+		int c = std::getc(file);
+		if(c == EOF || c == sep) {
+			break;
+		}
+	}
 	if(std::feof(file)) {
 		return -1;
 	}
+	return 0;
 }
 
 void NifReader::skipSizedString() {
@@ -93,20 +104,18 @@ void NifReader::skipSizedString() {
 	std::fseek(file, length, SEEK_CUR);
 }
 
-void NifReader::loadSizedString(char* dst) {
-	if (dst != NULL) {
-		delete[] dst;
-	}
+char* NifReader::loadSizedString() {
 	uint32_t length;
 	std::fread(&length, sizeof(uint32_t), 1, file);
-	dst = new char[length + 1];
+	char* dst = new char[length + 1];
 	std::fread(dst, sizeof(uint8_t), length, file);
 	dst[length] = '\0';
+	return dst;
 }
 
 
 int NifReader::read(void* dst, uint32_t size, uint32_t length) {
-	std::fread(dst, size, length, file);
+	return std::fread(dst, size, length, file);
 }
 
 void NifReader::readIndexedString(char* dst) {
@@ -115,5 +124,5 @@ void NifReader::readIndexedString(char* dst) {
 	}
 	uint32_t index;
 	std::fread(&index, sizeof(uint32_t), 1, file);
-	std::memcpy(dst, strings[index * (maxStringLength + 1)], maxStringLength);
+	std::memcpy(dst, &strings[index * (maxStringLength + 1)], maxStringLength);
 }

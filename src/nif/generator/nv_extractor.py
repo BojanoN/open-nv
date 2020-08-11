@@ -992,6 +992,7 @@ def get_compounds(document, version):
         new_compound += '\n\n\t'+name+'(NifReader& reader);\n'
         new_compound += '\tvoid print();\n'
         new_compound += '\tvoid resolvePointers(NifData& data);\n'
+        new_compound += '\t~'+name+'();\n'
         new_compound += '};\n\n'
         resolve_func += '}\n\n'
 
@@ -1062,6 +1063,13 @@ def get_objects(document, version, modules):
 
         module_name = niobject.getAttribute('module')
         new_object = ''
+
+        new_object += '#include "structs.hpp"\n'
+        new_object += '#include "enums.hpp"\n'
+        new_object += '#include "typedefs.hpp"\n'
+        new_object += '#include "bitfields.hpp"\n'
+        new_object += '#include <cstdio>'
+
         if niobject.firstChild is not None:
                 description = niobject.firstChild.nodeValue.strip()
         else:
@@ -1181,7 +1189,7 @@ def get_objects(document, version, modules):
         print_func += '\tstd::printf("---------------\\n");\n'
         print_func += '}\n\n'
 
-        cpp_data = loader_func + creator_func + print_func + destr_func + resolve_func
+        cpp_data = '#include "' + name + '.hpp" \n\n' + loader_func + creator_func + print_func + destr_func + resolve_func
 
         #new_object += loader_func
         #new_object += destr_func
@@ -1219,6 +1227,7 @@ def get_modules(document):
 def get_typedefs():
     return """
     #pragma once
+    #include <cstdint>
     typedef uint32_t nif_ref_t;
     typedef uint32_t nif_ptr_t;
     typedef uint8_t nif_bool_t;

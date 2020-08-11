@@ -1,6 +1,12 @@
+#pragma once
+
+#include "main/NiObject.hpp"
+#include "nifreader.hpp"
+
 #include <string>
 #include <cstdio>
 #include <cstdlib>
+#include <stdexcept>
 
 class NifData {
 
