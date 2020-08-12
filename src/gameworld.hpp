@@ -117,7 +117,7 @@ class GameWorld {
     GameData<ESM::DehydrationStage>        dehydrationStages;
     GameData<ESM::HungerStage>             hungerStages;
     GameData<ESM::SleepDeprivationStage>   sleepDeprivationStages;
-    // GameData<ESM::World>
+    //GameData<ESM::World>
 
     GameData<ESM::Cell> interiorCells;
     GameData<ESM::Cell> exteriorCells;
@@ -156,22 +156,9 @@ public:
     formid getByEditorID(std::string& editorId)
     {
         formid ret;
-        formid cellId;
 
-        auto it = edidCells.find(editorId);
-        if (it == edidCells.end()) {
-            return 0;
-        }
-        cellId = it->second;
-
-        ESM::Cell* cell;
-
-        cell = interiorCells.get(cellId);
-        cell = exteriorCells.get(cellId);
-
-        ret = cell->getByEditorID(editorId);
-        if (ret) {
-            return ret;
+        if (Test::edidMap.count(editorId)) {
+            return Test::edidMap[editorId];
         }
 
         return 0;

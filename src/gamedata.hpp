@@ -12,6 +12,11 @@
 
 namespace GameWorld {
 
+class Test {
+public:
+    static std::unordered_map<std::string, formid> edidMap;
+};
+
 class GameDataBase {
 public:
     virtual ESM::Record* load(ESM::ESMReader& reader) = 0;
@@ -29,9 +34,10 @@ private:
     void                                    raiseError(formid id) const;
 
 public:
-    virtual ssize_t                 size() { return dataMap.size(); }
-    virtual ESM::Record*            load(ESM::ESMReader& reader);
-    std::unordered_map<formid, T*>& getMap() { return this->dataMap; };
+    virtual ssize_t                          size() { return dataMap.size(); }
+    virtual ESM::Record*                     load(ESM::ESMReader& reader);
+    std::unordered_map<formid, T*>&          getMap() { return this->dataMap; };
+    std::unordered_map<std::string, formid>& getEdidMap() { return this->editorIdMap; };
 
     T*     get(formid id);
     formid get(std::string& editorId);
@@ -61,13 +67,13 @@ T* GameData<T>::get(formid id)
 template <class T>
 formid GameData<T>::get(std::string& editorId)
 {
-    typename std::unordered_map<std::string, formid>::const_iterator it = editorIdMap.find(editorId);
+    auto it = editorIdMap.find(editorId);
 
-    if (it == editorIdMap.end()) {
-        return 0;
+    if (it != editorIdMap.end()) {
+        return it->second;
     }
 
-    return it->second;
+    return 0;
 }
 
 template <class T>
@@ -78,14 +84,14 @@ void GameData<T>::insert(T* record)
     assert(it.second);
     if (record->editorId.size()) {
         log_debug("Editor id: %s", record->editorId.c_str());
-        bool res = editorIdMap.insert(std::make_pair(record->editorId, record->id)).second;
+        bool res = Test::edidMap.insert(std::make_pair(record->editorId, record->id)).second;
         log_info("Insertion for record %s: %d", record->editorId.c_str(), res);
     }
 
 #else
     dataMap.insert(std::make_pair(record->id, record));
     if (record->editorId.size()) {
-        editorIdMap.insert(std::make_pair(record->editorId, record->id));
+        Test::edidMap.insert(std::make_pair(record->editorId, record->id));
     }
 #endif
 }
@@ -93,9 +99,11 @@ void GameData<T>::insert(T* record)
 template <class T>
 ESM::Record* GameData<T>::load(ESM::ESMReader& reader)
 {
-    log_debug("Fpointer before load 0x%x", reader.getCurrentPosition());
+    //log_debug("Fpointer before load 0x%x", reader.getCurrentPosition());
     try {
         T* record = new T(reader);
+        log_info("Type: %s, edid: %s", ESM::Util::typeValueToName(record->recordType).c_str(), record->editorId.c_str());
+
         this->insert(record);
         assert(dataMap.find(record->id) != dataMap.end());
         return reinterpret_cast<ESM::Record*>(record);
@@ -105,7 +113,7 @@ ESM::Record* GameData<T>::load(ESM::ESMReader& reader)
         log_fatal(e.what());
         throw std::runtime_error(e.what());
     }
-    log_debug("Fpointer after load 0x%x", reader.getCurrentPosition());
+    //log_debug("Fpointer after load 0x%x", reader.getCurrentPosition());
 }
 
 template <class T>

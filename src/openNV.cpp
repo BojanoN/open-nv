@@ -1,8 +1,8 @@
 #include "gameworld.hpp"
 #include "logc/log.h"
 #include <getopt.h>
+#include <string.h>
 #include <time.h>
-
 #define FALLOUTNV_ESM_DEFAULT_PATH "./bin/esm/FalloutNV.esm"
 
 int main(int argc, char** argv)
@@ -13,7 +13,7 @@ int main(int argc, char** argv)
 #else
     log_set_level(LOG_INFO);
 #endif
-    log_set_level(LOG_INFO);
+    //    log_set_level(LOG_INFO);
     int         c;
     std::string path = FALLOUTNV_ESM_DEFAULT_PATH;
 
@@ -27,17 +27,31 @@ int main(int argc, char** argv)
         }
     }
 
-    GameWorld::GameWorld world;
+    GameWorld::GameWorld* world = new GameWorld::GameWorld();
     try {
         ESM::ESMReader reader(path);
-        world.load(reader);
+        world->load(reader);
     } catch (std::runtime_error& e) {
         log_fatal(e.what());
+        delete world;
     }
 
+    std::string test     = "sSleepDeprevationIncrease";
+    auto        hashfunc = GameWorld::Test::edidMap.hash_function();
+    log_info("HASH1: %d", hashfunc(test));
+    //    log_info("please: %d", world->getByEditorID(test));
+
+    GameWorld::GameData<ESM::GameSetting>* sStore = (GameWorld::GameData<ESM::GameSetting>*)world->getDataStore(ESM::ESMType::GMST);
+    assert(sStore->get(1553249) != nullptr);
+    ESM::GameSetting* s = sStore->get(1553249);
+    log_info("EDID: %s", s->editorId.c_str());
+    log_info("HASH1: %d", hashfunc(s->editorId));
+    log_info("ARE THEY EQUAL: %d", strcmp(s->editorId.c_str(), test.c_str()));
+
+    /*
     GameWorld::GameData<ESM::Script>* scriptStore = (GameWorld::GameData<ESM::Script>*)world.getDataStore(ESM::ESMType::SCPT);
 
-    std::unordered_map<formid, ESM::Script*>& scriptMap = scriptStore->getMap();
+       std::unordered_map<formid, ESM::Script*>& scriptMap = scriptStore->getMap();
 
     for (auto& n : scriptMap) {
 
@@ -49,8 +63,8 @@ int main(int argc, char** argv)
         out.write((char*)source.data(), source.size());
         out.close();
     }
-
+    */
     //log_info("Loaded %s in %f miliseconds", path.c_str(), (double)(end - start) / (CLOCKS_PER_SEC / 1000));
-
+    delete world;
     return 0;
 }
