@@ -4,10 +4,10 @@
 namespace ESM {
 
 struct Record {
+    std::string editorId = "";
     uint32_t    recordType;
     RecordFlags recordFlags;
     formid      id;
-    std::string editorId = "";
 
     Record() {};
     Record(ESMReader& reader)

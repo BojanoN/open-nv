@@ -36,16 +36,17 @@ int main(int argc, char** argv)
         delete world;
     }
 
-    std::string test     = "sSleepDeprevationIncrease";
-    auto        hashfunc = GameWorld::Test::edidMap.hash_function();
-    log_info("HASH1: %d", hashfunc(test));
+    auto hashfunc = GameWorld::Test::edidMap.hash_function();
+    //    log_info("HASH1: %d", hashfunc(test));
     //    log_info("please: %d", world->getByEditorID(test));
 
     GameWorld::GameData<ESM::GameSetting>* sStore = (GameWorld::GameData<ESM::GameSetting>*)world->getDataStore(ESM::ESMType::GMST);
     assert(sStore->get(1553249) != nullptr);
-    ESM::GameSetting* s = sStore->get(1553249);
+    ESM::GameSetting* s    = sStore->get(1553249);
+    std::string       test = "sSleepDeprevationIncrease";
+    log_info("HASH1: %d", hashfunc(test));
     log_info("EDID: %s", s->editorId.c_str());
-    log_info("HASH1: %d", hashfunc(s->editorId));
+    log_info("HASH2: %d", hashfunc(s->editorId));
     log_info("ARE THEY EQUAL: %d", strcmp(s->editorId.c_str(), test.c_str()));
 
     /*

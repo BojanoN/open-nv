@@ -92,14 +92,15 @@ void ESMReader::checkSubrecordHeader(ESMType type)
     }
 }
 
-void ESMReader::readDirect(char* dest, ssize_t length) {
+void ESMReader::readDirect(char* dest, ssize_t length)
+{
     this->currentStream->read(dest, length);
     updateReadLocation(length);
 }
 
 void ESMReader::readStringSubrecord(std::string& subrecString)
 {
-    subrecString.resize(currentSubrecordHead.dataSize);
+    subrecString.resize(currentSubrecordHead.dataSize - 1);
 
     //int start = this->currentStream->tellg();
     this->currentStream->read(reinterpret_cast<char*>(&subrecString[0]), currentSubrecordHead.dataSize);
