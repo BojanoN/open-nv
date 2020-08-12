@@ -4,6 +4,7 @@ import xml.dom.minidom
 import re
 import sys
 import string
+from enum import Enum
 
 class Version:
 
@@ -449,6 +450,63 @@ BITFIELD_TYPES = set()
 BITFIELD_STORAGE = dict()
 #FLAG_TYPES = set()
 
+
+
+class EnumOption:
+
+    def __init__(self, element, prefix=None, is_flags=False):
+        self.name = process_enum_name(element.getAttribute('name'))
+        if prefix is not None:
+            self.name = prefix + '_' + self.name
+        if is_flags:
+            self.value = '0x{:08X}'.format(1 << int(element.getAttribute('bit')))
+        else:
+            self.value = element.getAttribute('value')
+
+        if element.firstChild is not None:
+            self.description = element.firstChild.nodeValue.strip()
+        else:
+            self.description = ''
+
+class EnumCode:
+
+    def __init__(self, element, is_flags=False):
+        self.name = element.getAttribute('name')
+        self.type = basic_types_n[element.getAttribute('storage')]
+        self.description = element.firstChild.nodeValue.strip()
+        
+        if element.hasAttribute('prefix'):
+            self.prefix = element.getAttribute('prefix')
+            ENUM_PREFIXES[name] = self.prefix + '_'
+        else:
+            self.prefix = None
+            ENUM_PREFIXES[name] = ''
+
+        self.options = list()
+        for option in element.getElementsByTagName('option'):
+            self.options.append(EnumOption(option), prefix, is_flags)
+
+    def _get_declaration(self):
+        out = 'enum ' + self.name + ' : ' + self.type + ' {\n'
+
+        length = len(self.options)
+        for i, option in len(self.options):
+            out += '\t' + option.name + ' = ' + option.value
+            if i == length - 1:
+                out += ',\n'
+            else:
+                out += '\n'
+        out += '};\n'
+        return out
+
+    @classmethod
+    def get_includes(cls):
+        return "#pragma once\n"
+
+    def get_hpp(self):
+        out = self._get_declaration()
+
+
 def get_enums(document, version, flags=False):
     generated_enums = '#pragma once\n\nnamespace NiEnums {\n'
     if flags:
@@ -521,6 +579,86 @@ def get_enums(document, version, flags=False):
         generated_enums += new_enum
     generated_enums += '};\n'
     return generated_enums
+
+
+class BitfieldMember:
+
+    def __init__(self, element):
+        self.name = process_name(element.getAttribute('name'))
+        self.type = element.getAttribute('type')
+        if self.type in basic_types_n:
+            self.type = basic_types_n[self.type]
+        elif self.type in ENUM_TYPES:
+            self.type = 'NiEnums::' + self.type
+
+        if element.firstChild is not None:
+            self.description = element.firstChild.nodeValue.strip()
+        else:
+            self.description = ''
+
+        self.width = element.getAttribute('width')
+        self.mask = element.getAttribute('mask')
+        self.position = element.getAttribute('pos')
+
+
+        self.declaration = '\t' + self.type + ' ' + self.name + ' : ' + self.width + '; // ' + self.mask + '\n'
+
+
+    def get_bit_and(self, name):
+        return '\t\t' + name +' += ((' + member.name +' & (b >> ' + member.pos + ')) << ' + member.pos + ') & ' + member.mask + ';\n'
+
+    def get_assign(self, name):
+        if self.type in ENUM_TYPES:
+            return '\t' + self.name + ' = static_cast<'+self.type+'>(' + name + ' & ' + self.mask + ');\n'
+        else:
+            return '\t' + self.name + ' = ' + name + ' & ' + self.mask + ';\n'
+
+class BitfieldCode:
+
+    def __init__(self, element):
+        self.name = element.getAttribute('name')
+        self.description = element.firstChild.nodeValue.strip()
+        self.type = basic_types_n[element.getAttribute('storage')]
+        BITFIELD_TYPES.add(self.name)
+        BITFIELD_STORAGE[self.name] = self.type
+
+        self.members = list()
+        for member in element.getElementsByTagName('member'):
+            self.members.append(BitfieldMember(member))
+
+
+    def _get_declaration(self):
+        out = 'struct ' + self.name + ' {\n'
+
+
+        bit_and = '\t' + self.type + ' operator&(const ' + self.type + '& b) const {\n'
+        bit_and = '\t\t' + self.type + ' result = 0;\n'
+
+        assign = '\t' + self.name + '& operator=(const ' + self.type + '& value) {\n' 
+
+        for member in self.members:
+            out += member.declaration
+            bit_and += member.get_bit_and('b')
+            assign += member.get_assign('value')
+
+        bit_and += '\t}\n'
+        assign += '\t}\n'
+        out += bit_and
+        out += '};\n'
+        return out
+
+
+    @classmethod
+    def get_includes(cls):
+        out = """
+        #pragma once
+        #include "enums.hpp"
+        """
+        return out
+
+    def get_hpp(self):
+        out = self._get_declaration()
+        return out
 
 
 def get_bitfields(document, version):
@@ -689,16 +827,16 @@ def load_basic_vector(field_name, field_type, array_size):
     return loader_func
 
 def load_vector(field_name, field_type, array_size):
-    loader_func = '\t' + field_name + ' = new ' + field_type + '[' + array_size + '];\n'
-    #loader_func = '\t' + field_name + '.reserve(' + array_size + ');\n'
+    #loader_func = '\t' + field_name + ' = new ' + field_type + '[' + array_size + '];\n'
+    loader_func = '\t' + field_name + '.reserve(' + array_size + ');\n'
     loop_ext = '\tfor(unsigned int i = 0, limit = ' + array_size + '; i < limit; i++) {\n'
     loader_func += loop_ext
     resolve_func = loop_ext
-    #loader_func += '\t\t' + field_name + '.emplace_back();\n'
+    loader_func += '\t\t' + field_name + '.emplace_back(reader);\n'
     #loader_func += '\t\t' + field_name + '.back().load(file);\n'
-    loader_func += '\t\t' + field_name + '[i] = new ' + field_type + '(reader);\n' 
+    #loader_func += '\t\t' + field_name + '[i] = new ' + field_type + '(reader);\n' 
     loader_func += '\t}\n'
-    resolve_func += '\t\t' + field_name + '[i]->resolvePointers(data);\n\t}\n'
+    resolve_func += '\t\t' + field_name + '[i].resolvePointers(data);\n\t}\n'
     return loader_func, resolve_func
 
 
@@ -708,6 +846,7 @@ def load_array(field_name, field_type, array_size, field):
     print_func = ''
     destr_func = ''
     resolve_func = ''
+    header = ''
     if array_size.isdecimal():
         actual_size = int(array_size)
         new_compound += '\t' + field_type + ' ' + field_name + '[' + str(actual_size) + '];\n'
@@ -724,10 +863,14 @@ def load_array(field_name, field_type, array_size, field):
             new_compound += '\tstd::vector<std::string> ' + field_name + ';\n'
         elif field_type in ENUM_TYPES:
             new_compound += '\tstd::vector<NiEnums::' + field_type + '> ' + field_name + ';\n'
-        else:
-            #new_compound += '\tstd::vector<' + field_type + '> ' + field_name + ';\n'
+        elif field_type in basic_types.values():
             new_compound += '\t' + field_type + '* ' + field_name + ';\n'
             destr_func += '\t delete[] ' + field_name + ';\n'
+        else:
+            new_compound += '\tstd::vector<' + field_type + '> ' + field_name + ';\n'
+            header += 'struct ' + field_type + ';\n#include "'+field_type+'.hpp"\n'
+            #new_compound += '\t' + field_type + '* ' + field_name + ';\n'
+            #destr_func += '\t delete[] ' + field_name + ';\n'
 
         #array_size = ''.join(array_size.split(sep=' '))
         if field_type in basic_types.values() or field_type in ENUM_TYPES:
@@ -739,7 +882,7 @@ def load_array(field_name, field_type, array_size, field):
             loader_func += loader_ext
             resolve_func += resolve_ext
         print_func += print_basic_vector(field_name, field_type, array_size, is_fixed=False)
-    return new_compound, loader_func, print_func, destr_func, resolve_func
+    return new_compound, loader_func, print_func, destr_func, resolve_func, header
 
 def get_prefix(enum_type):
     if enum_type not in ENUM_TYPES:
@@ -752,6 +895,7 @@ def load_single(field_name, field_type, field):
     print_func = ''
     destr_func = ''
     resolve_func = ''
+    header = ''
     if field_type in string_types or field_type == 'string':
         new_compound += '\tchar* ' + field_name
     elif field_type in ENUM_TYPES:
@@ -760,6 +904,7 @@ def load_single(field_name, field_type, field):
         new_compound += '\t' + field_type + ' ' + field_name
     else:
         new_compound += '\t' + field_type + '* ' + field_name
+        header += 'struct ' + field_type + ';\n#include "'+field_type+'.hpp"\n'
     if field.hasAttribute('default'):
         if field_type in ENUM_TYPES:
             default_value = field.getAttribute('default')
@@ -813,7 +958,7 @@ def load_single(field_name, field_type, field):
         print_func += '\tstd::printf("' + field_name + ':\\n");\n'
         print_func += '\t' + field_name + '.print();\n'
 
-    return new_compound, loader_func, print_func, destr_func, resolve_func
+    return new_compound, loader_func, print_func, destr_func, resolve_func, header
 
 
 def load_single_ptr(field_name, field_type, target_type, field):
@@ -821,29 +966,33 @@ def load_single_ptr(field_name, field_type, target_type, field):
     loader_func = ''
     print_func = ''
     destr_func = ''
+    header = 'struct ' + target_type + ';\n#include "'+target_type+'.hpp"\n'
     new_compound += '\tNifPointer<' + target_type + '> ' + field_name + ';\n'
-    loader_func += '\tuint32_t ' + field_name + 'Index;\n'
-    loader_func += '\treader.read(&' + field_name + 'Index, sizeof(uint32_t), 1);\n'
-    loader_func += '\t' + field_name + ' = new NifPointer<'+target_type+'>(' + field_name + 'Index);\n'
-    resolve_func = '\t' + field_name + '->resolve(data);\n'
-    return new_compound, loader_func, print_func, destr_func, resolve_func
+    loader_func += '\t' + field_name + '.load(reader);\n'
+    #loader_func += '\tuint32_t ' + field_name + 'Index;\n'
+    #loader_func += '\treader.read(&' + field_name + 'Index, sizeof(uint32_t), 1);\n'
+    #loader_func += '\t' + field_name + ' = new NifPointer<'+target_type+'>(' + field_name + 'Index);\n'
+    resolve_func = '\t' + field_name + '.resolve(data);\n'
+    return new_compound, loader_func, print_func, destr_func, resolve_func, header
 
 def load_ptr_array(field_name, field_type, target_type, array_size, field):
     new_compound = ''
     loader_func = ''
     print_func = ''
     destr_func = ''
-    new_compound += '\tNifPointer<' + target_type + '>* ' + field_name + ';\n'
-    loader_func += '\t' + field_name + ' = new NifPointer<' + target_type + '>[' + array_size + '];\n'
-    loader_func += '\tuint32_t* ' + field_name + 'Indices = new uint32_t[' + array_size + '];\n'
-    loader_func += '\treader.read(' + field_name + 'Indices, sizeof(uint32_t), ' + array_size + ');\n'
-    loader_func += '\tfor(unsigned int i = 0; i < ' +array_size + '; i++) {\n '
-    loader_func += '\t\t' + field_name + '[i] = new NifPointer<'+target_type+'>(' + field_name + 'Indices[i]);\n\t}\n'
-    loader_func += '\tdelete[] ' + field_name + 'Indices;\n'
+    header = 'struct ' + target_type + ';\n#include "'+target_type+'.hpp"\n'
+    new_compound += '\tNifPointerList<' + target_type + '> ' + field_name + ';\n'
+    loader_func += '\t' + field_name + '.load(reader);\n'
+    #loader_func += '\t' + field_name + ' = new NifPointer<' + target_type + '>[' + array_size + '];\n'
+    #loader_func += '\tuint32_t* ' + field_name + 'Indices = new uint32_t[' + array_size + '];\n'
+    #loader_func += '\treader.read(' + field_name + 'Indices, sizeof(uint32_t), ' + array_size + ');\n'
+    #loader_func += '\tfor(unsigned int i = 0; i < ' +array_size + '; i++) {\n '
+    #loader_func += '\t\t' + field_name + '[i] = new NifPointer<'+target_type+'>(' + field_name + 'Indices[i]);\n\t}\n'
+    #loader_func += '\tdelete[] ' + field_name + 'Indices;\n'
 
-    destr_func += '\tdelete[] ' + field_name + ';\n'
-    resolve_func = '\tfor(unsigned int i = 0; i < ' + array_size + '; i++) {\n\t' + field_name + '[i]->resolve(data);\n\t}\n'
-    return new_compound, loader_func, print_func, destr_func, resolve_func
+    #destr_func += '\tdelete[] ' + field_name + ';\n'
+    resolve_func = '\tfor(unsigned int i = 0; i < ' + array_size + '; i++) {\n\t' + field_name + '.resolve(data);\n\t}\n'
+    return new_compound, loader_func, print_func, destr_func, resolve_func, header
 
 def is_correct_version(field):
     if field.hasAttribute('ver1'):
@@ -962,15 +1111,15 @@ def get_compounds(document, version):
                     loader_func += '\tif(' + array_size + ' != 0) {\n'
                     destr_func += '\tif(' + array_size + ' != 0) {\n'
                 if field_type in ptr_types:
-                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_ptr_array(field_name, field_type, field.getAttribute('template'), array_size, field)
+                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext, _ = load_ptr_array(field_name, field_type, field.getAttribute('template'), array_size, field)
                 else:
-                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_array(field_name, field_type, array_size, field)
+                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext, _ = load_array(field_name, field_type, array_size, field)
 
             else:
                 if field_type in ptr_types:
-                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext =  load_single_ptr(field_name, field_type, field.getAttribute('template'), field)
+                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext, _ =  load_single_ptr(field_name, field_type, field.getAttribute('template'), field)
                 else:
-                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_single(field_name, field_type, field)
+                    compound_ext, loader_ext, print_ext, destr_ext, resolve_ext, _ = load_single(field_name, field_type, field)
 
             new_compound += compound_ext
             loader_func += loader_ext
@@ -1049,6 +1198,375 @@ const std::unordered_map<std::string, NiObject* (*)(FILE*)> NiFunctionMaps::crea
 """
 
 
+class FieldMode(Enum):
+    SINGLE = 0
+    FIXED_ARRAY = 1
+    DYNAMIC_ARRAY_PRIMITIVE = 2
+    DYNAMIC_ARRAY_STRUCT = 3
+
+basic_types_n = {
+    'char' : 'int8_t',
+    'byte' : 'uint8_t',
+    'short' : 'int16_t',
+    'ushort' : 'uint16_t',
+    'int' : 'int32_t',
+    'uint' : 'uint32_t',
+    'ulittle32' : 'uint32_t',
+    'int64' : 'int64_t',
+    'uint64' : 'uint64_t',
+    'float' : 'float',
+    'hfloat' : 'float',
+    'bool' : 'nif_bool_t',
+    'BlockTypeIndex' : 'int16_t',
+    'FileVersion' : 'uint32_t',
+    'StringOffset' : 'uint32_t',
+    'NiFixedString' : 'uint32_t',
+    'HeaderString' : 'std::string',
+    'LineString' : 'std::string'
+}
+
+pointer_types_n = set('Ptr', 'Ref')
+
+
+class PointerType:
+
+    def __init__(self, element):
+        self.target_type = element.getAttribute('template')
+        name = element.getAttribute('name')
+        if element.hasAttribute('arr1'):
+            self.declaration_type = '\tNifPointerList<' + self.target_type + '> ' + name + ';\n'
+        else:
+            self.declaration_type = '\tNifPointer<' + self.target_type + '> ' + name + ';\n'
+
+        self.read_code = element.getAttribute('name') + '.load(reader);\n'
+        self.resolve_code = element.getAttribute('name') + '.resolve(data);\n'
+        self.delete_code = ''
+
+class BasicType:
+
+    def __init__(self, element):
+        f_type = element.getAttribute('type')
+        if f_type in basic_types_n:
+            true_type = basic_types_n[f_type]
+        elif f_type in ENUM_TYPES:
+            true_type = 'NiEnums::' + f_type
+        elif f_type in BITFIELD_TYPES:
+            true_type = f_type
+        else:
+            raise ValueError('Invalid type: ' + f_type)
+
+        name = element.getAttribute('name')
+        if element.hasAttribute('arr1'):
+            size = process_array_size(element.getAttribute('arr1'))
+            if size.isdecimal():
+                self.declaration_type = '\t' + true_type + ' ' + name + '[' + size + '];\n'
+                self.read_code = '\treader.read(' + name + ', sizeof(' + true_type + '), ' + size + ');\n'
+                self.delete_code = ''
+            else:
+                self.declaration_type = '\t' + true_type + '* ' + name + ';\n'
+                self.read_code = '\t' + name + ' = new ' + true_type + '[' + element.getAttribute('arr1') + '];\n'
+                self.read_code += '\treader.read(' + name + ', sizeof(' + true_type + '), ' + size + ');\n'
+                self.delete_code = '\tdelete[]' + name + ';\n'
+            self.resolve_code = ''
+        else:
+            self.declaration_type = '\t' + true_type + ' ' + name + ';\n'
+            self.read_code = '\treader.read(&' + name + ', sizeof(' + true_type + '), 1);\n'
+            self.delete_code = ''
+            self.resolve_code = ''
+
+
+class StringType:
+
+    def __init__(self, element):
+        name = element.getAttribute('name')
+        self.declaration_type = '\tchar* ' + name + ';\n'
+        self.read_code = '\t' + name + ' = reader.readIndexedString();\n'
+        self.delete_code = '\tdelete[] ' + name + ';\n'
+        self.resolve_code = ''
+
+
+class CompoundType:
+
+    def __init__(self, element):
+        name = elemen.getAttribute('name')
+        true_type = element.getAttribute('type')
+        if true_type == '#T#':
+            true_type = 'T'
+
+        if element.hasAttribute('template'):
+            true_type += '<T>'
+
+        if element.hasAttribute('arr1'):
+            size = process_array_size(element.getAttribute('arr1'))
+            self.declaration_type = '\tstd::vector<' + true_type + '> ' + name + ';\n'
+            self.read_code = '\t' + name + 'reserve(' + size + ');\n'
+            self.read_code += '\tfor(unsigned int i = 0; i < ' + size + '; i++) {\n'
+            self.read_code += '\t\t' + name + '.emplace_back(reader);\n'
+            self.read_code += '\t}\n' 
+            self.delete_code = ''
+            self.resolve_code = '\tfor(unsigned int i = 0; i < ' + size + '; i++) {\n'
+            self.resolve_code += '\t\t' + name + '[i].resolvePointers(data);\n'
+            self.resolve_code += '\t}\n' 
+
+        else:
+            self.declaration_type = '\t' + true_type + '* ' + name + ';\n'
+            self.read_code = '\t' + name + ' = new ' + true_type + '(reader);\n'
+            self.resolve_code = '\t' + name + '->resolvePointers(data);\n'
+            self.delete_code = '\tdelete ' + name + ';\n'
+
+
+class FieldCode:
+
+    def __init__(self, element):
+        self.name = process_name(element.getAttribute('name'))
+
+        if element.firstChild is not None:
+            self.description = element.firstChild.nodeValue.strip()
+        else:
+            self.description = None
+
+        self.hasCondition = element.hasAttribute('cond')
+        if self.hasCondition:
+            self.condition = element.getAttribute('cond')
+
+        f_type = element.getAttribute('type')
+        if f_type in pointer_types_n:
+            self.type = PointerType(element)
+        elif f_type in basic_types_n or f_type in ENUM_TYPES or f_type in BITFIELD_TYPES:
+            self.type = BasicType(element)
+        elif f_type == 'string':
+            self.type = StringType(element)
+        else:
+            self.type = CompoundType(element)
+
+    def get_declaration(self):
+        return self.type.declaration_type
+
+    def get_constructor_code(self):
+        out = ''
+        back = ''
+        if self.hasCondition:
+            if self.isArray and self.mode != FieldMode.FIXED_ARRAY:
+                out += 'if(' + self.condition + ' && ' + self.array_size ' != 0) {\n'
+            else:
+                out += 'if(' + self.condition + ') {\n'
+            back += '}\n'
+        out += self.type.get_read_code
+        out += back
+        return out
+
+    def get_destructor_code(self):
+        out = ''
+        back = ''
+        if self.hasCondition:
+            if self.isArray and self.mode != FieldMode.FIXED_ARRAY:
+                out += 'if(' + self.condition + ' && ' + self.array_size ' != 0) {\n'
+            else:
+                out += 'if(' + self.condition + ') {\n'
+            back += '}\n'
+        out += self.type.get_delete_code
+        out += back
+        return out
+
+    def get_resolve_pointers(self):
+        out = ''
+        out += self.type.get_resolve_code
+        return out
+
+
+
+class CompoundCode:
+
+    def __init__(self, element):
+        self.name = element.getAttribute('name')
+        if element.firstChild is not None:
+            self.description = element.firstChild.nodeValue.strip()
+        else:
+            self.description = None
+
+        fieldElements = element.getElementsByTagName('field')
+        
+        if element.hasAttribute('generic') and element.getAttribute('generic') == 'true':
+            self.generic = True
+        else:
+            self.generic = False
+
+        self.fields = list()
+        for el in fieldElements:
+            if is_correct_version(el):
+                self.fields.append(FieldCode(el))
+
+
+    @classmethod
+    def _get_includes(cls):
+        return """
+        #pragma once
+        #include "typedefs.hpp"
+        #include "enums.hpp"
+        #include "utils.hpp"
+        #include "bitfields.hpp"
+        #include <cstdint>
+        """
+
+    def _get_declaration(self):
+        if self.generic:
+            out = 'template <typename T>\n'
+        else:
+            out = ''
+
+        out += 'struct ' + self.name + ' {\n'
+
+        for field in self.fields:
+            out += field.get_declaration()
+
+        out += '\n\n\t'+name+'(NifReader& reader);\n'
+        out += '\n\n\t~'+name+'();\n'
+        out += '\tvoid resolvePointers(NifData& data);\n'
+        out += '};\n'
+
+    def _get_constructor(self):
+        if self.generic:
+            out = 'template <typename T>\n ' + self.name + '<T>::' + self.name + '(NifReader& reader) {\n'
+        else:
+            out = self.name + '::' + self.name + '(NifReader& reader) {\n'
+        for field in self.fields:
+            out += field.get_constructor_code()
+        out += '}\n'
+        return out
+
+    def _get_destructor(self):
+        if self.generic:
+            out = 'template <typename T>\n ' + self.name + '<T>::~' + self.name '() {\n'
+        else:
+            out = self.name + '::~' + self.name '() {\n'
+        for field in self.fields:
+            out += field.get_destructor_code()
+        out += '}\n'
+        return out
+
+    def _get_resolve_pointers(self):
+        if self.generic:
+            out = 'template <typename T>\nvoid ' + self.name + '<T>::resolvePointers(NifData& data) {\n'
+        else:
+            out = 'void ' + self.name + '::resolvePointers(NifData& data) {\n'
+        for field in self.fields:
+            out += field.get_resolve_pointers_code()
+        out += '}\n'
+        return out
+
+    def get_hpp(self):
+        return self._get_declaration()
+        
+    def get_cpp(self):
+        out = self._get_constructor()
+        out += self._get_destructor()
+        out += self._get_resolve_pointers()
+        return out
+
+
+class ObjectCode:
+
+    def __init__(self, element):
+        self.module = element.getAttribute('module')
+        self.name = element.getAttribute('name')
+
+        if element.firstChild is not None:
+            self.description = element.firstChild.nodeValue.strip()
+        else:
+            self.description = None
+        
+        if element.hasAttribute('inherit'):
+            self.parent = element.getAttribute('inherit')
+        else:
+            self.parent = None
+
+        fieldElements = element.getElementsByTagName('field')
+        self.fields = list()
+        for el in fieldElements:
+            if is_correct_version(el):
+                self.fields.append(FieldCode(el))
+
+    def _get_includes(self):
+        out = """
+        #pragma once
+        #include "typedefs.hpp"
+        #include "enums.hpp"
+        #include "bitfields.hpp"
+        #include "../nifreader.hpp"
+        #include "../nifpointer.hpp"
+        """
+        if self.parent is not None:
+            out += 'struct ' + self.parent + ';\n'
+            out += '#include "' + self.parent + '.hpp"\n'
+
+        for field in self.fields:
+            if field.name not in COMPOUND_TYPES and \
+                field_name not in ENUM_TYPES and \
+                field_name not in BITFIELD_TYPES:
+
+                out += 'struct ' + field.name + ';\n'
+                out += '#include "' + field.name + '.hpp"\n'
+
+        out += '#include <cstdint>\n'
+        out += '\n'
+
+        return out
+
+    def _get_declaration(self):
+        if self.parent is not None:
+            out += 'struct ' + self.name + ' : public ' + self.parent + ' {\n'
+        else:
+            out += 'struct ' + self.name + ' {\n'
+
+        for field in self.fields:
+            out += field.get_declaration()
+
+        out += '\n\n\t'+name+'(NifReader& reader);\n'
+        out += '\n\n\tvirtual ~'+name+'();\n'
+        out += '\tstatic NiObject* create(NifReader& reader);\n'
+        out += '\tvirtual void resolvePointers(NifData& data);\n'
+        out += '};\n'
+
+    def _get_constructor(self):
+        if self.parent is not None:
+            out = self.name + '::' + self.name + '(NifReader& reader) : ' + self.parent + '(reader) {\n'
+        else:
+            out = self.name + '::' + self.name + '(NifReader& reader) {\n'
+
+        for field in self.fields:
+            out += field.get_constructor_code()
+        out += '}\n'
+        return out
+
+    def _get_destructor(self):
+        out = self.name + '::~' + self.name '() {\n'
+        for field in self.fields:
+            out += field.get_destructor_code()
+        out += '}\n'
+        return out
+
+    def _get_resolve_pointers(self):
+        out = 'void ' + self.name + '::resolvePointers(NifData& data) {\n'
+        for field in self.fields:
+            out += field.get_resolve_pointers_code()
+        out += '}\n'
+        return out
+
+    def get_hpp(self):
+        out = self._get_includes()
+        out += self._get_declaration()
+        return out
+        
+    def get_cpp(self):
+        out = '#include "' + self.name + '.hpp"\n'
+        out += self._get_constructor()
+        out += self._get_destructor()
+        out += self._get_resolve_pointers()
+        return out
+        
+
+
+
 def get_objects(document, version, modules):
     for niobject in document.getElementsByTagName('niobject'):
         if niobject.hasAttribute('versions'):
@@ -1064,11 +1582,14 @@ def get_objects(document, version, modules):
         module_name = niobject.getAttribute('module')
         new_object = ''
 
-        new_object += '#include "structs.hpp"\n'
-        new_object += '#include "enums.hpp"\n'
-        new_object += '#include "typedefs.hpp"\n'
-        new_object += '#include "bitfields.hpp"\n'
-        new_object += '#include <cstdio>'
+        obj_header = '#pragma once\n'
+        obj_header += '#include "structs.hpp"\n'
+        obj_header += '#include "enums.hpp"\n'
+        obj_header += '#include "typedefs.hpp"\n'
+        obj_header += '#include "bitfields.hpp"\n'
+        obj_header += '#include <cstdio>\n'
+        obj_header += '#include "../nifreader.hpp"\n'
+        obj_header += 'class NifData;\n'
 
         if niobject.firstChild is not None:
                 description = niobject.firstChild.nodeValue.strip()
@@ -1084,6 +1605,8 @@ def get_objects(document, version, modules):
         resolve_func = 'void ' + name + '::resolvePointers(NifData& data) {\n'
         if niobject.hasAttribute('inherit'):
             parent = niobject.getAttribute('inherit')
+            obj_header += 'struct ' + parent + ';\n'
+            obj_header += '#include "' + parent + '.hpp"\n'
             new_object += ' : public ' + parent + ' {\n'
             loader_func += ' : ' + parent + '(reader) {\n'
             print_func += '\t' + parent + '::print();\n\tstd::printf("' + name + ':--------------\\n");\n'
@@ -1143,15 +1666,15 @@ def get_objects(document, version, modules):
                     destr_func += '\tif(' + array_size + ' != 0) {\n'
 
                 if field_type in ptr_types:
-                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_ptr_array(field_name, field_type, field.getAttribute('template'), array_size, field)
+                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext, header_ext = load_ptr_array(field_name, field_type, field.getAttribute('template'), array_size, field)
                 else:
-                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_array(field_name, field_type, array_size, field)
+                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext, header_ext = load_array(field_name, field_type, array_size, field)
 
             else:
                 if field_type in ptr_types:
-                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext =  load_single_ptr(field_name, field_type, field.getAttribute('template'), field)
+                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext, header_ext =  load_single_ptr(field_name, field_type, field.getAttribute('template'), field)
                 else:
-                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext = load_single(field_name, field_type, field)
+                    object_ext, loader_ext, print_ext, destr_ext, resolve_ext, header_ext = load_single(field_name, field_type, field)
 
             new_object += object_ext
             loader_func += loader_ext
@@ -1162,13 +1685,14 @@ def get_objects(document, version, modules):
             if len(condition) == 0 and field.hasAttribute('arr1'):
                     destr_func += '\t}\n'
             resolve_func += resolve_ext
+            obj_header += header_ext
 
             if field.hasAttribute('cond'):
                 loader_func += '\t}\n'
                 if field.hasAttribute('arr1') or field_type not in basic_types.values():
                     destr_func += '\t}\n'
 
-        new_object += '\n\n\t'+name+'(NifData* reader);\n'
+        new_object += '\n\n\t'+name+'(NifReader& reader);\n'
         new_object += '\n\n\tvirtual ~'+name+'();\n'
         new_object += '\tstatic NiObject* create(NifReader& reader);\n'
 
@@ -1195,7 +1719,7 @@ def get_objects(document, version, modules):
         #new_object += destr_func
         #new_object += creator_func
         #new_object += print_func
-        modules[module_name].append((name, new_object, cpp_data))
+        modules[module_name].append((name, obj_header + new_object, cpp_data))
     return modules
 
 includes_header = """
