@@ -10,10 +10,6 @@
         struct NiObject;
 #include "NiObject.hpp"
 #include <vector>
-#include <vector>
-#include <vector>
-#include <vector>
-#include <vector>
 struct AbstractAdditionalGeometryData;
 #include "AbstractAdditionalGeometryData.hpp"
 #include <cstdint>
@@ -34,7 +30,7 @@ struct NiGeometryData : public NiObject {
 	NiBound* boundingSphere;
 	nif_bool_t hasVertexColors;
 	std::vector<Color4> vertexColors;
-	TexCoord* uvSets;
+	std::vector<TexCoord> uvSets;
 	NiEnums::ConsistencyType consistencyFlags;
 	NifPointer<AbstractAdditionalGeometryData> additionalData;
 

@@ -566,9 +566,9 @@ class BitfieldMember:
 
     def get_assign(self, name):
         if 'NiEnums::' in self.type:
-            return '\t' + self.name + ' = static_cast<'+self.type+'>(' + name + ' & ' + self.mask + ');\n'
+            return '\t' + self.name + ' = static_cast<'+self.type+'>((' + name + ' & ' + self.mask + ') >> ' + self.position + ');\n'
         else:
-            return '\t' + self.name + ' = ' + name + ' & ' + self.mask + ';\n'
+            return '\t' + self.name + ' = (' + name + ' & ' + self.mask + ') >> ' + self.position + ';\n'
 
 class BitfieldCode:
 
@@ -621,10 +621,7 @@ class BitfieldCode:
 
 
 def get_bitfields(document, version):
-    bitfields_hpp = """
-    #pragma once
-    #include "enums.hpp"
-    """
+    bitfields_hpp = BitfieldCode.get_includes()
 
     for element in document.getElementsByTagName('bitfield'):
         if element.hasAttribute('versions'):
@@ -780,15 +777,44 @@ class BasicType:
                 self.delete_code = ''
             else:
                 self.fixed_array = False
-                self.declaration_type = '\t' + true_type + '* ' + name + ';\n'
-                self.read_code = '\t' + name + ' = new ' + true_type + '[' + size + '];\n'
-                self.read_code += '\treader.read(' + name + ', sizeof(' + true_type + '), ' + size + ');\n'
-                self.delete_code = '\tdelete[]' + name + ';\n'
+
+                if element.hasAttribute('arr2'):
+                    size_2 = process_array_size(element.getAttribute('arr2'))
+                    self.declaration_type = '\t' + true_type + '** ' + name + ';\n'
+
+                    if size_2.isdecimal():
+                        self.read_code = '\t' + name + ' = new ' + true_type + '*[' + size + '];\n'
+                        self.read_code += '\tfor(unsigned int i = 0; i < ' + size + '; i++) {\n'
+                        self.read_code += '\t\t' + name + '[i] = new ' + true_type + '[' + size_2 +';\n'
+                        self.read_code += '\t\treader.read(' + name + '[i], sizeof(' + true_type + '), ' + size_2 + ');\n'
+                        self.read_code += '\t}\n'
+                    else:
+                        self.read_code = '\t' + name + ' = new ' + true_type + '*[' + size + '];\n'
+                        self.read_code += '\tfor(unsigned int i = 0; i < ' + size + '; i++) {\n'
+                        self.read_code += '\t\t' + name + '[i] = new ' + true_type + '[' + size_2 +'[i]];\n'
+                        self.read_code += '\t\treader.read(' + name + '[i], sizeof(' + true_type + '), ' + size_2 + '[i]);\n'
+                        self.read_code += '\t}\n'
+                        
+                    self.delete_code = '\tfor(unsigned int i = 0; i < ' + size + '; i++) {\n'
+                    self.delete_code += '\t\tdelete[] ' + name + '[i];\n'
+                    self.delete_code += '\t}\n'
+                    self.delete_code += '\tdelete[] ' + name + ';\n'
+                else:
+                    self.declaration_type = '\t' + true_type + '* ' + name + ';\n'
+                    self.read_code = '\t' + name + ' = new ' + true_type + '[' + size + '];\n'
+                    self.read_code += '\treader.read(' + name + ', sizeof(' + true_type + '), ' + size + ');\n'
+                    self.delete_code = '\tdelete[]' + name + ';\n'
             self.resolve_code = ''
         else:
             self.is_array = False
             self.declaration_type = '\t' + true_type + ' ' + name + ';\n'
-            self.read_code = '\treader.read(&' + name + ', sizeof(' + true_type + '), 1);\n'
+            if true_type in BITFIELD_TYPES:
+                r_type = BITFIELD_STORAGE[true_type]
+                self.read_code = '\t' + r_type + ' ' + name + 'Data;\n'
+                self.read_code += '\treader.read(&' + name + 'Data, sizeof(' + r_type + '), 1);\n'
+                self.read_code += '\t' + name + ' = ' + name + 'Data;\n'
+            else:
+                self.read_code = '\treader.read(&' + name + ', sizeof(' + true_type + '), 1);\n'
             self.delete_code = ''
             self.resolve_code = ''
 
@@ -907,6 +933,11 @@ class FieldCode:
             self.type = StringType(element)
         else:
             self.type = CompoundType(element)
+
+        if element.hasAttribute('onlyT'):
+            self.only_type = element.getAttribute('onlyT')
+        else:
+            self.only_type = None
 
     def get_declaration(self):
         return self.type.declaration_type
@@ -1119,8 +1150,9 @@ class ObjectCode:
                 out += 'struct ' + field.type.target_type + ';\n'
                 out += '#include "' + field.type.target_type + '.hpp"\n'
              elif type(field.type) == CompoundType:
-                if field.type.is_array:
+                if field.type.is_array and not has_vector:
                     out += '#include <vector>\n'
+                    has_vector = True
 
         out += '#include <cstdint>\n'
         out += '\n'
@@ -1150,14 +1182,16 @@ class ObjectCode:
             out = self.name + '::' + self.name + '(NifReader& reader) {\n'
 
         for field in self.fields:
-            out += field.get_constructor_code()
+            if field.only_type is None or field.only_type == self.name:
+                out += field.get_constructor_code()
         out += '}\n'
         return out
 
     def _get_destructor(self):
         out = self.name + '::~' + self.name + '() {\n'
         for field in self.fields:
-            out += field.get_destructor_code()
+            if field.only_type is None or field.only_type == self.name:
+                out += field.get_destructor_code()
         out += '}\n'
         return out
 
@@ -1166,7 +1200,8 @@ class ObjectCode:
         if self.parent is not None:
             out += '\t' + self.parent + '::resolvePointers(data);\n'
         for field in self.fields:
-            out += field.get_resolve_pointers_code()
+            if field.only_type is None or field.only_type == self.name:
+                out += field.get_resolve_pointers_code()
         out += '}\n'
         return out
 
