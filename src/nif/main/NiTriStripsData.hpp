@@ -15,7 +15,7 @@ struct NiTriStripsData : public NiTriBasedGeomData {
 	uint16_t numStrips;
 	uint16_t* stripLengths;
 	nif_bool_t hasPoints;
-	uint16_t** points;
+	uint16_t* points;
 
 
 	NiTriStripsData(NifReader& reader);

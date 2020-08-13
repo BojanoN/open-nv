@@ -14,6 +14,15 @@ std::unordered_map<std::string, NiObject* (*)(NifReader&)> NiFactory::createCrea
 		m["NiCollisionObject"] = &NiCollisionObject::create;
 		m["NiNode"] = &NiNode::create;
 		m["NiStringExtraData"] = &NiStringExtraData::create;
+		m["NiTriStrips"] = &NiTriStrips::create;
+		m["NiTriStripsData"] = &NiTriStripsData::create;
+		m["BSShaderPPLightingProperty"] = &BSShaderPPLightingProperty::create;
+		m["BSShaderTextureSet"] = &BSShaderTextureSet::create;
+		m["BSShaderLightingProperty"] = &BSShaderLightingProperty::create;
+		m["BSShaderProperty"] = &BSShaderProperty::create;
+		m["NiShadeProperty"] = &NiShadeProperty::create;
+		m["NiMaterialProperty"] = &NiMaterialProperty::create;
+		m["NiAlphaProperty"] = &NiAlphaProperty::create;
         return m;
     }
 
