@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "nifdata.hpp"
 #include "nifreader.hpp"
 
@@ -47,6 +46,9 @@ uint64_t NifPointer<T>::getIndex() {
 
 template <typename T>
 void NifPointer<T>::resolve(NifData& data) {
+	if(static_cast<uint32_t>(this->index) == -1){
+		return;
+	}
 	this->pointer = reinterpret_cast<T*>(data.getBlock(this->index));
 }
 
@@ -91,6 +93,9 @@ void NifPointerList<T>::load(NifReader& reader, uint32_t length) {
 template <typename T>
 void NifPointerList<T>::resolve(NifData& data) {
 	for(unsigned int i = 0; i < this->length; i++) {
+		if(static_cast<uint32_t>(this->indices[i]) == -1) {
+			continue;
+		}
 		this->pointers[i] = reinterpret_cast<T*>(data.getBlock(this->indices[i]));
 	}
 }
