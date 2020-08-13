@@ -1,8 +1,8 @@
 
-        #pragma once
-        #include "enums.hpp"
-        #include "typedefs.hpp"
-        struct TimeControllerFlags {
+    #pragma once
+    #include "enums.hpp"
+	#include "typedefs.hpp"
+    struct TimeControllerFlags {
 	NiEnums::AnimType animType : 1; // 0x0001
 	NiEnums::CycleType cycleType : 2; // 0x0006
 	nif_bool_t active : 1; // 0x0008
@@ -23,13 +23,13 @@
 		return result;
 	}
 	TimeControllerFlags& operator=(const uint16_t& value) {
-	animType = static_cast<NiEnums::AnimType>((value & 0x0001) >> 0);
-	cycleType = static_cast<NiEnums::CycleType>((value & 0x0006) >> 1);
-	active = (value & 0x0008) >> 3;
-	playBackwards = (value & 0x0010) >> 4;
-	managerControlled = (value & 0x0020) >> 5;
-	computeScaledTime = (value & 0x0040) >> 6;
-	forcedUpdate = (value & 0x0080) >> 7;
+	animType = static_cast<NiEnums::AnimType>(value & 0x0001);
+	cycleType = static_cast<NiEnums::CycleType>(value & 0x0006);
+	active = value & 0x0008;
+	playBackwards = value & 0x0010;
+	managerControlled = value & 0x0020;
+	computeScaledTime = value & 0x0040;
+	forcedUpdate = value & 0x0080;
 		return *this;
 	}
 };
@@ -56,14 +56,14 @@ struct AlphaFlags {
 		return result;
 	}
 	AlphaFlags& operator=(const uint16_t& value) {
-	alphaBlend = (value & 0x0001) >> 0;
-	sourceBlendMode = static_cast<NiEnums::AlphaFunction>((value & 0x001E) >> 1);
-	destinationBlendMode = static_cast<NiEnums::AlphaFunction>((value & 0x01E0) >> 5);
-	alphaTest = (value & 0x0200) >> 9;
-	testFunc = static_cast<NiEnums::TestFunction>((value & 0x1C00) >> 10);
-	noSorter = (value & 0x2000) >> 13;
-	cloneUnique = (value & 0x4000) >> 14;
-	editorAlphaThreshold = (value & 0x8000) >> 15;
+	alphaBlend = value & 0x0001;
+	sourceBlendMode = static_cast<NiEnums::AlphaFunction>(value & 0x001E);
+	destinationBlendMode = static_cast<NiEnums::AlphaFunction>(value & 0x01E0);
+	alphaTest = value & 0x0200;
+	testFunc = static_cast<NiEnums::TestFunction>(value & 0x1C00);
+	noSorter = value & 0x2000;
+	cloneUnique = value & 0x4000;
+	editorAlphaThreshold = value & 0x8000;
 		return *this;
 	}
 };
@@ -78,8 +78,8 @@ struct FogFlags {
 		return result;
 	}
 	FogFlags& operator=(const uint16_t& value) {
-	enable = (value & 0x0001) >> 0;
-	fogFunction = static_cast<NiEnums::FogFunction>((value & 0x0006) >> 1);
+	enable = value & 0x0001;
+	fogFunction = static_cast<NiEnums::FogFunction>(value & 0x0006);
 		return *this;
 	}
 };
@@ -102,12 +102,12 @@ struct StencilFlags {
 		return result;
 	}
 	StencilFlags& operator=(const uint16_t& value) {
-	enable = (value & 0x0001) >> 0;
-	failAction = static_cast<NiEnums::StencilAction>((value & 0x000E) >> 1);
-	zfailAction = static_cast<NiEnums::StencilAction>((value & 0x0070) >> 4);
-	passAction = static_cast<NiEnums::StencilAction>((value & 0x0380) >> 7);
-	drawMode = static_cast<NiEnums::StencilDrawMode>((value & 0x0C00) >> 10);
-	testFunc = static_cast<NiEnums::StencilTestFunc>((value & 0xF000) >> 12);
+	enable = value & 0x0001;
+	failAction = static_cast<NiEnums::StencilAction>(value & 0x000E);
+	zfailAction = static_cast<NiEnums::StencilAction>(value & 0x0070);
+	passAction = static_cast<NiEnums::StencilAction>(value & 0x0380);
+	drawMode = static_cast<NiEnums::StencilDrawMode>(value & 0x0C00);
+	testFunc = static_cast<NiEnums::StencilTestFunc>(value & 0xF000);
 		return *this;
 	}
 };
@@ -124,9 +124,9 @@ struct TexturingFlags {
 		return result;
 	}
 	TexturingFlags& operator=(const uint16_t& value) {
-	multitexture = (value & 0x0001) >> 0;
-	applyMode = static_cast<NiEnums::ApplyMode>((value & 0x000E) >> 1);
-	decalCount = (value & 0x0FF0) >> 4;
+	multitexture = value & 0x0001;
+	applyMode = static_cast<NiEnums::ApplyMode>(value & 0x000E);
+	decalCount = value & 0x0FF0;
 		return *this;
 	}
 };
@@ -143,9 +143,9 @@ struct TexturingMapFlags {
 		return result;
 	}
 	TexturingMapFlags& operator=(const uint16_t& value) {
-	textureIndex = (value & 0x00FF) >> 0;
-	filterMode = static_cast<NiEnums::TexFilterMode>((value & 0x0F00) >> 8);
-	clampMode = static_cast<NiEnums::TexClampMode>((value & 0x3000) >> 12);
+	textureIndex = value & 0x00FF;
+	filterMode = static_cast<NiEnums::TexFilterMode>(value & 0x0F00);
+	clampMode = static_cast<NiEnums::TexClampMode>(value & 0x3000);
 		return *this;
 	}
 };
@@ -162,9 +162,9 @@ struct VertexColorFlags {
 		return result;
 	}
 	VertexColorFlags& operator=(const uint16_t& value) {
-	colorMode = (value & 0x0007) >> 0;
-	lightingMode = static_cast<NiEnums::LightingMode>((value & 0x0008) >> 3);
-	sourceVertexMode = static_cast<NiEnums::SourceVertexMode>((value & 0x0030) >> 4);
+	colorMode = value & 0x0007;
+	lightingMode = static_cast<NiEnums::LightingMode>(value & 0x0008);
+	sourceVertexMode = static_cast<NiEnums::SourceVertexMode>(value & 0x0030);
 		return *this;
 	}
 };
@@ -181,9 +181,9 @@ struct ZBufferFlags {
 		return result;
 	}
 	ZBufferFlags& operator=(const uint16_t& value) {
-	zbufferTest = (value & 0x0001) >> 0;
-	zbufferWrite = (value & 0x0002) >> 1;
-	testFunc = static_cast<NiEnums::TestFunction>((value & 0x003C) >> 2);
+	zbufferTest = value & 0x0001;
+	zbufferWrite = value & 0x0002;
+	testFunc = static_cast<NiEnums::TestFunction>(value & 0x003C);
 		return *this;
 	}
 };
@@ -198,8 +198,8 @@ struct NiAGDDataStreamFlags {
 		return result;
 	}
 	NiAGDDataStreamFlags& operator=(const uint8_t& value) {
-	keep = (value & 0x0001) >> 0;
-	consistencyType = static_cast<NiEnums::AGDConsistencyType>((value & 0x0006) >> 1);
+	keep = value & 0x0001;
+	consistencyType = static_cast<NiEnums::AGDConsistencyType>(value & 0x0006);
 		return *this;
 	}
 };
@@ -216,9 +216,9 @@ struct NiGeometryDataFlags {
 		return result;
 	}
 	NiGeometryDataFlags& operator=(const uint16_t& value) {
-	numUVSets = (value & 0x003F) >> 0;
-	havokMaterial = (value & 0x0FC0) >> 6;
-	nbtMethod = static_cast<NiEnums::NiNBTMethod>((value & 0xF000) >> 12);
+	numUVSets = value & 0x003F;
+	havokMaterial = value & 0x0FC0;
+	nbtMethod = static_cast<NiEnums::NiNBTMethod>(value & 0xF000);
 		return *this;
 	}
 };
@@ -235,9 +235,9 @@ struct BSGeometryDataFlags {
 		return result;
 	}
 	BSGeometryDataFlags& operator=(const uint16_t& value) {
-	hasUV = (value & 0x0001) >> 0;
-	havokMaterial = (value & 0x0FC0) >> 6;
-	hasTangents = (value & 0x1000) >> 12;
+	hasUV = value & 0x0001;
+	havokMaterial = value & 0x0FC0;
+	hasTangents = value & 0x1000;
 		return *this;
 	}
 };
@@ -256,10 +256,10 @@ struct CollisionFilterFlags {
 		return result;
 	}
 	CollisionFilterFlags& operator=(const uint8_t& value) {
-	bipedPart = static_cast<NiEnums::BipedPart>((value & 0x001F) >> 0);
-	moppScaled = (value & 0x0020) >> 5;
-	noCollision = (value & 0x0040) >> 6;
-	linkedGroup = (value & 0x0080) >> 7;
+	bipedPart = static_cast<NiEnums::BipedPart>(value & 0x001F);
+	moppScaled = value & 0x0020;
+	noCollision = value & 0x0040;
+	linkedGroup = value & 0x0080;
 		return *this;
 	}
 };
