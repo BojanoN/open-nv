@@ -1,7 +1,9 @@
 #pragma once
 
-#include "main/NiObject.hpp"
+
 #include "nifreader.hpp"
+
+struct NiObject;
 
 #include <string>
 #include <cstdio>
