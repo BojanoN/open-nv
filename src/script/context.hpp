@@ -46,24 +46,31 @@ public:
         return ret;
     }
 
-    std::pair<VariableInfo, bool> getScriptLocalVar(std::string& scriptEditorId, std::string& variable)
+    std::pair<VariableInfo, bool> getScriptLocalVar(std::string& scriptableRecordEditorId, std::string& variable)
     {
         std::pair<VariableInfo, bool> ret;
         uint32_t                      form;
 
         ret.second = false;
 
-        form = this->world->getByEditorID(scriptEditorId);
+        form = this->world->getByEditorID(scriptableRecordEditorId);
 
         if (form) {
-            return ret;
-            std::vector<ESM::LocalVariable>& variables = this->scriptStore->get(form)->data.localVariables;
+
+            ESM::ScriptableRecord* record = dynamic_cast<ESM::ScriptableRecord*>(this->world->getByFormId(form));
+
+            if (record == nullptr) {
+                log_fatal("Record %s is not scriptable", scriptableRecordEditorId.c_str());
+                return ret;
+            }
+
+            std::vector<ESM::LocalVariable>& variables = this->scriptStore->get(record->getLinkedScript())->data.localVariables;
             uint32_t                         size      = variables.size();
             ESM::LocalVariableData           targetVarData;
             bool                             found = false;
 
             for (uint32_t i = 0; i < size; i++) {
-                if (!strcmp(scriptEditorId.c_str(), variables[i].name.c_str())) {
+                if (!strcmp(variable.c_str(), variables[i].name.c_str())) {
                     found         = true;
                     targetVarData = variables[i].data;
                     break;
@@ -71,7 +78,7 @@ public:
             }
 
             if (!found) {
-                log_fatal("Variable %s does not exists in script %s", variable.c_str(), scriptEditorId.c_str());
+                log_fatal("Variable %s does not exists in script %s", variable.c_str(), scriptableRecordEditorId.c_str());
                 return ret;
             }
 
@@ -92,7 +99,7 @@ public:
             ret.second      = true;
             return ret;
         } else {
-            log_fatal("No scriptable record with editorId %s", scriptEditorId.c_str());
+            log_fatal("No scriptable record with editorId %s", scriptableRecordEditorId.c_str());
             return ret;
         }
 

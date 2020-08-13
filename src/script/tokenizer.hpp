@@ -210,15 +210,6 @@ private:
         return isAlpha(c) || isDigit(c);
     }
 
-    void toLowerCase(std::string& str)
-    {
-        uint32_t size = str.size();
-
-        for (uint32_t i = 0; i < size; i++) {
-            str[i] = std::tolower(str[i]);
-        }
-    }
-
     void reset()
     {
         currentLine       = 1;

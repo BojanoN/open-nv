@@ -277,7 +277,7 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
             uint32_t interiorCellSubBlockEnd = reader.groupSize() + reader.getCurrentPosition();
             uint32_t cellSubBlock            = reader.groupLabel();
 
-            log_debug("Interior cell block: %d, subblock: %d", cellBlock, cellSubBlock);
+            // log_debug("Interior cell block: %d, subblock: %d", cellBlock, cellSubBlock);
 
             while (reader.isCurrentLocationBefore(interiorCellSubBlockEnd)) {
                 reader.readNextRecordHeader();
@@ -404,7 +404,7 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
                 //currentExteriorBlock.subblocks.emplace_back();
                 //ExteriorWorldSubBlock& currentExteriorSubBlock = currentExteriorBlock.subblocks.back();
                 //currentExteriorSubBlock.coords                 = reader.groupLabel();
-                log_debug("Exterior world block: %d, subblock: %d, location: 0x%08x", coords, subBlockCoords, reader.getCurrentPosition());
+                //  log_debug("Exterior world block: %d, subblock: %d, location: 0x%08x", coords, subBlockCoords, reader.getCurrentPosition());
                 if (reader.getCurrentPosition() == 0x019e3099) {
                     std::cout << "benis";
                 }
@@ -439,7 +439,7 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
                         loadCellChildren(reader, *exteriorCell, recordsLoaded, recordsSkipped);
                     }
                 }
-                log_debug("Read %d exterior sub block cells", subblockRecords);
+                // log_debug("Read %d exterior sub block cells", subblockRecords);
             }
         }
     }

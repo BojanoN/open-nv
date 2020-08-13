@@ -53,8 +53,8 @@ struct QuestObjectiveTargetData {
 };
 
 struct QuestObjectiveTarget {
-    QuestObjectiveTargetData  data;
-    std::vector<Condition>    conditions;
+    QuestObjectiveTargetData data;
+    std::vector<Condition>   conditions;
 };
 
 struct QuestObjective {
@@ -65,9 +65,7 @@ struct QuestObjective {
     static void load(ESMReader& reader, QuestObjective& objective);
 };
 
-
-
-struct Quest : public Record {
+struct Quest : public ScriptableRecord {
     formid                      script;
     std::string                 name;
     std::string                 largeIconFilename;
@@ -76,6 +74,8 @@ struct Quest : public Record {
     std::vector<Condition>      conditions; //one 20 byte condition exists at 0xe755a0e
     std::vector<QuestStage>     stages;
     std::vector<QuestObjective> objectives;
+
+    virtual formid getLinkedScript() { return script; };
 
     Quest(ESMReader& reader);
 };

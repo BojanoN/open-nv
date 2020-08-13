@@ -23,7 +23,9 @@ struct Record {
 class ScriptableRecord : public Record {
 public:
     ScriptableRecord(ESMReader& reader)
-        : Record(reader) {};
+        : Record(reader) {
+
+        };
 
     virtual formid getLinkedScript() = 0;
 };

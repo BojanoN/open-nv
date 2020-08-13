@@ -304,7 +304,7 @@ inline Node* Parser::functionCall(NodeContext context)
             if (!isFunction) {
                 advance();
                 advance();
-                return new ReferenceAccess(refOriginal, fieldOriginal, context);
+                return new ReferenceAccess(refOriginal, fieldOrFuncIdentifier, context);
             }
             advance();
             funcOrRefIdentifier = fieldOrFuncIdentifier;
@@ -421,7 +421,7 @@ inline Node* Parser::assignment()
         reference = varOrRefToken.original;
         advance();
         advance();
-        varName  = peekCurrent().original;
+        varName  = peekCurrent().literal;
         variable = new ReferenceAccess(reference, varName, NodeContext::Assignment);
 
         // Plain var access

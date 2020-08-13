@@ -183,6 +183,8 @@ int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
 
         totalBlocksize += (uint32_t)compiledBytes;
     }
+    // Take the end opcode into account
+    totalBlocksize += sizeof(end);
     if (!out->writeAt(blocksizeOffset, (uint8_t*)&totalBlocksize, sizeof(uint32_t))) {
         log_fatal("WriteAt error");
         return -1;
@@ -544,7 +546,7 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
     if (!retPair.second) {
         return -1;
     }
-    /*
+
     uint8_t targetVarTypeCode;
 
     switch (retPair.first.type) {
@@ -563,7 +565,7 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
 
     out->writeByte(targetVarTypeCode);
     out->write((uint8_t*)&retPair.first.index, sizeof(uint16_t));
-    */
+
     return out->getSize() - begOffset;
 }
 

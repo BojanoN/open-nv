@@ -12,16 +12,13 @@
 
 namespace GameWorld {
 
-class Test {
-public:
-    static std::unordered_map<std::string, formid> edidMap;
-};
-
 class GameDataBase {
 public:
     virtual ESM::Record* load(ESM::ESMReader& reader) = 0;
     virtual ssize_t      size()                       = 0;
     virtual formid       get(std::string& editorId)   = 0;
+    virtual ESM::Record* getBase(formid id)           = 0;
+
     virtual ~GameDataBase() { }
 };
 
@@ -39,9 +36,10 @@ public:
     std::unordered_map<formid, T*>&          getMap() { return this->dataMap; };
     std::unordered_map<std::string, formid>& getEdidMap() { return this->editorIdMap; };
 
-    T*     get(formid id);
-    formid get(std::string& editorId);
-    void   insert(T* data);
+    T*           get(formid id);
+    ESM::Record* getBase(formid id);
+    formid       get(std::string& editorId);
+    void         insert(T* data);
     virtual ~GameData();
 };
 
@@ -55,6 +53,17 @@ GameData<T>::~GameData()
 
 template <class T>
 T* GameData<T>::get(formid id)
+{
+    typename std::unordered_map<formid, T*>::const_iterator it = dataMap.find(id);
+
+    if (it == dataMap.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
+
+template <class T>
+ESM::Record* GameData<T>::getBase(formid id)
 {
     typename std::unordered_map<formid, T*>::const_iterator it = dataMap.find(id);
 
@@ -83,15 +92,13 @@ void GameData<T>::insert(T* record)
     auto it = dataMap.insert(std::make_pair(record->id, record));
     assert(it.second);
     if (record->editorId.size()) {
-        log_debug("Editor id: %s", record->editorId.c_str());
-        bool res = Test::edidMap.insert(std::make_pair(record->editorId, record->id)).second;
-        log_info("Insertion for record %s: %d", record->editorId.c_str(), res);
+        bool res = editorIdMap.insert(std::make_pair(record->editorId, record->id)).second;
     }
 
 #else
     dataMap.insert(std::make_pair(record->id, record));
     if (record->editorId.size()) {
-        Test::edidMap.insert(std::make_pair(record->editorId, record->id));
+        editorIdMap.insert(std::make_pair(record->editorId, record->id));
     }
 #endif
 }
@@ -102,8 +109,6 @@ ESM::Record* GameData<T>::load(ESM::ESMReader& reader)
     //log_debug("Fpointer before load 0x%x", reader.getCurrentPosition());
     try {
         T* record = new T(reader);
-        log_info("Type: %s, edid: %s", ESM::Util::typeValueToName(record->recordType).c_str(), record->editorId.c_str());
-
         this->insert(record);
         assert(dataMap.find(record->id) != dataMap.end());
         return reinterpret_cast<ESM::Record*>(record);

@@ -1,4 +1,5 @@
 #include "structs.hpp"
+#include "strmanip.hpp"
 
 namespace ESM {
 
@@ -150,9 +151,11 @@ void ScriptData::load(ESMReader& reader, ScriptData& scriptData)
             scriptData.localVariables.emplace_back();
             reader.readSubrecord(scriptData.localVariables.back().data);
             break;
-        case ESMType::SCVR:
-            reader.readStringSubrecord(scriptData.localVariables.back().name);
-            break;
+        case ESMType::SCVR: {
+            std::string& name = scriptData.localVariables.back().name;
+            reader.readStringSubrecord(name);
+            ::Util::toLowerCase(name);
+        } break;
         default:
             std::stringstream s;
             s << "Invalid subrecord type " << Util::typeValueToName(reader.subrecordType()) << '\n';

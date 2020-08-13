@@ -1,5 +1,6 @@
 #include "tokenizer.hpp"
 #include "logc/log.h"
+#include "util/strmanip.hpp"
 #include <set>
 
 #define ADD_EMPTY_TOKEN(type) this->tokens->emplace_back(Token((this->currentLine), (type), (this->currentColumn)))
@@ -86,7 +87,7 @@ void Tokenizer::parseLiteral()
     }
     std::string value    = this->substring(this->source, this->startCharOffset, this->currentCharOffset + 1);
     std::string original = value;
-    this->toLowerCase(value);
+    Util::toLowerCase(value);
 
     if (Tokenizer::keywords.count(value)) {
         TokenType tmp = Tokenizer::keywords[value];

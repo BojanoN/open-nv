@@ -157,17 +157,30 @@ public:
     {
         formid ret;
 
-        if (Test::edidMap.count(editorId)) {
-            return Test::edidMap[editorId];
+        for (auto map : dataStores) {
+            ret = map.second->get(editorId);
+            if (ret) {
+                return ret;
+            }
         }
 
         return 0;
     };
 
-    formid searchCellChildren(std::string& editorId)
+    ESM::Record* getByFormId(formid id)
     {
-        return 0;
-    }
+        ESM::Record* ret;
+
+        for (auto map : dataStores) {
+            ret = map.second->getBase(id);
+            if (ret != nullptr) {
+                return ret;
+            }
+        }
+
+        return nullptr;
+    };
+
     GameDataBase* getDataStore(uint32_t type);
 };
 

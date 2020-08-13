@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+// TODO: refactor opcode definition with a separate struct
+
 namespace Script {
 
 #define OUTPUT_CODES_ENUM \

@@ -205,13 +205,23 @@ int main(int argc, char** argv)
                 if (out == nullptr) {
                     log_fatal("Error while compiling the script");
                 } else {
-                    std::string origName = "./compiled/";
-                    origName += formid + ".bin";
+                    std::string origName = "./compiled";
+                    std::string split(strchr(formid.c_str(), '/'));
 
+                    origName += split;
+                    origName += ".bin";
+                    log_info("ASDF: %s", origName.c_str());
                     std::ifstream originalFile { origName };
+
+                    if (originalFile.fail()) {
+                        return 1;
+                    }
+
                     originalFile.seekg(0, std::ios::end);
                     ssize_t origSize = originalFile.tellg();
                     originalFile.seekg(0, std::ios::beg);
+
+                    originalFile.read(reinterpret_cast<char*>(&original[0]), origSize);
 
                     if (!compareCompiled(out, original.data(), original.size())) {
                         log_fatal("Compiled script differs from original");
