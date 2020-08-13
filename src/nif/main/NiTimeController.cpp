@@ -1,7 +1,9 @@
 #include "NiTimeController.hpp"
 NiTimeController::NiTimeController(NifReader& reader) : NiObject(reader) {
 nextController.load(reader);
-	reader.read(&flags, sizeof(TimeControllerFlags), 1);
+	uint16_t flagsData;
+	reader.read(&flagsData , sizeof(uint16_t), 1);
+	flags = flagsData;
 	reader.read(&frequency, sizeof(float), 1);
 	reader.read(&phase, sizeof(float), 1);
 	reader.read(&startTime, sizeof(float), 1);
