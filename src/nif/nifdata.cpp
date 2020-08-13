@@ -1,6 +1,5 @@
 #include "nifdata.hpp"
-
-
+#include "main/NiObject.hpp"
 
 NifData::NifData(const char* filePath) {
 
