@@ -220,7 +220,7 @@ int main(int argc, char** argv)
                     originalFile.seekg(0, std::ios::end);
                     ssize_t origSize = originalFile.tellg();
                     originalFile.seekg(0, std::ios::beg);
-
+                    original.resize(origSize);
                     originalFile.read(reinterpret_cast<char*>(&original[0]), origSize);
 
                     if (!compareCompiled(out, original.data(), original.size())) {

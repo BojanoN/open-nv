@@ -69,4 +69,9 @@ constexpr const char* exprCodeToString(ExprCodes e) noexcept
 #undef X
 }
 
+struct Opcode {
+    uint16_t code;
+    uint16_t length;
+};
+
 };

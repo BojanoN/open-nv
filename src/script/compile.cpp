@@ -110,7 +110,7 @@ int Compiler::compileBlocktype(Node* node, CompiledScript* out)
         }
 
         out->writeAt(begSize, onTriggerEnterID, sizeof(uint16_t));
-        out->write((uint8_t*)&flags, sizeof(flags));
+        out->writeShort(flags);
 
         out->writeByte(ExprCodes::REF_FUNC_PARAM);
 
@@ -118,7 +118,7 @@ int Compiler::compileBlocktype(Node* node, CompiledScript* out)
         if (varIndex == 0) {
             return -1;
         }
-        out->write((uint8_t*)&varIndex, sizeof(varIndex));
+        out->writeShort(varIndex);
 
         break;
     }
@@ -138,14 +138,12 @@ int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
     ScriptBlock* block = dynamic_cast<ScriptBlock*>(node);
     int          size  = block->nodes->size();
 
-    uint8_t beg[] = {
-        OutputCodes::BEGIN, 0x00
-    };
+    uint16_t beg = OutputCodes::BEGIN;
 
-    uint8_t end[] = { OutputCodes::END, 0x00, 0x00, 0x00 };
+    Opcode end = { OutputCodes::END, 0x00 };
 
     uint32_t totalWrite = out->getSize();
-    out->write(beg, sizeof(beg));
+    out->writeShort(beg);
 
     uint32_t currentNodeOffset = 0;
 
@@ -190,7 +188,7 @@ int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
         return -1;
     }
 
-    out->write(end, sizeof(end));
+    out->writeOpcode(end);
 
     totalWrite = out->getSize() - totalWrite;
 
@@ -229,15 +227,10 @@ int Compiler::compileAssignment(Node* node, CompiledScript* out)
     Assignment* expr    = dynamic_cast<Assignment*>(node);
     uint32_t    begSize = out->getSize();
 
-    uint8_t set[]                = { static_cast<uint8_t>(OutputCodes::ASSIGN), 0x00 };
-    uint8_t exprLenPlaceholder[] = { 0x00, 0x00 };
+    Opcode set = { OutputCodes::ASSIGN, 0x00 };
 
-    out->write(set, 2);
-    uint16_t length = 0;
-    uint32_t lengthOffset;
-
-    lengthOffset = out->getSize();
-    out->write((uint8_t*)&length, sizeof(uint16_t));
+    out->writeOpcode(set);
+    uint32_t lengthOffset = out->getSize() - 2;
 
     int varLen = compileNode(expr->variable, out);
     if (varLen < 0) {
@@ -245,17 +238,19 @@ int Compiler::compileAssignment(Node* node, CompiledScript* out)
     }
 
     uint32_t exprLenOffset = out->getSize();
-    out->write(exprLenPlaceholder, 2);
+    // Fill the initial expression len with zeroes
+    out->writeShort(0x00);
 
     int exprLen = compileNode(expr->expression, out);
     if (exprLen < 0) {
         return -1;
     }
+
     uint16_t exprLenOut = (uint16_t)exprLen;
     out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(exprLenOut));
 
-    length = varLen + sizeof(uint16_t) + exprLenOut;
-    out->writeAt(lengthOffset, (uint8_t*)&length, sizeof(length));
+    set.length = varLen + sizeof(uint16_t) + exprLenOut;
+    out->writeAt(lengthOffset, (uint8_t*)&set.length, sizeof(set.length));
 
     return out->getSize() - begSize;
 };
@@ -307,7 +302,7 @@ int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
             }
         }
         out->writeByte(typeCode);
-        out->write((uint8_t*)&varIndex, sizeof(uint16_t));
+        out->writeShort(varIndex);
     } else {
         out->write((uint8_t*)expr->value.data(), expr->value.size());
     }
@@ -329,7 +324,7 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
     if (func->reference.size()) {
         out->writeByte(ExprCodes::REF_FUNC_PARAM);
         uint16_t index = ctx.SCROLookup(func->reference);
-        out->write((uint8_t*)&index, sizeof(uint16_t));
+        out->writeShort(index);
     }
 
     if (func->context == NodeContext::Expression) {
@@ -337,13 +332,13 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
     }
 
     uint16_t funcCode = info.opcode;
-    out->write((uint8_t*)&funcCode, sizeof(uint16_t));
+    out->writeShort(funcCode);
 
     uint32_t paramBytesOffset = out->getSize();
-    out->writeZeros(sizeof(uint16_t));
+    out->writeShort(0x00);
 
     uint16_t paramCount = func->arguments.size();
-    out->write((uint8_t*)&paramCount, sizeof(uint16_t));
+    out->writeShort(paramCount);
 
     uint16_t     paramBytes = 0;
     LiteralExpr* literal;
@@ -357,12 +352,12 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
         }
 
         literal = dynamic_cast<LiteralExpr*>(func->arguments[i]);
-        log_debug("WHAT: %s", TypeEnumToString(literal->valueType));
+
         switch (literal->valueType) {
         case (Type::Integer): {
             out->writeByte(ExprCodes::LONG_FUNC_PARAM);
             uint32_t value = std::stol(literal->value);
-            out->write((uint8_t*)&value, sizeof(uint32_t));
+            out->writeLong(value);
             paramBytes += 1 + sizeof(uint32_t);
             break;
         }
@@ -370,7 +365,7 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
         case (Type::Identifier): {
             out->writeByte(ExprCodes::REF_FUNC_PARAM);
             uint16_t index = ctx.SCROLookup(literal->value);
-            out->write((uint8_t*)&index, sizeof(uint16_t));
+            out->writeShort(index);
             paramBytes += 1 + sizeof(uint16_t);
             break;
         }
@@ -400,9 +395,9 @@ int Compiler::compileScriptName(Node* node, CompiledScript* out)
 
     this->ctx.scriptName = scriptName->name;
 
-    uint8_t scn[] = { 0x1D, 0x00, 0x00, 0x00 };
+    Opcode scn = { OutputCodes::SCRIPTNAME, 0x00 };
 
-    out->write(scn, sizeof(scn));
+    out->writeOpcode(scn);
 
     return sizeof(scn);
 };
@@ -422,30 +417,27 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     IfStatement* ifStmt    = dynamic_cast<IfStatement*>(node);
     uint32_t     begOffset = out->getSize();
 
-    uint8_t ifBegin[]   = { OutputCodes::IF, 0x00 };
-    uint8_t elifBegin[] = { OutputCodes::ELIF, 0x00 };
-    uint8_t elseBegin[] = { OutputCodes::ELSE, 0x00, 0x02, 0x00 };
-    uint8_t endif[]     = { OutputCodes::ENDIF, 0x00, 0x00, 0x00 };
+    Opcode ifBegin   = { OutputCodes::IF, 0x00 };
+    Opcode elifBegin = { OutputCodes::ELIF, 0x00 };
+    Opcode elseBegin = { OutputCodes::ELSE, 0x02 };
+    Opcode endif     = { OutputCodes::ENDIF, 0x00 };
 
     int      exprLen, compLen, bodyLen;
     uint16_t exprLenOut, compLenOut, jumpOps;
     uint32_t exprLenOffset, jumpOpsOffset, compLenOffset;
 
-    out->write(ifBegin, 2);
+    out->writeOpcode(ifBegin);
 
-    // TODO: check .esm files for source and see what this is supposed to be
     compLenOut = 0;
-    jumpOps    = dynamic_cast<StatementBlock*>(ifStmt->body)->nodes->size();
     exprLenOut = 0;
+    jumpOps    = dynamic_cast<StatementBlock*>(ifStmt->body)->nodes->size();
 
-    compLenOffset = out->getSize();
-    out->write((uint8_t*)&compLenOut, sizeof(uint16_t));
+    compLenOffset = out->getSize() - sizeof(ifBegin.length);
 
-    //    jumpOpsOffset = out->getSize();
-    out->write((uint8_t*)&jumpOps, sizeof(uint16_t));
+    out->writeShort(jumpOps);
 
     exprLenOffset = out->getSize();
-    out->write((uint8_t*)&exprLenOut, sizeof(uint16_t));
+    out->writeShort(exprLenOut);
 
     exprLen = compileNode(ifStmt->condition, out);
     if (exprLen < 0) {
@@ -469,19 +461,18 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 
     if (elifsSize) {
         for (uint32_t i = 0; i < elifsSize; i++) {
-            out->write(elifBegin, 2);
+            out->writeOpcode(elifBegin);
 
             compLenOut = 0;
-            jumpOps    = dynamic_cast<StatementBlock*>(ifStmt->elseIfs[i].second)->nodes->size();
             exprLenOut = 0;
+            jumpOps    = dynamic_cast<StatementBlock*>(ifStmt->elseIfs[i].second)->nodes->size();
 
-            compLenOffset = out->getSize();
-            out->write((uint8_t*)&compLenOut, sizeof(uint16_t));
+            compLenOffset = out->getSize() - sizeof(elifBegin.length);
 
-            out->write((uint8_t*)&jumpOps, sizeof(uint16_t));
+            out->writeShort(jumpOps);
 
             exprLenOffset = out->getSize();
-            out->write((uint8_t*)&exprLenOut, sizeof(uint16_t));
+            out->writeShort(exprLenOut);
 
             exprLen = compileNode(ifStmt->elseIfs[i].first, out);
             if (exprLen < 0) {
@@ -502,9 +493,10 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     }
 
     if (ifStmt->elseBody != nullptr) {
-        out->write(elseBegin, 4);
+        out->writeOpcode(elseBegin);
+
         jumpOpsOffset = out->getSize();
-        out->write((uint8_t*)&jumpOps, sizeof(uint16_t));
+        out->writeShort(jumpOps);
 
         bodyLen = compileNode(ifStmt->elseBody, out);
 
@@ -516,7 +508,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
         out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
     }
 
-    out->write(endif, sizeof(endif));
+    out->writeOpcode(endif);
 
     return out->getSize() - begOffset;
 };
@@ -539,7 +531,7 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
     }
 
     uint16_t index = ctx.SCROLookup(refAccess->reference);
-    out->write((uint8_t*)&index, sizeof(uint16_t));
+    out->writeShort(index);
 
     std::pair<VariableInfo, bool> retPair = this->ctx.getScriptLocalVar(refAccess->reference, refAccess->field);
 
@@ -564,7 +556,7 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
     }
 
     out->writeByte(targetVarTypeCode);
-    out->write((uint8_t*)&retPair.first.index, sizeof(uint16_t));
+    out->writeShort(retPair.first.index);
 
     return out->getSize() - begOffset;
 }
@@ -599,11 +591,11 @@ int Compiler::compileVariableAccess(Node* node, CompiledScript* out)
     switch (varInfo.first.type) {
     case (Type::Reference):
     case (Type::Float):
-        typeCode = static_cast<uint8_t>(ExprCodes::FLOAT_REF_LOCAL);
+        typeCode = ExprCodes::FLOAT_REF_LOCAL;
         break;
     case (Type::Short):
     case (Type::Integer):
-        typeCode = static_cast<uint8_t>(ExprCodes::INT_LOCAL);
+        typeCode = ExprCodes::INT_LOCAL;
         break;
     default:
         return -1;
@@ -611,7 +603,7 @@ int Compiler::compileVariableAccess(Node* node, CompiledScript* out)
     }
 
     out->writeByte(typeCode);
-    out->write((uint8_t*)&varIndex, sizeof(uint16_t));
+    out->writeShort(varIndex);
 
     return out->getSize() - begSize;
 }
@@ -638,9 +630,9 @@ int Compiler::compileReturnStatement(Node* node, CompiledScript* out)
 {
     ReturnStatement* retStmt = dynamic_cast<ReturnStatement*>(node);
 
-    uint8_t retcode[4] = { 0x1E, 0, 0, 0 };
+    Opcode retcode = { 0x1E, 0x00 };
 
-    out->write(retcode, sizeof(retcode));
+    out->writeOpcode(retcode);
 
     return sizeof(retcode);
 }

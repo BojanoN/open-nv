@@ -76,6 +76,45 @@ public:
         return true;
     }
 
+    bool writeShort(uint16_t value)
+    {
+
+        if (this->currentSize + sizeof(value) < this->capacity) {
+            resize(1);
+        }
+
+        *((uint16_t*)&bytecode[currentSize]) = *((uint16_t*)&value);
+        currentSize += sizeof(value);
+
+        return true;
+    }
+
+    bool writeLong(uint32_t value)
+    {
+
+        if (this->currentSize + sizeof(value) < this->capacity) {
+            resize(1);
+        }
+
+        *((uint32_t*)&bytecode[currentSize]) = *((uint32_t*)&value);
+        currentSize += sizeof(value);
+
+        return true;
+    }
+
+    bool writeOpcode(Opcode opcode)
+    {
+
+        if (this->currentSize + sizeof(Opcode) < this->capacity) {
+            resize(1);
+        }
+
+        *((uint32_t*)&bytecode[currentSize]) = *((uint32_t*)&opcode);
+        currentSize += sizeof(Opcode);
+
+        return true;
+    }
+
     uint8_t peekByte()
     {
         return this->bytecode[this->currentReadOffset];
