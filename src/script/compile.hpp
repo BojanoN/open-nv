@@ -13,6 +13,7 @@
 namespace Script {
 
 class Node;
+class BlockTypeStatement;
 
 class CompiledScript {
 
@@ -298,6 +299,9 @@ private:
     int compileStatementBlock(Node* node, CompiledScript* out);
     int compileReturnStatement(Node* node, CompiledScript* out);
     int compileVariableAccess(Node* node, CompiledScript* out);
+
+    int compileOnTrigger(BlockTypeStatement* node, CompiledScript* out, uint32_t blocktypeIDOffset);
+    int compileOnTriggerEnter(BlockTypeStatement* node, CompiledScript* out, uint32_t blocktypeIDOffset);
 
     int error(std::string cause)
     {

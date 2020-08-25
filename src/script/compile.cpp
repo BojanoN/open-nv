@@ -87,6 +87,58 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
     return 0;
 }
 
+int Compiler::compileOnTriggerEnter(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    uint8_t  onTriggerEnterID[] = { 0x1A, 0x00 };
+    uint16_t flags              = 0x0001;
+    uint16_t varIndex           = 0;
+
+    if (blocktype->arg.size() == 0) {
+        log_fatal("OnTriggerEnter blocktype requires an argument");
+        return -1;
+    }
+
+    out->writeAt(blocktypeCodeOffset, onTriggerEnterID, sizeof(uint16_t));
+    out->writeShort(flags);
+
+    out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+    varIndex = ctx.SCROLookup(blocktype->arg);
+    if (varIndex == 0) {
+        return -1;
+    }
+
+    out->writeShort(varIndex);
+
+    return 0;
+}
+
+int Compiler::compileOnTrigger(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeIDOffset)
+{
+    uint8_t  onTriggerEnterID[] = { 0x18, 0x00 };
+    uint16_t flags              = 0x0001;
+    uint16_t varIndex           = 0;
+
+    if (blocktype->arg.size() == 0) {
+        log_fatal("OnTriggerEnter blocktype requires an argument");
+        return -1;
+    }
+
+    out->writeAt(blocktypeIDOffset, onTriggerEnterID, sizeof(uint16_t));
+    out->writeShort(flags);
+
+    out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+    varIndex = ctx.SCROLookup(blocktype->arg);
+    if (varIndex == 0) {
+        return -1;
+    }
+
+    out->writeShort(varIndex);
+
+    return 0;
+}
+
 int Compiler::compileBlocktype(Node* node, CompiledScript* out)
 {
 
@@ -97,34 +149,24 @@ int Compiler::compileBlocktype(Node* node, CompiledScript* out)
     out->writeZeros(sizeof(uint16_t));
     // block size placeholder
     out->writeZeros(sizeof(uint32_t));
+    int ret;
 
     switch (blocktype->blocktype) {
     case BlockType::OnTriggerEnter: {
-        uint8_t  onTriggerEnterID[] = { 0x1A, 0x00 };
-        uint16_t flags              = 0x0001;
-        uint16_t varIndex           = 0;
-
-        if (blocktype->arg.size() == 0) {
-            log_fatal("OnTriggerEnter blocktype requires an argument");
-            return -1;
-        }
-
-        out->writeAt(begSize, onTriggerEnterID, sizeof(uint16_t));
-        out->writeShort(flags);
-
-        out->writeByte(ExprCodes::REF_FUNC_PARAM);
-
-        varIndex = ctx.SCROLookup(blocktype->arg);
-        if (varIndex == 0) {
-            return -1;
-        }
-        out->writeShort(varIndex);
-
+        ret = compileOnTriggerEnter(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnTrigger: {
+        ret = compileOnTrigger(blocktype, out, begSize);
         break;
     }
 
     default:
         log_fatal("Unknown blocktype %s", BlockTypeEnumToString(blocktype->blocktype));
+        return -1;
+    }
+
+    if (ret < 0) {
         return -1;
     }
 
