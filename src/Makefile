@@ -1,12 +1,14 @@
 include ../config
 
-ESMSRC = $(wildcard esm/*.cpp)
+ESMSRC = $(wildcard esm/*.cpp) $(wildcard esm/*/*.cpp)
 BSASRC = $(wildcard bsa/*.cpp)
+NIFSRC = $(wildcard nif/*.cpp) $(wildcard nif/main/*.cpp)
 GAMESRC = $(wildcard *.cpp)
 UTILSRC = $(wildcard util/*.cpp) $(wildcard logc/*.cpp)
 
 BSAOBJS = $(patsubst %, $(BUILDDIR)/%, $(BSASRC:.cpp=.o))
 ESMOBJS = $(patsubst %, $(BUILDDIR)/%, $(ESMSRC:.cpp=.o))
+NIFOBJS = $(patsubst %, $(BUILDDIR)/%, $(NIFSRC:.cpp=.o))
 UTILOBJS = $(patsubst %, $(BUILDDIR)/%, $(UTILSRC:.cpp=.o))
 GAMEOBJS = $(patsubst %, $(BUILDDIR)/%, $(GAMESRC:.cpp=.o))
 
@@ -31,5 +33,5 @@ $(BUILDDIR)/%.o: %.cpp
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/$(PROJECT): $(ESMOBJS) $(UTILOBJS) $(GAMEOBJS) $(BUILDDIR)/$(PROJECT).o
+$(BUILDDIR)/$(PROJECT): $(ESMOBJS) $(UTILOBJS) $(GAMEOBJS) $(NIFOBJS) $(BSAOBJS) $(BUILDDIR)/$(PROJECT).o
 	$(CC) $^ -o $@ $(LDFLAGS)

@@ -22,5 +22,6 @@ public:
 	~NifData();
 	//char* getString(int index);
 	//int readData(uint32_t size);
+	NiObject* getRoot() { return blocks[0]; } 
 	NiObject* getBlock(uint32_t index) { return blocks[index]; }
 };
