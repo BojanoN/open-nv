@@ -1,7 +1,0 @@
-ScriptName MyFirstScript
-
-Begin OnAdd player
-
-    ShowMessage MyMessage
-
-End
