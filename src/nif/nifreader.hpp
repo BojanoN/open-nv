@@ -51,6 +51,7 @@ public:
 	void skipSizedString();
 	char* loadSizedString();
 	NiObject* readBlock(uint32_t index);
+	NiObject* readNifTree();
 
 	inline uint32_t getNumBlocks() {
 		return numBlocks;

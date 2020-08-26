@@ -81,6 +81,22 @@ NiObject* NifReader::readBlock(uint32_t index) {
 	return factory(*this);
 }
 
+/*
+NiObject* NifReader::readNifTree() {
+	NiObject** blocks = new NiObject*[numBlocks];
+
+	for(unsigned int i = 0; i < numBlocks; i++) {
+		blocks[i] = this->readBlock(i);
+		if(blocks[i] == NULL) {
+			throw std::runtime_error("Cannot read block!");
+		}
+	}
+
+	for(unsigned int i = 0; i < numBlocks; i++) {
+		blocks[i]->resolvePointers(*this);
+	}
+}*/
+
 
 int NifReader::skipTerminatedString(char sep) { 
 	if(file == NULL) {
