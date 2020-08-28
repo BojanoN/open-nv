@@ -9,7 +9,9 @@ FileInputStream::FileInputStream(std::string filepath) {
 }
 
 FileInputStream::~FileInputStream() {
-	std::fclose(this->inputFile);
+	if(inputOpen) {
+		std::fclose(this->inputFile);
+	}
 }
 
 std::size_t FileInputStream::read(void* dst, std::size_t size, std::size_t length) {

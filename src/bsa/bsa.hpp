@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util/enumflags.hpp"
+#include "../streams/istream.hpp"
 #include <cstdint>
 #include <fstream>
 #include <map>
@@ -92,14 +93,18 @@ private:
 
 class BSA {
 public:
-    BSA(std::string path);
-    ~BSA() { delete cache; };
+    BSA(InputStream* path, std::string name);
+    ~BSA() { delete cache; 
+            delete file; };
 
-    std::vector<uint8_t>* getFile(std::string path);
+    InputStream* getFile(std::string path);
     bool                  fileExists(std::string path);
 
+    std::string           getName() { return name; }
+    
 private:
-    std::ifstream file;
+    //std::ifstream file;
+    InputStream*  file;
     Header        header;
     BSACache*     cache;
     // hash, offset
@@ -111,6 +116,8 @@ private:
     bool compressedByDefault;
     bool filenamesEmbedded;
     bool folderNamesIncluded;
+
+    std::string name;
 };
 
 };

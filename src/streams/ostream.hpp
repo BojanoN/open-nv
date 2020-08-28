@@ -24,4 +24,6 @@ public:
 	virtual OutputStream& outputSeek(uint64_t offset, StreamPosition position) = 0;
 	virtual uint64_t 	  outputTell() = 0;
 	virtual void close() = 0;
+
+	virtual ~OutputStream() {}
 };

@@ -2,6 +2,8 @@
 #include "logc/log.h"
 #include <getopt.h>
 #include <time.h>
+#include "file/reader.hpp"
+#include <chrono>
 
 #define FALLOUTNV_ESM_DEFAULT_PATH "./bin/esm/FalloutNV.esm"
 
@@ -27,13 +29,22 @@ int main(int argc, char** argv)
         }
     }
 
+    File::Reader::setRootFilePath(path.c_str());
+    std::string esmPath = std::string(path) + std::string("FalloutNV.esm");
+
+    auto start = std::chrono::system_clock::now();
+
     GameWorld::GameWorld world;
     try {
-        ESM::ESMReader reader(path);
+        ESM::ESMReader reader(esmPath);
         world.load(reader);
     } catch (std::runtime_error& e) {
         log_fatal(e.what());
     }
+
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = end-start;
+    std::cout << diff.count() << std::endl;
 
     GameWorld::GameData<ESM::Script>* scriptStore = (GameWorld::GameData<ESM::Script>*)world.getDataStore(ESM::ESMType::SCPT);
 
