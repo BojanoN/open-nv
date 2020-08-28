@@ -12,6 +12,7 @@
 #include <mutex>
 #include <condition_variable>
 
+
 class FileProvider {
 
 private:
@@ -50,6 +51,7 @@ private:
 	InputStream* findAndOpenFile(const std::string* filepath);  
 
 
+	static bool instantiated;
 
 public:
 
@@ -59,6 +61,6 @@ public:
 	InputStream* openFile(const std::string& filePath);
 
 	// Closes the given file.
-	void  closeFile(InputStream* file);
+	void closeFile(InputStream* file);
 
 };

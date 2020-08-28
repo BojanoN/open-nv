@@ -5,11 +5,9 @@
 #include "types.hpp"
 #include "util/bytestream.hpp"
 #include "utils.hpp"
+#include "file/reader.hpp"
 
 #include <cassert>
-//#include <cerrno>
-//#include <cstdio>
-//#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -17,25 +15,30 @@
 #include <string>
 #include <vector>
 
+
 namespace ESM {
 
-class ESMReader {
+
+
+class ESMReader : public File::Reader {
 public:
     ESMReader(std::string& path)
-        : currentStream { &file }
-        , file { path.c_str() }
-        , compressed(nullptr)
+        : compressed(nullptr)
         , fileName { path }
         , currentLocation(0)
 
     {
-        this->file.seekg(0, std::ios::end);
+        file = getFileProvider().openFile(path);
+        currentStream = file;
+        
+        this->file->inputSeek(0, StreamPosition::end);
 
-        ssize_t size   = this->file.tellg();
+        ssize_t size   = this->file->inputTell();
         this->fileSize = size;
         this->fileLeft = size;
 
-        this->file.seekg(0, std::ios::beg);
+        this->file->inputSeek(0, StreamPosition::beg);
+        
     };
     ~ESMReader() {};
 
@@ -46,7 +49,7 @@ public:
     void skipRecord();
     void skipGroup();
     void skipSubrecord();
-    void setCurrentStream(std::ifstream* stream)
+    void setCurrentStream(InputStream* stream)
     {
         this->currentStream = stream;
     }
@@ -130,9 +133,10 @@ public:
     reportError(std::string err);
 
 private:
-    std::istream* currentStream;
-    std::ifstream file;
-    std::istream  compressed;
+    //std::istream* currentStream;
+    InputStream* currentStream;
+    InputStream* file;
+    InputStream*  compressed;
     decompBuf*    compBuf;
 
     ssize_t     fileSize;
@@ -168,28 +172,28 @@ template <typename T>
 void ESMReader::readSubrecordTypeSize(T& subrecValue)
 {
 
-    //int start = this->currentStream->tellg();
+    //int start = this->currentStream->inputTell();
 #ifdef DEBUG
     assert(sizeof(T) == currentSubrecordHead.dataSize);
 #endif
-    this->currentStream->read(reinterpret_cast<char*>(&subrecValue), sizeof(T));
+    this->currentStream->read(reinterpret_cast<char*>(&subrecValue), sizeof(T), 1);
 
     if (!currentStream) {
         std::stringstream s;
         s << "I/O error!\n";
         s << "Expected to read record with size " << currentSubrecordHead.dataSize << "\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->tellg();
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->inputTell();
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }
     updateReadLocation(sizeof(T));
 
-    //int end    = this->currentStream->tellg();
+    //int end    = this->currentStream->inputTell();
     /*int actual = end - start;
     if (actual != sizeof(T)) {
         std::stringstream s;
         s << "Expected to read " << sizeof(T) << " bytes, actually read " << actual << " bytes,\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << this->currentStream->tellg();
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at 0x" << std::hex << this->currentStream->inputTell();
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }*/
@@ -204,7 +208,7 @@ void ESMReader::readSubrecord(T& subrecValue)
     }
 #endif
 
-    this->currentStream->read(reinterpret_cast<char*>(&subrecValue), currentSubrecordHead.dataSize);
+    this->currentStream->read(reinterpret_cast<char*>(&subrecValue), currentSubrecordHead.dataSize, 1);
     updateReadLocation(currentSubrecordHead.dataSize);
 }
 
@@ -212,7 +216,7 @@ template <typename T>
 void ESMReader::readRawData(T& value)
 {
 
-    this->currentStream->read(reinterpret_cast<char*>(&value), sizeof(T));
+    this->currentStream->read(reinterpret_cast<char*>(&value), sizeof(T), 1);
     updateReadLocation(sizeof(T));
 }
 
@@ -220,16 +224,16 @@ template <typename T>
 void ESMReader::readRawDataSubrecSize(T& value)
 {
 
-    this->currentStream->read(reinterpret_cast<char*>(&value), this->currentSubrecordHead.dataSize);
+    this->currentStream->read(reinterpret_cast<char*>(&value), this->currentSubrecordHead.dataSize, 1);
     updateReadLocation(this->currentSubrecordHead.dataSize);
 }
 
 template <typename T>
 void ESMReader::readRawArray(T* array, ssize_t length)
 {
-    //int start = this->currentStream->tellg();
-    this->currentStream->read(reinterpret_cast<char*>(array), length);
-    //int end = this->currentStream->tellg();
+    //int start = this->currentStream->inputTell();
+    this->currentStream->read(reinterpret_cast<char*>(array), sizeof(char), length);
+    //int end = this->currentStream->inputTell();
     updateReadLocation(length);
 
     //return end - start;
@@ -243,27 +247,27 @@ void ESMReader::readArraySubrecord(std::vector<T>& array)
     assert((sizeof(T) * array.size()) == currentSubrecordHead.dataSize);
 #endif
 
-    //int start = this->currentStream->tellg();
-    this->currentStream->read(reinterpret_cast<char*>(&array[0]), currentSubrecordHead.dataSize);
+    //int start = this->currentStream->inputTell();
+    this->currentStream->read(reinterpret_cast<char*>(&array[0]), 1, currentSubrecordHead.dataSize);
 
     if (!currentStream) {
         std::stringstream s;
         s << "I/O error!\n";
         s << "Expected to read array with size " << currentSubrecordHead.dataSize << "\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->tellg();
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->inputTell();
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }
     updateReadLocation(currentSubrecordHead.dataSize);
     //Nikad nece biti error, rijec je o citanju "koliko treba"
 
-    //int end    = this->currentStream->tellg();
+    //int end    = this->currentStream->inputTell();
     /*int actual = end - start;
 
     if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->tellg();
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->inputTell();
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }*/
@@ -272,23 +276,23 @@ void ESMReader::readArraySubrecord(std::vector<T>& array)
 template <typename T>
 void ESMReader::readFixedArraySubrecord(T* array)
 {
-    //int start = this->currentStream->tellg();
-    this->currentStream->read(reinterpret_cast<char*>(array), currentSubrecordHead.dataSize);
+    //int start = this->currentStream->inputTell();
+    this->currentStream->read(reinterpret_cast<char*>(array), 1, currentSubrecordHead.dataSize);
 
     if (!currentStream) {
         std::stringstream s;
         s << "I/O error!\n";
         s << "Expected to read array with size " << currentSubrecordHead.dataSize << "\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->tellg();
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->inputTell();
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }
-    //int end    = this->currentStream->tellg();
+    //int end    = this->currentStream->inputTell();
     /*int actual = end - start;
     if (actual != currentSubrecordHead.dataSize) {
         std::stringstream s;
         s << "Expected to read size " << currentSubrecordHead.dataSize << ", actually read " << actual << " bytes,\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->tellg();
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->inputTell();
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }*/

@@ -13,7 +13,7 @@ class ByteArrayInputStream : public InputStream {
 
 private:
 
-	std::vector<uint8_t> array;
+	std::vector<uint8_t>* array;
 	uint64_t pos;
 
 public:
@@ -25,6 +25,6 @@ public:
 	bool isEnded();
 	void close() { inputOpen = false; }
 
-	ByteArrayInputStream(std::vector<uint8_t>& array);
+	ByteArrayInputStream(std::vector<uint8_t>* array);
 	~ByteArrayInputStream() {}
 };
