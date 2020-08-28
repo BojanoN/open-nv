@@ -35,57 +35,78 @@ void FileProvider::initArchives() {
 }
 
 
-InputStream& FileProvider::openFile(std::string filepath) {
+InputStream* FileProvider::openFile(const std::string& filepath) {
 
 	if(this->openedFiles.find(filepath) != this->openedFiles.end()) {
-		std::logic_error("File already opened!");
+		return NULL;
 	}
 
-	std::string errors;
+	InputStream* file = findAndOpenFile(filepath);
 
-
-	try {
-		return openLooseFile(filepath);
-	} catch (std::invalid_argument& e) {
-		// Not a loose file
-		errors += e.what();
+	if(file == NULL) {
+		throw std::invalid_argument("File not found: " + filepath);
 	}
 
-	try {
-		return openArchiveFile(filepath);
-	} catch (std::invalid_argument e) {
-		// Not an archive file
-		errors += e.what();
-	}
+	return file;
+}
+
+InputStream* FileProvider::findAndOpenFile(const std::string& filepath) {
 	
-	throw std::invalid_argument(errors);
+	InputStream* file = openLooseFile(filepath);
+	if(file != NULL) {
+		
+		lockFile(filepath, file);
+		return file;
+	}
+
+	file = openArchiveFile(filepath);
+	if(file != NULL) {
+		return file;
+	}
+
+	registerFileOpened(filepath, file);
+
+	return NULL;
+}
+
+void FileProvider::lockFile(const std::string& filepath, InputStream* file) {
+
+	openedInputFiles.insert(fileStream);
+	openedInputFilesPathMap.emplace(std::make_pair(filepath, fileStream));
+	openedInputFilesStreamMap.emplace(std::make_pair(fileStream, filepath));
 }
 
 
-InputStream& FileProvider::openLooseFile(std::string filepath) {
+InputStream* FileProvider::openLooseFile(const std::string& filepath) {
 
 	fs::path fullPath = this->rootPath / fs::path(filepath);
 
 	if(!fs::exists(fullPath)) {
-		throw std::invalid_argument(std::string("Loose file path does not exist! ") + std::string(fullPath));
+		return NULL;
 	}
 	if(!fs::is_regular_file(fullPath)) {
-		throw std::invalid_argument(std::string("Not a regular file! ") + std::string(fullPath));
+		log_error("Attempted to open %s, not a regular file!", filepath.c_str());
+		return NULL;
 	}
-
-	FileInputStream* fileStream = new FileInputStream(fullPath);
+	return new FileInputStream(fullPath);
 	
-	openedInputFiles.insert(fileStream);
-	openedInputFilesPathMap.emplace(std::make_pair(filepath, fileStream));
-	
-	return *fileStream;
+	return fileStream;
 }
 
 
-InputStream& FileProvider::openArchiveFile(std::string filepath) {
+InputStream* FileProvider::openArchiveFile(const std::string& filepath) {
 	
-	BSA* containingArchive = NULL;
+	BSA* containingArchive = getContainingArchive(filepath);
 
+	if (containingArchive == NULL) {
+		return NULL;
+	}
+
+	return new ByteArrayInputStream(archive->getFile(filepath));
+}
+
+
+BSA* FileProvider::getContainingArchive(const std::string& filepath) {
 	auto archiveIt = this->archivePathCache.find(filepath);
 	if(archiveIt != this->archivePathCache.end()) {
 		
@@ -96,6 +117,7 @@ InputStream& FileProvider::openArchiveFile(std::string filepath) {
 		for(auto archive = archives.begin(); archive != archives.end(); archive++) {
 		
 			if(archive->fileExists(filepath)) {
+				
 				this->archivePathCache[filepath] = archive;
 				containingArchive = archive;
 
@@ -103,21 +125,16 @@ InputStream& FileProvider::openArchiveFile(std::string filepath) {
 			}
 		}	
 	}
-
-	if (containingArchive == NULL) {
-		throw std::invalid_argument("File not found in any archive!");
-	}
-
-	ByteArrayInputStream* fileStream = new ByteArrayInputStream(archive->getFile(filepath));
-
-	openedFiles.emplace(std::make_pair(std::string(filepath), ByteArrayInputStream(archive->getFile(filepath))));
-	return openedFiles[filepath];
 }
 
 
-void FileProvider::closeFile(InputStream& file) {
-	auto it = openedFiles.find(file.getPath());
+void FileProvider::closeFile(InputStream* file) {
+	auto it = openedFiles.find(file);
 	if (it != openedFiles.end()) {
+
+		openedInputFilesPathMap.erase(openedInputFilesStreamMap.find(file)->second);
+		openedInputFilesStreamMap.erase(file);
 		openedFiles.erase(it);
 	}
+	file->close();
 }
