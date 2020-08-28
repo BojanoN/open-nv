@@ -2,6 +2,7 @@
 #include "hash.hpp"
 #include "logc/log.h"
 #include "util/compress.hpp"
+#include "streams/bytearray/ibastream.hpp"
 #include <algorithm>
 #include <string>
 #include <utility>
@@ -185,7 +186,8 @@ bool BSA::fileExists(std::string path)
     return false;
 }
 
-std::vector<uint8_t>* BSA::getFile(std::string path)
+//std::vector<uint8_t>* BSA::getFile(std::string path)
+InputStream* BSA::getFile(std::string path)
 {
 
     FolderRecord* folder;
@@ -293,7 +295,7 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
         this->file->read(reinterpret_cast<char*>(ret->data()), 1, file.size);
     }
 
-    return ret;
+    return new ByteArrayInputStream(ret);
 };
 
 };
