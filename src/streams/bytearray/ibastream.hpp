@@ -3,6 +3,9 @@
 #include <vector>
 #include <stdexcept>
 
+/*
+	ByteArrayInputStream supports reading from a vector.
+*/
 class ByteArrayInputStream : public InputStream {
 
 private:
