@@ -97,7 +97,7 @@ public:
     ~BSA() { delete cache; 
             delete file; };
 
-    std::vector<uint8_t>* getFile(std::string path);
+    InputStream* getFile(std::string path);
     bool                  fileExists(std::string path);
 
     std::string           getName() { return name; }
