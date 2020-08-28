@@ -61,4 +61,7 @@ public:
 	virtual void close() = 0;
 
 	virtual ~InputStream() {}
+
+	InputStream() {}
+	InputStream(InputStream& is) = delete;
 };
