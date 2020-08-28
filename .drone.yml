@@ -3,9 +3,14 @@ type: docker
 name: default
 
 steps:
-- name: greeting
+- name: compiler-setup
   image: alpine
   commands:
-  - echo hello
-  - ls
-  - pwd
+  - apk update
+  - apk add git cmake make ninja clang build-base # build-base includes all possible headers and runtimes
+  - apk add lld   # llvm linker
+  - ln -s /usr/bin/lld /usr/bin/ld
+- name: compile-test
+  image: alpine
+  commands:
+  - make
