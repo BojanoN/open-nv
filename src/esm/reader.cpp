@@ -18,33 +18,33 @@ uint32_t    ESMReader::recordId() { return currentRecordHead.id; }
 ESMType ESMReader::peekNextType()
 {
     ESMType ret;
-    this->currentStream->read(reinterpret_cast<char*>(&ret), sizeof(uint32_t));
-    this->currentStream->seekg(-sizeof(uint32_t), std::ios::cur);
+    this->currentStream->read(reinterpret_cast<char*>(&ret), sizeof(uint32_t), 1);
+    this->currentStream->inputSeek(-sizeof(uint32_t), StreamPosition::cur);
     return ret;
 }
 
 void ESMReader::readNextRecordHeader()
 {
-    this->currentStream->read(reinterpret_cast<char*>(&(this->currentRecordHead)), sizeof(RecordHeader));
-    //this->endOfRecord = (int)this->currentStream->tellg() + currentRecordHead.dataSize;
+    this->currentStream->read(reinterpret_cast<char*>(&(this->currentRecordHead)), sizeof(RecordHeader), 1);
+    //this->endOfRecord = (int)this->currentStream->inputTell() + currentRecordHead.dataSize;
     updateReadLocation(sizeof(RecordHeader));
     updateEndOfRecord();
 }
 
 void ESMReader::readNextGroupHeader()
 {
-    this->currentStream->read(reinterpret_cast<char*>(&(this->currentGroupHead)), sizeof(GroupHeader));
-    //this->endOfGroup = (int)this->currentStream->tellg() + currentGroupHead.groupSize - 24;
+    this->currentStream->read(reinterpret_cast<char*>(&(this->currentGroupHead)), sizeof(GroupHeader), 1);
+    //this->endOfGroup = (int)this->currentStream->inputTell() + currentGroupHead.groupSize - 24;
     updateReadLocation(sizeof(GroupHeader));
     updateEndOfGroup();
 }
 
 void ESMReader::readNextSubrecordHeader()
 {
-    /* if (this->currentStream->tellg() == endOfRecord) {
+    /* if (this->currentStream->inputTell() == endOfRecord) {
         std::stringstream s;
         s << "Unexpected end of record " << currentRecordHead.type << " at "
-          << this->currentStream->tellg() << '\n';
+          << this->currentStream->inputTell() << '\n';
     }*/
 
     // Check if we ran out of compressed data
@@ -54,27 +54,27 @@ void ESMReader::readNextSubrecordHeader()
         std::streambuf* stb   = this->compressed.rdbuf();
         delete stb;
     }*/
-    this->currentStream->read(reinterpret_cast<char*>(&(this->currentSubrecordHead)), sizeof(SubrecordHeader));
+    this->currentStream->read(reinterpret_cast<char*>(&(this->currentSubrecordHead)), sizeof(SubrecordHeader), 1);
     updateReadLocation(sizeof(SubrecordHeader));
     updateEndOfSubrecord();
-    //this->endOfSubrecord = (int)this->currentStream->tellg() + currentSubrecordHead.dataSize;
+    //this->endOfSubrecord = (int)this->currentStream->inputTell() + currentSubrecordHead.dataSize;
 }
 
 void ESMReader::skipRecord()
 {
-    this->currentStream->seekg(endOfRecord, std::ios::beg);
+    this->currentStream->inputSeek(endOfRecord, StreamPosition::beg);
     updateReadLocation(endOfRecord - currentLocation);
 }
 
 void ESMReader::skipGroup()
 {
-    this->currentStream->seekg(endOfGroup, std::ios::beg);
+    this->currentStream->inputSeek(endOfGroup, StreamPosition::beg);
     updateReadLocation(endOfGroup - currentLocation);
 }
 
 void ESMReader::skipSubrecord()
 {
-    this->currentStream->seekg(endOfSubrecord, std::ios::beg);
+    this->currentStream->inputSeek(endOfSubrecord, StreamPosition::beg);
     updateReadLocation(endOfSubrecord - currentLocation);
 }
 
@@ -86,30 +86,29 @@ void ESMReader::checkSubrecordHeader(ESMType type)
             Util::typeValueToName(currentSubrecordHead.type).c_str(),
             Util::typeValueToName(currentRecordHead.type).c_str(),
             currentRecordHead.id,
-            ((int)this->currentStream->tellg() - sizeof(SubrecordHeader)));
+            ((int)this->currentStream->inputTell() - sizeof(SubrecordHeader)));
 
         throw std::runtime_error("Subrecord type mismatch!");
     }
 }
 
-void ESMReader::readDirect(char* dest, ssize_t length)
-{
-    this->currentStream->read(dest, length);
+void ESMReader::readDirect(char* dest, ssize_t length) {
+    this->currentStream->read(dest, 1, length);
     updateReadLocation(length);
 }
 
 void ESMReader::readStringSubrecord(std::string& subrecString)
 {
-    subrecString.resize(currentSubrecordHead.dataSize - 1);
+    subrecString.resize(currentSubrecordHead.dataSize);
 
-    //int start = this->currentStream->tellg();
-    this->currentStream->read(reinterpret_cast<char*>(&subrecString[0]), currentSubrecordHead.dataSize);
+    //int start = this->currentStream->inputTell();
+    this->currentStream->read(reinterpret_cast<char*>(&subrecString[0]), 1, currentSubrecordHead.dataSize);
 
     if (!currentStream) {
         std::stringstream s;
         s << "I/O error!\n";
         s << "Expected to read array with size " << currentSubrecordHead.dataSize << "\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->tellg();
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->inputTell();
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }
@@ -118,7 +117,7 @@ void ESMReader::readStringSubrecord(std::string& subrecString)
 
 void ESMReader::rewind(ssize_t size)
 {
-    this->currentStream->seekg(-size, std::ios::cur);
+    this->currentStream->inputSeek(-size, StreamPosition::cur);
     updateReadLocation(-size);
 }
 
@@ -126,13 +125,13 @@ void ESMReader::readFixedSizeString(std::string& dest, size_t size)
 {
     dest.resize(size);
 
-    this->currentStream->read(reinterpret_cast<char*>(&dest[0]), size);
+    this->currentStream->read(reinterpret_cast<char*>(&dest[0]), 1 ,size);
 
     if (!currentStream) {
         std::stringstream s;
         s << "I/O error!\n";
         s << "Expected to read array with size " << currentSubrecordHead.dataSize << "\n";
-        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->tellg();
+        s << " in subrecord " << Util::typeValueToName(currentSubrecordHead.type) << ", in record " << Util::typeValueToName(currentRecordHead.type) << " at " << std::hex << this->currentStream->inputTell();
         log_fatal(s.str().c_str());
         throw std::runtime_error("Read mismatch!");
     }
@@ -156,14 +155,20 @@ void ESMReader::reportError(std::string err)
 void ESMReader::startCompressedMode()
 {
     uint32_t recordSize;
-    this->currentStream->read(reinterpret_cast<char*>(&recordSize), sizeof(uint32_t));
+    this->currentStream->read(reinterpret_cast<char*>(&recordSize), sizeof(uint32_t), 1);
 
     this->currentLocation += this->currentRecordHead.dataSize;
 
-    this->compBuf = new decompBuf(this->file, this->currentRecordHead.dataSize, recordSize);
+    std::vector<uint8_t> compressedRecord(this->currentRecordHead.dataSize);
+    std::vector<uint8_t>* uncompressedRecord = new std::vector<uint8_t>(recordSize);
 
-    this->compressed.rdbuf(this->compBuf);
-    this->currentStream = &this->compressed;
+    this->currentStream->read(reinterpret_cast<char*>(&compressedRecord[0]), sizeof(char), this->currentRecordHead.dataSize);
+    
+    ::Util::zlibDecompress(compressedRecord, *uncompressedRecord);
+
+    this->compressed = new ByteArrayInputStream(uncompressedRecord);
+
+    this->currentStream = this->compressed;
     savedContext.save(*this);
     this->endOfRecord     = recordSize;
     this->currentLocation = 0;
@@ -173,13 +178,9 @@ void ESMReader::endCompressedMode()
 {
     if (currentRecordHead.flags & RecordFlags::COMPRESSED) {
         savedContext.restore(*this);
-        currentStream = &file;
-        this->currentStream->seekg(this->currentLocation, std::ios::beg);
+        currentStream = file;
+        this->currentStream->inputSeek(this->currentLocation, StreamPosition::beg);
 
-        if (compBuf != nullptr) {
-            delete compBuf;
-            compBuf = nullptr;
-        }
     }
 }
 
@@ -202,7 +203,7 @@ void ESMReader::ReaderContext::restore(ESMReader& reader)
 void ESMReader::readStringArray(std::vector<std::string>& vec)
 {
     std::vector<uint8_t> tmp(currentSubrecordHead.dataSize);
-    this->currentStream->read(reinterpret_cast<char*>(&tmp[0]), currentSubrecordHead.dataSize);
+    this->currentStream->read(reinterpret_cast<char*>(&tmp[0]), 1, currentSubrecordHead.dataSize);
     updateReadLocation(currentSubrecordHead.dataSize);
 
     uint32_t beg = 0;

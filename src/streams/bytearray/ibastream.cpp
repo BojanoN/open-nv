@@ -1,7 +1,8 @@
 #include "ibastream.hpp"
 
-ByteArrayInputStream::ByteArrayInputStream(std::vector<uint8_t>& byteArray) : pos{0} {
-	std::copy(byteArray.begin(), byteArray.end(), std::back_inserter(this->array));
+ByteArrayInputStream::ByteArrayInputStream(std::vector<uint8_t>* byteArray) : pos{0} {
+	//std::copy(byteArray.begin(), byteArray.end(), std::back_inserter(this->array));
+	this->array = byteArray;
 }
 
 std::size_t ByteArrayInputStream::read(void* _dst, std::size_t size, std::size_t length) {
@@ -11,12 +12,12 @@ std::size_t ByteArrayInputStream::read(void* _dst, std::size_t size, std::size_t
 	std::size_t read = length; // Presume
 	for(unsigned int i = 0; i < size * length; i++) {
 		
-		if(pos == array.size()) {
+		if(pos == array->size()) {
 			read = i / size;
 			break;
 		}
 
-		dst[i] = array[pos++];
+		dst[i] = (*(array))[pos++];
 	}
 	this->lastRead = read;
 
@@ -34,7 +35,7 @@ InputStream& ByteArrayInputStream::inputSeek(uint64_t offset, StreamPosition pos
 		pos += offset;
 		break;
 	case StreamPosition::end:
-		pos = array.size() - offset;
+		pos = array->size() - offset;
 		break;
 	}
 	return *this;
@@ -45,5 +46,5 @@ uint64_t ByteArrayInputStream::inputTell() {
 }
 
 bool ByteArrayInputStream::isEnded() {
-	return pos == array.size();
+	return pos == array->size();
 }

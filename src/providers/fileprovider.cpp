@@ -2,10 +2,15 @@
 #include <algorithm>
 #include <cctype>
 #include <thread>
+#include <cassert>
 
 namespace fs = std::filesystem;
 
+bool FileProvider::instantiated = false;
+
 FileProvider::FileProvider(const char* rootPath) {
+	assert(!this->instantiated);
+
 	fs::path root(rootPath);
 
 	if(!fs::exists(root)) {
@@ -20,12 +25,15 @@ FileProvider::FileProvider(const char* rootPath) {
 	log_info("Setting root data folder: %s", rootPath);
 
 	this->initArchives();
+
+	this->instantiated = true;
 }
 
 FileProvider::~FileProvider() {
 	for(auto archive : archives) {
 		delete archive;
 	}
+	this->instantiated = false;
 }
 
 
@@ -134,11 +142,7 @@ InputStream* FileProvider::openArchiveFile(const std::string* filepath) {
 		return NULL;
 	}
 
-	std::vector<uint8_t>* fileData = containingArchive->getFile(lowerCased);
-	InputStream* stream = new ByteArrayInputStream(*fileData);
-	
-	delete fileData;
-	return stream;
+	return containingArchive->getFile(lowerCased);
 }
 
 
