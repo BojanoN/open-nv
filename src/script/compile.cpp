@@ -90,7 +90,7 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
 int Compiler::compileOnTriggerEnter(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
 {
     uint8_t  onTriggerEnterID[] = { 0x1A, 0x00 };
-    uint16_t flags              = 0x0001;
+    uint16_t argumentCount      = 1;
     uint16_t varIndex           = 0;
 
     if (blocktype->arg.size() == 0) {
@@ -99,7 +99,7 @@ int Compiler::compileOnTriggerEnter(BlockTypeStatement* blocktype, CompiledScrip
     }
 
     out->writeAt(blocktypeCodeOffset, onTriggerEnterID, sizeof(uint16_t));
-    out->writeShort(flags);
+    out->writeShort(argumentCount);
 
     out->writeByte(ExprCodes::REF_FUNC_PARAM);
 
@@ -116,7 +116,7 @@ int Compiler::compileOnTriggerEnter(BlockTypeStatement* blocktype, CompiledScrip
 int Compiler::compileOnTrigger(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeIDOffset)
 {
     uint8_t  onTriggerEnterID[] = { 0x18, 0x00 };
-    uint16_t flags              = 0x0001;
+    uint16_t argumentCount      = 1;
     uint16_t varIndex           = 0;
 
     if (blocktype->arg.size() == 0) {
@@ -125,7 +125,7 @@ int Compiler::compileOnTrigger(BlockTypeStatement* blocktype, CompiledScript* ou
     }
 
     out->writeAt(blocktypeIDOffset, onTriggerEnterID, sizeof(uint16_t));
-    out->writeShort(flags);
+    out->writeShort(argumentCount);
 
     out->writeByte(ExprCodes::REF_FUNC_PARAM);
 
@@ -362,15 +362,18 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
     FunctionInfo& info = FunctionResolver::getFunctionInfo(func->functionName);
 
     // Reference function call, inside an expression
-    // TODO: check the esm file for confirmation
     if (func->reference.size()) {
-        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+        if (func->context == NodeContext::Expression) {
+            out->writeByte(ExprCodes::PUSH);
+            out->writeByte(ExprCodes::REF_FUNC_PARAM);
+        } else {
+            out->writeShort(OutputCodes::REF_ACCESS);
+        }
         uint16_t index = ctx.SCROLookup(func->reference);
         out->writeShort(index);
     }
-
     if (func->context == NodeContext::Expression) {
-        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+        out->writeByte(ExprCodes::FUNC_CALL);
     }
 
     uint16_t funcCode = info.opcode;
@@ -379,52 +382,55 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
     uint32_t paramBytesOffset = out->getSize();
     out->writeShort(0x00);
 
-    uint16_t paramCount = func->arguments.size();
-    out->writeShort(paramCount);
+    if (info.paramCount > 0) {
 
-    uint16_t     paramBytes = 0;
-    LiteralExpr* literal;
+        uint16_t paramCount = func->arguments.size();
+        out->writeShort(paramCount);
 
-    for (uint32_t i = 0; i < paramCount; i++) {
-        // TODO: add information about the number of parameters required for each available function
-        // so we can enable nested function calls
-        if (func->arguments[i]->type != NodeType::LiteralExpr) {
-            log_fatal("Function arguments can only be constant values");
-            return -1;
+        uint16_t     paramBytes = sizeof(uint16_t);
+        LiteralExpr* literal;
+
+        for (uint32_t i = 0; i < paramCount; i++) {
+            // TODO: add information about the number of parameters required for each available function
+            // so we can enable nested function calls
+            if (func->arguments[i]->type != NodeType::LiteralExpr) {
+                log_fatal("Function arguments can only be constant values");
+                return -1;
+            }
+
+            literal = dynamic_cast<LiteralExpr*>(func->arguments[i]);
+
+            switch (literal->valueType) {
+            case (Type::Integer): {
+                out->writeByte(ExprCodes::LONG_FUNC_PARAM);
+                uint32_t value = std::stol(literal->value);
+                out->writeLong(value);
+                paramBytes += 1 + sizeof(uint32_t);
+                break;
+            }
+            case (Type::Reference):
+            case (Type::Identifier): {
+                out->writeByte(ExprCodes::REF_FUNC_PARAM);
+                uint16_t index = ctx.SCROLookup(literal->value);
+                out->writeShort(index);
+                paramBytes += 1 + sizeof(uint16_t);
+                break;
+            }
+            case (Type::Float): {
+                out->writeByte(ExprCodes::FLOAT_FUNC_PARAM);
+                double value = std::stod(literal->value);
+                out->write((uint8_t*)&value, sizeof(double));
+                paramBytes += 1 + sizeof(double);
+                break;
+            }
+            default:
+                log_fatal("Unknown function parameter %s", TypeEnumToString(literal->valueType));
+                return -1;
+            }
         }
 
-        literal = dynamic_cast<LiteralExpr*>(func->arguments[i]);
-
-        switch (literal->valueType) {
-        case (Type::Integer): {
-            out->writeByte(ExprCodes::LONG_FUNC_PARAM);
-            uint32_t value = std::stol(literal->value);
-            out->writeLong(value);
-            paramBytes += 1 + sizeof(uint32_t);
-            break;
-        }
-        case (Type::Reference):
-        case (Type::Identifier): {
-            out->writeByte(ExprCodes::REF_FUNC_PARAM);
-            uint16_t index = ctx.SCROLookup(literal->value);
-            out->writeShort(index);
-            paramBytes += 1 + sizeof(uint16_t);
-            break;
-        }
-        case (Type::Float): {
-            out->writeByte(ExprCodes::FLOAT_FUNC_PARAM);
-            double value = std::stod(literal->value);
-            out->write((uint8_t*)&value, sizeof(double));
-            paramBytes += 1 + sizeof(double);
-            break;
-        }
-        default:
-            log_fatal("Unknown function parameter %s", TypeEnumToString(literal->valueType));
-            return -1;
-        }
+        out->writeAt(paramBytesOffset, (uint8_t*)&paramBytes, sizeof(uint16_t));
     }
-
-    out->writeAt(paramBytesOffset, (uint8_t*)&paramBytes, sizeof(uint16_t));
 
     return out->getSize() - begSize;
 };
@@ -567,7 +573,6 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
         out->writeByte(ExprCodes::REF_FUNC_PARAM);
     } else if (refAccess->context == NodeContext::Assignment) {
         out->writeByte(ExprCodes::REF_FUNC_PARAM);
-
     } else {
         out->writeByte(OutputCodes::REF_ACCESS);
     }

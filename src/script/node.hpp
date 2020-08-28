@@ -256,6 +256,7 @@ public:
         std::cout << functionName << " ";
         for (Node* n : arguments) {
             n->print();
+            std::cout << " ";
         }
         std::cout << ")\n";
     }
