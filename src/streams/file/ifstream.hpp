@@ -4,6 +4,9 @@
 #include <cstdio>
 #include <stdexcept>
 
+/*
+	FileInputStream supports reading from a file.
+*/
 class FileInputStream : public InputStream {
 
 private:
