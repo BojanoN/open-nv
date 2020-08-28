@@ -26,21 +26,28 @@ private:
 	// Map of opened input files.
 	std::unordered_map<std::string, InputStream*> openedInputFilesPathMap;
 
+	std::unordered_map<InputStream*, std::string> openedInputFilesStreamMap;
+
 	// Loads the .bsa archives.
 	void 			initArchives();
 
 	// Opens a loose file. 
-	FileInputStream&    openLooseFile(const std::string& filepath);
+	InputStream*    openLooseFile(const std::string& filepath);
 	
 	// Opens a file from a .bsa archive.
-	ByteArrayInputStream&    openArchiveFile(const std::string& filepath);
+	InputStream*    openArchiveFile(const std::string& filepath);
 
-	// Closes the given file.
-	void 			closeFile(InputStream& file);
+	BSA* getContainingArchive(const std::string& filepath);
+	void lockFile(const std::string& filepath, InputStream* file);
+	InputStream* findAndOpenFile(const std::string& filepath);  
 
 public:
 
 	FileProvider(const char* rootPath);
 
-	std::ifstream openFile(std::string filePath);
+	InputStream* openFile(std::string filePath);
+
+	// Closes the given file.
+	void  closeFile(InputStream* file);
+
 };
