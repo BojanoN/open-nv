@@ -28,7 +28,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "getsecondspassed", { 0x100C, "GetSecondsPassed", "Returns the number of real life seconds that have passed since this function was last called by the calling script.", FunctionType::Standalone, Type::Integer, 0, {} } },
     {
         "activate",
-        { 0x100D, "Activate", "", FunctionType::Standalone, Type::Reference, 0, {} },
+        { 0x100D, "Activate", "", FunctionType::Standalone, Type::Reference, 2, { { Type::Reference, 0 }, { Type::Integer, 0 } } },
     },
     { "getactorvalue", { 0x100E, "GetActorValue", "Returns the current, modified value of the specified stat. GetActorValue can use any stat available to the player or actor (NPCs and creatures).", FunctionType::ReferenceBound, Type::Integer, 2, { { Type::Reference, 0 }, { Type::Integer, 0 } } } },
     { "setactorvalue", { 0x100F, "SetActorValue", "SetActorValue sets the stat's base value to the new value.", FunctionType::ReferenceBound, Type::Reference, 3, { { Type::Integer, 0 }, { Type::Integer, 0 }, { Type::Reference, 0 } } } },
@@ -73,7 +73,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     },
     {
         "disable",
-        { 0x1022, "Disable", "", FunctionType::Standalone, Type::Reference, 1, {{Type::Integer, 0} } },
+        { 0x1022, "Disable", "", FunctionType::ReferenceBound, Type::Reference, 1, { { Type::Integer, 0 } } },
     },
     { "getdisabled", { 0x1023, "GetDisabled", "Used to check whether or not a reference is disabled.", FunctionType::ReferenceBound, Type::Reference, 0, {} } },
     {
@@ -176,7 +176,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
         { 0x105C, "Look", "", FunctionType::Standalone, Type::Reference, 0, {} },
     },
     { "stoplook", { 0x105D, "StopLook", "Cancels forced head-tracking from the Look function. Actor resumes normal head-tracking behavior.", FunctionType::ReferenceBound, Type::Reference, 0, {} } },
-    { "evaluatepackage", { 0x105E, "EvaluatePackage", "EvaluatePackage or 'evp' forces the actor to reevaluate its package list.", FunctionType::ReferenceBound, Type::Reference, 1, { { Type::Reference, 0 } } } },
+    { "evaluatepackage", { 0x105E, "EvaluatePackage", "EvaluatePackage or 'evp' forces the actor to reevaluate its package list.", FunctionType::ReferenceBound, Type::Reference, 0, {} } },
     { "sendassaultalarm", { 0x105F, "SendAssaultAlarm", "Manually creates an assault crime. The calling reference is the perpetrator. There are two optional parameters: an actor reference (the specific victim, if applicable - if not applicable, use player) and a faction reference.", FunctionType::ReferenceBound, Type::Reference, 2, { { Type::Reference, 0 }, { Type::Reference, 0 } } } },
     { "enableplayercontrols", { 0x1060, "EnablePlayerControls", "EnablePlayerControls enables the player's controls after use of DisablePlayerControls.", FunctionType::Standalone, Type::Reference, 21, { { Type::Reference, 0 }, { Type::Reference, 0 }, { Type::Reference, 0 }, { Type::Reference, 0 }, { Type::Reference, 0 }, { Type::Reference, 0 }, { Type::Reference, 0 } } } },
     { "disableplayercontrols", { 0x1061, "DisablePlayerControls", "DisablePlayerControls disables some or all of the player's controls.", FunctionType::Standalone, Type::Reference, 21, { { Type::Reference, 0 }, { Type::Reference, 0 }, { Type::Reference, 0 }, { Type::Reference, 0 }, { Type::Reference, 0 }, { Type::Reference, 0 }, { Type::Reference, 0 } } } },

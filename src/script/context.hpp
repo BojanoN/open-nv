@@ -33,6 +33,13 @@ public:
         variables[name]   = info;
     }
 
+    void declareRefVar(std::string& name, VariableScope scope)
+    {
+        log_debug("RefVarDeclare: %s, %d", name.c_str(), refVariableIndex);
+        VariableInfo info  = { Type::Reference, scope, refVariableIndex++ };
+        refVariables[name] = info;
+    }
+
     std::pair<VariableInfo, bool> getVar(std::string& name)
     {
         std::pair<VariableInfo, bool> ret;
@@ -108,6 +115,7 @@ public:
 
     Context(GameWorld::GameWorld* w)
         : variableIndex(1)
+        , refVariableIndex(1)
         , world(w)
     {
         this->scriptStore = (GameWorld::GameData<ESM::Script>*)w->getDataStore(ESM::ESMType::SCPT);
@@ -136,12 +144,41 @@ public:
         return variables[editorId].index;
     }
 
+    uint16_t SCRVLookup(std::string& editorId)
+    {
+        log_info("SCRVLookup: %s", editorId.c_str());
+
+        if (!refVariables.count(editorId)) {
+
+            declareRefVar(editorId, VariableScope::Local);
+
+            // TODO: save formids
+            // This is just a dummy lookup used for testing the compiler
+            //        formid ref = world->getByEditorID(editorId);
+            uint32_t ref = 1;
+
+            if (!ref) {
+                log_fatal("No such editorId: %s", editorId.c_str());
+                return 0;
+            }
+        }
+
+        return refVariables[editorId].index;
+    }
+
     std::string scriptName;
 
 private:
+    // Stores local variables and global object references
     std::unordered_map<std::string, VariableInfo> variables;
-    uint16_t                                      variableIndex;
-    GameWorld::GameWorld*                         world;
-    GameWorld::GameData<ESM::Script>*             scriptStore;
+
+    // Stores local reference variables
+    std::unordered_map<std::string, VariableInfo> refVariables;
+
+    uint16_t variableIndex;
+    uint16_t refVariableIndex;
+
+    GameWorld::GameWorld*             world;
+    GameWorld::GameData<ESM::Script>* scriptStore;
 };
 };

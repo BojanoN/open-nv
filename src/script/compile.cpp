@@ -139,6 +139,16 @@ int Compiler::compileOnTrigger(BlockTypeStatement* blocktype, CompiledScript* ou
     return 0;
 }
 
+int Compiler::compileGameMode(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    uint8_t  gameModeID[]  = { 0x00, 0x00 };
+    uint16_t argumentCount = 0;
+
+    out->writeAt(blocktypeCodeOffset, gameModeID, sizeof(uint16_t));
+
+    return 0;
+}
+
 int Compiler::compileBlocktype(Node* node, CompiledScript* out)
 {
 
@@ -158,6 +168,10 @@ int Compiler::compileBlocktype(Node* node, CompiledScript* out)
     }
     case BlockType::OnTrigger: {
         ret = compileOnTrigger(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::GameMode: {
+        ret = compileGameMode(blocktype, out, begSize);
         break;
     }
 
@@ -363,7 +377,7 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
 
     // Reference function call, inside an expression
     if (func->reference.size()) {
-        if (func->context == NodeContext::Expression) {
+        if (func->context == NodeContext::Expression || func->context == NodeContext::Assignment) {
             out->writeByte(ExprCodes::PUSH);
             out->writeByte(ExprCodes::REF_FUNC_PARAM);
         } else {
@@ -373,6 +387,7 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
         out->writeShort(index);
     }
     if (func->context == NodeContext::Expression) {
+        out->writeByte(ExprCodes::PUSH);
         out->writeByte(ExprCodes::FUNC_CALL);
     }
 

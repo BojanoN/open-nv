@@ -302,6 +302,7 @@ private:
 
     int compileOnTrigger(BlockTypeStatement* node, CompiledScript* out, uint32_t blocktypeIDOffset);
     int compileOnTriggerEnter(BlockTypeStatement* node, CompiledScript* out, uint32_t blocktypeIDOffset);
+    int compileGameMode(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset);
 
     int error(std::string cause)
     {
