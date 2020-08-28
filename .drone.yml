@@ -8,9 +8,7 @@ steps:
   commands:
   - apk update
   - apk add git cmake make ninja clang build-base # build-base includes all possible headers and runtimes
-  - apk add lld   # llvm linker
-  - ln -s /usr/bin/lld /usr/bin/ld
-- name: compile-test
+- name: compile
   image: alpine
   commands:
   - make
