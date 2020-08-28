@@ -10,25 +10,25 @@
 #define MIN_CACHE_SIZE        50
 
 namespace BSA {
-BSA::BSA(std::string path)
-    : file(path.c_str())
+BSA::BSA(InputStream* file, std::string name)
+    : file{file}, name{name}
 {
-    this->file.read(reinterpret_cast<char*>(&this->header), sizeof(Header));
+    this->file->read(reinterpret_cast<char*>(&this->header), sizeof(Header), 1);
 
     if (this->header.fileId != BSAId) {
-        throw std::runtime_error("Not a valid BSA file: " + path);
+        throw std::runtime_error("Not a valid BSA file!");
     }
 
-    this->file.seekg(this->header.folderRecordsOffset, std::ios::beg);
+    this->file->inputSeek(this->header.folderRecordsOffset, StreamPosition::beg);
     for (uint32_t i = 0; i < this->header.folderCount; i++) {
-        this->file.read(reinterpret_cast<char*>(&this->folders.emplace_back()), sizeof(FolderRecord));
+        this->file->read(reinterpret_cast<char*>(&this->folders.emplace_back()), sizeof(FolderRecord), 1);
     };
 
     this->compressedByDefault = this->header.archiveFlags & ArchiveFlags::CompressedArchive;
     this->filenamesEmbedded   = this->header.archiveFlags & ArchiveFlags::EmbedFileNames;
     this->folderNamesIncluded = this->header.archiveFlags & ArchiveFlags::IncludeDirectoryNames;
 
-    log_info("File %s:", path.c_str());
+    //log_info("File %s:", path.c_str());
     log_info("Read %d folders", this->folders.size());
     log_info("Compressed by default: %s", this->compressedByDefault ? "true" : "false");
     // TODO: dynamically determine fair cache size
@@ -113,15 +113,15 @@ std::pair<FileRecord, bool> BSA::findFile(FolderRecord* folder, uint64_t hashval
 
     uint32_t folderOffset = folder->offset - this->header.totalFileNameLength;
 
-    this->file.seekg(folderOffset, std::ios::beg);
+    this->file->inputSeek(folderOffset, StreamPosition::beg);
 
     if (this->folderNamesIncluded) {
         uint8_t size;
-        this->file.read(reinterpret_cast<char*>(&size), 1);
-        this->file.seekg(size, std::ios::cur);
+        this->file->read(reinterpret_cast<char*>(&size), 1, 1);
+        this->file->inputSeek(size, StreamPosition::cur);
     }
 
-    uint32_t startOffset = this->file.tellg();
+    uint32_t startOffset = this->file->inputTell();
     int32_t  l           = 0;
     int32_t  r           = folder->fileCount - 1;
     int32_t  mid         = 0;
@@ -131,8 +131,8 @@ std::pair<FileRecord, bool> BSA::findFile(FolderRecord* folder, uint64_t hashval
     while (l <= r) {
         mid = (l + r) / 2;
 
-        this->file.seekg(startOffset + (sizeof(FileRecord) * mid), std::ios::beg);
-        this->file.read(reinterpret_cast<char*>(&tmp), sizeof(FileRecord));
+        this->file->inputSeek(startOffset + (sizeof(FileRecord) * mid), StreamPosition::beg);
+        this->file->read(reinterpret_cast<char*>(&tmp), sizeof(FileRecord), 1);
 
         if (tmp.nameHash < hashval) {
             l = mid + 1;
@@ -141,7 +141,7 @@ std::pair<FileRecord, bool> BSA::findFile(FolderRecord* folder, uint64_t hashval
         } else {
             ret.first  = tmp;
             ret.second = true;
-            log_debug("File record found at 0x%x!", (int)this->file.tellg() - sizeof(FileRecord));
+            log_debug("File record found at 0x%x!", (int)this->file->inputTell() - sizeof(FileRecord));
             return ret;
         }
     }
@@ -239,7 +239,7 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
     offsetToFile = file.offsetToFile;
 
     log_debug("File found at 0x%x!", offsetToFile);
-    this->file.seekg(offsetToFile, std::ios::beg);
+    this->file->inputSeek(offsetToFile, StreamPosition::beg);
 
     std::vector<uint8_t>* ret = nullptr;
 
@@ -256,20 +256,26 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
 
         if (this->filenamesEmbedded) {
             uint8_t fnameSize;
-            this->file.read(reinterpret_cast<char*>(&fnameSize), 1);
-            this->file.seekg(fnameSize, std::ios::cur);
+            this->file->read(reinterpret_cast<char*>(&fnameSize), 1, 1);
+            this->file->inputSeek(fnameSize, StreamPosition::cur);
         }
 
-        this->file.read(reinterpret_cast<char*>(&decompSize), sizeof(uint32_t));
+        this->file->read(reinterpret_cast<char*>(&decompSize), sizeof(uint32_t), 1);
 
         // file.size + 4, what the fuck
+        log_debug("Compressed size: %d + 4", file.size);
         std::vector<uint8_t>* tmpBuf = new std::vector<uint8_t>(file.size + 4);
-        this->file.read(reinterpret_cast<char*>(tmpBuf->data()), file.size + 4);
+        this->file->read(reinterpret_cast<char*>(tmpBuf->data()), 1, file.size + 4);
 
+        log_debug("Uncompressed size: %d", decompSize);
         ret = new std::vector<uint8_t>(decompSize);
 
         try {
             Util::zlibDecompress(*tmpBuf, *ret);
+
+            if(ret->size() != decompSize) {
+                throw std::runtime_error("Wrong uncompressed size: " + std::to_string(ret->size()) + ", expected: " + std::to_string(decompSize));
+            }
 
             delete tmpBuf;
         } catch (std::runtime_error& e) {
@@ -284,7 +290,7 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
     } else {
         ret = new std::vector<uint8_t>(file.size);
 
-        this->file.read(reinterpret_cast<char*>(ret->data()), file.size);
+        this->file->read(reinterpret_cast<char*>(ret->data()), 1, file.size);
     }
 
     return ret;
