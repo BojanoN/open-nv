@@ -3,10 +3,23 @@ type: docker
 name: default
 
 
+#steps:
+#- name: compile
+#  image: alpine
+#  commands:
+#  - apk update
+#  - apk add git cmake make ninja clang build-base # build-base includes all possible headers and runtimes for both c and c++
+#  - make -j16
+
 steps:
-- name: compile
+- name: static-analysis
   image: alpine
   commands:
   - apk update
-  - apk add git cmake make ninja clang build-base # build-base includes all possible headers and runtimes for both c and c++
-  - make -j16
+  - apk add cppcheck
+  - ERROR=$(cppcheck  ./src  >/dev/null)
+  - if [[ -z "${ERROR// }" ]] then
+  - echo "all OK"
+  - else
+  - exit 1
+  - fi
