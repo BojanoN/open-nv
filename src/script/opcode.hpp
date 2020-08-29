@@ -69,22 +69,34 @@ constexpr const char* exprCodeToString(ExprCodes e) noexcept
     }
 #undef X
 }
-
-#define BLOCK_CODES_ENUM \
-    X(GAMEMODE, 0x00)
+// Note: OnActorEquip and OnActorUnequip are not present in game files
+#define BLOCK_CODES_ENUM              \
+    X(GameMode, 0x00)                 \
+    X(MenuMode, 0x01)                 \
+    X(OnActivate, 0x02)               \
+    X(OnAdd, 0x03)                    \
+    X(OnClose, 0x04)                  \
+    X(OnDrop, 0x06)                   \
+    X(OnActorEquip, 0xFF)             \
+    X(OnActorUnequip, 0xFE)           \
+    X(OnDeath, 0xA)                   \
+    X(OnCombatEnd, 0xC)               \
+    X(OnDestructionStageChange, 0x22) \
+    X(OnTriggerEnter, 0x1A)           \
+    X(OnTrigger, 0x18)
 
 #define X(name, value) name = value,
 
-enum BlocktypeCodes : uint16_t {
+enum BlocktypeCode : uint16_t {
     BLOCK_CODES_ENUM
 };
 
 #undef X
 
-constexpr const char* BlocktypeCodeToString(BlocktypeCodes e) noexcept
+constexpr const char* BlocktypeCodeToString(BlocktypeCode e) noexcept
 {
-#define X(name, value)           \
-    case (BlocktypeCodes::name): \
+#define X(name, value)          \
+    case (BlocktypeCode::name): \
         return #name;
 
     switch (e) {

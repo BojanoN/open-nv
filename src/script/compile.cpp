@@ -89,16 +89,16 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
 
 int Compiler::compileOnTriggerEnter(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
 {
-    uint8_t  onTriggerEnterID[] = { 0x1A, 0x00 };
-    uint16_t argumentCount      = 1;
-    uint16_t varIndex           = 0;
+    BlocktypeCode onTriggerEnterID = BlocktypeCode::OnTriggerEnter;
+    uint16_t      argumentCount    = 1;
+    uint16_t      varIndex         = 0;
 
     if (blocktype->arg.size() == 0) {
         log_fatal("OnTriggerEnter blocktype requires an argument");
         return -1;
     }
 
-    out->writeAt(blocktypeCodeOffset, onTriggerEnterID, sizeof(uint16_t));
+    out->writeShortAt(blocktypeCodeOffset, onTriggerEnterID);
     out->writeShort(argumentCount);
 
     out->writeByte(ExprCodes::REF_FUNC_PARAM);
@@ -115,16 +115,16 @@ int Compiler::compileOnTriggerEnter(BlockTypeStatement* blocktype, CompiledScrip
 
 int Compiler::compileOnTrigger(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeIDOffset)
 {
-    uint8_t  onTriggerEnterID[] = { 0x18, 0x00 };
-    uint16_t argumentCount      = 1;
-    uint16_t varIndex           = 0;
+    BlocktypeCode onTriggerID   = BlocktypeCode::OnTrigger;
+    uint16_t      argumentCount = 1;
+    uint16_t      varIndex      = 0;
 
     if (blocktype->arg.size() == 0) {
         log_fatal("OnTriggerEnter blocktype requires an argument");
         return -1;
     }
 
-    out->writeAt(blocktypeIDOffset, onTriggerEnterID, sizeof(uint16_t));
+    out->writeShortAt(blocktypeIDOffset, onTriggerID);
     out->writeShort(argumentCount);
 
     out->writeByte(ExprCodes::REF_FUNC_PARAM);
@@ -141,11 +141,176 @@ int Compiler::compileOnTrigger(BlockTypeStatement* blocktype, CompiledScript* ou
 
 int Compiler::compileGameMode(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
 {
-    uint8_t gameModeID[] = { 0x00, 0x00 };
-    // TODO: check bytecode for argcount
-    //uint16_t argumentCount = 0;
+    BlocktypeCode gameModeID = BlocktypeCode::GameMode;
 
-    out->writeAt(blocktypeCodeOffset, gameModeID, sizeof(uint16_t));
+    if (blocktype->arg.size()) {
+        log_fatal("GameMode blocktype takes no arguments");
+        return -1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, gameModeID);
+
+    return 0;
+}
+
+int Compiler::compileMenuMode(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode menuModeID    = BlocktypeCode::MenuMode;
+    uint16_t      argumentCount = 0;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size() > 0) {
+        argumentCount = 1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, menuModeID);
+    out->writeShort(argumentCount);
+
+    if (argumentCount) {
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+        varIndex = ctx.SCROLookup(blocktype->arg);
+        if (varIndex == 0) {
+            return -1;
+        }
+
+        out->writeShort(varIndex);
+    }
+
+    return 0;
+}
+
+int Compiler::compileOnAdd(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onAddID       = BlocktypeCode::OnAdd;
+    uint16_t      argumentCount = 1;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size() == 0) {
+        log_fatal("OnTriggerEnter blocktype requires an argument");
+        return -1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onAddID);
+    out->writeShort(argumentCount);
+
+    out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+    varIndex = ctx.SCROLookup(blocktype->arg);
+    if (varIndex == 0) {
+        return -1;
+    }
+
+    out->writeShort(varIndex);
+
+    return 0;
+}
+
+int Compiler::compileOnClose(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onCloseID = BlocktypeCode::OnClose;
+
+    if (blocktype->arg.size()) {
+        log_fatal("OnClose blocktype takes no arguments");
+        return -1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onCloseID);
+
+    return 0;
+}
+
+int Compiler::compileOnCombatEnd(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onCombatEndID = BlocktypeCode::OnCombatEnd;
+    uint16_t      argumentCount = 0;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size() > 0) {
+        argumentCount = 1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onCombatEndID);
+    out->writeShort(argumentCount);
+
+    if (argumentCount) {
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+        varIndex = ctx.SCROLookup(blocktype->arg);
+        if (varIndex == 0) {
+            return -1;
+        }
+
+        out->writeShort(varIndex);
+    }
+
+    return 0;
+}
+
+int Compiler::compileOnDeath(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onDeathID     = BlocktypeCode::OnDeath;
+    uint16_t      argumentCount = 0;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size() > 0) {
+        argumentCount = 1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onDeathID);
+    out->writeShort(argumentCount);
+
+    if (argumentCount) {
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+        varIndex = ctx.SCROLookup(blocktype->arg);
+        if (varIndex == 0) {
+            return -1;
+        }
+
+        out->writeShort(varIndex);
+    }
+
+    return 0;
+}
+
+int Compiler::compileOnDestructionStageChange(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onDestructionStageChangeID = BlocktypeCode::OnDestructionStageChange;
+
+    if (blocktype->arg.size()) {
+        log_fatal("OnDestructionStageChange blocktype takes no arguments");
+        return -1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onDestructionStageChangeID);
+
+    return 0;
+}
+
+int Compiler::compileOnDrop(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onDropID      = BlocktypeCode::OnDrop;
+    uint16_t      argumentCount = 0;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size() > 0) {
+        argumentCount = 1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onDropID);
+    out->writeShort(argumentCount);
+
+    if (argumentCount) {
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+        varIndex = ctx.SCROLookup(blocktype->arg);
+        if (varIndex == 0) {
+            return -1;
+        }
+
+        out->writeShort(varIndex);
+    }
 
     return 0;
 }
@@ -174,7 +339,34 @@ int Compiler::compileBlocktype(Node* node, CompiledScript* out)
         ret = compileGameMode(blocktype, out, begSize);
         break;
     }
-
+    case BlockType::MenuMode: {
+        ret = compileMenuMode(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnAdd: {
+        ret = compileOnAdd(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnClose: {
+        ret = compileOnClose(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnDrop: {
+        ret = compileOnDrop(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnDeath: {
+        ret = compileOnDeath(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnCombatEnd: {
+        ret = compileOnCombatEnd(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnDestructionStageChange: {
+        ret = compileOnDestructionStageChange(blocktype, out, begSize);
+        break;
+    }
     default:
         log_fatal("Unknown blocktype %s", BlockTypeEnumToString(blocktype->blocktype));
         return -1;

@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 
     const char* fname = argv[1];
 
-    std::string path = "../../bin/esm/FalloutNV.esm";
+    std::string path = "../../../bin/esm/FalloutNV.esm";
 
     GameWorld::GameWorld world;
     try {
@@ -42,6 +42,7 @@ int main(int argc, char** argv)
         world.load(reader);
     } catch (std::runtime_error& e) {
         log_fatal(e.what());
+        return 1;
     }
 
     Script::Tokenizer* tok      = new Script::Tokenizer();

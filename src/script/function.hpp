@@ -23,7 +23,7 @@ struct FunctionInfo {
     std::string                        description;
     FunctionType                       type;
     Type                               returnType;
-    unsigned int                       paramCount;
+    int                                paramCount;
     std::vector<FunctionParameterInfo> params;
 };
 
