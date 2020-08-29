@@ -20,6 +20,10 @@ std::size_t FileInputStream::read(void* dst, std::size_t size, std::size_t lengt
 	return this->lastRead;
 }
 
+int FileInputStream::getc() {
+	return std::getc(this->inputFile);
+}
+
 InputStream& FileInputStream::inputSeek(uint64_t offset, StreamPosition position) {
 	switch(position) {
 	

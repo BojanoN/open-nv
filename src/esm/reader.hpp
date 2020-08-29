@@ -37,10 +37,13 @@ public:
         this->fileSize = size;
         this->fileLeft = size;
 
-        this->file->inputSeek(0, StreamPosition::beg);
-        
+        this->file->inputSeek(0, StreamPosition::beg);  
     };
-    ~ESMReader() {};
+    
+    ~ESMReader() {
+        getFileProvider().closeFile(file);
+        delete file;
+    };
 
     bool hasMoreSubrecords() { return currentLocation < endOfRecord; }
     bool hasMoreRecordsInGroup() { return currentLocation < endOfGroup; }
