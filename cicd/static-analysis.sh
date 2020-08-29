@@ -1,5 +1,5 @@
 #!/bin/sh
-ERROR="$(cppcheck ../src 3>&1 1>&2 2>&3 | tee /dev/stderr)"  
+ERROR="$(cppcheck  --enable=warning,performance,portability ../src 3>&1 1>&2 2>&3 | tee /dev/stderr)"  
 # redirect stderr to ERROR variable while still printing both stdout and stderr
 echo "------------------------SUMMARY ------------------------"
 if [[ -z "${ERROR// }" ]]
