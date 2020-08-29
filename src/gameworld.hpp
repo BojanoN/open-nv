@@ -117,7 +117,7 @@ class GameWorld {
     GameData<ESM::DehydrationStage>        dehydrationStages;
     GameData<ESM::HungerStage>             hungerStages;
     GameData<ESM::SleepDeprivationStage>   sleepDeprivationStages;
-    // GameData<ESM::World>
+    //GameData<ESM::World>
 
     GameData<ESM::Cell> interiorCells;
     GameData<ESM::Cell> exteriorCells;
@@ -136,6 +136,8 @@ class GameWorld {
     std::unordered_map<uint32_t, GameDataBase*> dataStores;
     //std::unordered_map<formid, CellChildren*>&  getCellChildrenMap(uint32_t groupType);
 
+    std::unordered_map<std::string, formid> edidCells;
+
     void initDataStoreMap();
     void parseCellGroup(ESM::ESMReader& reader);
     //void loadCellChildren(ESM::ESMReader& reader, formid cellId, uint32_t& recordsLoaded, uint32_t& recordsSkipped);
@@ -149,13 +151,14 @@ public:
         initDataStoreMap();
     }
 
-    void   load(ESM::ESMReader& reader);
+    void load(ESM::ESMReader& reader);
+
     formid getByEditorID(std::string& editorId)
     {
         formid ret;
 
-        for (auto& entry : dataStores) {
-            ret = entry.second->get(editorId);
+        for (auto map : dataStores) {
+            ret = map.second->get(editorId);
             if (ret) {
                 return ret;
             }
@@ -164,10 +167,20 @@ public:
         return 0;
     };
 
-    formid searchCellChildren(std::string& editorId)
+    ESM::Record* getByFormId(formid id)
     {
-        return 0;
-    }
+        ESM::Record* ret;
+
+        for (auto map : dataStores) {
+            ret = map.second->getBase(id);
+            if (ret != nullptr) {
+                return ret;
+            }
+        }
+
+        return nullptr;
+    };
+
     GameDataBase* getDataStore(uint32_t type);
 };
 

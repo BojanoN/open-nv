@@ -212,6 +212,7 @@ void GameWorld::loadCellChildren(ESM::ESMReader& reader, ESM::Cell& parentCell, 
 
     uint32_t totalChildrenSkipped = 0;
     uint32_t totalChildrenLoaded  = 0;
+    formid   cellId               = parentCell.id;
 
     uint32_t cellChildrenEnd = reader.groupSize() + reader.getCurrentPosition();
     while (reader.isCurrentLocationBefore(cellChildrenEnd)) {
@@ -223,18 +224,23 @@ void GameWorld::loadCellChildren(ESM::ESMReader& reader, ESM::Cell& parentCell, 
         class ESM::CellChildren* children = parentCell.getChildren(reader.groupType());
         //childrenMap.insert(std::make_pair(cellId, new CellChildren));
 
-        uint32_t skipped = 0;
-        uint32_t loaded  = 0;
+        uint32_t     skipped = 0;
+        uint32_t     loaded  = 0;
+        ESM::Record* loadedRecord;
         while (reader.hasMoreRecordsInGroup()) {
 
             reader.readNextRecordHeader();
             try {
                 if (reader.isCurrentRecordCompressed()) {
                     reader.startCompressedMode();
-                    children->load(reader);
+                    loadedRecord = children->load(reader);
                     reader.endCompressedMode();
                 } else {
-                    children->load(reader);
+                    loadedRecord = children->load(reader);
+                }
+                if (loadedRecord->editorId.size()) {
+                    log_info("REGISTERED editorid %s", loadedRecord->editorId.c_str());
+                    this->edidCells[loadedRecord->editorId] = cellId;
                 }
                 loaded++;
             } catch (std::runtime_error& error) {
@@ -271,7 +277,7 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
             uint32_t interiorCellSubBlockEnd = reader.groupSize() + reader.getCurrentPosition();
             uint32_t cellSubBlock            = reader.groupLabel();
 
-            log_debug("Interior cell block: %d, subblock: %d", cellBlock, cellSubBlock);
+            // log_debug("Interior cell block: %d, subblock: %d", cellBlock, cellSubBlock);
 
             while (reader.isCurrentLocationBefore(interiorCellSubBlockEnd)) {
                 reader.readNextRecordHeader();
@@ -295,9 +301,9 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
                     continue;
                 }
 
-                ESM::Cell& loadedCell = this->interiorCells.get(cellId);
+                ESM::Cell* loadedCell = this->interiorCells.get(cellId);
                 reader.readNextGroupHeader();
-                loadCellChildren(reader, loadedCell, recordsLoaded, recordsSkipped);
+                loadCellChildren(reader, *loadedCell, recordsLoaded, recordsSkipped);
             }
         }
     }
@@ -321,7 +327,7 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
             reader.readNextRecordHeader();
             this->worldspaces.load(reader);
         }*/
-        ESM::Worldspace& loadedWorldspace = this->worldspaces.get(worldspaceId);
+        ESM::Worldspace* loadedWorldspace = this->worldspaces.get(worldspaceId);
 
         reader.readNextGroupHeader();
         assert(reader.groupType() == ESM::GroupType::WorldChildren);
@@ -337,16 +343,16 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
             formid cellId = reader.recordId();
             if (reader.isCurrentRecordCompressed()) {
                 reader.startCompressedMode();
-                loadedWorldspace.loadCell(reader);
+                loadedWorldspace->loadCell(reader);
                 reader.endCompressedMode();
             } else {
-                loadedWorldspace.loadCell(reader);
+                loadedWorldspace->loadCell(reader);
             }
             recordsLoaded++;
 
             reader.readNextGroupHeader();
             if (reader.groupType() == ESM::GroupType::CellChildren) {
-                loadCellChildren(reader, *loadedWorldspace.worldCell, recordsLoaded, recordsSkipped);
+                loadCellChildren(reader, *loadedWorldspace->worldCell, recordsLoaded, recordsSkipped);
             } else {
                 reader.rewind(sizeof(ESM::GroupHeader));
             }
@@ -383,7 +389,7 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
             uint32_t exteriorCellBlockEnd = reader.groupSize() + reader.getCurrentPosition();
 
             uint32_t coords = reader.groupLabel();
-            loadedWorldspace.exteriorWorldBlocks[coords];
+            loadedWorldspace->exteriorWorldBlocks[coords];
             //children->exteriorWorldBlocks.emplace_back();
             //ExteriorWorldBlock& currentExteriorBlock = children->exteriorWorldBlocks.back();
             //currentExteriorBlock.coords              = reader.groupLabel();
@@ -398,7 +404,7 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
                 //currentExteriorBlock.subblocks.emplace_back();
                 //ExteriorWorldSubBlock& currentExteriorSubBlock = currentExteriorBlock.subblocks.back();
                 //currentExteriorSubBlock.coords                 = reader.groupLabel();
-                log_debug("Exterior world block: %d, subblock: %d, location: 0x%08x", coords, subBlockCoords, reader.getCurrentPosition());
+                //  log_debug("Exterior world block: %d, subblock: %d, location: 0x%08x", coords, subBlockCoords, reader.getCurrentPosition());
                 if (reader.getCurrentPosition() == 0x019e3099) {
                     std::cout << "benis";
                 }
@@ -420,8 +426,8 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
                     subblockRecords++;
                     recordsLoaded++;
 
-                    ESM::Cell& exteriorCell = this->exteriorCells.get(cellId);
-                    loadedWorldspace.exteriorWorldBlocks[coords].insert(subBlockCoords, cellId);
+                    ESM::Cell* exteriorCell = this->exteriorCells.get(cellId);
+                    loadedWorldspace->exteriorWorldBlocks[coords].insert(subBlockCoords, cellId);
                     //currentExteriorSubBlock.cells.insert(cellId);
 
                     if (reader.peekNextType() == ESM::ESMType::GRUP) {
@@ -430,10 +436,10 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
                             reader.rewind(sizeof(ESM::GroupHeader));
                             continue;
                         }
-                        loadCellChildren(reader, exteriorCell, recordsLoaded, recordsSkipped);
+                        loadCellChildren(reader, *exteriorCell, recordsLoaded, recordsSkipped);
                     }
                 }
-                log_debug("Read %d exterior sub block cells", subblockRecords);
+                // log_debug("Read %d exterior sub block cells", subblockRecords);
             }
         }
     }

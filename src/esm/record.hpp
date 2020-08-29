@@ -4,10 +4,10 @@
 namespace ESM {
 
 struct Record {
+    std::string editorId = "";
     uint32_t    recordType;
     RecordFlags recordFlags;
     formid      id;
-    std::string editorId = "";
 
     Record() {};
     Record(ESMReader& reader)
@@ -18,6 +18,16 @@ struct Record {
     {
     }
     virtual ~Record() {};
+};
+
+class ScriptableRecord : public Record {
+public:
+    ScriptableRecord(ESMReader& reader)
+        : Record(reader) {
+
+        };
+
+    virtual formid getLinkedScript() = 0;
 };
 
 };

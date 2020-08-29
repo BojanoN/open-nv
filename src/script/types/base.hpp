@@ -10,7 +10,8 @@ namespace Script {
     X(Integer)    \
     X(Short)      \
     X(Float)      \
-    X(Identifier)
+    X(Identifier) \
+    X(Void)
 
 #define X(name) name,
 

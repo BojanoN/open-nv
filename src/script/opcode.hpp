@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+// TODO: refactor opcode definition with a separate struct
+
 namespace Script {
 
 #define OUTPUT_CODES_ENUM \
@@ -45,6 +47,7 @@ constexpr const char* outputCodeToString(OutputCodes e) noexcept
     X(REF_FUNC_PARAM, 0x72)   \
     X(LONG_FUNC_PARAM, 0x6E)  \
     X(FLOAT_FUNC_PARAM, 0x7A) \
+    X(FUNC_CALL, 0x58)        \
     X(PUSH, 0x20)
 
 #define X(name, value) name = value,
@@ -66,5 +69,33 @@ constexpr const char* exprCodeToString(ExprCodes e) noexcept
     }
 #undef X
 }
+
+#define BLOCK_CODES_ENUM \
+    X(GAMEMODE, 0x00)
+
+#define X(name, value) name = value,
+
+enum BlocktypeCodes : uint16_t {
+    BLOCK_CODES_ENUM
+};
+
+#undef X
+
+constexpr const char* BlocktypeCodeToString(BlocktypeCodes e) noexcept
+{
+#define X(name, value)           \
+    case (BlocktypeCodes::name): \
+        return #name;
+
+    switch (e) {
+        BLOCK_CODES_ENUM
+    }
+#undef X
+}
+
+struct Opcode {
+    uint16_t code;
+    uint16_t length;
+};
 
 };

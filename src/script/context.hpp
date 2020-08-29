@@ -26,11 +26,23 @@ public:
         return variables.count(var);
     }
 
+    bool refVarExists(std::string& var)
+    {
+        return refVariables.count(var);
+    }
+
     void declareVar(std::string& name, Type type, VariableScope scope)
     {
         log_debug("VarDeclare: %s, %d", name.c_str(), variableIndex);
         VariableInfo info = { type, scope, variableIndex++ };
         variables[name]   = info;
+    }
+
+    void declareRefVar(std::string& name, VariableScope scope)
+    {
+        log_debug("RefVarDeclare: %s, %d", name.c_str(), refVariableIndex);
+        VariableInfo info  = { Type::Reference, scope, refVariableIndex++ };
+        refVariables[name] = info;
     }
 
     std::pair<VariableInfo, bool> getVar(std::string& name)
@@ -41,28 +53,39 @@ public:
         if (variables.count(name)) {
             ret.second = true;
             ret.first  = variables[name];
+        } else if (refVariables.count(name)) {
+            ret.second = true;
+            ret.first  = refVariables[name];
         }
 
         return ret;
     }
 
-    std::pair<VariableInfo, bool> getScriptLocalVar(std::string& scriptEditorId, std::string& variable)
+    std::pair<VariableInfo, bool> getScriptLocalVar(std::string& scriptableRecordEditorId, std::string& variable)
     {
         std::pair<VariableInfo, bool> ret;
         uint32_t                      form;
 
         ret.second = false;
 
-        form = this->world->getByEditorID(scriptEditorId);
+        form = this->world->getByEditorID(scriptableRecordEditorId);
+
         if (form) {
 
-            std::vector<ESM::LocalVariable>& variables = this->scriptStore->get(form).data.localVariables;
+            ESM::ScriptableRecord* record = dynamic_cast<ESM::ScriptableRecord*>(this->world->getByFormId(form));
+
+            if (record == nullptr) {
+                log_fatal("Record %s is not scriptable", scriptableRecordEditorId.c_str());
+                return ret;
+            }
+
+            std::vector<ESM::LocalVariable>& variables = this->scriptStore->get(record->getLinkedScript())->data.localVariables;
             uint32_t                         size      = variables.size();
             ESM::LocalVariableData           targetVarData;
             bool                             found = false;
 
             for (uint32_t i = 0; i < size; i++) {
-                if (!strcmp(scriptEditorId.c_str(), variables[i].name.c_str())) {
+                if (!strcmp(variable.c_str(), variables[i].name.c_str())) {
                     found         = true;
                     targetVarData = variables[i].data;
                     break;
@@ -70,7 +93,7 @@ public:
             }
 
             if (!found) {
-                log_fatal("Variable %s does not exists in script %s", variable.c_str(), scriptEditorId.c_str());
+                log_fatal("Variable %s does not exists in script %s", variable.c_str(), scriptableRecordEditorId.c_str());
                 return ret;
             }
 
@@ -91,7 +114,7 @@ public:
             ret.second      = true;
             return ret;
         } else {
-            log_fatal("No such script with editorId %s", scriptEditorId.c_str());
+            log_fatal("No scriptable record with editorId %s", scriptableRecordEditorId.c_str());
             return ret;
         }
 
@@ -100,6 +123,7 @@ public:
 
     Context(GameWorld::GameWorld* w)
         : variableIndex(1)
+        , refVariableIndex(1)
         , world(w)
     {
         this->scriptStore = (GameWorld::GameData<ESM::Script>*)w->getDataStore(ESM::ESMType::SCPT);
@@ -110,9 +134,9 @@ public:
     {
         log_info("SCROLookup: %s", editorId.c_str());
 
-        if (!varExists(editorId)) {
+        if (!refVariables.count(editorId)) {
 
-            declareVar(editorId, Type::Reference, VariableScope::Global);
+            declareRefVar(editorId, VariableScope::Global);
 
             // TODO: save formids
             // This is just a dummy lookup used for testing the compiler
@@ -125,15 +149,22 @@ public:
             }
         }
 
-        return variables[editorId].index;
+        return refVariables[editorId].index;
     }
 
     std::string scriptName;
 
 private:
+    // Stores local variables and global object references
     std::unordered_map<std::string, VariableInfo> variables;
-    uint16_t                                      variableIndex;
-    GameWorld::GameWorld*                         world;
-    GameWorld::GameData<ESM::Script>*             scriptStore;
+
+    // Stores local reference variables
+    std::unordered_map<std::string, VariableInfo> refVariables;
+
+    uint16_t variableIndex;
+    uint16_t refVariableIndex;
+
+    GameWorld::GameWorld*             world;
+    GameWorld::GameData<ESM::Script>* scriptStore;
 };
 };

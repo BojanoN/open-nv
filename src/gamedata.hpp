@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esm/reader.hpp"
+#include "esm/record.hpp"
 #include "esm/types.hpp"
 #include "logc/log.h"
 #include <cassert>
@@ -13,9 +14,11 @@ namespace GameWorld {
 
 class GameDataBase {
 public:
-    virtual void    load(ESM::ESMReader& reader) = 0;
-    virtual ssize_t size()                       = 0;
-    virtual formid  get(std::string& editorId)   = 0;
+    virtual ESM::Record* load(ESM::ESMReader& reader) = 0;
+    virtual ssize_t      size()                       = 0;
+    virtual formid       get(std::string& editorId)   = 0;
+    virtual ESM::Record* getBase(formid id)           = 0;
+
     virtual ~GameDataBase() { }
 };
 
@@ -28,13 +31,15 @@ private:
     void                                    raiseError(formid id) const;
 
 public:
-    virtual ssize_t                 size() { return dataMap.size(); }
-    virtual void                    load(ESM::ESMReader& reader);
-    std::unordered_map<formid, T*>& getMap() { return this->dataMap; };
+    virtual ssize_t                          size() { return dataMap.size(); }
+    virtual ESM::Record*                     load(ESM::ESMReader& reader);
+    std::unordered_map<formid, T*>&          getMap() { return this->dataMap; };
+    std::unordered_map<std::string, formid>& getEdidMap() { return this->editorIdMap; };
 
-    T&     get(formid id);
-    formid get(std::string& editorId);
-    void   insert(T* data);
+    T*           get(formid id);
+    ESM::Record* getBase(formid id);
+    formid       get(std::string& editorId);
+    void         insert(T* data);
     virtual ~GameData();
 };
 
@@ -47,25 +52,37 @@ GameData<T>::~GameData()
 }
 
 template <class T>
-T& GameData<T>::get(formid id)
+T* GameData<T>::get(formid id)
 {
     typename std::unordered_map<formid, T*>::const_iterator it = dataMap.find(id);
 
     if (it == dataMap.end()) {
-        raiseError(id);
+        return nullptr;
     }
-    return *(it->second);
+    return it->second;
+}
+
+template <class T>
+ESM::Record* GameData<T>::getBase(formid id)
+{
+    typename std::unordered_map<formid, T*>::const_iterator it = dataMap.find(id);
+
+    if (it == dataMap.end()) {
+        return nullptr;
+    }
+    return it->second;
 }
 
 template <class T>
 formid GameData<T>::get(std::string& editorId)
 {
-    typename std::unordered_map<std::string, formid>::const_iterator it = editorIdMap.find(editorId);
+    auto it = editorIdMap.find(editorId);
 
-    if (it == editorIdMap.end()) {
-        return 0;
+    if (it != editorIdMap.end()) {
+        return it->second;
     }
-    return it->second;
+
+    return 0;
 }
 
 template <class T>
@@ -87,20 +104,21 @@ void GameData<T>::insert(T* record)
 }
 
 template <class T>
-void GameData<T>::load(ESM::ESMReader& reader)
+ESM::Record* GameData<T>::load(ESM::ESMReader& reader)
 {
-    log_debug("Fpointer before load 0x%x", reader.getCurrentPosition());
+    //log_debug("Fpointer before load 0x%x", reader.getCurrentPosition());
     try {
         T* record = new T(reader);
         this->insert(record);
         assert(dataMap.find(record->id) != dataMap.end());
+        return reinterpret_cast<ESM::Record*>(record);
     } catch (std::runtime_error& e) {
         std::stringstream s;
         log_fatal("Cannot read record!");
         log_fatal(e.what());
         throw std::runtime_error(e.what());
     }
-    log_debug("Fpointer after load 0x%x", reader.getCurrentPosition());
+    //log_debug("Fpointer after load 0x%x", reader.getCurrentPosition());
 }
 
 template <class T>

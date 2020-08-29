@@ -9,13 +9,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-bool compareCompiled(Script::CompiledScript* out, uint8_t* original, uint8_t originalSize)
+bool compareCompiled(Script::CompiledScript* out, std::vector<uint8_t> original)
 {
 
-    if (out->getSize() != originalSize)
+    if (out->getSize() != original.size())
         return false;
 
-    for (uint32_t i = 0; i < originalSize; i++) {
+    for (uint32_t i = 0; i < original.size(); i++) {
         if (out->readAt(i) != original[i]) {
             return false;
         }
@@ -31,7 +31,8 @@ int main(int argc, char** argv)
     char           c;
     DIR*           d;
     struct dirent* dir;
-    const char*    fname = argv[1];
+
+    const char* fname = argv[1];
 
     std::string path = "../../bin/esm/FalloutNV.esm";
 
@@ -121,15 +122,25 @@ int main(int argc, char** argv)
                             failed++;
                         } else {
 
-                            std::string origName = "./compiled/";
-                            origName += formid + ".bin";
+                            std::string origName = "./compiled";
+                            std::string split(strchr(formid.c_str(), '/'));
 
+                            origName += split;
+                            origName += ".bin";
+                            log_info("ASDF: %s", origName.c_str());
                             std::ifstream originalFile { origName };
+
+                            if (originalFile.fail()) {
+                                return 1;
+                            }
+
                             originalFile.seekg(0, std::ios::end);
                             ssize_t origSize = originalFile.tellg();
                             originalFile.seekg(0, std::ios::beg);
+                            original.resize(origSize);
+                            originalFile.read(reinterpret_cast<char*>(&original[0]), origSize);
 
-                            if (compareCompiled(out, original.data(), original.size())) {
+                            if (compareCompiled(out, original)) {
                                 passed++;
                             } else {
                                 failedCases << dir->d_name << "\n";
@@ -142,7 +153,7 @@ int main(int argc, char** argv)
                         }
 
                         delete s;
-                    } catch (std::exception& e) {
+                    } catch (std::runtime_error& e) {
                         log_fatal("%s\n", e.what());
                         failedCases << dir->d_name << "\n";
                         failed++;
@@ -205,15 +216,25 @@ int main(int argc, char** argv)
                 if (out == nullptr) {
                     log_fatal("Error while compiling the script");
                 } else {
-                    std::string origName = "./compiled/";
-                    origName += formid + ".bin";
+                    std::string origName = "./compiled";
+                    std::string split(strchr(formid.c_str(), '/'));
 
+                    origName += split;
+                    origName += ".bin";
+                    log_info("ASDF: %s", origName.c_str());
                     std::ifstream originalFile { origName };
+
+                    if (originalFile.fail()) {
+                        return 1;
+                    }
+
                     originalFile.seekg(0, std::ios::end);
                     ssize_t origSize = originalFile.tellg();
                     originalFile.seekg(0, std::ios::beg);
+                    original.resize(origSize);
+                    originalFile.read(reinterpret_cast<char*>(&original[0]), origSize);
 
-                    if (!compareCompiled(out, original.data(), original.size())) {
+                    if (!compareCompiled(out, original)) {
                         log_fatal("Compiled script differs from original");
                         out->dumpToFile("./failed.bin");
                     }

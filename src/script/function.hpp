@@ -3,12 +3,28 @@
 #include <unordered_map>
 #include <utility>
 
+#include "types/base.hpp"
+
 namespace Script {
+
+enum class FunctionType {
+    Standalone,
+    ReferenceBound
+};
+
+struct FunctionParameterInfo {
+    // The defaultValue field also holds the parameter type
+    Value defaultValue;
+};
+
 struct FunctionInfo {
-    uint16_t    opcode;
-    std::string name;
-    std::string alias;
-    std::string description;
+    uint16_t                           opcode;
+    std::string                        name;
+    std::string                        description;
+    FunctionType                       type;
+    Type                               returnType;
+    unsigned int                       paramCount;
+    std::vector<FunctionParameterInfo> params;
 };
 
 class FunctionResolver {

@@ -4,7 +4,7 @@
 namespace ESM {
 
 NPC::NPC(ESMReader& reader)
-    : Record(reader)
+    : ScriptableRecord(reader)
 {
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::EDID);

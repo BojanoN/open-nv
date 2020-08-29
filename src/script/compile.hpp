@@ -13,14 +13,16 @@
 namespace Script {
 
 class Node;
+class BlockTypeStatement;
 
 class CompiledScript {
 
 public:
     CompiledScript()
         : currentSize(0)
-        , currentReadOffset(0)
         , capacity(DEFAULT_ARR_SIZE)
+        , currentReadOffset(0)
+
     {
         bytecode = (uint8_t*)malloc(DEFAULT_ARR_SIZE);
     }
@@ -72,6 +74,45 @@ public:
         }
 
         bytecode[currentSize++] = value;
+
+        return true;
+    }
+
+    bool writeShort(uint16_t value)
+    {
+
+        if (this->currentSize + sizeof(value) < this->capacity) {
+            resize(1);
+        }
+
+        *((uint16_t*)&bytecode[currentSize]) = *((uint16_t*)&value);
+        currentSize += sizeof(value);
+
+        return true;
+    }
+
+    bool writeLong(uint32_t value)
+    {
+
+        if (this->currentSize + sizeof(value) < this->capacity) {
+            resize(1);
+        }
+
+        *((uint32_t*)&bytecode[currentSize]) = *((uint32_t*)&value);
+        currentSize += sizeof(value);
+
+        return true;
+    }
+
+    bool writeOpcode(Opcode opcode)
+    {
+
+        if (this->currentSize + sizeof(Opcode) < this->capacity) {
+            resize(1);
+        }
+
+        *((uint32_t*)&bytecode[currentSize]) = *((uint32_t*)&opcode);
+        currentSize += sizeof(Opcode);
 
         return true;
     }
@@ -194,7 +235,7 @@ public:
 
     Value getLocalVariable(uint16_t index)
     {
-        Value ret;
+        Value ret = { Type::Integer, { 0 } };
 
         // TODO: local var lookup
 
@@ -232,8 +273,8 @@ class Compiler {
 public:
     Compiler(GameWorld::GameWorld* store)
         //Compiler(GameWorld::GameData<ESM::Script>* store)
-        : nodes(nullptr)
-        , ctx(store) {};
+        : ctx(store)
+        , nodes(nullptr) {};
 
     CompiledScript* compile(std::vector<Node*>* ns);
 
@@ -259,6 +300,10 @@ private:
     int compileStatementBlock(Node* node, CompiledScript* out);
     int compileReturnStatement(Node* node, CompiledScript* out);
     int compileVariableAccess(Node* node, CompiledScript* out);
+
+    int compileOnTrigger(BlockTypeStatement* node, CompiledScript* out, uint32_t blocktypeIDOffset);
+    int compileOnTriggerEnter(BlockTypeStatement* node, CompiledScript* out, uint32_t blocktypeIDOffset);
+    int compileGameMode(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset);
 
     int error(std::string cause)
     {
