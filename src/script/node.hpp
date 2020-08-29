@@ -136,7 +136,14 @@ public:
         delete right;
     }
 
-    void print();
+    void print()
+    {
+        std::cout << "(";
+        this->left->print();
+        std::cout << " " << TokenEnumToString(this->op.type) << " ";
+        this->right->print();
+        std::cout << ")\n";
+    }
 
     Token op;
     Node* left;
@@ -200,7 +207,11 @@ public:
     {
         delete expression;
     }
-    void print();
+
+    void print()
+    {
+        this->expression->print();
+    }
 
     Node* expression;
 };
