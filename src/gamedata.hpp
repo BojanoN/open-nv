@@ -92,7 +92,7 @@ void GameData<T>::insert(T* record)
     auto it = dataMap.insert(std::make_pair(record->id, record));
     assert(it.second);
     if (record->editorId.size()) {
-        bool res = editorIdMap.insert(std::make_pair(record->editorId, record->id)).second;
+        editorIdMap.insert(std::make_pair(record->editorId, record->id));
     }
 
 #else

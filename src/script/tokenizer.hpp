@@ -83,16 +83,16 @@ constexpr const char* TokenEnumToString(TokenType e) noexcept
 class Token {
 public:
     Token(uint32_t lineNum, std::string lit, TokenType tType, uint32_t col)
-        : line(lineNum)
-        , literal(lit)
-        , type(tType)
-        , column(col) {};
+        : type(tType)
+        , line(lineNum)
+        , column(col)
+        , literal(lit) {};
 
     Token(uint32_t lineNum, TokenType tType, uint32_t col)
-        : line(lineNum)
-        , literal("")
-        , type(tType)
+        : type(tType)
+        , line(lineNum)
         , column(col)
+        , literal("")
     {
     }
 
@@ -125,11 +125,12 @@ public:
     Tokenizer()
         : currentLine(0)
         , currentColumn(0)
+        , sourceSize(0)
         , currentCharOffset(0)
         , startCharOffset(0)
-        , sourceSize(0)
         , tokens(nullptr)
         , tokenizeError(false)
+
     {
         log_debug("%s", source.c_str());
     };

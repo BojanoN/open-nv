@@ -70,6 +70,29 @@ constexpr const char* exprCodeToString(ExprCodes e) noexcept
 #undef X
 }
 
+#define BLOCK_CODES_ENUM \
+    X(GAMEMODE, 0x00)
+
+#define X(name, value) name = value,
+
+enum BlocktypeCodes : uint16_t {
+    BLOCK_CODES_ENUM
+};
+
+#undef X
+
+constexpr const char* BlocktypeCodeToString(BlocktypeCodes e) noexcept
+{
+#define X(name, value)           \
+    case (BlocktypeCodes::name): \
+        return #name;
+
+    switch (e) {
+        BLOCK_CODES_ENUM
+    }
+#undef X
+}
+
 struct Opcode {
     uint16_t code;
     uint16_t length;

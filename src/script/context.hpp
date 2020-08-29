@@ -26,6 +26,11 @@ public:
         return variables.count(var);
     }
 
+    bool refVarExists(std::string& var)
+    {
+        return refVariables.count(var);
+    }
+
     void declareVar(std::string& name, Type type, VariableScope scope)
     {
         log_debug("VarDeclare: %s, %d", name.c_str(), variableIndex);
@@ -48,6 +53,9 @@ public:
         if (variables.count(name)) {
             ret.second = true;
             ret.first  = variables[name];
+        } else if (refVariables.count(name)) {
+            ret.second = true;
+            ret.first  = refVariables[name];
         }
 
         return ret;
@@ -126,31 +134,9 @@ public:
     {
         log_info("SCROLookup: %s", editorId.c_str());
 
-        if (!varExists(editorId)) {
-
-            declareVar(editorId, Type::Reference, VariableScope::Global);
-
-            // TODO: save formids
-            // This is just a dummy lookup used for testing the compiler
-            //        formid ref = world->getByEditorID(editorId);
-            uint32_t ref = 1;
-
-            if (!ref) {
-                log_fatal("No such editorId: %s", editorId.c_str());
-                return 0;
-            }
-        }
-
-        return variables[editorId].index;
-    }
-
-    uint16_t SCRVLookup(std::string& editorId)
-    {
-        log_info("SCRVLookup: %s", editorId.c_str());
-
         if (!refVariables.count(editorId)) {
 
-            declareRefVar(editorId, VariableScope::Local);
+            declareRefVar(editorId, VariableScope::Global);
 
             // TODO: save formids
             // This is just a dummy lookup used for testing the compiler

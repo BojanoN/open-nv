@@ -140,7 +140,7 @@ VMStatusCode VM::functionCall(uint16_t opcode, int16_t refIndex)
 
     uint16_t paramBytes = script->readShort();
     uint16_t paramEnd   = script->getReadOffset() + paramBytes;
-    uint16_t paramCount = script->readShort();
+    //uint16_t paramCount = script->readShort();
 
     uint8_t  paramOpcode;
     uint32_t noPushed = 0;
@@ -216,7 +216,7 @@ VMStatusCode VM::handleBinaryOperator()
 {
     uint8_t  code = script->peekByte();
     uint16_t comp = script->peekShort();
-    Value    res;
+    //Value    res;
 
     if (singleCharOp.count(code)) {
         script->readByte();

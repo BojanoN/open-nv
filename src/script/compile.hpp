@@ -20,8 +20,9 @@ class CompiledScript {
 public:
     CompiledScript()
         : currentSize(0)
-        , currentReadOffset(0)
         , capacity(DEFAULT_ARR_SIZE)
+        , currentReadOffset(0)
+
     {
         bytecode = (uint8_t*)malloc(DEFAULT_ARR_SIZE);
     }
@@ -272,8 +273,8 @@ class Compiler {
 public:
     Compiler(GameWorld::GameWorld* store)
         //Compiler(GameWorld::GameData<ESM::Script>* store)
-        : nodes(nullptr)
-        , ctx(store) {};
+        : ctx(store)
+        , nodes(nullptr) {};
 
     CompiledScript* compile(std::vector<Node*>* ns);
 

@@ -123,10 +123,10 @@ public:
 class BinaryExpr : public Node {
 public:
     BinaryExpr(Token& opr, Node* l, Node* r)
-        : op(opr)
+        : Node(NodeType::BinaryExpr)
+        , op(opr)
         , left(l)
         , right(r)
-        , Node(NodeType::BinaryExpr)
     {
     }
 
@@ -146,9 +146,9 @@ public:
 class UnaryExpr : public Node {
 public:
     UnaryExpr(Token& opr, Node* r)
-        : op(opr)
+        : Node(NodeType::UnaryExpr)
+        , op(opr)
         , right(r)
-        , Node(NodeType::UnaryExpr)
     {
     }
 
@@ -169,9 +169,9 @@ public:
 class Assignment : public Node {
 public:
     Assignment(Node* var, Node* expr)
-        : variable(var)
-        , expression(expr)
-        , Node(NodeType::Assignment) {};
+        : Node(NodeType::Assignment)
+        , variable(var)
+        , expression(expr) {};
 
     ~Assignment()
     {
@@ -194,8 +194,8 @@ public:
 class GroupingExpr : public Node {
 public:
     GroupingExpr(Node* expr)
-        : expression(expr)
-        , Node(NodeType::GroupingExpr) {};
+        : Node(NodeType::GroupingExpr)
+        , expression(expr) {};
     ~GroupingExpr()
     {
         delete expression;
@@ -208,9 +208,10 @@ public:
 class LiteralExpr : public Node {
 public:
     LiteralExpr(Token tok, Type t)
-        : valueType(t)
+        : Node(NodeType::LiteralExpr)
         , value(tok.literal)
-        , Node(NodeType::LiteralExpr)
+        , valueType(t)
+
     {
         if (t == Type::Identifier) {
             original = tok.original;
@@ -230,12 +231,11 @@ public:
 class FunctionCall : public Node {
 public:
     FunctionCall(std::string& name, std::string& ref, std::vector<Node*>& args, NodeContext ctx)
-        : functionName(name)
+        : Node(NodeType::FunctionCall)
+        , functionName(name)
         , reference(ref)
         , arguments(args)
         , context(ctx)
-        , Node(NodeType::FunctionCall)
-
     {
     }
 
@@ -292,8 +292,8 @@ public:
 class ExpressionStatement : public Node {
 public:
     ExpressionStatement(Node* expr)
-        : expression(expr)
-        , Node(NodeType::ExpressionStatement) {};
+        : Node(NodeType::ExpressionStatement)
+        , expression(expr) {};
 
     ~ExpressionStatement()
     {
@@ -342,11 +342,11 @@ public:
 class IfStatement : public Node {
 public:
     IfStatement(Node* expr, Node* ifBod, std::vector<std::pair<Node*, Node*>>& elifBod, Node* elseBod)
-        : condition(expr)
+        : Node(NodeType::IfStatement)
+        , condition(expr)
         , body(ifBod)
         , elseIfs(elifBod)
-        , elseBody(elseBod)
-        , Node(NodeType::IfStatement) {};
+        , elseBody(elseBod) {};
     ~IfStatement()
     {
         delete condition;
@@ -394,9 +394,9 @@ public:
 class Variable : public Node {
 public:
     Variable(Type& type, std::string varName)
-        : variableType(type)
-        , variableName(varName)
-        , Node(NodeType::Variable) {};
+        : Node(NodeType::Variable)
+        , variableType(type)
+        , variableName(varName) {};
     ~Variable() {};
 
     void print()
@@ -411,9 +411,9 @@ public:
 class VariableAccess : public Node {
 public:
     VariableAccess(std::string varName, NodeContext ctx)
-        : variableName(varName)
-        , context(ctx)
-        , Node(NodeType::VariableAccess) {};
+        : Node(NodeType::VariableAccess)
+        , variableName(varName)
+        , context(ctx) {};
     ~VariableAccess() {};
 
     void print()
@@ -421,16 +421,16 @@ public:
         std::cout << variableName;
     }
 
-    NodeContext context;
     std::string variableName;
+    NodeContext context;
 };
 
 class ScriptBlock : public Node {
 public:
     ScriptBlock(Node* t, std::vector<Node*>* ns)
         : Node(NodeType::ScriptBlock)
-        , type(t)
-        , nodes(ns) {};
+        , nodes(ns)
+        , type(t) {};
     ~ScriptBlock()
     {
         uint32_t size = nodes->size();

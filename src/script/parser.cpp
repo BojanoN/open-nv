@@ -141,8 +141,7 @@ std::vector<Node*>* Parser::parse(std::vector<Token>* toks)
 
     std::vector<Node*>* ret;
 
-    Token& current = peekCurrent();
-    ret            = new std::vector<Node*>();
+    ret = new std::vector<Node*>();
 
     ret->push_back(scriptName());
 
@@ -289,7 +288,7 @@ inline Node* Parser::functionCall(NodeContext context)
             advance();
 
             std::string& fieldOrFuncIdentifier = peekNext().literal;
-            std::string& fieldOriginal         = peekNext().original;
+            //std::string& fieldOriginal         = peekNext().original;
 
             isFunction = false;
 
@@ -572,8 +571,7 @@ inline Node* Parser::scriptBlock()
     try {
         Node* type = blocktype();
 
-        bool hasEndBlock = false;
-        current          = advance();
+        current = advance();
 
         while (peekCurrent().type != TokenType::End) {
 

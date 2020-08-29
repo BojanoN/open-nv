@@ -141,8 +141,9 @@ int Compiler::compileOnTrigger(BlockTypeStatement* blocktype, CompiledScript* ou
 
 int Compiler::compileGameMode(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
 {
-    uint8_t  gameModeID[]  = { 0x00, 0x00 };
-    uint16_t argumentCount = 0;
+    uint8_t gameModeID[] = { 0x00, 0x00 };
+    // TODO: check bytecode for argcount
+    //uint16_t argumentCount = 0;
 
     out->writeAt(blocktypeCodeOffset, gameModeID, sizeof(uint16_t));
 
@@ -151,7 +152,6 @@ int Compiler::compileGameMode(BlockTypeStatement* blocktype, CompiledScript* out
 
 int Compiler::compileBlocktype(Node* node, CompiledScript* out)
 {
-
     BlockTypeStatement* blocktype = dynamic_cast<BlockTypeStatement*>(node);
 
     uint32_t begSize = out->getSize();
@@ -485,7 +485,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     Opcode elseBegin = { OutputCodes::ELSE, 0x02 };
     Opcode endif     = { OutputCodes::ENDIF, 0x00 };
 
-    int      exprLen, compLen, bodyLen;
+    int      exprLen, bodyLen;
     uint16_t exprLenOut, compLenOut, jumpOps;
     uint32_t exprLenOffset, jumpOpsOffset, compLenOffset;
 
@@ -629,8 +629,14 @@ int Compiler::compileVariable(Node* node, CompiledScript* out)
 
     Variable* var = dynamic_cast<Variable*>(node);
 
-    if (!ctx.varExists(var->variableName))
-        this->ctx.declareVar(var->variableName, var->variableType, VariableScope::Local);
+    if (var->variableType != Type::Reference) {
+
+        if (!ctx.varExists(var->variableName))
+            this->ctx.declareVar(var->variableName, var->variableType, VariableScope::Local);
+    } else {
+        if (!ctx.refVarExists(var->variableName))
+            this->ctx.declareRefVar(var->variableName, VariableScope::Local);
+    }
 
     return 0;
 };
@@ -690,8 +696,6 @@ int Compiler::compileStatementBlock(Node* node, CompiledScript* out)
 
 int Compiler::compileReturnStatement(Node* node, CompiledScript* out)
 {
-    ReturnStatement* retStmt = dynamic_cast<ReturnStatement*>(node);
-
     Opcode retcode = { 0x1E, 0x00 };
 
     out->writeOpcode(retcode);

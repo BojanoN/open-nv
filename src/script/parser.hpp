@@ -9,8 +9,8 @@ namespace Script {
 class Parser {
 public:
     Parser()
-        : tokens(nullptr)
-        , currentOffset(0)
+        : currentOffset(0)
+        , tokens(nullptr)
     {
     }
 
