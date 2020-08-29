@@ -17,8 +17,9 @@ class NifData {
 private:
 	uint32_t numBlocks;
 
-	//std::vector<std::shared_ptr<NiObject>> blocks;
-	NiObject** blocks; // for now
+	//std::vector<NiObject*> blocks;
+	std::vector<std::shared_ptr<NiObject>> blocks;
+	//NiObject** blocks; // for now
 
 public:
 
@@ -28,6 +29,6 @@ public:
 	//int readData(uint32_t size);
 	//std::shared_ptr<NiObject> getRoot() { return blocks[0]; } 
 	//std::shared_ptr<NiObject> getBlock(uint32_t index) { return blocks[index]; }
-	NiObject* getRoot() { return blocks[0]; } 
-	NiObject* getBlock(uint32_t index) { return blocks[index]; }
+	NiObject* getRoot() { return blocks[0].get(); } 
+	NiObject* getBlock(uint32_t index) { return blocks[index].get(); }
 };

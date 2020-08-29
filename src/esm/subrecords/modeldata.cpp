@@ -64,7 +64,7 @@ bool ModelData::isInCollection(uint32_t type, int index)
     }
     return false;
 }
-
+/*
 std::shared_ptr<NiObject> ModelData::getModel() {
     
     if(!this->loaded) {
@@ -72,7 +72,7 @@ std::shared_ptr<NiObject> ModelData::getModel() {
     }
 
     return model->getRoot();
-}
+}*/
 
 void ModelData::loadModel() {
     try {

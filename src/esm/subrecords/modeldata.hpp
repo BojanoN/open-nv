@@ -29,7 +29,7 @@ struct ModelData {
     uint8_t                       FaceGenModelFlags;
 
 
-    std::shared_ptr<NiObject> getModel();
+    //std::shared_ptr<NiObject> getModel();
     void            loadModel();
     ~ModelData();
 
@@ -53,7 +53,7 @@ private:
 
     static bool                     isInCollection(uint32_t type, int index);
 
-    NifData*    model = NULL;
+    NifData*          model = NULL;
     bool              loaded = false;
 };
 

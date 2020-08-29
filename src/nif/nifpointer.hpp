@@ -79,7 +79,7 @@ public:
 	T* operator[](uint32_t idx) { return pointers[idx]; }
 
 	~NifPointerList() {
-		delete this->indices;
+		delete[] this->indices;
 	}
 };
 

@@ -8,21 +8,11 @@ NifData::NifData(const char* filePath) {
 	reader.readNifHeader();
 
 	numBlocks = reader.getNumBlocks();
-	blocks = new NiObject*[numBlocks];
-	//blocks.reserve(numBlocks);
+	//blocks = new NiObject*[numBlocks];
+	blocks.reserve(numBlocks);
 
 	for(unsigned int i = 0; i < numBlocks; i++) {
-		blocks[i] = reader.readBlock(i);
-		
-		if(blocks[i] == NULL) {
-
-			for(unsigned int j = 0; j < i; j++) {
-				delete blocks[j];
-			}
-			delete[] blocks;
-
-			throw std::runtime_error("Cannot read block!");
-		}
+		blocks[i] = std::shared_ptr<NiObject>(reader.readBlock(i));
 	}
 
 	for(unsigned int i = 0; i < numBlocks; i++) {
@@ -33,12 +23,12 @@ NifData::NifData(const char* filePath) {
 
 
 NifData::~NifData() {
-	if(numBlocks > 50) {
+	/*if(numBlocks > 50) {
 		int a = 5;
-	}
+	}*/
 
-	for(unsigned int i = 0; i < numBlocks; i++) {
+	/*for(unsigned int i = 0; i < numBlocks; i++) {
 		delete blocks[i];
 	}
-	delete[] blocks;
+	delete[] blocks;*/
 }

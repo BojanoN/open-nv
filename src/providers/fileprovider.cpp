@@ -8,21 +8,21 @@ namespace fs = std::filesystem;
 
 bool FileProvider::instantiated = false;
 
-FileProvider::FileProvider(const char* rootPath) {
+FileProvider::FileProvider(const std::string& rootPath) {
 	assert(!this->instantiated);
 
 	fs::path root(rootPath);
 
 	if(!fs::exists(root)) {
-		throw std::invalid_argument(std::string("Root data path does not exist! ") + std::string(rootPath));
+		throw std::invalid_argument(std::string("Root data path does not exist! ") + rootPath);
 	}
 
 	if(!fs::is_directory(root)) {
-		throw std::invalid_argument(std::string("Root data path is not a directory! ") + std::string(rootPath));
+		throw std::invalid_argument(std::string("Root data path is not a directory! ") + rootPath);
 	}
 
 	this->root = root;
-	log_info("Setting root data folder: %s", rootPath);
+	log_info("Setting root data folder: %s", rootPath.c_str());
 
 	this->initArchives();
 
@@ -30,9 +30,6 @@ FileProvider::FileProvider(const char* rootPath) {
 }
 
 FileProvider::~FileProvider() {
-	for(auto archive : archives) {
-		delete archive;
-	}
 	this->instantiated = false;
 }
 
@@ -71,7 +68,7 @@ InputStream* FileProvider::openFile(const std::string& filepath) {
 
 	log_debug("Thread %u passed block! ", std::this_thread::get_id());
 
-	InputStream* file = findAndOpenFile(&filepath);
+	InputStream* file = findAndOpenFile(filepath);
 
 	if(file == NULL) {
 
@@ -86,17 +83,18 @@ InputStream* FileProvider::openFile(const std::string& filepath) {
 		//throw std::invalid_argument("File not found: " + filepath);
 	}
 
+	log_debug("Inserting %p, %s into map.", file, filepath.c_str());
+	//std::shared_ptr ret = std::make_shared<InputStream>(file);
+	openedInputFilesMap.emplace(std::make_pair(file, filepath));
+	
 	return file;
 }
 
-InputStream* FileProvider::findAndOpenFile(const std::string* filepath) {
+InputStream* FileProvider::findAndOpenFile(const std::string& filepath) {
 	
 	InputStream* file = openLooseFile(filepath);
 	if(file != NULL) {
-	
-		log_debug("Inserting %p, %s into map.", file, filepath->c_str());
-		openedInputFilesMap.insert(std::make_pair(file, *filepath));
-		
+			
 		return file;
 	}
 
@@ -105,17 +103,15 @@ InputStream* FileProvider::findAndOpenFile(const std::string* filepath) {
 		return NULL;
 	}
 
-	log_debug("Inserting %p, %p into map.", file, filepath);
-	openedInputFilesMap.insert(std::make_pair(file, *filepath));
 	return file;
 }
 
-InputStream* FileProvider::openLooseFile(const std::string* filepath) {
+InputStream* FileProvider::openLooseFile(const std::string& filepath) {
 
 	#ifdef __linux__ 
-	fs::path fullPath = this->root / StringUtils::replaceChar(*filepath, '\\', '/');
+	fs::path fullPath = this->root / StringUtils::replaceChar(filepath, '\\', '/');
 	#else
-	fs::path fullPath = this->root / *filepath
+	fs::path fullPath = this->root / filepath
 	#endif
 	
 	log_info("Searching for loose file: %s", fullPath.string().c_str());
@@ -124,7 +120,7 @@ InputStream* FileProvider::openLooseFile(const std::string* filepath) {
 		return NULL;
 	}
 	if(!fs::is_regular_file(fullPath)) {
-		log_error("Attempted to open %s, not a regular file!", filepath->c_str());
+		log_error("Attempted to open %s, not a regular file!", filepath.c_str());
 		return NULL;
 	}
 
@@ -133,30 +129,32 @@ InputStream* FileProvider::openLooseFile(const std::string* filepath) {
 }
 
 
-InputStream* FileProvider::openArchiveFile(const std::string* filepath) {
+InputStream* FileProvider::openArchiveFile(const std::string& filepath) {
 	
-	std::string lowerCased = *filepath;
-	std::transform(filepath->begin(), filepath->end(), lowerCased.begin(), [](unsigned char c) { return std::tolower(c); });
+	std::string lowerCased = filepath;
+	std::transform(filepath.begin(), filepath.end(), lowerCased.begin(), [](unsigned char c) { return std::tolower(c); });
 
 	log_info("Searching for file in archive: %s", lowerCased.c_str());
 
-	BSA::BSA* containingArchive = getContainingArchive(&lowerCased);
+	BSA::BSA* containingArchive = getContainingArchive(lowerCased);
 
 	if (containingArchive == NULL) {
 		return NULL;
 	}
 
+	log_info("Found archived file: %s", lowerCased.c_str());
 	return containingArchive->getFile(lowerCased);
 }
 
 
-BSA::BSA* FileProvider::getContainingArchive(const std::string* filepath) {
+BSA::BSA* FileProvider::getContainingArchive(const std::string& filepath) {
 	
 	BSA::BSA* containingArchive = NULL;
 
-	log_debug("Searching for archived file: %s", filepath->c_str());
+	log_debug("Searching for archived file: %s", filepath.c_str());
 	log_debug("Checking path cache.");
-	auto archiveIt = this->archivePathCache.find(*filepath);
+
+	auto archiveIt = this->archivePathCache.find(filepath);
 	if(archiveIt != this->archivePathCache.end()) {
 		log_debug("Hit! %s", archiveIt->second->getName().c_str());		
 		containingArchive = archiveIt->second;
@@ -166,10 +164,10 @@ BSA::BSA* FileProvider::getContainingArchive(const std::string* filepath) {
 		for(auto archive : archives) {
 			
 			log_debug("Searching %s", archive->getName().c_str());
-			if(archive->fileExists(*filepath)) {
+			if(archive->fileExists(filepath)) {
 					
 				log_debug("Found!");
-				this->archivePathCache.insert(std::make_pair(*filepath, /*static_cast<BSA::BSA*>(*/archive/*)*/));
+				this->archivePathCache.insert(std::make_pair(filepath, /*static_cast<BSA::BSA*>(*/archive/*)*/));
 				containingArchive = archive;
 
 				break;

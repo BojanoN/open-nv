@@ -7,6 +7,7 @@
 #include <map>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 #define BSAId 0x00415342
 
@@ -93,20 +94,20 @@ private:
 
 class BSA {
 public:
-    BSA(InputStream* path, std::string name);
-    ~BSA() { delete cache; 
-            delete file; };
+    BSA(InputStream* path, const std::string& name);
+    ~BSA() { delete file; };
 
-    InputStream* getFile(std::string path);
-    bool                  fileExists(std::string path);
+    /*std::unique_ptr<InputStream>*/InputStream*     getFile(const std::string& path);
+    bool                             fileExists(const std::string& path);
 
-    std::string           getName() { return name; }
+    std::string                      getName() { return name; }
     
 private:
     //std::ifstream file;
+    //std::unique_ptr<InputStream> file;
     InputStream*  file;
     Header        header;
-    BSACache*     cache;
+    std::unique_ptr<BSACache>    cache;
     // hash, offset
     std::vector<FolderRecord> folders;
 

@@ -16,10 +16,11 @@
 
 class NiObject;
 
-class NifReader {
+class NifReader : File::Reader {
 
 private:
-	FILE* file;
+	//FILE* file;
+	InputStream* file;
 
 	//Major engine version
 	uint32_t version = 0x04000002;
@@ -39,11 +40,12 @@ private:
 	// Strings of the Nif file
 	uint32_t numStrings;
 	uint32_t maxStringLength;
-	char** strings;
+	
+	std::vector<char*> strings;
 
 public:
 
-	NifReader(const char* filePath);
+	NifReader(const std::string& filePath);
 	~NifReader();
 
 	void readNifHeader();

@@ -11,7 +11,7 @@
 #define MIN_CACHE_SIZE        50
 
 namespace BSA {
-BSA::BSA(InputStream* file, std::string name)
+BSA::BSA(InputStream* file, const std::string& name)
     : file{file}, name{name}
 {
     this->file->read(reinterpret_cast<char*>(&this->header), sizeof(Header), 1);
@@ -36,7 +36,7 @@ BSA::BSA(InputStream* file, std::string name)
     uint32_t dynSize = (this->header.fileCount * 0.1);
     uint32_t size    = (dynSize < MIN_CACHE_SIZE) ? MIN_CACHE_SIZE : dynSize;
     log_debug("Cache size: %u", size);
-    this->cache = new BSACache(size);
+    this->cache = std::make_unique<BSACache>(size);
 };
 
 bool BSACache::insert(uint64_t key, FileRecord value)
@@ -159,7 +159,7 @@ void BSACache::clear()
     lfu.clear();
 }
 
-bool BSA::fileExists(std::string path)
+bool BSA::fileExists(const std::string& path)
 {
 
     uint32_t    lastBackslash = path.find_last_of('\\');
@@ -187,7 +187,8 @@ bool BSA::fileExists(std::string path)
 }
 
 //std::vector<uint8_t>* BSA::getFile(std::string path)
-InputStream* BSA::getFile(std::string path)
+//std:unique_ptr<InputStream> BSA::getFile(const std::string& path)
+InputStream* BSA::getFile(const std::string& path)
 {
 
     FolderRecord* folder;
@@ -295,6 +296,7 @@ InputStream* BSA::getFile(std::string path)
         this->file->read(reinterpret_cast<char*>(ret->data()), 1, file.size);
     }
 
+    //return std::make_unique<ByteArrayInputStream>(ret);
     return new ByteArrayInputStream(ret);
 };
 

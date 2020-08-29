@@ -42,25 +42,24 @@ private:
 	void 			initArchives();
 
 	// Opens a loose file. 
-	InputStream*    openLooseFile(const std::string* filepath);
+	InputStream*    openLooseFile(const std::string& filepath);
 	
 	// Opens a file from a .bsa archive.
-	InputStream*    openArchiveFile(const std::string* filepath);
+	InputStream*    openArchiveFile(const std::string& filepath);
 
-	BSA::BSA* getContainingArchive(const std::string* filepath);
-	InputStream* findAndOpenFile(const std::string* filepath);  
-
+	BSA::BSA* 		getContainingArchive(const std::string& filepath);
+	
+	InputStream* 	findAndOpenFile(const std::string& filepath);  
 
 	static bool instantiated;
 
 public:
 
-	FileProvider(const char* rootPath);
+	FileProvider(const std::string& rootPath);
 	~FileProvider();
 
 	InputStream* openFile(const std::string& filePath);
 
 	// Closes the given file.
 	void closeFile(InputStream* file);
-
 };

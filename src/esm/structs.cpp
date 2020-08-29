@@ -1,5 +1,5 @@
 #include "structs.hpp"
-#include "strmanip.hpp"
+#include "util/strmanip.hpp"
 
 namespace ESM {
 
