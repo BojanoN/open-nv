@@ -1,5 +1,4 @@
 #include "nifreader.hpp"
-
 NifReader::NifReader(const char* filePath) {
 	file = std::fopen(filePath, "rb");
 	if(file == NULL) {
@@ -11,7 +10,9 @@ NifReader::~NifReader() {
 	for(unsigned int i = 0; i < numBlockTypes; i++) {
 		delete[] blockTypes[i];
 	}
-	delete[] blockTypes;
+	for(unsigned int i = 0; i < numStrings; i++) {
+		delete[] strings[i];
+	}
 	delete[] strings;
 	std::fclose(file);
 }
@@ -37,19 +38,18 @@ void NifReader::readNifHeader() {
 		skipSizedString(); // Skip "max filepath"
 	}
 	//end BS header
-
 	std::fread(&numBlockTypes, sizeof(uint16_t), 1, file);
-	blockTypes = new char*[numBlockTypes];
+	blockTypes.reserve(numBlockTypes);
 
 	for(unsigned int i = 0; i < numBlockTypes; i++) {
 		blockTypes[i] = loadSizedString();
 	}
 
-	blockTypeIndices = new int16_t[numBlocks];
-	std::fread(blockTypeIndices, sizeof(int16_t), numBlocks, file);
+	blockTypeIndices.reserve(numBlocks);
+	std::fread(&blockTypeIndices[0], sizeof(int16_t), numBlocks, file);
 
-	uint32_t* blockSizes = new uint32_t[numBlocks]; // Temporary.
-	std::fread(blockSizes, sizeof(uint32_t), numBlocks, file);
+	std::vector<uint32_t> blockSizes(numBlocks); // Temporary.
+	std::fread(&blockSizes[0], sizeof(uint32_t), numBlocks, file);
 
 	std::fread(&numStrings, sizeof(uint32_t), 1, file);
 	std::fread(&maxStringLength, sizeof(uint32_t), 1, file);
@@ -63,8 +63,7 @@ void NifReader::readNifHeader() {
 	uint32_t numGroups;
 	std::fread(&numGroups, sizeof(uint32_t), 1, file);
 	std::fseek(file, sizeof(uint32_t) * numGroups, SEEK_CUR); // Skip groups for now.
-
-	delete[] blockSizes;
+	//delete[] blockSizes;
 }
 
 
@@ -84,14 +83,12 @@ NiObject* NifReader::readBlock(uint32_t index) {
 /*
 NiObject* NifReader::readNifTree() {
 	NiObject** blocks = new NiObject*[numBlocks];
-
 	for(unsigned int i = 0; i < numBlocks; i++) {
 		blocks[i] = this->readBlock(i);
 		if(blocks[i] == NULL) {
 			throw std::runtime_error("Cannot read block!");
 		}
 	}
-
 	for(unsigned int i = 0; i < numBlocks; i++) {
 		blocks[i]->resolvePointers(*this);
 	}
@@ -141,7 +138,7 @@ char* NifReader::readIndexedString() {
 		return NULL;
 	}
 	
-	char* dst = new char[maxStringLength];
+	char* dst = new char[maxStringLength + 1]; // +1 !!!
 	std::strcpy(dst, strings[index]);
 	return dst;
 }

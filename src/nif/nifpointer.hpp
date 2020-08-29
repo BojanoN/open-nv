@@ -77,13 +77,17 @@ public:
 	void load(NifReader& reader, uint32_t length);
 
 	T* operator[](uint32_t idx) { return pointers[idx]; }
+
+	~NifPointerList() {
+		delete this->indices;
+	}
 };
 
 template <typename T>
 void NifPointerList<T>::load(NifReader& reader, uint32_t length) {
 	this->length = length;
-	uint32_t* indices = new uint32_t[length];
-	reader.read(indices, sizeof(uint32_t), length);
+	std::vector<uint32_t> indices(length);
+	reader.read(&indices[0], sizeof(uint32_t), length);
 	this->indices = new uint64_t[length];
 	for(unsigned int i = 0; i < length; i++) {
 		this->indices[i] = static_cast<uint64_t>(indices[i]);
