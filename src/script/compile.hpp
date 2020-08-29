@@ -235,7 +235,7 @@ public:
 
     Value getLocalVariable(uint16_t index)
     {
-        Value ret;
+        Value ret = { Type::Integer, { 0 } };
 
         // TODO: local var lookup
 

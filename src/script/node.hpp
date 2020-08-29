@@ -1,6 +1,5 @@
 #pragma once
 
-#include "misc.hpp"
 #include "tokenizer.hpp"
 #include "types/base.hpp"
 #include <iostream>
@@ -404,7 +403,7 @@ public:
 
 class Variable : public Node {
 public:
-    Variable(Type& type, std::string varName)
+    Variable(Type& type, std::string& varName)
         : Node(NodeType::Variable)
         , variableType(type)
         , variableName(varName) {};
@@ -421,7 +420,7 @@ public:
 
 class VariableAccess : public Node {
 public:
-    VariableAccess(std::string varName, NodeContext ctx)
+    VariableAccess(std::string& varName, NodeContext ctx)
         : Node(NodeType::VariableAccess)
         , variableName(varName)
         , context(ctx) {};
@@ -441,7 +440,7 @@ public:
     ScriptBlock(Node* t, std::vector<Node*>* ns)
         : Node(NodeType::ScriptBlock)
         , nodes(ns)
-        , type(t) {};
+        , blocktype(t) {};
     ~ScriptBlock()
     {
         uint32_t size = nodes->size();
@@ -451,7 +450,7 @@ public:
         }
 
         delete nodes;
-        delete type;
+        delete blocktype;
     }
 
     void print()
@@ -462,7 +461,7 @@ public:
     }
 
     std::vector<Node*>* nodes;
-    Node*               type;
+    Node*               blocktype;
 };
 
 class ReturnStatement : public Node {

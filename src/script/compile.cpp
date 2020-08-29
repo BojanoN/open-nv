@@ -16,7 +16,7 @@ void CompiledScript::print()
     for (uint32_t i = 0; i < currentSize; i++) {
         printf("%.2x ", bytecode[i]);
         if ((i + 1) % 4 == 0) {
-            printf("\n%.5d: ", i + 1);
+            printf("\n%.5u: ", i + 1);
         }
     }
     printf("\n");
@@ -219,7 +219,7 @@ int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
 
     out->writeZeros(sizeof(uint16_t));
 
-    blocktypeSize = compileBlocktype(block->type, out);
+    blocktypeSize = compileBlocktype(block->blocktype, out);
     if (blocktypeSize < 0) {
         return -1;
     }
