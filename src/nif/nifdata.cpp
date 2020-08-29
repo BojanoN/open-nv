@@ -28,9 +28,6 @@ NifData::NifData(const char* filePath) {
 	for(unsigned int i = 0; i < numBlocks; i++) {
 		blocks[i]->resolvePointers(*this);
 	}
-	for(unsigned int i = 0; i < numBlocks; i++) {
-		blocks[i]->resolvePointers(*this);
-	}
 }
 
 
