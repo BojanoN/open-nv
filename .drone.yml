@@ -17,9 +17,4 @@ steps:
   commands:
   - apk update
   - apk add cppcheck
-  - ERROR=$(cppcheck  ./src  >/dev/null)
-  - if [[ -z "${ERROR// }" ]] then
-  - echo "all OK"
-  - else
-  - exit 1
-  - fi
+  - ./cicd/static-analysis.sh
