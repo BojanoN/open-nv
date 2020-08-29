@@ -81,7 +81,9 @@ InputStream* FileProvider::openFile(const std::string& filepath) {
 
 		lock.unlock();
 
-		throw std::invalid_argument("File not found: " + filepath);
+		log_error("File not found: %s", filepath.c_str());
+		return NULL;
+		//throw std::invalid_argument("File not found: " + filepath);
 	}
 
 	return file;
@@ -135,6 +137,8 @@ InputStream* FileProvider::openArchiveFile(const std::string* filepath) {
 	
 	std::string lowerCased = *filepath;
 	std::transform(filepath->begin(), filepath->end(), lowerCased.begin(), [](unsigned char c) { return std::tolower(c); });
+
+	log_info("Searching for file in archive: %s", lowerCased.c_str());
 
 	BSA::BSA* containingArchive = getContainingArchive(&lowerCased);
 

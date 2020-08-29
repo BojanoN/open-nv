@@ -5,7 +5,10 @@ namespace ESM {
 void ModelData::load(ESMReader& reader, ModelData& modelData, int index)
 {
     reader.checkSubrecordHeader(filenameType[index]);
-    reader.readStringSubrecord(modelData.filename);
+
+    std::string filename;
+    reader.readStringSubrecord(filename);
+    modelData.filename = std::string(pathPrefix) + filename;
 
     while (reader.hasMoreSubrecords() && isInCollection(reader.peekNextType(), index)) {
         reader.readNextSubrecordHeader();
@@ -32,6 +35,8 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index)
             reader.readSubrecord(modelData.FaceGenModelFlags);
         }
     }
+
+    modelData.loadModel();
 }
 
 bool ModelData::isInCollection(uint32_t type, int index)
@@ -60,7 +65,7 @@ bool ModelData::isInCollection(uint32_t type, int index)
     return false;
 }
 
-const NiObject* ModelData::getModel() {
+std::shared_ptr<NiObject> ModelData::getModel() {
     
     if(!this->loaded) {
         throw std::logic_error(std::string("Model not loaded: ") + this->filename);
@@ -70,13 +75,20 @@ const NiObject* ModelData::getModel() {
 }
 
 void ModelData::loadModel() {
+    try {
+        this->model = new NifData(this->filename.c_str());
+    } catch(std::runtime_error& e) {
+        log_error("%s", e.what());
+        
+    }
     
-    this->model = new NifData(this->filename.c_str());
 }
 
 ModelData::~ModelData() {
     
-    delete model;
+    if(model != nullptr) {
+        delete model;        
+    }
 }
 
 }; // namespace

@@ -39,9 +39,6 @@ $(BUILDDIR)/%.o: %.cpp
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-<<<<<<< Updated upstream
-$(BUILDDIR)/$(PROJECT): $(ESMOBJS) $(UTILOBJS) $(GAMEOBJS) $(NIFOBJS) $(BSAOBJS) $(BUILDDIR)/$(PROJECT).o
-=======
-$(BUILDDIR)/$(PROJECT): $(ESMOBJS) $(UTILOBJS) $(BSAOBJS) $(STREAMOBJS) $(FILEOBJS) $(GAMEOBJS) $(BUILDDIR)/$(PROJECT).o
->>>>>>> Stashed changes
+
+$(BUILDDIR)/$(PROJECT): $(ESMOBJS) $(UTILOBJS) $(GAMEOBJS) $(STREAMOBJS) $(FILEOBJS) $(NIFOBJS) $(BSAOBJS) $(BUILDDIR)/$(PROJECT).o
 	$(CC) $^ -o $@ $(LDFLAGS)

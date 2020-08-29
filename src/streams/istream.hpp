@@ -55,6 +55,8 @@ public:
 	*/
 	virtual bool isEnded() = 0;
 
+	virtual int getc() = 0;
+
 	/*
 		Closes the stream.
 	*/

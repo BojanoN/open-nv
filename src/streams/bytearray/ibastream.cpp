@@ -24,6 +24,10 @@ std::size_t ByteArrayInputStream::read(void* _dst, std::size_t size, std::size_t
 	return this->lastRead;
 }
 
+int ByteArrayInputStream::getc() {
+	return static_cast<int>((*(array))[pos++]);
+}
+
 InputStream& ByteArrayInputStream::inputSeek(uint64_t offset, StreamPosition position) {
 	
 	switch(position) {

@@ -22,6 +22,8 @@ public:
 	InputStream& inputSeek(uint64_t offset, StreamPosition position);
 	uint64_t 	 inputTell();
 
+	int getc();
+
 	bool isEnded();
 	void close() { inputOpen = false; }
 
