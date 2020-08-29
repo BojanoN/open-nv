@@ -17,4 +17,4 @@ steps:
   commands:
   - apk update
   - apk add cppcheck
-  - ./cicd/static-analysis.sh
+  - cd cicd && ./static-analysis.sh
