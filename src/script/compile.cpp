@@ -636,6 +636,12 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
             }
         }
 
+        // TODO: remove this bethesda idiocy once all compiler tests pass
+        if (strcmp(info.name.c_str(), "ShowMessage") == 0) {
+            out->writeZeros(6);
+            paramBytes += 6;
+        }
+
         out->writeAt(paramBytesOffset, (uint8_t*)&paramBytes, sizeof(uint16_t));
     }
 
