@@ -416,7 +416,7 @@ int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
         return -1;
     }
 
-    out->writeAt(blocktypeSizeOffset, (uint8_t*)&blocktypeSize, sizeof(uint16_t));
+    out->writeShortAt(blocktypeSizeOffset, blocktypeSize);
 
     uint32_t blocksizeOffset = blocktypeSizeOffset + sizeof(uint16_t) + sizeof(uint16_t);
 
@@ -495,10 +495,10 @@ int Compiler::compileAssignment(Node* node, CompiledScript* out)
     }
 
     uint16_t exprLenOut = (uint16_t)exprLen;
-    out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(exprLenOut));
+    out->writeShortAt(exprLenOffset, exprLenOut);
 
     set.length = varLen + sizeof(uint16_t) + exprLenOut;
-    out->writeAt(lengthOffset, (uint8_t*)&set.length, sizeof(set.length));
+    out->writeShortAt(lengthOffset, set.length);
 
     return out->getSize() - begSize;
 };
@@ -565,10 +565,33 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
     FunctionCall* func    = dynamic_cast<FunctionCall*>(node);
     uint32_t      begSize = out->getSize();
 
-    FunctionInfo& info = FunctionResolver::getFunctionInfo(func->functionName);
+    FunctionInfo& info       = FunctionResolver::getFunctionInfo(func->functionName);
+    int           paramCount = info.params.size();
+
+    // Parameter count check
+    if (paramCount) {
+        int totalReqParam = 0;
+
+        for (int i = 0; i < paramCount; i++) {
+            if (!info.params[i].optional) {
+                totalReqParam++;
+            }
+        }
+
+        if (totalReqParam > func->arguments.size()) {
+            log_error("Attempted to call function %s with insufficient parameters!", func->functionName.c_str());
+            return -1;
+        }
+    }
 
     // Reference function call, inside an expression
     if (func->reference.size()) {
+
+        if (info.type == FunctionType::Standalone) {
+            log_error("Attempted to call a standalone function %s as reference bound!", func->functionName.c_str());
+            return -1;
+        }
+
         if (func->context == NodeContext::Expression || func->context == NodeContext::Assignment) {
             out->writeByte(ExprCodes::PUSH);
             out->writeByte(ExprCodes::REF_FUNC_PARAM);
@@ -578,6 +601,7 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
         uint16_t index = ctx.SCROLookup(func->reference);
         out->writeShort(index);
     }
+
     if (func->context == NodeContext::Expression) {
         out->writeByte(ExprCodes::PUSH);
         out->writeByte(ExprCodes::FUNC_CALL);
@@ -589,10 +613,10 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
     uint32_t paramBytesOffset = out->getSize();
     out->writeShort(0x00);
 
-    if (info.paramCount > 0) {
+    if (paramCount > 0) {
 
-        uint16_t paramCount = func->arguments.size();
-        out->writeShort(paramCount);
+        uint16_t paramCountOut = func->arguments.size();
+        out->writeShort(paramCountOut);
 
         uint16_t     paramBytes = sizeof(uint16_t);
         LiteralExpr* literal;
@@ -642,7 +666,7 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
             paramBytes += 6;
         }
 
-        out->writeAt(paramBytesOffset, (uint8_t*)&paramBytes, sizeof(uint16_t));
+        out->writeShortAt(paramBytesOffset, paramBytes);
     }
 
     return out->getSize() - begSize;
@@ -714,9 +738,9 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     //    jumpOps    = bodyLen;
     compLenOut = exprLenOut + sizeof(uint16_t) + sizeof(uint16_t);
 
-    out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
+    out->writeShortAt(compLenOffset, compLenOut);
     //out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
-    out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(uint16_t));
+    out->writeShortAt(exprLenOffset, exprLenOut);
 
     uint32_t elifsSize = ifStmt->elseIfs.size();
 
@@ -748,8 +772,8 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 
             compLenOut = exprLenOut + sizeof(uint16_t) + sizeof(uint16_t);
 
-            out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
-            out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(uint16_t));
+            out->writeShortAt(compLenOffset, compLenOut);
+            out->writeShortAt(exprLenOffset, exprLenOut);
         }
     }
 
@@ -766,7 +790,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
         }
 
         jumpOps = bodyLen;
-        out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
+        out->writeShortAt(jumpOpsOffset, jumpOps);
     }
 
     out->writeOpcode(endif);
