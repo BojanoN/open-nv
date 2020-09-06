@@ -618,6 +618,7 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
         uint16_t paramCountOut = func->arguments.size();
         out->writeShort(paramCountOut);
 
+        paramCount              = paramCountOut;
         uint16_t     paramBytes = sizeof(uint16_t);
         LiteralExpr* literal;
 
@@ -695,6 +696,37 @@ int Compiler::compileExpressionStatement(Node* node, CompiledScript* out)
     return compileNode(expr->expression, out);
 };
 
+int getNumberOfOps(StatementBlock* statements)
+{
+    int                 opNum = 0;
+    std::vector<Node*>* nodes = statements->nodes;
+
+    for (int i = 0; i < nodes->size(); i++) {
+        if (nodes->at(i)->type == NodeType::IfStatement) {
+            IfStatement* stmt = (IfStatement*)nodes->at(i);
+
+            opNum += 2; // if and endif opcodes
+            opNum += getNumberOfOps(stmt->body);
+
+            // Process all elseif blocks
+            for (int j = 0; j < stmt->elseIfs.size(); j++) {
+                // elseif opcode
+                opNum++;
+                opNum += getNumberOfOps(stmt->elseIfs.at(j).second);
+            }
+
+            // else blocks
+            if (stmt->elseBody != nullptr) {
+                opNum += getNumberOfOps(stmt->elseBody);
+            }
+        } else {
+            opNum++;
+        }
+    }
+
+    return opNum;
+}
+
 int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
@@ -708,6 +740,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     Opcode endif     = { OutputCodes::ENDIF, 0x00 };
 
     int      exprLen, bodyLen;
+    int      err;
     uint16_t exprLenOut, compLenOut, jumpOps;
     uint32_t exprLenOffset, jumpOpsOffset, compLenOffset;
 
@@ -715,7 +748,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 
     compLenOut = 0;
     exprLenOut = 0;
-    jumpOps    = dynamic_cast<StatementBlock*>(ifStmt->body)->nodes->size();
+    jumpOps    = getNumberOfOps(ifStmt->body);
 
     compLenOffset = out->getSize() - sizeof(ifBegin.length);
 
@@ -728,12 +761,13 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     if (exprLen < 0) {
         return -1;
     }
-    exprLenOut = (uint16_t)exprLen;
 
     bodyLen = compileNode(ifStmt->body, out);
     if (bodyLen < 0) {
         return -1;
     }
+
+    exprLenOut = (uint16_t)exprLen;
 
     //    jumpOps    = bodyLen;
     compLenOut = exprLenOut + sizeof(uint16_t) + sizeof(uint16_t);
@@ -750,7 +784,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 
             compLenOut = 0;
             exprLenOut = 0;
-            jumpOps    = dynamic_cast<StatementBlock*>(ifStmt->elseIfs[i].second)->nodes->size();
+            jumpOps    = getNumberOfOps(ifStmt->elseIfs[i].second);
 
             compLenOffset = out->getSize() - sizeof(elifBegin.length);
 
@@ -780,17 +814,14 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     if (ifStmt->elseBody != nullptr) {
         out->writeOpcode(elseBegin);
 
-        jumpOpsOffset = out->getSize();
+        jumpOps = getNumberOfOps(ifStmt->elseBody);
         out->writeShort(jumpOps);
 
-        bodyLen = compileNode(ifStmt->elseBody, out);
+        err = compileNode(ifStmt->elseBody, out);
 
-        if (bodyLen < 0) {
+        if (err < 0) {
             return -1;
         }
-
-        jumpOps = bodyLen;
-        out->writeShortAt(jumpOpsOffset, jumpOps);
     }
 
     out->writeOpcode(endif);

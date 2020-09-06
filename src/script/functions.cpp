@@ -4,13 +4,12 @@
 namespace Script {
 
 std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
-
     {
         "unusedfunction0",
         { 0x1000, "UnusedFunction0", "", FunctionType::Standalone, Type::Void, {} },
     },
     { "getdistance", { 0x1001, "GetDistance", "Used to find the distance between two references.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
-    { "additem", { 0x1002, "AddItem", "Adds Count items of object ObjectID to the calling container's inventory.  It has two required parameters (the object to add and the quantity) and one optional parameter (whether to display a message on screen).", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
+    { "additem", { 0x1002, "AddItem", "Adds Count items of object ObjectID to the calling container's inventory.  It has two required parameters (the object to add and the quantity) and one optional parameter (whether to display a message on screen).", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, true } } } },
     { "setessential", { 0x1003, "SetEssential", "Sets the essential state of the object.", FunctionType::Standalone, Type::Integer, { { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
     { "rotate", { 0x1004, "Rotate", "Rotates the calling object relative to the world on the specified axis (X, Y, or Z) at a given speed in degrees/sec.", FunctionType::ReferenceBound, Type::Integer, {} } },
     { "getlocked", { 0x1005, "GetLocked", "The GetLocked script function gets the access state of terminals and locks.", FunctionType::ReferenceBound, Type::Integer, {} } },
@@ -66,7 +65,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
         "cast",
         { 0x101E, "Cast", "", FunctionType::Standalone, Type::Void, {} },
     },
-    { "getbuttonpressed", { 0x101F, "GetButtonPressed", "GetButtonPressed is used to determine which button has been selected after a message box has been displayed using ShowMessage.", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false } } } },
+    { "getbuttonpressed", { 0x101F, "GetButtonPressed", "GetButtonPressed is used to determine which button has been selected after a message box has been displayed using ShowMessage.", FunctionType::Standalone, Type::Integer, {} } },
     { "getinsamecell", { 0x1020, "GetInSameCell", "Returns true if the calling reference is in the same cell as the target Actor.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
     {
         "enable",
@@ -159,7 +158,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "getquestvariable", { 0x104F, "GetQuestVariable", "Returns the value of a quest variable.", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false } } } },
     { "getlevel", { 0x1050, "GetLevel", "Used to get an actors current level.", FunctionType::ReferenceBound, Type::Integer, {} } },
     { "getarmorrating", { 0x1051, "GetArmorRating", "Returns the total damage resistance of the armor the actor currently has equipped.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
-    { "removeitem", { 0x1052, "RemoveItem", "Removes and destroys Count items of object ObjectID from the calling container's inventory.  It has two required parameters (the object to remove and the quantity) and one optional parameter (whether to display a message on screen).", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
+    { "removeitem", { 0x1052, "RemoveItem", "Removes and destroys Count items of object ObjectID from the calling container's inventory.  It has two required parameters (the object to remove and the quantity) and one optional parameter (whether to display a message on screen).", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, true } } } },
     {
         "moddisposition",
         { 0x1053, "ModDisposition", "", FunctionType::Standalone, Type::Void, {} },
@@ -169,7 +168,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "startconversation", { 0x1056, "StartConversation", "Use the function to force a conversation between two NPCs, starting with a specified topic. When you call this function on an actor, the actor will seek out the target actor in order to have a conversation, no matter where the two NPCs are currently. ", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     { "drop", { 0x1057, "Drop", "Calling actor drops the specified item(s) in the world at his/her feet.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
     { "addtopic", { 0x1058, "AddTopic", "Adds a topic to the Player's list of known topics.", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false } } } },
-    { "showmessage", { 0x1059, "ShowMessage", "ShowMessage is used to display messages to the player.  The message itself is an editor object that contains all the data: display text, type of message, and buttons (if the message is a message box).", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
+    { "showmessage", { 0x1059, "ShowMessage", "ShowMessage is used to display messages to the player.  The message itself is an editor object that contains all the data: display text, type of message, and buttons (if the message is a message box).", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, true } } } },
     { "setalert", { 0x105A, "SetAlert", "Sets whether the actor is in an 'alert' state (weapon drawn). This is purely an animation state, and does not affect their actual combat status.", FunctionType::ReferenceBound, Type::Integer, { { Type::Integer, { 0 }, false } } } },
     { "getisalerted", { 0x105B, "GetIsAlerted", "Returns 1 if the actor is in an alerted state.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     {
@@ -485,7 +484,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "getisghost", { 0x10ED, "GetIsGhost", "Returns 1 if the actor is in the 'ghost' state.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     {
         "equipitem",
-        { 0x10EE, "EquipItem", "", FunctionType::Standalone, Type::Void, {} },
+        { 0x10EE, "EquipItem", "", FunctionType::ReferenceBound, Type::Void, { { Type::Reference, { 0 }, false } } },
     },
     { "unequipitem", { 0x10EF, "UnequipItem", "UnequipItem forces an actor to unequip an item.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     { "setclass", { 0x10F0, "SetClass", "SetClass Changes the class of the actor to the Classname. An autocalc is performed, if and only if the checkbox is marked for the actor. It is called on a reference.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false } } } },
@@ -1841,5 +1840,4 @@ FunctionInfo& FunctionResolver::getFunctionInfo(std::string& name)
 {
     return functions[name];
 }
-
 }
