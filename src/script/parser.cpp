@@ -149,34 +149,12 @@ std::vector<Node*>* Parser::parse(std::vector<Token>* toks)
     if (end()) {
         return ret;
     }
-    /*
-    while (advanceMatches(TokenType::Newline)) { };
-    current = peekCurrent();
-
-    // Variable declaration block
-    while (varTypeMatch.count(current.type)) {
-        Node* tmp = varDeclaration();
-        ret->push_back(tmp);
-        while (advanceMatches(TokenType::Newline)) { };
-        current = peekCurrent();
-    };
-    while (advanceMatches(TokenType::Newline)) { };
-*/
 
     while (!end()) {
         while (advanceMatches(TokenType::Newline)) { };
         ret->push_back(scriptBlock());
         while (advanceMatches(TokenType::Newline)) { };
     }
-
-    /*if (end()) {
-      for (Node* n : *ret) {
-        delete n;
-      }
-      delete ret;
-
-      this->error("Missing End keyword", peekCurrent());
-      }*/
 
     return ret;
 }
@@ -321,7 +299,11 @@ parse_args:
     std::vector<Node*> arguments;
 
     while (functionCallArgType.count(peekCurrent().type)) {
-        arguments.push_back(expression());
+        if (comparisonAndLogicalMatch.count(peekNext().type)) {
+            arguments.push_back(addition());
+        } else {
+            arguments.push_back(expression());
+        }
         if (peekCurrent().type == TokenType::Comma)
             advance();
     }

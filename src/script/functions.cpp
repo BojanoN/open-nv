@@ -58,6 +58,10 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     },
     { "addspell", { 0x101C, "AddSpell", "Adds the Actor Effect to the calling actor, which will instantly be applied. The only types of actor effects used in the Vanilla Game are addictions and abilities.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false } } } },
     {
+        "addreputation",
+        { 0x1239, "AddReputation", "", FunctionType::Standalone, Type::Void, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, false } } },
+    },
+    {
         "removespell",
         { 0x101D, "RemoveSpell", "", FunctionType::Standalone, Type::Void, {} },
     },
@@ -117,7 +121,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "getquestrunning", { 0x1038, "GetQuestRunning", "Returns 1 if the quest is currently running, 0 if it is not.", FunctionType::Standalone, Type::Integer, { { Type::Integer, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     {
         "setstage",
-        { 0x1039, "SetStage", "", FunctionType::Standalone, Type::Void, {} },
+        { 0x1039, "SetStage", "", FunctionType::Standalone, Type::Void, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false } } },
     },
     { "getstage", { 0x103A, "GetStage", "Gets the highest completed quest stage. For example, if stages 10, 30, and 75 were completed, GetStage would return 75. Even when stage 30 is completed after stage 75, GetStage will still return 75 (i.e. the highest one). If you need to know if a certain quest stage is completed, use GetStageDone instead.", FunctionType::Standalone, Type::Integer, {} } },
     { "getstagedone", { 0x103B, "GetStageDone", "Returns 1 if the specified stage has been completed, 0 otherwise.", FunctionType::Standalone, Type::Integer, {} } },
@@ -134,7 +138,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
         "getshouldattack",
         { 0x1042, "GetShouldAttack", "", FunctionType::Standalone, Type::Void, {} },
     },
-    { "getincell", { 0x1043, "GetInCell", "Returns true if the actor's current cell includes the argument as the first part of its cell name.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
+    { "getincell", { 0x1043, "GetInCell", "Returns true if the actor's current cell includes the argument as the first part of its cell name.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false } } } },
     { "getisclass", { 0x1044, "GetIsClass", "Returns 1 if the actor's class matches a given Class ID.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
     { "getisrace", { 0x1045, "GetIsRace", "Returns True (1) if the actor's race matches a given RaceId.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
     { "getissex", { 0x1046, "GetIsSex", "Returns 1 if the calling actor is of the specified sex (male/female).", FunctionType::Standalone, Type::Integer, {} } },
@@ -207,7 +211,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "getcurrentaipackage", { 0x106E, "GetCurrentAIPackage", "Returns the current AI package an actor is using.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     { "iswaiting", { 0x106F, "IsWaiting", "Returns 1 if the actor is currently in a wait state.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     { "isidleplaying", { 0x1070, "IsIdlePlaying", "Returns 1 if the actor is currently playing a special idle.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
-    { "completequest", { 0x1071, "CompleteQuest", "Marks the quest as complete. The only real effect of this is that the quest is will be dimmed and moved below all active quests in the GECK, and will no longer be selectable as an active quest.", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false } } } },
+    { "completequest", { 0x1071, "CompleteQuest", "Marks the quest as complete. The only real effect of this is that the quest is will be dimmed and moved below all active quests in the GECK, and will no longer be selectable as an active quest.", FunctionType::Standalone, Type::Void, { { Type::Reference, { 0 }, false } } } },
     { "lock", { 0x1072, "Lock", "The Lock script function changes the lock level of a terminal or lock. The second parameter can be used to specify the the new owner of the locked object.", FunctionType::ReferenceBound, Type::Integer, { { Type::Integer, { 0 }, false } } } },
     {
         "unlock",
@@ -571,7 +575,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
         "modpcattribute",
         { 0x1110, "ModPCAttribute", "", FunctionType::Standalone, Type::Void, {} },
     },
-    { "enablefasttravel", { 0x1111, "EnableFastTravel", "Enable or disable fast travel manually: 1 = allowed, 0 = disabled until reenabled by this function.", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
+    { "enablefasttravel", { 0x1111, "EnableFastTravel", "Enable or disable fast travel manually: 1 = allowed, 0 = disabled until reenabled by this function.", FunctionType::Standalone, Type::Void, { { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
     { "getarmorratingupperbody", { 0x1112, "GetArmorRatingUpperBody", "Link to TES4 Construction Set Wiki: GetArmorRatingUpperBody.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     { "getparentref", { 0x1113, "GetParentRef", "Returns the enable parent reference, as set in the Enable Parent tab of the Reference dialog. A reference with an enable parent will disable/enable in accordance with its parent", FunctionType::ReferenceBound, Type::Reference, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     { "playbink", { 0x1114, "PlayBink", "PlayBink opens a Bink video file.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
@@ -712,7 +716,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
         "unusedfunction17",
         { 0x1149, "UnusedFunction17", "", FunctionType::Standalone, Type::Void, {} },
     },
-    { "addachievement", { 0x114A, "AddAchievement", "As opposed to Oblivion, this function actually is useful (somewhat) in Fallout 3, thanks to Windows Live.  However, Achievements can't be changed, so there's probably not much point to using this in a mod other than to bump up gamerscores.", FunctionType::Standalone, Type::Integer, { { Type::Integer, { 0 }, false } } } },
+    { "addachievement", { 0x114A, "AddAchievement", "As opposed to Oblivion, this function actually is useful (somewhat) in Fallout 3, thanks to Windows Live.  However, Achievements can't be changed, so there's probably not much point to using this in a mod other than to bump up gamerscores.", FunctionType::Standalone, Type::Void, { { Type::Integer, { 0 }, false } } } },
     { "duplicateallitems", { 0x114B, "DuplicateAllItems", "Duplicates all items into the target container. Any scripted item will be duplicated almost identically:", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false } } } },
     {
         "isindangerouswater",
@@ -817,7 +821,7 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
         { 0x1175, "UnusedFunction18", "", FunctionType::Standalone, Type::Void, {} },
     },
     { "addperk", { 0x1176, "AddPerk", "Increments the rank of the specified perk on an Actor.  If the specified Actor doesn't already have the perk, then it will be added with rank 1.  Has no effect on any Actor other than the Player (NPCs cannot have perks, and see Notes regarding companions).", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
-    { "rewardxp", { 0x1177, "RewardXP", "RewardXP Awards Experience Points (XP) to the player.  It is not called on a reference and the parameter is an integer which represents the amount of XP to add to the player.", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false } } } },
+    { "rewardxp", { 0x1177, "RewardXP", "RewardXP Awards Experience Points (XP) to the player.  It is not called on a reference and the parameter is an integer which represents the amount of XP to add to the player.", FunctionType::Standalone, Type::Integer, { { Type::Integer, { 0 }, false } } } },
     { "showhackingminigame", { 0x1178, "ShowHackingMiniGame", "Opens calling Terminal reference with hacking minigame.", FunctionType::ReferenceBound, Type::Integer, {} } },
     {
         "showsurgerymenu",
@@ -887,8 +891,8 @@ std::unordered_map<std::string, FunctionInfo> FunctionResolver::functions({
     { "exists", { 0x119F, "Exists", "In Combat Dialogue, the target of the conversation is a group member nearby the speaking actor. If no group members are nearby, the target of the conversation is the speaker himself. Because of this, there is a new condition function called the Exists condition function.", FunctionType::ReferenceBound, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     { "getgroupmembercount", { 0x11A0, "GetGroupMemberCount", "GetGroupMemberCount returns the number of members in the actor's combat group. It will return 0 if the reference is not an actor or if the actor is not in combat. A return value of 1 means the actor is in combat but fighting by themselves.", FunctionType::ReferenceBound, Type::Integer, {} } },
     { "getgrouptargetcount", { 0x11A1, "GetGroupTargetCount", "GetGroupTargetCount returns the number of targets in the actor's combat group. It will return 0 if the reference is not an actor, the actor is not in combat, or if the actor is in combat but has no targets.", FunctionType::ReferenceBound, Type::Integer, {} } },
-    { "setobjectivecompleted", { 0x11A2, "SetObjectiveCompleted", "SetObjectiveCompleted Turns a quest objective on or off.", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
-    { "setobjectivedisplayed", { 0x11A3, "SetObjectiveDisplayed", "SetObjectiveDisplayed turns a quest objective on or off.", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
+    { "setobjectivecompleted", { 0x11A2, "SetObjectiveCompleted", "SetObjectiveCompleted Turns a quest objective on or off.", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
+    { "setobjectivedisplayed", { 0x11A3, "SetObjectiveDisplayed", "SetObjectiveDisplayed turns a quest objective on or off.", FunctionType::Standalone, Type::Void, { { Type::Reference, { 0 }, false }, { Type::Integer, { 0 }, false }, { Type::Integer, { 0 }, false } } } },
     { "getobjectivecompleted", { 0x11A4, "GetObjectiveCompleted", "GetObjectiveCompleted Returns 1 if the specified objective is marked as completed, 0 otherwise.", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     { "getobjectivedisplayed", { 0x11A5, "GetObjectiveDisplayed", "GetObjectiveDisplayed Returns 1 if the specified objective is currently being displayed, 0 otherwise.", FunctionType::Standalone, Type::Integer, { { Type::Reference, { 0 }, false }, { Type::Reference, { 0 }, false } } } },
     {
@@ -1704,6 +1708,7 @@ std::unordered_map<uint16_t, std::string> FunctionResolver::opcodeFuncs = {
     { 0x1230, "SetLastExtDoorActivated" },
     { 0x1231, "KillQuestUpdates" },
     { 0x1232, "IsImageSpaceActive" },
+    { 0x1239, "AddReputation" },
 };
 
 std::unordered_map<std::string, std::string> FunctionResolver::functionAliases({

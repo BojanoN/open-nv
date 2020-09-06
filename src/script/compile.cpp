@@ -274,6 +274,23 @@ int Compiler::compileOnDeath(BlockTypeStatement* blocktype, CompiledScript* out,
     return 0;
 }
 
+int Compiler::compileOnActivate(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onActivateID  = BlocktypeCode::OnActivate;
+    uint16_t      argumentCount = 0;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size()) {
+        log_fatal("OnActivate blocktype takes no arguments");
+        return -1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onActivateID);
+    out->writeShort(argumentCount);
+
+    return 0;
+}
+
 int Compiler::compileOnDestructionStageChange(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
 {
     BlocktypeCode onDestructionStageChangeID = BlocktypeCode::OnDestructionStageChange;
@@ -341,6 +358,10 @@ int Compiler::compileBlocktype(Node* node, CompiledScript* out)
     }
     case BlockType::MenuMode: {
         ret = compileMenuMode(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnActivate: {
+        ret = compileOnActivate(blocktype, out, begSize);
         break;
     }
     case BlockType::OnAdd: {
@@ -623,8 +644,6 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
         LiteralExpr* literal;
 
         for (uint32_t i = 0; i < paramCount; i++) {
-            // TODO: add information about the number of parameters required for each available function
-            // so we can enable nested function calls
             if (func->arguments[i]->type != NodeType::LiteralExpr) {
                 log_fatal("Function arguments can only be constant values");
                 return -1;
