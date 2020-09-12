@@ -52,7 +52,7 @@ BSA::BSA(InputStream* file, const std::string& name)
             read += entry.size() + 1;
         }
 
-        delete buffer;
+        delete[] buffer;
     }
 
     log_info("Read %d folders", this->folders.size());
