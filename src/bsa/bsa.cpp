@@ -1,8 +1,8 @@
 #include "bsa.hpp"
+#include "../logc/log.h"
+#include "../streams/bytearray/ibastream.hpp"
+#include "../util/compress.hpp"
 #include "hash.hpp"
-#include "logc/log.h"
-#include "util/compress.hpp"
-#include "streams/bytearray/ibastream.hpp"
 #include <algorithm>
 #include <string>
 #include <utility>
@@ -12,7 +12,8 @@
 
 namespace BSA {
 BSA::BSA(InputStream* file, const std::string& name)
-    : file{file}, name{name}
+    : file { file }
+    , name { name }
 {
     this->file->read(reinterpret_cast<char*>(&this->header), sizeof(Header), 1);
 
@@ -28,10 +29,33 @@ BSA::BSA(InputStream* file, const std::string& name)
     this->compressedByDefault = this->header.archiveFlags & ArchiveFlags::CompressedArchive;
     this->filenamesEmbedded   = this->header.archiveFlags & ArchiveFlags::EmbedFileNames;
     this->folderNamesIncluded = this->header.archiveFlags & ArchiveFlags::IncludeDirectoryNames;
+    this->fileNamesIncluded   = this->header.archiveFlags & ArchiveFlags::IncludeFileNames;
 
-    //log_info("File %s:", path.c_str());
+    if (this->fileNamesIncluded) {
+        uint32_t fileNamesOffset = (this->header.fileCount * (sizeof(FileRecord))) + (this->folderNamesIncluded ? (this->header.folderCount + this->header.totalFolderNameLength) : 0);
+        this->fileNames          = new std::unordered_set<std::string>();
+
+        this->file->inputSeek(fileNamesOffset, StreamPosition::cur);
+        log_debug("OFFSET: %u", this->file->inputTell());
+
+        char* buffer = new char[this->header.totalFileNameLength];
+        this->file->read(buffer, this->header.totalFileNameLength, 1);
+
+        int   read = 0;
+        char* tmp  = buffer;
+
+        while (read < this->header.totalFileNameLength) {
+            std::string entry(tmp);
+            this->fileNames->insert(entry);
+
+            tmp += entry.size() + 1;
+            read += entry.size() + 1;
+        }
+    }
+
     log_info("Read %d folders", this->folders.size());
     log_info("Compressed by default: %s", this->compressedByDefault ? "true" : "false");
+    log_info("FilenameBlock included: %s", this->fileNamesIncluded ? "true" : "false");
     // TODO: dynamically determine fair cache size
     uint32_t dynSize = (this->header.fileCount * 0.1);
     uint32_t size    = (dynSize < MIN_CACHE_SIZE) ? MIN_CACHE_SIZE : dynSize;
@@ -161,28 +185,37 @@ void BSACache::clear()
 
 bool BSA::fileExists(const std::string& path)
 {
+    int         lastBackslash = path.find_last_of('\\');
+    std::string folderName;
 
-    uint32_t    lastBackslash = path.find_last_of('\\');
-    std::string folderName    = path.substr(0, lastBackslash);
-    std::string fileName      = path.substr(lastBackslash + 1);
-
-    uint64_t folderHval = FNVHash(folderName, "");
-    uint64_t fileHval   = FNVHash("", fileName);
-
-    if (this->cache->exists(folderHval + fileHval)) {
-        return true;
+    if (lastBackslash == std::string::npos) {
+        lastBackslash = 0;
+        folderName    = "";
+    } else {
+        folderName = path.substr(0, lastBackslash);
     }
+    std::string fileName = path.substr(lastBackslash + 1);
 
-    std::pair<FolderRecord*, bool> folderEntry = this->findFolder(folderHval);
+    if (this->fileNamesIncluded) {
+        return this->fileNames->count(fileName);
+    } else {
+        uint64_t folderHval = FNVHash(folderName, "");
+        uint64_t fileHval   = FNVHash("", fileName);
 
-    if (folderEntry.second) {
-        std::pair<FileRecord, bool> fileEntry = this->findFile(folderEntry.first, fileHval);
-        if (fileEntry.second) {
-            this->cache->insert((folderHval + fileHval), fileEntry.first);
+        if (this->cache->exists(folderHval + fileHval)) {
             return true;
         }
-    }
 
+        std::pair<FolderRecord*, bool> folderEntry = this->findFolder(folderHval);
+
+        if (folderEntry.second) {
+            std::pair<FileRecord, bool> fileEntry = this->findFile(folderEntry.first, fileHval);
+            if (fileEntry.second) {
+                this->cache->insert((folderHval + fileHval), fileEntry.first);
+                return true;
+            }
+        }
+    }
     return false;
 }
 
@@ -194,9 +227,17 @@ InputStream* BSA::getFile(const std::string& path)
     FolderRecord* folder;
     FileRecord    file;
 
-    uint32_t    lastBackslash = path.find_last_of('\\');
-    std::string folderName    = path.substr(0, lastBackslash);
-    std::string fileName      = path.substr(lastBackslash + 1);
+    int         lastBackslash = path.find_last_of('\\');
+    std::string folderName;
+
+    if (lastBackslash == std::string::npos) {
+        lastBackslash = 0;
+        folderName    = "";
+    } else {
+        folderName = path.substr(0, lastBackslash);
+    }
+
+    std::string fileName = path.substr(lastBackslash + 1);
 
     uint64_t folderHval = FNVHash(folderName, "");
     uint64_t fileHval   = FNVHash("", fileName);
@@ -276,7 +317,7 @@ InputStream* BSA::getFile(const std::string& path)
         try {
             Util::zlibDecompress(*tmpBuf, *ret);
 
-            if(ret->size() != decompSize) {
+            if (ret->size() != decompSize) {
                 throw std::runtime_error("Wrong uncompressed size: " + std::to_string(ret->size()) + ", expected: " + std::to_string(decompSize));
             }
 
@@ -299,5 +340,4 @@ InputStream* BSA::getFile(const std::string& path)
     //return std::make_unique<ByteArrayInputStream>(ret);
     return new ByteArrayInputStream(ret);
 };
-
 };

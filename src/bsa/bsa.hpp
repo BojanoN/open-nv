@@ -1,13 +1,14 @@
 #pragma once
 
-#include "util/enumflags.hpp"
 #include "../streams/istream.hpp"
+#include "../util/enumflags.hpp"
 #include <cstdint>
 #include <fstream>
 #include <map>
-#include <unordered_map>
-#include <vector>
 #include <memory>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 #define BSAId 0x00415342
 
@@ -95,21 +96,27 @@ private:
 class BSA {
 public:
     BSA(InputStream* path, const std::string& name);
-    ~BSA() { delete file; };
+    ~BSA()
+    {
+        delete file;
+        delete fileNames;
+    };
 
-    /*std::unique_ptr<InputStream>*/InputStream*     getFile(const std::string& path);
-    bool                             fileExists(const std::string& path);
+    /*std::unique_ptr<InputStream>*/ InputStream* getFile(const std::string& path);
+    bool                                          fileExists(const std::string& path);
 
-    std::string                      getName() { return name; }
-    
+    std::string getName() { return name; }
+
 private:
     //std::ifstream file;
     //std::unique_ptr<InputStream> file;
-    InputStream*  file;
-    Header        header;
-    std::unique_ptr<BSACache>    cache;
+    InputStream*              file;
+    Header                    header;
+    std::unique_ptr<BSACache> cache;
     // hash, offset
     std::vector<FolderRecord> folders;
+    // Contains a list of all file names if ArchiveFlags::IncludeFileNames bit is set
+    std::unordered_set<std::string>* fileNames;
 
     std::pair<FolderRecord*, bool> findFolder(uint64_t hashval);
     std::pair<FileRecord, bool>    findFile(FolderRecord* folder, uint64_t hashval);
@@ -117,6 +124,7 @@ private:
     bool compressedByDefault;
     bool filenamesEmbedded;
     bool folderNamesIncluded;
+    bool fileNamesIncluded;
 
     std::string name;
 };
