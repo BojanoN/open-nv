@@ -12,7 +12,7 @@ struct Quaternion {
     {
     }
 
-    Quaternion(double angle, vec3 vec)
+    Quaternion(double angle, Vector3 vec)
         : scalar(cos(angle / 2))
         , vector(vec)
     {
@@ -88,19 +88,19 @@ struct Quaternion {
         return sqrt(scalar * scalar + vector.normSquared());
     }
 
-    vec3 rotate(const vec3& vec)
+    Vector3 rotate(const Vector3& vec)
     {
-        vec3 ret;
+        Vector3 ret;
 
-        vec3 t = (vector * 2).cross(vec);
-        ret    = vec + (t * scalar) + vector.cross(t);
+        Vector3 t = (vector * 2).cross(vec);
+        ret       = vec + (t * scalar) + vector.cross(t);
 
         return ret;
     }
 
-    mat4 toMat4()
+    Matrix44 toMat4()
     {
-        mat4 mat;
+        Matrix44 mat;
 
         double x = vector[0];
         double y = vector[1];
@@ -122,12 +122,12 @@ struct Quaternion {
         mat[1][1] = 1. - x_sq - z_sq;
         mat[2][2] = 1. - x_sq - y_sq;
 
-        mat[0][1] = 2. * (xy - zw);
-        mat[0][2] = 2. * (xz + yw);
-        mat[1][0] = 2. * (xy + zw);
-        mat[1][2] = 2. * (yz - xw);
-        mat[2][0] = 2. * (xz - yw);
-        mat[2][1] = 2. * (yz + xw);
+        mat[1][0] = 2. * (xy - zw);
+        mat[2][0] = 2. * (xz + yw);
+        mat[0][1] = 2. * (xy + zw);
+        mat[2][1] = 2. * (yz - xw);
+        mat[0][2] = 2. * (xz - yw);
+        mat[1][2] = 2. * (yz + xw);
 
         mat[3][3] = 1.;
 
@@ -145,6 +145,6 @@ struct Quaternion {
         return ret;
     }
 
-    double scalar;
-    vec3   vector;
+    double  scalar;
+    Vector3 vector;
 };

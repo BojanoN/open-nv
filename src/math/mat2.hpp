@@ -1,17 +1,17 @@
 #pragma once
 #include "vec2.hpp"
 
-struct mat2 {
+struct Matrix22 {
 
-    mat2() {};
+    Matrix22() {};
 
-    mat2(vec2 a, vec2 b)
+    Matrix22(Vector2 a, Vector2 b)
     {
         mat[0] = a;
         mat[1] = b;
     };
 
-    mat2(double diag_val)
+    Matrix22(double diag_val)
     {
         mat[0][1] = 0.;
         mat[1][0] = 0.;
@@ -20,31 +20,31 @@ struct mat2 {
         mat[1][1] = diag_val;
     }
 
-    vec2& operator[](int index)
+    Vector2& operator[](int index)
     {
         return mat[index];
     }
 
-    const vec2& operator[](int index) const
+    const Vector2& operator[](int index) const
     {
         return mat[index];
     }
 
-    mat2 operator*(const mat2& b)
+    Matrix22 operator*(const Matrix22& b)
     {
-        mat2 ret;
+        Matrix22 ret;
 
-        ret[0][0] = mat[0][0] * b[0][0] + mat[0][1] * b[1][0];
-        ret[0][1] = mat[0][0] * b[1][0] + mat[0][1] * b[1][1];
-        ret[1][0] = mat[1][0] * b[0][0] + mat[1][1] * b[1][0];
-        ret[0][1] = mat[1][0] * b[1][0] + mat[1][1] * b[1][1];
+        ret[0][0] = mat[0][0] * b[0][0] + mat[1][0] * b[0][1];
+        ret[0][1] = mat[0][1] * b[0][0] + mat[1][1] * b[0][1];
+        ret[1][0] = mat[0][0] * b[1][0] + mat[1][0] * b[1][1];
+        ret[1][1] = mat[0][1] * b[1][0] + mat[1][1] * b[1][1];
 
         return ret;
     }
 
-    vec2 operator*(const vec2& b)
+    Vector2 operator*(const Vector2& b)
     {
-        vec2 ret;
+        Vector2 ret;
 
         ret[0] = b[0] * mat[0][0] + b[1] * mat[1][0];
         ret[1] = b[0] * mat[0][1] + b[1] * mat[1][1];
@@ -62,9 +62,9 @@ struct mat2 {
         double det = determinant();
         double tmp = mat[0][0];
 
-        mat[1][0] = (-mat[1][0]) / det;
-        mat[0][1] = (-mat[0][1]) / det;
         mat[0][0] = mat[1][1] / det;
+        mat[0][1] = (-mat[0][1]) / det;
+        mat[1][0] = (-mat[1][0]) / det;
         mat[1][1] = tmp / det;
     }
 
@@ -86,26 +86,27 @@ struct mat2 {
 
     void colswap(unsigned int c1, unsigned int c2)
     {
-        vec2 tmpcol;
+        Vector2 tmprow;
 
-        tmpcol[0] = mat[0][c1];
-        tmpcol[1] = mat[1][c1];
+        tmprow = mat[c1];
 
-        mat[0][c1] = mat[0][c2];
-        mat[1][c1] = mat[1][c2];
-        mat[0][c2] = tmpcol[0];
-        mat[1][c2] = tmpcol[1];
+        mat[c1] = mat[c2];
+        mat[c2] = tmprow;
     }
 
     void rowswap(unsigned int r1, unsigned int r2)
     {
-        vec2 tmprow;
 
-        tmprow = mat[r1];
+        Vector2 tmpcol;
 
-        mat[r1] = mat[r2];
-        mat[r2] = tmprow;
+        tmpcol[0] = mat[0][r1];
+        tmpcol[1] = mat[1][r1];
+
+        mat[0][r1] = mat[0][r2];
+        mat[1][r1] = mat[1][r2];
+        mat[0][r2] = tmpcol[0];
+        mat[1][r2] = tmpcol[1];
     }
 
-    vec2 mat[2];
+    Vector2 mat[2];
 };

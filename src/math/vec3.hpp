@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 
-struct vec3 {
+struct Vector3 {
 
     double& operator[](int index)
     {
@@ -15,35 +15,35 @@ struct vec3 {
         return arr[index];
     }
 
-    vec3()
+    Vector3()
     {
         arr[0] = 0.;
         arr[1] = 0.;
         arr[2] = 0.;
     }
 
-    vec3(double in[3])
+    Vector3(double in[3])
     {
         arr[0] = in[0];
         arr[1] = in[1];
         arr[2] = in[2];
     }
 
-    vec3(double x, double y, double z)
+    Vector3(double x, double y, double z)
     {
         arr[0] = x;
         arr[1] = y;
         arr[2] = z;
     }
 
-    void vec3_print()
+    void Vector3_print()
     {
         printf("( %f %f %f )\n", arr[0], arr[1], arr[2]);
     }
 
-    vec3 operator+(const vec3& b) const
+    Vector3 operator+(const Vector3& b) const
     {
-        vec3 ret;
+        Vector3 ret;
 
         ret[0] = arr[0] + b[0];
         ret[1] = arr[1] + b[1];
@@ -52,9 +52,9 @@ struct vec3 {
         return ret;
     }
 
-    vec3 operator+(double val) const
+    Vector3 operator+(double val) const
     {
-        vec3 ret;
+        Vector3 ret;
 
         ret[0] = arr[0] + val;
         ret[1] = arr[1] + val;
@@ -62,9 +62,9 @@ struct vec3 {
 
         return ret;
     }
-    vec3 operator-(const vec3& b) const
+    Vector3 operator-(const Vector3& b) const
     {
-        vec3 ret;
+        Vector3 ret;
 
         ret[0] = arr[0] - b[0];
         ret[1] = arr[1] - b[1];
@@ -72,9 +72,9 @@ struct vec3 {
 
         return ret;
     }
-    vec3 operator-(double val) const
+    Vector3 operator-(double val) const
     {
-        vec3 ret;
+        Vector3 ret;
 
         ret[0] = arr[0] - val;
         ret[1] = arr[1] - val;
@@ -82,9 +82,9 @@ struct vec3 {
 
         return ret;
     }
-    vec3 operator*(const vec3& b) const
+    Vector3 operator*(const Vector3& b) const
     {
-        vec3 ret;
+        Vector3 ret;
 
         ret[0] = arr[0] * b[0];
         ret[1] = arr[1] * b[1];
@@ -93,9 +93,9 @@ struct vec3 {
         return ret;
     }
 
-    vec3 operator*(double val) const
+    Vector3 operator*(double val) const
     {
-        vec3 ret;
+        Vector3 ret;
 
         ret[0] = arr[0] * val;
         ret[1] = arr[1] * val;
@@ -103,9 +103,9 @@ struct vec3 {
 
         return ret;
     }
-    vec3 operator/(const vec3& b) const
+    Vector3 operator/(const Vector3& b) const
     {
-        vec3 ret;
+        Vector3 ret;
 
         ret[0] = arr[0] / b[0];
         ret[1] = arr[1] / b[1];
@@ -114,9 +114,9 @@ struct vec3 {
         return ret;
     }
 
-    vec3 operator/(double val) const
+    Vector3 operator/(double val) const
     {
-        vec3 ret;
+        Vector3 ret;
 
         ret[0] = arr[0] / val;
         ret[1] = arr[1] / val;
@@ -125,7 +125,7 @@ struct vec3 {
         return ret;
     }
 
-    void operator+=(const vec3& b)
+    void operator+=(const Vector3& b)
     {
 
         arr[0] += b[0];
@@ -140,7 +140,7 @@ struct vec3 {
         arr[1] += val;
         arr[2] += val;
     }
-    void operator-=(const vec3& b)
+    void operator-=(const Vector3& b)
     {
 
         arr[0] -= b[0];
@@ -155,7 +155,7 @@ struct vec3 {
         arr[2] -= val;
     }
 
-    void operator*=(const vec3& b)
+    void operator*=(const Vector3& b)
     {
 
         arr[0] *= b[0];
@@ -170,7 +170,7 @@ struct vec3 {
         arr[1] *= val;
         arr[2] *= val;
     }
-    void operator/=(const vec3& b)
+    void operator/=(const Vector3& b)
     {
 
         arr[0] /= b[0];
@@ -186,7 +186,7 @@ struct vec3 {
         arr[2] /= val;
     }
 
-    double dot(const vec3& b) const
+    double dot(const Vector3& b) const
     {
         return arr[0] * b[0] + arr[1] * b[1] + arr[2] * b[2];
     }
@@ -209,9 +209,9 @@ struct vec3 {
         arr[2] /= len;
     }
 
-    vec3 cross(const vec3& b) const
+    Vector3 cross(const Vector3& b) const
     {
-        vec3 ret;
+        Vector3 ret;
 
         ret[0] = arr[1] * b[2] - b[1] * arr[2];
         ret[1] = arr[2] * b[0] - b[2] * arr[0];
@@ -220,14 +220,14 @@ struct vec3 {
         return ret;
     }
 
-    double cos(const vec3& vec) const
+    double cos(const Vector3& vec) const
     {
         return this->dot(vec) / (this->norm() * vec.norm());
     }
 
-    vec3 operator-()
+    Vector3 operator-()
     {
-        vec3 ret;
+        Vector3 ret;
 
         ret[0] = -arr[0];
         ret[1] = -arr[1];

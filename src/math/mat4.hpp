@@ -1,11 +1,11 @@
 #pragma once
 #include "vec4.hpp"
-#include <initializer_list>
-struct mat4 {
 
-    mat4() {};
+struct Matrix44 {
 
-    mat4(vec4 a, vec4 b, vec4 c, vec4 d)
+    Matrix44() {};
+
+    Matrix44(Vector4 a, Vector4 b, Vector4 c, Vector4 d)
     {
         mat[0] = a;
         mat[1] = b;
@@ -13,7 +13,7 @@ struct mat4 {
         mat[3] = d;
     };
 
-    mat4(double diag_val)
+    Matrix44(double diag_val)
     {
         mat[0][1] = 0.;
         mat[0][2] = 0.;
@@ -34,12 +34,12 @@ struct mat4 {
         mat[3][3] = diag_val;
     }
 
-    vec4& operator[](int index)
+    Vector4& operator[](int index)
     {
         return mat[index];
     }
 
-    const vec4& operator[](int index) const
+    const Vector4& operator[](int index) const
     {
         return mat[index];
     }
@@ -64,36 +64,37 @@ struct mat4 {
         mat[3][3] *= val;
     }
 
-    mat4 operator*(const mat4& b)
+    Matrix44 operator*(const Matrix44& b)
     {
-        mat4 ret;
+        Matrix44 ret;
 
-        ret[0][0] = mat[0][0] * b[0][0] + mat[0][1] * b[1][0] + mat[0][2] * b[2][0] + mat[0][3] * b[3][0];
-        ret[0][1] = mat[0][0] * b[0][1] + mat[0][1] * b[1][1] + mat[0][2] * b[2][1] + mat[0][3] * b[3][1];
-        ret[0][2] = mat[0][0] * b[0][2] + mat[0][1] * b[1][2] + mat[0][2] * b[2][2] + mat[0][3] * b[3][2];
-        ret[0][3] = mat[0][0] * b[0][3] + mat[0][1] * b[1][3] + mat[0][2] * b[2][3] + mat[0][3] * b[3][3];
+        ret[0][0] = mat[0][0] * b[0][0] + mat[1][0] * b[0][1] + mat[2][0] * b[0][2] + mat[3][0] * b[0][3];
+        ret[0][1] = mat[0][1] * b[0][0] + mat[1][1] * b[0][1] + mat[2][1] * b[0][2] + mat[3][1] * b[0][3];
+        ret[0][2] = mat[0][2] * b[0][0] + mat[1][2] * b[0][1] + mat[2][2] * b[0][2] + mat[3][2] * b[0][3];
+        ret[0][3] = mat[0][3] * b[0][0] + mat[1][3] * b[0][1] + mat[2][3] * b[0][2] + mat[3][3] * b[0][3];
 
-        ret[1][0] = mat[1][0] * b[0][0] + mat[1][1] * b[1][0] + mat[1][2] * b[2][0] + mat[1][3] * b[3][0];
-        ret[1][1] = mat[1][0] * b[0][1] + mat[1][1] * b[1][1] + mat[1][2] * b[2][1] + mat[1][3] * b[3][1];
-        ret[1][2] = mat[1][0] * b[0][2] + mat[1][1] * b[1][2] + mat[1][2] * b[2][2] + mat[1][3] * b[3][2];
-        ret[1][3] = mat[1][0] * b[0][2] + mat[1][1] * b[1][2] + mat[1][2] * b[2][3] + mat[1][3] * b[3][3];
+        ret[1][0] = mat[0][0] * b[1][0] + mat[1][0] * b[1][1] + mat[2][0] * b[1][2] + mat[3][0] * b[1][3];
+        ret[1][1] = mat[0][1] * b[1][0] + mat[1][1] * b[1][1] + mat[2][1] * b[1][2] + mat[3][1] * b[1][3];
+        ret[1][2] = mat[0][2] * b[1][0] + mat[1][2] * b[1][1] + mat[2][2] * b[1][2] + mat[3][2] * b[1][3];
+        ret[1][3] = mat[0][3] * b[1][0] + mat[1][3] * b[1][1] + mat[2][3] * b[1][2] + mat[3][3] * b[1][3];
 
-        ret[2][0] = mat[2][0] * b[0][0] + mat[2][1] * b[1][0] + mat[2][2] * b[2][0] + mat[2][3] * b[3][0];
-        ret[2][1] = mat[2][0] * b[0][1] + mat[2][1] * b[1][1] + mat[2][2] * b[2][1] + mat[2][3] * b[3][1];
-        ret[2][2] = mat[2][0] * b[0][2] + mat[2][1] * b[1][2] + mat[2][2] * b[2][2] + mat[2][3] * b[3][2];
-        ret[2][3] = mat[2][0] * b[0][3] + mat[2][1] * b[1][3] + mat[2][2] * b[2][3] + mat[2][3] * b[3][3];
+        ret[2][0] = mat[0][0] * b[2][0] + mat[1][0] * b[2][1] + mat[2][0] * b[2][2] + mat[3][0] * b[2][3];
+        ret[2][1] = mat[0][1] * b[2][0] + mat[1][1] * b[2][1] + mat[2][1] * b[2][2] + mat[3][1] * b[2][3];
+        ret[2][2] = mat[0][2] * b[2][0] + mat[1][2] * b[2][1] + mat[2][2] * b[2][2] + mat[3][2] * b[2][3];
+        ret[2][3] = mat[0][3] * b[2][0] + mat[1][3] * b[2][1] + mat[2][3] * b[2][2] + mat[3][3] * b[2][3];
 
-        ret[3][0] = mat[3][0] * b[0][0] + mat[3][1] * b[1][0] + mat[3][2] * b[2][0] + mat[3][3] * b[3][0];
-        ret[3][1] = mat[3][0] * b[0][1] + mat[3][1] * b[1][1] + mat[3][2] * b[2][1] + mat[3][3] * b[3][1];
-        ret[3][2] = mat[3][0] * b[0][2] + mat[3][1] * b[1][2] + mat[3][2] * b[2][2] + mat[3][3] * b[3][2];
-        ret[3][3] = mat[3][0] * b[0][3] + mat[3][1] * b[1][3] + mat[3][2] * b[2][3] + mat[3][3] * b[3][3];
+        ret[3][0] = mat[0][0] * b[3][0] + mat[1][0] * b[3][1] + mat[2][0] * b[3][2] + mat[3][0] * b[3][3];
+        ret[3][1] = mat[0][1] * b[3][0] + mat[1][1] * b[3][1] + mat[2][1] * b[3][2] + mat[3][1] * b[3][3];
+        ret[3][2] = mat[0][2] * b[3][0] + mat[1][2] * b[3][1] + mat[2][2] * b[3][2] + mat[3][2] * b[3][3];
+        ret[3][3] = mat[0][3] * b[3][0] + mat[1][3] * b[3][1] + mat[2][3] * b[3][2] + mat[3][3] * b[3][3];
 
         return ret;
     }
 
-    vec4 operator*(const vec4& b)
+    Vector4
+    operator*(const Vector4& b)
     {
-        vec4 ret;
+        Vector4 ret;
 
         ret[0] = b[0] * mat[0][0] + b[1] * mat[1][0] + b[2] * mat[2][0] + b[3] * mat[3][0];
         ret[1] = b[0] * mat[0][1] + b[1] * mat[1][1] + b[2] * mat[2][1] + b[3] * mat[3][1];
@@ -202,32 +203,32 @@ struct mat4 {
 
     void colswap(unsigned int c1, unsigned int c2)
     {
-        vec4 tmpcol;
+        Vector4 tmprow;
 
-        tmpcol[0] = mat[0][c1];
-        tmpcol[1] = mat[1][c1];
-        tmpcol[2] = mat[2][c1];
-        tmpcol[3] = mat[3][c1];
-
-        mat[0][c1] = mat[0][c2];
-        mat[1][c1] = mat[1][c2];
-        mat[2][c1] = mat[2][c2];
-        mat[3][c1] = mat[3][c2];
-
-        mat[0][c2] = tmpcol[0];
-        mat[1][c2] = tmpcol[1];
-        mat[2][c2] = tmpcol[2];
-        mat[3][c2] = tmpcol[3];
+        tmprow  = mat[c1];
+        mat[c1] = mat[c2];
+        mat[c2] = tmprow;
     }
 
     void rowswap(unsigned int r1, unsigned int r2)
     {
-        vec4 tmprow;
+        Vector4 tmpcol;
 
-        tmprow  = mat[r1];
-        mat[r1] = mat[r2];
-        mat[r2] = tmprow;
+        tmpcol[0] = mat[0][r1];
+        tmpcol[1] = mat[1][r1];
+        tmpcol[2] = mat[2][r1];
+        tmpcol[3] = mat[3][r1];
+
+        mat[0][r1] = mat[0][r2];
+        mat[1][r1] = mat[1][r2];
+        mat[2][r1] = mat[2][r2];
+        mat[3][r1] = mat[3][r2];
+
+        mat[0][r2] = tmpcol[0];
+        mat[1][r2] = tmpcol[1];
+        mat[2][r2] = tmpcol[2];
+        mat[3][r2] = tmpcol[3];
     }
 
-    vec4 mat[4];
+    Vector4 mat[4];
 };

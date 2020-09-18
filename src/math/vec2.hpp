@@ -2,21 +2,21 @@
 #include <math.h>
 #include <stdio.h>
 
-struct vec2 {
+struct Vector2 {
 
-    vec2()
+    Vector2()
     {
         arr[0] = 0.;
         arr[1] = 0.;
     }
 
-    vec2(double in[2])
+    Vector2(double in[2])
     {
         arr[0] = in[0];
         arr[1] = in[1];
     }
 
-    vec2(double x, double y)
+    Vector2(double x, double y)
     {
         arr[0] = x;
         arr[1] = y;
@@ -37,18 +37,18 @@ struct vec2 {
         printf("( %f %f )\n", arr[0], arr[1]);
     }
 
-    vec2 operator+(const vec2& b) const
+    Vector2 operator+(const Vector2& b) const
     {
-        vec2 ret;
+        Vector2 ret;
         ret[0] = arr[0] + b[0];
         ret[1] = arr[1] + b[1];
 
         return ret;
     }
 
-    vec2 operator+(double val) const
+    Vector2 operator+(double val) const
     {
-        vec2 ret;
+        Vector2 ret;
 
         ret[0] = arr[0] + val;
         ret[1] = arr[1] + val;
@@ -56,23 +56,23 @@ struct vec2 {
         return ret;
     }
 
-    vec2 operator-(const vec2& b) const
+    Vector2 operator-(const Vector2& b) const
     {
-        vec2 ret;
+        Vector2 ret;
         ret[0] = arr[0] - b[0];
         ret[1] = arr[1] - b[1];
         return ret;
     }
 
-    vec2 operator-(double val) const
+    Vector2 operator-(double val) const
     {
-        vec2 ret;
+        Vector2 ret;
         ret[0] = arr[0] - val;
         ret[1] = arr[1] - val;
         return ret;
     }
 
-    void operator+=(vec2& b)
+    void operator+=(Vector2& b)
     {
         arr[0] += b[0];
         arr[1] += b[1];
@@ -84,7 +84,7 @@ struct vec2 {
         arr[1] += val;
     }
 
-    void operator-=(vec2& b)
+    void operator-=(Vector2& b)
     {
         arr[0] -= b[0];
         arr[1] -= b[1];
@@ -96,9 +96,9 @@ struct vec2 {
         arr[1] -= val;
     }
 
-    vec2 operator*(const vec2& b) const
+    Vector2 operator*(const Vector2& b) const
     {
-        vec2 ret;
+        Vector2 ret;
 
         ret[0] = arr[0] * b[0];
         ret[1] = arr[1] * b[1];
@@ -106,9 +106,9 @@ struct vec2 {
         return ret;
     }
 
-    vec2 operator*(double val) const
+    Vector2 operator*(double val) const
     {
-        vec2 ret;
+        Vector2 ret;
 
         ret[0] = arr[0] * val;
         ret[1] = arr[1] * val;
@@ -116,9 +116,9 @@ struct vec2 {
         return ret;
     }
 
-    vec2 operator/(const vec2& b) const
+    Vector2 operator/(const Vector2& b) const
     {
-        vec2 ret;
+        Vector2 ret;
 
         ret[0] = arr[0] / b[0];
         ret[1] = arr[1] / b[1];
@@ -126,9 +126,9 @@ struct vec2 {
         return ret;
     }
 
-    vec2 operator/(double val) const
+    Vector2 operator/(double val) const
     {
-        vec2 ret;
+        Vector2 ret;
 
         ret[0] = arr[0] / val;
         ret[1] = arr[1] / val;
@@ -136,7 +136,7 @@ struct vec2 {
         return ret;
     }
 
-    void operator*=(vec2& b)
+    void operator*=(Vector2& b)
     {
         arr[0] *= b[0];
         arr[1] *= b[1];
@@ -146,7 +146,7 @@ struct vec2 {
         arr[0] *= val;
         arr[1] *= val;
     }
-    void operator/=(vec2& b)
+    void operator/=(Vector2& b)
     {
         arr[0] /= b[0];
         arr[1] /= b[1];
@@ -157,7 +157,7 @@ struct vec2 {
         arr[1] /= val;
     }
 
-    double dot(const vec2& b) const
+    double dot(const Vector2& b) const
     {
         return arr[0] * b[0] + arr[1] * b[1];
     }
@@ -174,14 +174,14 @@ struct vec2 {
         arr[1] /= len;
     }
 
-    double cos(const vec2& vec) const
+    double cos(const Vector2& vec) const
     {
         return this->dot(vec) / (this->norm() * vec.norm());
     }
 
-    vec2 operator-()
+    Vector2 operator-()
     {
-        vec2 ret;
+        Vector2 ret;
 
         ret[0] = -arr[0];
         ret[1] = -arr[1];

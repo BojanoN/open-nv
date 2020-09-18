@@ -7,23 +7,23 @@
 
 #include <math.h>
 
-inline int mat2_equal(mat2 a, mat2 b)
+inline int mat2_equal(Matrix22 a, Matrix22 b)
 {
     return (abs(a[0][0] - b[0][0]) <= Math::epsilon) && (abs(a[0][1] - b[0][1]) <= Math::epsilon) && (abs(a[1][0] - b[1][0]) <= Math::epsilon) && (abs(a[1][1] - b[1][1]) <= Math::epsilon);
 }
 
-inline int mat3_equal(mat3 a, mat3 b)
+inline int mat3_equal(Matrix33 a, Matrix33 b)
 {
     return (abs(a[0][0] - b[0][0]) <= Math::epsilon) && (abs(a[0][1] - b[0][1]) <= Math::epsilon) && (abs(a[0][2] - b[0][2]) <= Math::epsilon) && (abs(a[1][0] - b[1][0]) <= Math::epsilon) && (abs(a[1][1] - b[1][1]) <= Math::epsilon) && (abs(a[1][2] - b[1][2]) <= Math::epsilon) && (abs(a[2][0] - b[2][0]) <= Math::epsilon) && (abs(a[2][1] - b[2][1]) <= Math::epsilon) && (abs(a[2][2] - b[2][2]) <= Math::epsilon);
 }
-inline int mat4_equal(mat4 a, mat4 b)
+inline int mat4_equal(Matrix44 a, Matrix44 b)
 {
     return (abs(a[0][0] - b[0][0]) <= Math::epsilon) && (abs(a[0][1] - b[0][1]) <= Math::epsilon) && (abs(a[0][2] - b[0][2]) <= Math::epsilon) && (abs(a[0][3] - b[0][3]) <= Math::epsilon) && (abs(a[1][0] - b[1][0]) <= Math::epsilon) && (abs(a[1][1] - b[1][1]) <= Math::epsilon) && (abs(a[1][2] - b[1][2]) <= Math::epsilon) && (abs(a[1][3] - b[1][3]) <= Math::epsilon) && (abs(a[2][0] - b[2][0]) <= Math::epsilon) && (abs(a[2][1] - b[2][1]) <= Math::epsilon) && (abs(a[2][2] - b[2][2]) <= Math::epsilon) && (abs(a[2][3] - b[2][3]) <= Math::epsilon) && (abs(a[3][0] - b[3][0]) <= Math::epsilon) && (abs(a[3][1] - b[3][1]) <= Math::epsilon) && (abs(a[3][2] - b[3][2]) <= Math::epsilon) && (abs(a[3][3] - b[3][3]) <= Math::epsilon);
 }
 
-inline mat4 perspective_mat(double fovy, double aspect, double near, double far)
+inline Matrix44 perspective_mat(double fovy, double aspect, double near, double far)
 {
-    mat4 mat;
+    Matrix44 mat;
 
     double diff = near - far;
     double f    = 1. / tan(fovy * 0.5);
@@ -43,48 +43,55 @@ inline mat4 perspective_mat(double fovy, double aspect, double near, double far)
     mat[0][0] = f / aspect;
     mat[1][1] = f;
     mat[2][2] = (far + near) / diff;
-    mat[2][3] = (2 * far * near) / diff;
-    mat[3][2] = -1.;
+    mat[3][2] = (2 * far * near) / diff;
+    mat[2][3] = -1.;
 
     return mat;
 }
 
-inline mat4 lookat_mat(vec3& eye, vec3& center, vec3& up)
+inline Matrix44 lookat_mat(Vector3& eye, Vector3& center, Vector3& up)
 {
-    mat4 mat;
+    Matrix44 mat;
 
-    vec3 F = (center - eye);
-    vec3 U = up;
-    vec3 u;
-    vec3 s;
+    Vector3 F = (center - eye);
+    Vector3 U = up;
+    Vector3 u;
+    Vector3 s;
 
     U.normalize();
     F.normalize();
 
-    s      = F.cross(U);
-    mat[0] = s;
+    s         = F.cross(U);
+    mat[0][0] = s[0];
+    mat[1][0] = s[1];
+    mat[2][0] = s[2];
 
     s.normalize();
     u = s.cross(F);
     F.negate();
 
-    mat[1] = F;
-    mat[2] = u;
+    mat[0][2] = F[0];
+    mat[0][3] = u[0];
+    mat[1][2] = F[1];
+    mat[1][3] = u[1];
+    mat[2][2] = F[2];
+    mat[2][3] = u[2];
 
     mat[0][3] = 0.;
     mat[1][3] = 0.;
     mat[2][3] = 0.;
     mat[3][0] = 0.;
     mat[3][1] = 0.;
+    mat[3][2] = 0.;
 
     mat[3][3] = 1.;
 
     return mat;
 }
 
-inline mat4 ortho_mat(double left, double right, double bottom, double top, double near, double far)
+inline Matrix44 ortho_mat(double left, double right, double bottom, double top, double near, double far)
 {
-    mat4 mat;
+    Matrix44 mat;
 
     double rl_diff = right - left;
     double tb_diff = top - bottom;
@@ -100,26 +107,25 @@ inline mat4 ortho_mat(double left, double right, double bottom, double top, doub
     mat[1][2] = 0.;
     mat[2][0] = 0.;
     mat[2][1] = 0.;
-    mat[3][0] = 0.;
-    mat[3][1] = 0.;
-    mat[3][2] = 0.;
+    mat[0][3] = 0.;
+    mat[1][3] = 0.;
+    mat[2][3] = 0.;
 
     mat[0][0] = 2. / rl_diff;
     mat[1][1] = 2. / tb_diff;
     mat[2][2] = -2. / fn_diff;
+    mat[3][0] = tx;
+    mat[3][1] = ty;
+    mat[3][2] = tz;
     mat[3][3] = 1.;
-
-    mat[0][3] = tx;
-    mat[1][3] = ty;
-    mat[2][3] = tz;
 
     return mat;
 }
 
 // Near and far are -1 and 1
-inline mat4 ortho2D_mat(double left, double right, double bottom, double top)
+inline Matrix44 ortho2D_mat(double left, double right, double bottom, double top)
 {
-    mat4 mat;
+    Matrix44 mat;
 
     double rl_diff = right - left;
     double tb_diff = top - bottom;
@@ -134,8 +140,8 @@ inline mat4 ortho2D_mat(double left, double right, double bottom, double top)
     mat[2][0] = 0.;
     mat[2][1] = 0.;
     mat[2][3] = 0.;
-    mat[3][0] = 0.;
-    mat[3][1] = 0.;
+    mat[0][3] = 0.;
+    mat[1][3] = 0.;
     mat[3][2] = 0.;
 
     mat[0][0] = 2. / rl_diff;
@@ -143,15 +149,15 @@ inline mat4 ortho2D_mat(double left, double right, double bottom, double top)
     mat[2][2] = -1.;
     mat[3][3] = 1.;
 
-    mat[0][3] = tx;
-    mat[1][3] = ty;
+    mat[3][0] = tx;
+    mat[3][1] = ty;
 
     return mat;
 }
 
-inline mat4 translate_mat(vec3& vec)
+inline Matrix44 translate_mat(Vector3& vec)
 {
-    mat4 mat;
+    Matrix44 mat;
 
     mat[0][1] = 0.;
     mat[0][2] = 0.;
@@ -159,25 +165,25 @@ inline mat4 translate_mat(vec3& vec)
     mat[1][2] = 0.;
     mat[2][0] = 0.;
     mat[2][1] = 0.;
-    mat[3][0] = 0.;
-    mat[3][1] = 0.;
-    mat[3][2] = 0.;
+    mat[0][3] = 0.;
+    mat[1][3] = 0.;
+    mat[2][3] = 0.;
 
     mat[0][0] = 1.;
     mat[1][1] = 1.;
     mat[2][2] = 1.;
     mat[3][3] = 1.;
 
-    mat[0][3] = vec[0];
-    mat[1][3] = vec[1];
-    mat[2][3] = vec[2];
+    mat[3][0] = vec[0];
+    mat[3][1] = vec[1];
+    mat[3][2] = vec[2];
 
     return mat;
 }
 
-inline mat4 scale_mat(double val)
+inline Matrix44 scale_mat(double val)
 {
-    mat4 mat;
+    Matrix44 mat;
 
     mat[0][1] = 0.;
     mat[0][2] = 0.;

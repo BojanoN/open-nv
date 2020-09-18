@@ -2,17 +2,17 @@
 
 #include "vec3.hpp"
 
-struct mat3 {
+struct Matrix33 {
 
-    mat3() {};
-    mat3(vec3 a, vec3 b, vec3 c)
+    Matrix33() {};
+    Matrix33(Vector3 a, Vector3 b, Vector3 c)
     {
         mat[0] = a;
         mat[1] = b;
         mat[2] = c;
     };
 
-    mat3(double diag_val)
+    Matrix33(double diag_val)
     {
         mat[0][1] = 0.;
         mat[0][2] = 0.;
@@ -26,39 +26,39 @@ struct mat3 {
         mat[2][2] = diag_val;
     }
 
-    vec3& operator[](int index)
+    Vector3& operator[](int index)
     {
         return mat[index];
     }
 
-    const vec3& operator[](int index) const
+    const Vector3& operator[](int index) const
     {
         return mat[index];
     }
 
-    mat3 operator*(const mat3& b)
+    Matrix33 operator*(const Matrix33& b)
     {
 
-        mat3 ret;
+        Matrix33 ret;
 
-        ret[0][0] = mat[0][0] * b[0][0] + mat[0][1] * b[1][0] + mat[0][2] * b[2][0];
-        ret[0][1] = mat[0][0] * b[0][1] + mat[0][1] * b[1][1] + mat[0][2] * b[2][1];
-        ret[0][2] = mat[0][0] * b[0][2] + mat[0][1] * b[1][2] + mat[0][2] * b[2][2];
+        ret[0][0] = mat[0][0] * b[0][0] + mat[1][0] * b[0][1] + mat[2][0] * b[0][2];
+        ret[0][1] = mat[0][1] * b[0][0] + mat[1][1] * b[0][1] + mat[2][1] * b[0][2];
+        ret[0][2] = mat[0][2] * b[0][0] + mat[1][2] * b[0][1] + mat[2][2] * b[0][2];
 
-        ret[1][0] = mat[1][0] * b[0][0] + mat[1][1] * b[1][0] + mat[1][2] * b[2][0];
-        ret[1][1] = mat[1][0] * b[0][1] + mat[1][1] * b[1][1] + mat[1][2] * b[2][1];
-        ret[1][2] = mat[1][0] * b[0][2] + mat[1][1] * b[1][2] + mat[1][2] * b[2][2];
+        ret[1][0] = mat[0][0] * b[1][0] + mat[1][0] * b[1][1] + mat[2][0] * b[1][2];
+        ret[1][1] = mat[0][1] * b[1][0] + mat[1][1] * b[1][1] + mat[2][1] * b[1][2];
+        ret[1][2] = mat[0][2] * b[1][0] + mat[1][2] * b[1][1] + mat[2][2] * b[1][2];
 
-        ret[2][0] = mat[2][0] * b[0][0] + mat[2][1] * b[1][0] + mat[2][2] * b[2][0];
-        ret[2][1] = mat[2][0] * b[0][1] + mat[2][1] * b[1][1] + mat[2][2] * b[2][1];
-        ret[2][2] = mat[2][0] * b[0][2] + mat[2][1] * b[1][2] + mat[2][2] * b[2][2];
+        ret[2][0] = mat[0][0] * b[2][0] + mat[1][0] * b[2][1] + mat[2][0] * b[2][2];
+        ret[2][1] = mat[0][1] * b[2][0] + mat[1][1] * b[2][1] + mat[2][1] * b[2][2];
+        ret[2][2] = mat[0][2] * b[2][0] + mat[1][2] * b[2][1] + mat[2][2] * b[2][2];
 
         return ret;
     }
 
-    vec3 operator*(const vec3& b)
+    Vector3 operator*(const Vector3& b)
     {
-        vec3 ret;
+        Vector3 ret;
 
         ret[0] = b[0] * mat[0][0] + b[1] * mat[1][0] + b[2] * mat[2][0];
         ret[1] = b[0] * mat[0][1] + b[1] * mat[1][1] + b[2] * mat[2][1];
@@ -111,7 +111,7 @@ struct mat3 {
 
     void transpose()
     {
-        mat3 tmp;
+        Matrix33 tmp;
 
         tmp[0][1] = mat[1][0];
         tmp[0][2] = mat[2][0];
@@ -130,28 +130,28 @@ struct mat3 {
 
     void colswap(unsigned int c1, unsigned int c2)
     {
-        vec3 tmpcol;
+        Vector3 tmprow;
 
-        tmpcol[0] = mat[0][c1];
-        tmpcol[1] = mat[1][c1];
-        tmpcol[2] = mat[2][c1];
-
-        mat[0][c1] = mat[0][c2];
-        mat[1][c1] = mat[1][c2];
-        mat[2][c1] = mat[2][c2];
-
-        mat[0][c2] = tmpcol[0];
-        mat[1][c2] = tmpcol[1];
-        mat[2][c2] = tmpcol[2];
+        tmprow  = mat[c1];
+        mat[c1] = mat[c2];
+        mat[c2] = tmprow;
     }
 
     void rowswap(unsigned int r1, unsigned int r2)
     {
-        vec3 tmprow;
+        Vector3 tmpcol;
 
-        tmprow  = mat[r1];
-        mat[r1] = mat[r2];
-        mat[r2] = tmprow;
+        tmpcol[0] = mat[0][r1];
+        tmpcol[1] = mat[1][r1];
+        tmpcol[2] = mat[2][r1];
+
+        mat[0][r1] = mat[0][r2];
+        mat[1][r1] = mat[1][r2];
+        mat[2][r1] = mat[2][r2];
+
+        mat[0][r2] = tmpcol[0];
+        mat[1][r2] = tmpcol[1];
+        mat[2][r2] = tmpcol[2];
     }
 
     void scale(double val)
@@ -167,5 +167,5 @@ struct mat3 {
         mat[2][2] *= val;
     }
 
-    vec3 mat[3];
+    Vector3 mat[3];
 };

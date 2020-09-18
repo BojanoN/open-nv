@@ -4,7 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 
-struct vec4 {
+struct Vector4 {
 
     double& operator[](int index)
     {
@@ -16,7 +16,7 @@ struct vec4 {
         return arr[index];
     }
 
-    vec4()
+    Vector4()
     {
         arr[0] = 0.;
         arr[1] = 0.;
@@ -24,7 +24,7 @@ struct vec4 {
         arr[3] = 0.;
     }
 
-    vec4(double in[4])
+    Vector4(double in[4])
     {
         arr[0] = in[0];
         arr[1] = in[1];
@@ -32,7 +32,7 @@ struct vec4 {
         arr[3] = in[3];
     }
 
-    vec4(double x, double y, double z, double w)
+    Vector4(double x, double y, double z, double w)
     {
         arr[0] = x;
         arr[1] = y;
@@ -40,21 +40,21 @@ struct vec4 {
         arr[3] = w;
     }
 
-    void vec4_print()
+    void Vector4_print()
     {
         printf("( %f %f %f %f )\n", arr[0], arr[1], arr[2], arr[3]);
     }
 
-    void operator=(const vec3& vec)
+    void operator=(const Vector3& vec)
     {
         arr[0] = vec[0];
         arr[1] = vec[1];
         arr[2] = vec[2];
     }
 
-    vec4 operator+(const vec4& b) const
+    Vector4 operator+(const Vector4& b) const
     {
-        vec4 ret;
+        Vector4 ret;
 
         ret[0] = arr[0] + b[0];
         ret[1] = arr[1] + b[1];
@@ -64,9 +64,9 @@ struct vec4 {
         return ret;
     }
 
-    vec4 operator+(double val) const
+    Vector4 operator+(double val) const
     {
-        vec4 ret;
+        Vector4 ret;
 
         ret[0] = arr[0] + val;
         ret[1] = arr[1] + val;
@@ -75,9 +75,9 @@ struct vec4 {
 
         return ret;
     }
-    vec4 operator-(const vec4& b) const
+    Vector4 operator-(const Vector4& b) const
     {
-        vec4 ret;
+        Vector4 ret;
 
         ret[0] = arr[0] - b[0];
         ret[1] = arr[1] - b[1];
@@ -87,9 +87,9 @@ struct vec4 {
         return ret;
     }
 
-    vec4 operator-(double val) const
+    Vector4 operator-(double val) const
     {
-        vec4 ret;
+        Vector4 ret;
 
         ret[0] = arr[0] - val;
         ret[1] = arr[1] - val;
@@ -98,9 +98,9 @@ struct vec4 {
 
         return ret;
     }
-    vec4 operator*(const vec4& b) const
+    Vector4 operator*(const Vector4& b) const
     {
-        vec4 ret;
+        Vector4 ret;
 
         ret[0] = arr[0] * b[0];
         ret[1] = arr[1] * b[1];
@@ -110,9 +110,9 @@ struct vec4 {
         return ret;
     }
 
-    vec4 operator*(double val) const
+    Vector4 operator*(double val) const
     {
-        vec4 ret;
+        Vector4 ret;
 
         ret[0] = arr[0] * val;
         ret[1] = arr[1] * val;
@@ -122,9 +122,9 @@ struct vec4 {
         return ret;
     }
 
-    vec4 operator/(const vec4& b) const
+    Vector4 operator/(const Vector4& b) const
     {
-        vec4 ret;
+        Vector4 ret;
 
         ret[0] = arr[0] / b[0];
         ret[1] = arr[1] / b[1];
@@ -133,9 +133,9 @@ struct vec4 {
 
         return ret;
     }
-    vec4 operator/(double val) const
+    Vector4 operator/(double val) const
     {
-        vec4 ret;
+        Vector4 ret;
 
         ret[0] = arr[0] / val;
         ret[1] = arr[1] / val;
@@ -145,7 +145,7 @@ struct vec4 {
         return ret;
     }
 
-    void operator+=(const vec4& b)
+    void operator+=(const Vector4& b)
     {
 
         arr[0] += b[0];
@@ -163,7 +163,7 @@ struct vec4 {
         arr[3] += val;
     }
 
-    void operator-=(const vec4& b)
+    void operator-=(const Vector4& b)
     {
         arr[0] -= b[0];
         arr[1] -= b[1];
@@ -179,7 +179,7 @@ struct vec4 {
         arr[3] -= val;
     }
 
-    void operator*=(const vec4& b)
+    void operator*=(const Vector4& b)
     {
         arr[0] *= b[0];
         arr[1] *= b[1];
@@ -195,7 +195,7 @@ struct vec4 {
         arr[3] *= val;
     }
 
-    void operator/=(const vec4& b)
+    void operator/=(const Vector4& b)
     {
         arr[0] /= b[0];
         arr[1] /= b[1];
@@ -212,7 +212,7 @@ struct vec4 {
         arr[3] /= val;
     }
 
-    double dot(const vec4& b) const
+    double dot(const Vector4& b) const
     {
         return arr[0] * b[0] + arr[1] * b[1] + arr[2] * b[2] + arr[3] * b[3];
     }
@@ -231,14 +231,14 @@ struct vec4 {
         arr[3] /= len;
     }
 
-    double cos(const vec4& vec) const
+    double cos(const Vector4& vec) const
     {
         return this->dot(vec) / (this->norm() * vec.norm());
     }
 
-    vec4 operator-()
+    Vector4 operator-()
     {
-        vec4 ret;
+        Vector4 ret;
 
         ret[0] = -arr[0];
         ret[1] = -arr[1];
