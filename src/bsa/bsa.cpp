@@ -1,6 +1,5 @@
 #include "bsa.hpp"
 #include "../logc/log.h"
-#include "../streams/bytearray/ibastream.hpp"
 #include "../util/compress.hpp"
 #include "hash.hpp"
 #include <algorithm>
