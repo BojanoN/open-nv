@@ -56,17 +56,12 @@ void FileProvider::initArchives()
 InputStream* FileProvider::openFile(const std::string& filepath)
 {
 
-    std::unique_lock<std::mutex> lock(this->mutex);
-
     while (openedInputFiles.find(filepath) != openedInputFiles.end()) {
         log_debug("Thread %u waiting!", std::this_thread::get_id());
-        fileAlreadyOpen.wait(lock);
         log_debug("Thread %u woke up!", std::this_thread::get_id());
     }
     log_debug("Placing %s into opened files map.", filepath.c_str());
     openedInputFiles.insert(filepath);
-
-    lock.unlock();
 
     log_debug("Thread %u passed block! ", std::this_thread::get_id());
 
@@ -74,11 +69,7 @@ InputStream* FileProvider::openFile(const std::string& filepath)
 
     if (file == NULL) {
 
-        lock.lock();
-
         openedInputFiles.erase(filepath);
-
-        lock.unlock();
 
         log_error("File not found: %s", filepath.c_str());
         return NULL;
@@ -184,7 +175,6 @@ BSA::BSA* FileProvider::getContainingArchive(const std::string& filepath)
 
 void FileProvider::closeFile(InputStream* file)
 {
-    std::unique_lock<std::mutex> lock(this->mutex);
 
     log_debug("Attempting to remove %p from map.", file);
 
@@ -204,7 +194,4 @@ void FileProvider::closeFile(InputStream* file)
         }
     }
     file->close();
-
-    lock.unlock();
-    fileAlreadyOpen.notify_one();
 }

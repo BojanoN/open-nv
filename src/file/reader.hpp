@@ -2,20 +2,18 @@
 #include "providers/fileprovider.hpp"
 #include <memory>
 
-
 namespace File {
 
 class Reader {
 
 private:
-	static std::unique_ptr<FileProvider> fileProvider;
+    static FileProvider* fileProvider;
 
 protected:
-	static FileProvider& getFileProvider();
+    static FileProvider& getFileProvider();
 
 public:
-	static void setRootFilePath(const std::string& path);
-
+    static void setRootFilePath(const std::string& path);
 };
 
 }; // namespace
