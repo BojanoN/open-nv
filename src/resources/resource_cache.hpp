@@ -32,8 +32,3 @@ template<typename K, typename V>
 void ResourceCache<K, V>::insert(K key, std::shared_ptr<V> value) {
 	this->cacheMap.insert(std::make_pair(key, value));
 }
-
-template<typename K, typename V>
-void ResourceCache<K, V>::clear() {
-	this->cacheMap.clear();
-}

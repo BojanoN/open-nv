@@ -29,3 +29,24 @@ public:
 private:
     std::vector<uint8_t> buffer;
 };
+
+
+
+class ByteBuffer : public std::basic_streambuf<char> {
+public:
+
+    ByteBuffer(std::vector<uint8_t> bytes) {
+        setg((char*) bytes.data(), (char*) bytes.data(), (char*) bytes.data() + bytes.size());
+    }
+
+    std::streampos seekoff(std::streamoff off, std::ios_base::seekdir way, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out)
+    {
+        if (way == std::ios_base::cur && ((off + gptr()) < egptr())) {
+            gbump(off);
+        } else if (way == std::ios_base::beg && ((off + eback()) < egptr())) {
+            setg(eback(), eback() + off, egptr());
+        }
+
+        return gptr() - eback();
+    };
+};

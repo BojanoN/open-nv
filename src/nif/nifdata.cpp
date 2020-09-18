@@ -1,10 +1,10 @@
 #include "nifdata.hpp"
 #include "main/NiObject.hpp"
 
-NifData::NifData(const char* filePath)
+NifData::NifData(std::vector<uint8_t> nifFileData)
 {
 
-    NifReader reader(filePath);
+    NifReader reader(nifFileData);
 
     reader.readNifHeader();
 

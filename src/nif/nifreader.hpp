@@ -1,10 +1,8 @@
 #pragma once
 
-//#include "nifdata.hpp"
-
 #include "nifactory.hpp"
 #include "file/reader.hpp"
-#include "streams/istream.hpp"
+#include "util/bytestream.hpp"
 
 #include <cstdio>
 #include <cstdint>
@@ -12,6 +10,7 @@
 #include <string>
 #include <cstring>
 #include <unordered_map>
+#include <sstream>
 
 
 class NiObject;
@@ -19,8 +18,9 @@ class NiObject;
 class NifReader : File::Reader {
 
 private:
-	//FILE* file;
-	InputStream* file;
+
+	ByteBuffer streamBuffer;
+	std::istream file;
 
 	//Major engine version
 	uint32_t version = 0x04000002;
@@ -45,12 +45,12 @@ private:
 
 public:
 
-	NifReader(const std::string& filePath);
+	NifReader(std::vector<uint8_t> nifFileData);
 	~NifReader();
 
 	void readNifHeader();
 
-	int read(void* dst, uint32_t size, uint32_t length);
+	void read(void* dst, uint32_t size, uint32_t length);
 	char* readIndexedString();
 	int skipTerminatedString(char sep); 
 	void skipSizedString();
