@@ -95,28 +95,25 @@ private:
 
 class BSA {
 public:
-    BSA(InputStream* path, const std::string& name);
+    BSA(const std::string& path, const std::string& name);
     ~BSA()
     {
-        delete file;
-        delete fileNames;
+        std::fclose(file);
     };
 
-    /*std::unique_ptr<InputStream>*/ InputStream* getFile(const std::string& path);
-    bool                                          fileExists(const std::string& path);
+    std::vector<uint8_t> getFile(const std::string& path);
+    bool                 fileExists(const std::string& path);
 
     std::string getName() { return name; }
 
 private:
-    //std::ifstream file;
-    //std::unique_ptr<InputStream> file;
-    InputStream*              file;
+    FILE*              file;
     Header                    header;
-    std::unique_ptr<BSACache> cache;
+    BSACache* cache;
     // hash, offset
     std::vector<FolderRecord> folders;
     // Contains a list of all file names if ArchiveFlags::IncludeFileNames bit is set
-    std::unordered_set<std::string>* fileNames;
+    std::unordered_set<std::string> fileNames;
 
     std::pair<FolderRecord*, bool> findFolder(uint64_t hashval);
     std::pair<FileRecord, bool>    findFile(FolderRecord* folder, uint64_t hashval);
