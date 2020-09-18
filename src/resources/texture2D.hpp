@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <cstdint>
-
+#include <iostream>
 
 const uint32_t ddsMagic = 0x20534444; // 'DDS '
 
@@ -90,4 +90,8 @@ private:
 public:
 
 	Texture2D(ddsHeader header, std::vector<uint8_t> data) : header{header}, textureData{data} {}
+
+	~Texture2D() {
+		std::cout << "Destroying texture" << std::endl;
+	}
 };

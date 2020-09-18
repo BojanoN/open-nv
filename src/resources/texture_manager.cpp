@@ -1,6 +1,6 @@
 #include "texture_manager.hpp"
 
-Texture2D* TextureManager::getTexture(const std::string& texturePath) {
+std::shared_ptr<Texture2D> TextureManager::getTexture(const std::string& texturePath) {
 
 	auto[cachedTexture, ok] = textureCache.getCachedObject(texturePath);
 	if(ok) {
@@ -31,7 +31,7 @@ Texture2D* TextureManager::getTexture(const std::string& texturePath) {
 
 	log_debug("Texture data has size %d", textureData.size());
 
-	Texture2D* texture = new Texture2D(header, textureData);
+	std::shared_ptr<Texture2D> texture = std::make_shared<Texture2D>(header, textureData);
 	
 	textureCache.insert(texturePath, texture);
 	return texture;

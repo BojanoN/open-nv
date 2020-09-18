@@ -3,6 +3,7 @@
 #include "../file/reader.hpp"
 #include "resource_cache.hpp"
 #include <string>
+#include <memory>
 
 
 class TextureManager : public File::Reader {
@@ -15,5 +16,5 @@ public:
 
 	TextureManager() {}
 
-	Texture2D* getTexture(const std::string& texturePath);
+	std::shared_ptr<Texture2D> getTexture(const std::string& texturePath);
 };
