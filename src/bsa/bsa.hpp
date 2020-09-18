@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../streams/istream.hpp"
 #include "../util/enumflags.hpp"
 #include <cstdint>
 #include <fstream>
