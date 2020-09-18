@@ -1,7 +1,8 @@
 #include "bsa.hpp"
+#include "../logc/log.h"
+#include "../streams/bytearray/ibastream.hpp"
+#include "../util/compress.hpp"
 #include "hash.hpp"
-#include "logc/log.h"
-#include "util/compress.hpp"
 #include <algorithm>
 #include <string>
 #include <utility>
@@ -10,27 +11,56 @@
 #define MIN_CACHE_SIZE        50
 
 namespace BSA {
-BSA::BSA(std::string path)
-    : file(path.c_str())
+BSA::BSA(const std::string& path, const std::string& name) :  name { name }
 {
-    this->file.read(reinterpret_cast<char*>(&this->header), sizeof(Header));
-
-    if (this->header.fileId != BSAId) {
-        throw std::runtime_error("Not a valid BSA file: " + path);
+    file = std::fopen(path.c_str(), "rb");
+    if(file == NULL) {
+        log_error("Cannot open BSA file %s", path.c_str());
+        throw std::runtime_error("Cannot open archive file");
     }
 
-    this->file.seekg(this->header.folderRecordsOffset, std::ios::beg);
+    std::fread(reinterpret_cast<char*>(&this->header), sizeof(Header), 1, file);
+
+    if (this->header.fileId != BSAId) {
+        throw std::runtime_error("Not a valid BSA file!");
+    }
+
+    std::fseek(file, this->header.folderRecordsOffset, SEEK_SET);
     for (uint32_t i = 0; i < this->header.folderCount; i++) {
-        this->file.read(reinterpret_cast<char*>(&this->folders.emplace_back()), sizeof(FolderRecord));
+        std::fread(reinterpret_cast<char*>(&this->folders.emplace_back()), sizeof(FolderRecord), 1, file);
     };
 
     this->compressedByDefault = this->header.archiveFlags & ArchiveFlags::CompressedArchive;
     this->filenamesEmbedded   = this->header.archiveFlags & ArchiveFlags::EmbedFileNames;
     this->folderNamesIncluded = this->header.archiveFlags & ArchiveFlags::IncludeDirectoryNames;
+    this->fileNamesIncluded   = this->header.archiveFlags & ArchiveFlags::IncludeFileNames;
 
-    log_info("File %s:", path.c_str());
+    if (this->fileNamesIncluded) {
+        uint32_t fileNamesOffset = (this->header.fileCount * (sizeof(FileRecord))) + (this->folderNamesIncluded ? (this->header.folderCount + this->header.totalFolderNameLength) : 0);
+
+        std::fseek(file, fileNamesOffset, SEEK_CUR);
+        log_debug("OFFSET: %u", std::ftell(file));
+
+        std::vector<char> nameBuffer(this->header.totalFileNameLength);
+        std::fread(&nameBuffer[0], this->header.totalFileNameLength, 1, file);
+
+        int   read = 0;
+        char*  currentNamePtr = &nameBuffer[0];
+
+        while (read < this->header.totalFileNameLength) {
+            std::string entry(currentNamePtr);
+            this->fileNames.insert(entry);
+
+            currentNamePtr += entry.size() + 1;
+            read += entry.size() + 1;
+        }
+
+        //delete[] buffer;
+    }
+
     log_info("Read %d folders", this->folders.size());
     log_info("Compressed by default: %s", this->compressedByDefault ? "true" : "false");
+    log_info("FilenameBlock included: %s", this->fileNamesIncluded ? "true" : "false");
     // TODO: dynamically determine fair cache size
     uint32_t dynSize = (this->header.fileCount * 0.1);
     uint32_t size    = (dynSize < MIN_CACHE_SIZE) ? MIN_CACHE_SIZE : dynSize;
@@ -113,15 +143,15 @@ std::pair<FileRecord, bool> BSA::findFile(FolderRecord* folder, uint64_t hashval
 
     uint32_t folderOffset = folder->offset - this->header.totalFileNameLength;
 
-    this->file.seekg(folderOffset, std::ios::beg);
+    std::fseek(file, folderOffset, SEEK_SET);
 
     if (this->folderNamesIncluded) {
         uint8_t size;
-        this->file.read(reinterpret_cast<char*>(&size), 1);
-        this->file.seekg(size, std::ios::cur);
+        std::fread(reinterpret_cast<char*>(&size), 1, 1, file);
+        std::fseek(file, size, SEEK_CUR);
     }
 
-    uint32_t startOffset = this->file.tellg();
+    uint32_t startOffset = std::ftell(file);
     int32_t  l           = 0;
     int32_t  r           = folder->fileCount - 1;
     int32_t  mid         = 0;
@@ -131,8 +161,8 @@ std::pair<FileRecord, bool> BSA::findFile(FolderRecord* folder, uint64_t hashval
     while (l <= r) {
         mid = (l + r) / 2;
 
-        this->file.seekg(startOffset + (sizeof(FileRecord) * mid), std::ios::beg);
-        this->file.read(reinterpret_cast<char*>(&tmp), sizeof(FileRecord));
+        std::fseek(file, startOffset + (sizeof(FileRecord) * mid), SEEK_SET);
+        std::fread(reinterpret_cast<char*>(&tmp), sizeof(FileRecord), 1, file);
 
         if (tmp.nameHash < hashval) {
             l = mid + 1;
@@ -141,7 +171,7 @@ std::pair<FileRecord, bool> BSA::findFile(FolderRecord* folder, uint64_t hashval
         } else {
             ret.first  = tmp;
             ret.second = true;
-            log_debug("File record found at 0x%x!", (int)this->file.tellg() - sizeof(FileRecord));
+            log_debug("File record found at 0x%x!", (int)std::ftell(file) - sizeof(FileRecord));
             return ret;
         }
     }
@@ -158,42 +188,59 @@ void BSACache::clear()
     lfu.clear();
 }
 
-bool BSA::fileExists(std::string path)
+bool BSA::fileExists(const std::string& path)
 {
+    int         lastBackslash = path.find_last_of('\\');
+    std::string folderName;
 
-    uint32_t    lastBackslash = path.find_last_of('\\');
-    std::string folderName    = path.substr(0, lastBackslash);
-    std::string fileName      = path.substr(lastBackslash + 1);
-
-    uint64_t folderHval = FNVHash(folderName, "");
-    uint64_t fileHval   = FNVHash("", fileName);
-
-    if (this->cache->exists(folderHval + fileHval)) {
-        return true;
+    if (lastBackslash == std::string::npos) {
+        lastBackslash = 0;
+        folderName    = "";
+    } else {
+        folderName = path.substr(0, lastBackslash);
     }
+    std::string fileName = path.substr(lastBackslash + 1);
 
-    std::pair<FolderRecord*, bool> folderEntry = this->findFolder(folderHval);
+    if (this->fileNamesIncluded) {
+        return this->fileNames.count(fileName);
+    } else {
+        uint64_t folderHval = FNVHash(folderName, "");
+        uint64_t fileHval   = FNVHash("", fileName);
 
-    if (folderEntry.second) {
-        std::pair<FileRecord, bool> fileEntry = this->findFile(folderEntry.first, fileHval);
-        if (fileEntry.second) {
-            this->cache->insert((folderHval + fileHval), fileEntry.first);
+        if (this->cache->exists(folderHval + fileHval)) {
             return true;
         }
-    }
 
+        std::pair<FolderRecord*, bool> folderEntry = this->findFolder(folderHval);
+
+        if (folderEntry.second) {
+            std::pair<FileRecord, bool> fileEntry = this->findFile(folderEntry.first, fileHval);
+            if (fileEntry.second) {
+                this->cache->insert((folderHval + fileHval), fileEntry.first);
+                return true;
+            }
+        }
+    }
     return false;
 }
 
-std::vector<uint8_t>* BSA::getFile(std::string path)
+std::vector<uint8_t> BSA::getFile(const std::string& path)
 {
 
     FolderRecord* folder;
     FileRecord    file;
 
-    uint32_t    lastBackslash = path.find_last_of('\\');
-    std::string folderName    = path.substr(0, lastBackslash);
-    std::string fileName      = path.substr(lastBackslash + 1);
+    int         lastBackslash = path.find_last_of('\\');
+    std::string folderName;
+
+    if (lastBackslash == std::string::npos) {
+        lastBackslash = 0;
+        folderName    = "";
+    } else {
+        folderName = path.substr(0, lastBackslash);
+    }
+
+    std::string fileName = path.substr(lastBackslash + 1);
 
     uint64_t folderHval = FNVHash(folderName, "");
     uint64_t fileHval   = FNVHash("", fileName);
@@ -210,8 +257,8 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
         std::pair<FolderRecord*, bool> folderEntry = this->findFolder(folderHval);
 
         if (!folderEntry.second) {
-            log_warn("Folder %s not found", folderName.c_str());
-            return nullptr;
+            log_fatal("Folder %s not found", folderName.c_str());
+            throw std::runtime_error("File in archive not found");
         }
 
         folder = folderEntry.first;
@@ -232,16 +279,14 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
     }
 
     if (!fileFound) {
-        log_warn("File %s not found", path.c_str());
-        return nullptr;
+        log_fatal("File %s not found", path.c_str());
+        throw std::runtime_error("File in archive not found");
     }
 
     offsetToFile = file.offsetToFile;
 
     log_debug("File found at 0x%x!", offsetToFile);
-    this->file.seekg(offsetToFile, std::ios::beg);
-
-    std::vector<uint8_t>* ret = nullptr;
+    std::fseek(this->file, offsetToFile, SEEK_SET);
 
     bool sizeFlag = file.size & SIZE_COMPRESSION_MASK;
     if (sizeFlag) {
@@ -256,38 +301,36 @@ std::vector<uint8_t>* BSA::getFile(std::string path)
 
         if (this->filenamesEmbedded) {
             uint8_t fnameSize;
-            this->file.read(reinterpret_cast<char*>(&fnameSize), 1);
-            this->file.seekg(fnameSize, std::ios::cur);
+            std::fread(reinterpret_cast<char*>(&fnameSize), 1, 1, this->file);
+            std::fseek(this->file, fnameSize, SEEK_CUR);
         }
 
-        this->file.read(reinterpret_cast<char*>(&decompSize), sizeof(uint32_t));
+        std::fread(reinterpret_cast<char*>(&decompSize), sizeof(uint32_t), 1, this->file);
 
         // file.size + 4, what the fuck
-        std::vector<uint8_t>* tmpBuf = new std::vector<uint8_t>(file.size + 4);
-        this->file.read(reinterpret_cast<char*>(tmpBuf->data()), file.size + 4);
+        log_debug("Compressed size: %d + 4", file.size);
+        std::vector<uint8_t> compressedFileData(file.size + 4);
+        std::fread(reinterpret_cast<char*>(compressedFileData.data()), 1, file.size + 4, this->file);
 
-        ret = new std::vector<uint8_t>(decompSize);
+        log_debug("Uncompressed size: %d", decompSize);
+        std::vector<uint8_t> fileData(decompSize);
 
         try {
-            Util::zlibDecompress(*tmpBuf, *ret);
+            Util::zlibDecompress(compressedFileData, fileData);
 
-            delete tmpBuf;
+            if (fileData.size() != decompSize) {
+                throw std::runtime_error("Wrong uncompressed size: " + std::to_string(fileData.size()) + ", expected: " + std::to_string(decompSize));
+            }
+
         } catch (std::runtime_error& e) {
             log_fatal("%s", e.what());
-
-            delete tmpBuf;
-            delete ret;
-
-            return nullptr;
         }
 
-    } else {
-        ret = new std::vector<uint8_t>(file.size);
-
-        this->file.read(reinterpret_cast<char*>(ret->data()), file.size);
-    }
-
-    return ret;
+        return fileData;
+    } 
+    
+    std::vector<uint8_t> fileData(file.size);
+    std::fread(reinterpret_cast<char*>(fileData.data()), 1, file.size, this->file);
+    return fileData;
 };
-
 };
