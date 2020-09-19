@@ -1,9 +1,18 @@
 #pragma once
+#include "logc/log.h"
+#include "../file/reader.hpp"
+#include <string>
+#include <memory>
 #include <vector>
 #include <cstdint>
 #include <iostream>
+#include <mutex>
+#include <unordered_map>
+
+namespace DDS {
 
 const uint32_t ddsMagic = 0x20534444; // 'DDS '
+const uint32_t ddsDataOffset = 128;
 
 enum ddsHeaderFlags : uint32_t {
 	DDSD_CAPS = 0x1, // always
@@ -79,19 +88,25 @@ struct ddsHeader {
 	uint32_t reserved_2;
 };
 
+}; // namespace DDS
 
-class Texture2D {
+class Texture2D : public File::Reader {
 
 private:
 
-	ddsHeader header;
+	DDS::ddsHeader header;
 	std::vector<uint8_t> textureData;
+	Texture2D(const std::string& texturePath);
+
+	static inline std::mutex _mutex;
+	static inline std::unordered_map<std::string, std::weak_ptr<Texture2D>> cache;
 
 public:
 
-	Texture2D(ddsHeader header, std::vector<uint8_t> data) : header{header}, textureData{data} {}
+	static std::shared_ptr<Texture2D> get(const std::string& texturePath);
+	static uint64_t cacheSize() { return cache.size(); }
 
 	~Texture2D() {
-		std::cout << "Destroying texture" << std::endl;
+		//std::cout << "Destroying texture" << std::endl;
 	}
 };
