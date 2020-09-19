@@ -1,5 +1,4 @@
 #pragma once
+#include "constants.hpp"
 
-namespace Math {
-
-}
+inline double deg2rad(double deg) { return (deg * pi) / 180; }
