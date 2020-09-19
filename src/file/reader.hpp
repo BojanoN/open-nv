@@ -14,6 +14,9 @@ protected:
 
 public:
     static void setRootFilePath(const std::string& path);
+    static void destroyFileProvider() {
+    	delete fileProvider;
+    }
 };
 
 }; // namespace

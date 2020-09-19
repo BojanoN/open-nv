@@ -34,5 +34,7 @@ int main(int argc, char const *argv[])
 	}
 	std::cout << "Cache size: " << Texture2D::cacheSize() << std::endl;
 
+	Texture2D::destroyFileProvider();
+
 	return 0;
 }

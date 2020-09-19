@@ -8,6 +8,7 @@
 #include <iostream>
 #include <mutex>
 #include <unordered_map>
+#include "resource.hpp"
 
 namespace DDS {
 
@@ -90,22 +91,16 @@ struct ddsHeader {
 
 }; // namespace DDS
 
-class Texture2D : public File::Reader {
+class Texture2D : public File::Reader, public Resource<Texture2D> {
 
 private:
 
 	DDS::ddsHeader header;
 	std::vector<uint8_t> textureData;
-	Texture2D(const std::string& texturePath);
-
-	static inline std::mutex _mutex;
-	static inline std::unordered_map<std::string, std::weak_ptr<Texture2D>> cache;
 
 public:
 
-	static std::shared_ptr<Texture2D> get(const std::string& texturePath);
-	static uint64_t cacheSize() { return cache.size(); }
-
+	Texture2D(const std::string& texturePath);
 	~Texture2D() {
 		//std::cout << "Destroying texture" << std::endl;
 	}

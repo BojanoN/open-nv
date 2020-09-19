@@ -20,20 +20,3 @@ Texture2D::Texture2D(const std::string& texturePath) {
 
 	this->textureData.assign(textureFile.begin() + DDS::ddsDataOffset, textureFile.end());
 }
-
-std::shared_ptr<Texture2D> Texture2D::get(const std::string& texturePath) {
-
-	std::lock_guard<std::mutex> guard(Texture2D::_mutex);
-
-	auto tex = Texture2D::cache[texturePath].lock();
-
-	std::cout << texturePath << std::endl;
-	if(!tex) {
-		Texture2D::cache[texturePath] = tex = std::shared_ptr<Texture2D>{new Texture2D(texturePath), 
-			[&, texturePath](Texture2D* tex) { 
-				Texture2D::cache.erase(texturePath);
-				delete tex; 
-			}};
-	}
-	return tex;
-}

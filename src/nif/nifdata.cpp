@@ -1,8 +1,9 @@
 #include "nifdata.hpp"
 #include "main/NiObject.hpp"
 
-NifData::NifData(std::vector<uint8_t> nifFileData)
+NifData::NifData(const std::string& nifPath)
 {
+    std::vector<uint8_t> nifFileData = getFileProvider().readFile(NifData::meshPathPrefix + nifPath);
 
     NifReader reader(nifFileData);
 

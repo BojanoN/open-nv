@@ -98,6 +98,7 @@ public:
     ~BSA()
     {
         std::fclose(file);
+        delete cache;
     };
 
     std::vector<uint8_t> getFile(const std::string& path);
