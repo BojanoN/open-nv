@@ -1,10 +1,12 @@
 #pragma once
 
 #include <math.h>
-#include <math/mat4.h>
-#include <math/quat.h>
-#include <math/util.h>
-#include <math/vec3.h>
+#include <math/mat4.hpp>
+#include <math/quat.hpp>
+#include <math/util.hpp>
+#include <math/vec3.hpp>
+
+#include <window/events.hpp>
 
 namespace Util {
 
@@ -14,7 +16,7 @@ public:
         : position(pos)
         , up(u)
         , front(f)
-        , right(0.)
+        , right()
         , pitch(pt)
         , yaw(y)
         , sensitivity(s)
@@ -26,6 +28,7 @@ public:
         : position(pos)
         , up(u)
         , front(f)
+        , right()
         , pitch(0.)
         , yaw(-90.)
         , sensitivity(0.2)
@@ -49,9 +52,22 @@ public:
         up = right.cross(front);
     }
 
-    // Note: leaving this emptyuntil we settle on a windowing system
-    void handleKeyboard(int key, double delta)
+    // This is called from the callback for glfw key events
+    void handleKeyboard(KeyEvent& e, double delta)
     {
+        double v = speed * delta;
+
+        if (e.key == Key::KEY_W && e.action == KeyAction::PRESSED) {
+            position += front * v;
+        } else if (e.key == Key::KEY_A && e.action == KeyAction::PRESSED) {
+            position -= right * v;
+        } else if (e.key == Key::KEY_S && e.action == KeyAction::PRESSED) {
+            position -= front * v;
+        } else if (e.key == Key::KEY_D && e.action == KeyAction::PRESSED) {
+            position += right * v;
+        }
+
+        update();
     }
 
     void handleMouse(double xOffset, double yOffset)
@@ -84,5 +100,6 @@ private:
     double yaw;
 
     double sensitivity;
+    double speed = 0.2;
 };
 }
