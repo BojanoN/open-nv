@@ -14,8 +14,7 @@ NifData::NifData(const std::string& nifPath)
     blocks.resize(numBlocks);
 
     for (unsigned int i = 0; i < numBlocks; i++) {
-        NiObject* tmp = reader.readBlock(i);
-        blocks[i]     = std::shared_ptr<NiObject>(tmp);
+        blocks[i]     = std::shared_ptr<NiObject>(reader.readBlock(i));
     }
 
     for (unsigned int i = 0; i < numBlocks; i++) {

@@ -4,6 +4,9 @@
         #include "enums.hpp"
         #include "bitfields.hpp"
         #include "structs.hpp"
+        #include <memory>
+        #include <vector>
+        #include <array>
         #include "../nifreader.hpp"
         #include "../nifpointer.hpp"
         class NifData;
@@ -13,7 +16,7 @@
 
 struct BSShaderTextureSet : public NiObject {
 	uint32_t numTextures;
-	char** textures;
+	std::vector<std::string> textures;
 
 
 	BSShaderTextureSet(NifReader& reader);

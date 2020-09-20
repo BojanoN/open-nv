@@ -4,6 +4,9 @@
         #include "enums.hpp"
         #include "bitfields.hpp"
         #include "structs.hpp"
+        #include <memory>
+        #include <vector>
+        #include <array>
         #include "../nifreader.hpp"
         #include "../nifpointer.hpp"
         class NifData;
@@ -16,7 +19,7 @@ struct NiTimeController;
 #include <cstdint>
 
 struct NiObjectNET : public NiObject {
-	char* name;
+	std::string name;
 	uint32_t numExtraDataList;
 	NifPointerList<NiExtraData> extraDataList;
 	NifPointer<NiTimeController> controller;

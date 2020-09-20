@@ -2,7 +2,8 @@
 
 namespace File {
 
-FileProvider* Reader::fileProvider = new FileProvider("/home/bojan/Documents/projects/open-nv/bin/bsa");
+//FileProvider* Reader::fileProvider = new FileProvider("/media/crop/06A0AC67A0AC5F45/GOG Games/Fallout New Vegas/Data/");
+FileProvider* Reader::fileProvider = nullptr;
 
 FileProvider& Reader::getFileProvider()
 {

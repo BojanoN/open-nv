@@ -69,10 +69,12 @@ class BasicType:
         self.type_name = f_type
 
         name = process_name(element.getAttribute('name'))
+        self.delete_code = ''
         if element.hasAttribute('arr1'):
             self.is_array = True
             size = process_array_size(element.getAttribute('arr1'))
             self.size = size
+
             if size.isdecimal():
                 self.fixed_array = True
                 self.declaration_type = '\t' + true_type + ' ' + name + '[' + size + '];\n'
@@ -83,30 +85,35 @@ class BasicType:
 
                 if element.hasAttribute('arr2'):
                     size_2 = process_array_size(element.getAttribute('arr2'))
-                    self.declaration_type = '\t' + true_type + '** ' + name + ';\n'
+                    #self.declaration_type = '\t' + true_type + '** ' + name + ';\n'
 
                     if size_2.isdecimal():
-                        self.read_code = '\t' + name + ' = new ' + true_type + '*[' + size + '];\n'
+                        self.declaration_type = '\tstd::vector<std::array<' + true_type + ',' + size_2 + '> ' + name + ';\n'
+                        #self.read_code = '\t' + name + ' = new ' + true_type + '*[' + size + '];\n'
                         self.read_code += '\tfor(unsigned int i = 0; i < ' + size + '; i++) {\n'
-                        self.read_code += '\t\t' + name + '[i] = new ' + true_type + '[' + size_2 +';\n'
-                        self.read_code += '\t\treader.read(' + name + '[i], sizeof(' + true_type + '), ' + size_2 + ');\n'
+                        #self.read_code += '\t\t' + name + '[i] = new ' + true_type + '[' + size_2 +';\n'
+                        self.read_code += '\t\treader.read(&' + name + '[i].front(), sizeof(' + true_type + '), ' + size_2 + ');\n'
                         self.read_code += '\t}\n'
                     else:
-                        self.read_code = '\t' + name + ' = new ' + true_type + '*[' + size + '];\n'
+                        self.declaration_type = '\tstd::vector<std::vector<' + true_type + '>> ' + name + ';\n'
+                        #self.read_code = '\t' + name + ' = new ' + true_type + '*[' + size + '];\n'
+                        self.read_code =  '\t' + name + '.resize(' + size + ');\n'
                         self.read_code += '\tfor(unsigned int i = 0; i < ' + size + '; i++) {\n'
-                        self.read_code += '\t\t' + name + '[i] = new ' + true_type + '[' + size_2 +'[i]];\n'
-                        self.read_code += '\t\treader.read(' + name + '[i], sizeof(' + true_type + '), ' + size_2 + '[i]);\n'
+                        #self.read_code += '\t\t' + name + '[i] = new ' + true_type + '[' + size_2 +'[i]];\n'
+                        self.read_code += '\t\t' + name + '[i].resize(' + size_2 + '[i]);\n'
+                        #self.read_code += '\t\treader.read(' + name + '[i], sizeof(' + true_type + '), ' + size_2 + '[i]);\n'
+                        self.read_code += '\t\treader.read(&' + name + '[i][0], sizeof(' + true_type + '), ' + size_2 + '[i]);\n'
                         self.read_code += '\t}\n'
                         
-                    self.delete_code = '\tfor(unsigned int i = 0; i < ' + size + '; i++) {\n'
-                    self.delete_code += '\t\tdelete[] ' + name + '[i];\n'
-                    self.delete_code += '\t}\n'
-                    self.delete_code += '\tdelete[] ' + name + ';\n'
+
+                    #self.delete_code = '\tfor(unsigned int i = 0; i < ' + size + '; i++) {\n'
+                    #self.delete_code += '\t\tdelete[] ' + name + '[i];\n'
+                    #self.delete_code += '\t}\n'
+                    #self.delete_code += '\tdelete[] ' + name + ';\n'
                 else:
-                    self.declaration_type = '\t' + true_type + '* ' + name + ';\n'
-                    self.read_code = '\t' + name + ' = new ' + true_type + '[' + size + '];\n'
-                    self.read_code += '\treader.read(' + name + ', sizeof(' + true_type + '), ' + size + ');\n'
-                    self.delete_code = '\tdelete[]' + name + ';\n'
+                    self.declaration_type = '\tstd::vector<' + true_type + '> ' + name + ';\n'
+                    self.read_code = '\t' + name + '.resize(' + size + ');\n'
+                    self.read_code += '\treader.read(&' + name + '[0], sizeof(' + true_type + '), ' + size + ');\n'
             self.resolve_code = ''
         else:
             self.is_array = False
@@ -142,11 +149,12 @@ class StringType:
     def __init__(self, element):
         f_type = element.getAttribute('type')
         name = process_name(element.getAttribute('name'))
-
+        self.delete_code = ''
         if f_type == 'string':
-            self.declaration_type = '\tchar* ' + name + ';\n'
+            #self.declaration_type = '\tchar* ' + name + ';\n'
+            self.declaration_type = '\tstd::string ' + name + ';\n'
             self.read_code = '\t' + name + ' = reader.readIndexedString();\n'
-            self.delete_code = '\tdelete[] ' + name + ';\n'
+            #self.delete_code = '\tdelete[] ' + name + ';\n'
             self.resolve_code = ''
 
         else:
@@ -155,31 +163,36 @@ class StringType:
                 self.size = process_array_size(element.getAttribute('arr1'))
                 
                 self.read_code = ''
-                self.delete_code = '\tfor(unsigned int i = 0; i < ' + self.size + '; i++) {\n'
-                self.delete_code += '\t\tdelete ' + name + '[i];\n'
-                self.delete_code += '\t}\n'
+                #self.delete_code = '\tfor(unsigned int i = 0; i < ' + self.size + '; i++) {\n'
+                #self.delete_code += '\t\tdelete ' + name + '[i];\n'
+                #self.delete_code += '\t}\n'
 
                 
                 if self.size.isdecimal():
                     self.fixed_array = True
-                    self.declaration_type = '\tchar* ' + name + '[' + self.size + '];\n'
+                    #self.declaration_type = '\tchar* ' + name + '[' + self.size + '];\n'
+                    self.declaration_type = '\tstd::string ' + name + '[' + self.size + '];\n'
+                    self.read_code += '\tfor(unsigned int i = 0; i < ' + self.size + '; i++) {\n'
+                    self.read_code += '\t\t' + name + '[i] = reader.loadSizedString();\n'
+                    self.read_code += '\t}\n'
                     
                 else:
                     self.fixed_array = False
-                    self.declaration_type = '\tchar** ' + name + ';\n'
-                    self.read_code = '\t' + name + ' = new char*[' + self.size + '];\n'
-                    self.delete_code += '\tdelete[] ' + name + ';\n'
+                    #self.declaration_type = '\tchar** ' + name + ';\n'
+                    self.declaration_type = '\tstd::vector<std::string> ' + name + ';\n'
+                    self.read_code = '\t' + name + '.resize(' + self.size + ');\n'
+                    #self.read_code = '\t' + name + ' = new char*[' + self.size + '];\n'
+                    #self.delete_code += '\tdelete[] ' + name + ';\n'
+                    self.read_code += '\tfor(unsigned int i = 0; i < ' + self.size + '; i++) {\n'
+                    self.read_code += '\t\t' + name + '.push_back(reader.loadSizedString());\n'
+                    self.read_code += '\t}\n'
 
-                self.read_code += '\tfor(unsigned int i = 0; i < ' + self.size + '; i++) {\n'
-                self.read_code += '\t\t' + name + '[i] = reader.loadSizedString();\n'
-                self.read_code += '\t}\n'
-                
-                
                 self.resolve_code = ''
             else:
-                self.declaration_type = '\tchar* ' + name + ';\n'
+                #self.declaration_type = '\tchar* ' + name + ';\n'
+                self.declaration_type = '\tstd::string ' + name + ';\n'
                 self.read_code = '\t' + name + ' = reader.loadSizedString();\n'
-                self.delete_code = '\tdelete[] ' + name + ';\n'
+                #self.delete_code = '\tdelete[] ' + name + ';\n'
                 self.resolve_code = ''
 
     def get_type_name(self):
@@ -209,16 +222,17 @@ class CompoundType:
             true_type += '<T>'
 
         self.type_name = true_type
-
+        self.delete_code = ''
         if element.hasAttribute('arr1'):
             self.is_array = True
             self.fixed_array = False
             size = process_array_size(element.getAttribute('arr1'))
             self.size = size
             self.declaration_type = '\tstd::vector<' + true_type + '> ' + name + ';\n'
-            self.read_code = '\t' + name + '.reserve(' + size + ');\n'
+            self.read_code = '\t' + name + '.resize(' + size + ');\n'
             self.read_code += '\tfor(unsigned int i = 0; i < ' + size + '; i++) {\n'
-            self.read_code += '\t\t' + name + '.emplace_back(reader);\n'
+            #self.read_code += '\t\t' + name + '.emplace_back(reader);\n'
+            self.read_code += '\t\t' + name + '[i].load(reader);\n'
             self.read_code += '\t}\n' 
             self.delete_code = ''
             self.resolve_code = '\tfor(unsigned int i = 0; i < ' + size + '; i++) {\n'
@@ -227,10 +241,13 @@ class CompoundType:
 
         else:
             self.is_array = False
-            self.declaration_type = '\t' + true_type + '* ' + name + ';\n'
-            self.read_code = '\t' + name + ' = new ' + true_type + '(reader);\n'
+            #self.declaration_type = '\t' + true_type + '* ' + name + ';\n'
+            self.declaration_type = '\tstd::shared_ptr<' + true_type + '> ' + name + ';\n'
+            #self.read_code = '\t' + name + ' = new ' + true_type + '(reader);\n'
+            self.read_code = '\t' + name + ' = std::make_shared<' + true_type + '>();\n'
+            self.read_code += '\t' + name + '->load(reader);\n'
             self.resolve_code = '\t' + name + '->resolvePointers(data);\n'
-            self.delete_code = '\tdelete ' + name + ';\n'
+            #self.delete_code = '\tdelete ' + name + ';\n'
 
     def get_type_name(self):
         return self.type_name

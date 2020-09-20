@@ -1,9 +1,9 @@
 #include "NiSkinPartition.hpp"
 NiSkinPartition::NiSkinPartition(NifReader& reader) : NiObject(reader) {
 	reader.read(&numPartitions, sizeof(uint32_t), 1);
-	partitions.reserve(numPartitions);
+	partitions.resize(numPartitions);
 	for(unsigned int i = 0; i < numPartitions; i++) {
-		partitions.emplace_back(reader);
+		partitions[i].load(reader);
 	}
 }
 NiObject* NiSkinPartition::create(NifReader& reader) {

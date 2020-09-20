@@ -40,7 +40,7 @@ class CompoundCode:
         for field in self.fields:
             out += field.get_declaration()
 
-        out += '\n\n\t'+self.name+'(NifReader& reader);\n'
+        out += '\n\n\tvoid load(NifReader& reader);\n'
         out += '\n\n\t~'+self.name+'();\n'
         out += '\tvoid resolvePointers(NifData& data);\n'
         out += '};\n'
@@ -51,9 +51,11 @@ class CompoundCode:
             Gets the constructor code.
         """
         if self.generic:
-            out = 'template <typename T>\n ' + self.name + '<T>::' + self.name + '(NifReader& reader) {\n'
+            #out = 'template <typename T>\n ' + self.name + '<T>::' + self.name + '(NifReader& reader) {\n'
+            out = 'template <typename T>\n void ' + self.name + '<T>::load(NifReader& reader) {\n'
         else:
-            out = self.name + '::' + self.name + '(NifReader& reader) {\n'
+            #out = self.name + '::' + self.name + '(NifReader& reader) {\n'
+            out = 'void ' + self.name + '::load(NifReader& reader) {\n'
         for field in self.fields:
             out += field.get_constructor_code()
         out += '}\n'
@@ -133,7 +135,13 @@ def get_compounds(context, document, version):
     #include "typedefs.hpp"
     #include "enums.hpp"
     #include "bitfields.hpp"
+    #include "../nifdata.hpp"
+    #include "../nifreader.hpp"
+    #include "../nifpointer.hpp"
     #include <cstdint>
+    #include <memory>
+    #include <vector>
+    #include <array>
     """
     structs_cpp = """
     #include "structs.hpp"

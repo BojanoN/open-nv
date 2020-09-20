@@ -59,11 +59,11 @@ void NifReader::readNifHeader()
 
 NiObject* NifReader::readBlock(uint32_t index)
 {
-    const char* type = blockTypes[blockTypeIndices[index]];
-    //typename std::unordered_map<std::string, NiObject* (*)(FILE*)>::const_iterator mapIterator = NiFactory::creatorMap.find(type);
+    std::string type = blockTypes[blockTypeIndices[index]];
+
     auto mapIterator = NiFactory::creatorMap.find(type);
     if (mapIterator == NiFactory::creatorMap.end()) {
-        throw std::runtime_error(std::string("Cannot find factory function for: ") + std::string(type));
+        throw std::invalid_argument(std::string("Cannot find factory function for: ") + type);
     }
 
     NiObject* (*factory)(NifReader&) = mapIterator->second;
@@ -91,15 +91,17 @@ void NifReader::skipSizedString()
     file.seekg(length, std::ios::cur);
 }
 
-char* NifReader::loadSizedString()
-{
+std::string NifReader::loadSizedString()
+{   
+    std::string loadedString;
     uint32_t length;
     file.read((char*)&length, sizeof(uint32_t));
 
-    char* dst = new char[length + 1];
-    file.read((char*)dst, sizeof(uint8_t) * length);
-    dst[length] = '\0';
-    return dst;
+    loadedString.resize(length + 1);
+    //char* dst = new char[length + 1];
+    file.read(&loadedString.data()[0], sizeof(uint8_t) * length);
+    loadedString[length] = '\0';
+    return loadedString;
 }
 
 void NifReader::read(void* dst, uint32_t size, uint32_t length)
@@ -107,16 +109,14 @@ void NifReader::read(void* dst, uint32_t size, uint32_t length)
     file.read((char*) dst, size * length);
 }
 
-char* NifReader::readIndexedString()
+std::string NifReader::readIndexedString()
 {
-
     uint32_t index;
     file.read((char*)&index, sizeof(uint32_t));
 
     if (static_cast<int32_t>(index) == -1) {
-        return NULL;
+        return std::string();
     }
-    char* dst = new char[maxStringLength + 1];
-    std::strcpy(dst, strings[index]);
-    return dst;
+
+    return strings[index];
 }

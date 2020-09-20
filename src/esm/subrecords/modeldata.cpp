@@ -6,9 +6,7 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index)
 {
     reader.checkSubrecordHeader(filenameType[index]);
 
-    std::string filename;
-    reader.readStringSubrecord(filename);
-    modelData.filename = std::string(pathPrefix) + filename;
+    reader.readStringSubrecord(modelData.filename);
 
     while (reader.hasMoreSubrecords() && isInCollection(reader.peekNextType(), index)) {
         reader.readNextSubrecordHeader();
@@ -76,19 +74,13 @@ std::shared_ptr<NiObject> ModelData::getModel() {
 
 void ModelData::loadModel() {
     try {
-        this->model = new NifData(this->filename.c_str());
-    } catch(std::runtime_error& e) {
-        log_error("%s", e.what());
-        
+        model = NifData::get(filename);
+    } catch(std::invalid_argument& e) {
+        log_error("Model data file for %s not found", filename.c_str());
     }
-    
 }
 
 ModelData::~ModelData() {
-    
-    if(model != nullptr) {
-        delete model;        
-    }
 }
 
 }; // namespace

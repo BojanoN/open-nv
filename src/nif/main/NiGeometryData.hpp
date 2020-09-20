@@ -4,6 +4,9 @@
         #include "enums.hpp"
         #include "bitfields.hpp"
         #include "structs.hpp"
+        #include <memory>
+        #include <vector>
+        #include <array>
         #include "../nifreader.hpp"
         #include "../nifpointer.hpp"
         class NifData;
@@ -27,7 +30,7 @@ struct NiGeometryData : public NiObject {
 	std::vector<Vector3> normals;
 	std::vector<Vector3> tangents;
 	std::vector<Vector3> bitangents;
-	NiBound* boundingSphere;
+	std::shared_ptr<NiBound> boundingSphere;
 	nif_bool_t hasVertexColors;
 	std::vector<Color4> vertexColors;
 	std::vector<TexCoord> uvSets;

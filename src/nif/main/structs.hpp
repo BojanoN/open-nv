@@ -1,50 +1,166 @@
-#pragma once
-#include "typedefs.hpp"
-#include "enums.hpp"
-//#include "utils.hpp"
-#include "bitfields.hpp"
-#include <cstdint>
-#include <cstdio>
-#include <vector>
 
-#include "../nifreader.hpp"
+    #pragma once
+    #include "typedefs.hpp"
+    #include "enums.hpp"
+    #include "bitfields.hpp"
+        #include "../nifreader.hpp"
+#include "../nifdata.hpp"
+#include "../nifpointer.hpp"
+    #include <cstdint>
+    #include <memory>
+    #include <vector>
+    #include <array>
 
-class NifData;
-
-struct Color3 {
-	float r;
-	float g;
-	float b;
-
-
-	Color3(NifReader& reader);
-
-
-	~Color3();
-	void resolvePointers(NifData& data);
-};
-/*
-A vector in 3D space (x,y,z).
-Size: 12
-*/
 struct Vector3 {
 	float x;
 	float y;
 	float z;
 
 
-	Vector3(NifReader& reader);
+	void load(NifReader& reader);
 
 
 	~Vector3();
 	void resolvePointers(NifData& data);
 };
 
+struct NiBound {
+	std::shared_ptr<Vector3> center;
+	float radius;
 
-/*
-A 3x3 rotation matrix; M^T M=identity, det(M)=1.    Stored in OpenGL column-major format.
-Size: 36
-*/
+
+	void load(NifReader& reader);
+
+
+	~NiBound();
+	void resolvePointers(NifData& data);
+};
+
+struct Color4 {
+	float r;
+	float g;
+	float b;
+	float a;
+
+
+	void load(NifReader& reader);
+
+
+	~Color4();
+	void resolvePointers(NifData& data);
+};
+
+struct TexCoord {
+	float u;
+	float v;
+
+
+	void load(NifReader& reader);
+
+
+	~TexCoord();
+	void resolvePointers(NifData& data);
+};
+
+    struct SizedString {
+	uint32_t length;
+	std::vector<int8_t> value;
+
+
+	void load(NifReader& reader);
+
+
+	~SizedString();
+	void resolvePointers(NifData& data);
+};
+
+struct SizedString16 {
+	uint16_t length;
+	std::vector<int8_t> value;
+
+
+	void load(NifReader& reader);
+
+
+	~SizedString16();
+	void resolvePointers(NifData& data);
+};
+
+struct string {
+	uint32_t index;
+
+
+	void load(NifReader& reader);
+
+
+	~string();
+	void resolvePointers(NifData& data);
+};
+
+template <typename T>
+struct NiTFixedStringMapItem {
+	uint32_t string;
+	std::shared_ptr<T> value;
+
+
+	void load(NifReader& reader);
+
+
+	~NiTFixedStringMapItem();
+	void resolvePointers(NifData& data);
+};
+
+template <typename T>
+struct NiTFixedStringMap {
+	uint32_t numStrings;
+	std::vector<NiTFixedStringMapItem<T>> strings;
+
+
+	void load(NifReader& reader);
+
+
+	~NiTFixedStringMap();
+	void resolvePointers(NifData& data);
+};
+
+struct ByteMatrix {
+	uint32_t dataSize1;
+	uint32_t dataSize2;
+	std::vector<std::vector<uint8_t>> data;
+
+
+	void load(NifReader& reader);
+
+
+	~ByteMatrix();
+	void resolvePointers(NifData& data);
+};
+struct Color3 {
+	float r;
+	float g;
+	float b;
+
+
+	void load(NifReader& reader);
+
+
+	~Color3();
+	void resolvePointers(NifData& data);
+};
+
+struct ByteColor3 {
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
+
+
+	void load(NifReader& reader);
+
+
+	~ByteColor3();
+	void resolvePointers(NifData& data);
+};
+
 struct Matrix33 {
 	float m11;
 	float m21;
@@ -57,179 +173,106 @@ struct Matrix33 {
 	float m33;
 
 
-	Matrix33(NifReader& reader);
+	void load(NifReader& reader);
 
 
 	~Matrix33();
 	void resolvePointers(NifData& data);
 };
 
-/*
-A color with alpha (red, green, blue, alpha).
-Size: 16
-*/
-struct Color4 {
-	float r;
-	float g;
-	float b;
-	float a;
+struct Triangle;
 
-
-	Color4(NifReader& reader);
-
-
-	~Color4();
-	void resolvePointers(NifData& data);
-};
-
-/*
-Texture coordinates (u,v). As in OpenGL; image origin is in the lower left corner.
-Size: 8
-*/
-struct TexCoord {
-	// Range: -100.0:100.0
-	// First coordinate.
-	float u;
-	// Range: -100.0:100.0
-	// Second coordinate.
-	float v;
-
-
-	TexCoord(NifReader& reader);
-	void resolvePointers(NifData& data);
-	~TexCoord();
-};
-
-/*
-List of three vertex indices.
-Size: 6
-*/
-struct Triangle {
-	// First vertex index.
-	uint16_t v1;
-	// Second vertex index.
-	uint16_t v2;
-	// Third vertex index.
-	uint16_t v3;
-
-
-	Triangle(NifReader& reader);
-	void resolvePointers(NifData& data);
-	~Triangle();
-};
-
-/*
-Skinning data for a submesh, optimized for hardware skinning. Part of NiSkinPartition.
-*/
 struct SkinPartition {
 	uint16_t numVertices;
 	uint16_t numTriangles;
 	uint16_t numBones;
 	uint16_t numStrips;
 	uint16_t numWeightsPerVertex;
-	uint16_t* bones;
+	std::vector<uint16_t> bones;
 	nif_bool_t hasVertexMap;
-	uint16_t* vertexMap;
+	std::vector<uint16_t> vertexMap;
 	nif_bool_t hasVertexWeights;
-	float* vertexWeights;
-	uint16_t* stripLengths;
+	std::vector<std::vector<float>> vertexWeights;
+	std::vector<uint16_t> stripLengths;
 	nif_bool_t hasFaces;
-	uint16_t* strips;
+	std::vector<std::vector<uint16_t>> strips;
 	std::vector<Triangle> triangles;
 	nif_bool_t hasBoneIndices;
-	uint8_t* boneIndices;
+	std::vector<std::vector<uint8_t>> boneIndices;
 
 
-	SkinPartition(NifReader& reader);
+	void load(NifReader& reader);
 
 
 	~SkinPartition();
 	void resolvePointers(NifData& data);
 };
 
-/*
-NiSkinData::BoneVertData. A vertex and its weight.
-Size: 6
-*/
-struct BoneVertData {
-	// The vertex index, in the mesh.
-	uint16_t index;
-	// Range: 0.0:1.0
-	// The vertex weight - between 0.0 and 1.0
-	float weight;
+struct Triangle {
+	uint16_t v1;
+	uint16_t v2;
+	uint16_t v3;
 
 
-	BoneVertData(NifReader& reader);
+	void load(NifReader& reader);
+
+
+	~Triangle();
 	void resolvePointers(NifData& data);
-	~BoneVertData();
 };
-/*
-A sphere.
-*/
-struct NiBound {
-	// The sphere's center.
-	Vector3* center;
-	// The sphere's radius.
-	float radius;
 
-
-	NiBound(NifReader& reader);
-	void resolvePointers(NifData& data);
-	~NiBound();
-};
-/*
-
-Size: 52
-*/
 struct NiTransform {
-	// The rotation part of the transformation matrix.
-	Matrix33* rotation;
-	// The translation vector.
-	Vector3* translation;
-	// Scaling part (only uniform scaling is supported).
-	float scale = 1.0;
+	std::shared_ptr<Matrix33> rotation;
+	std::shared_ptr<Vector3> translation;
+	float scale;
 
 
-	NiTransform(NifReader& reader);
-	void resolvePointers(NifData& data);
+	void load(NifReader& reader);
+
+
 	~NiTransform();
+	void resolvePointers(NifData& data);
 };
-/*
-NiSkinData::BoneData. Skinning data component.
-*/
+
+struct BoneVertData;
+
 struct BoneData {
-	NiTransform* skinTransform;
-	NiBound* boundingSphere;
+	std::shared_ptr<NiTransform> skinTransform;
+	std::shared_ptr<NiBound> boundingSphere;
 	uint16_t numVertices;
 	std::vector<BoneVertData> vertexWeights;
 
 
-	BoneData(NifReader& reader);
+	void load(NifReader& reader);
 
 
 	~BoneData();
 	void resolvePointers(NifData& data);
 };
 
-/*
-
-*/
 struct MaterialData {
 	uint32_t numMaterials;
-	// The name of the material.
-	// Size: numMaterials
-	uint32_t* materialName;
-	// Extra data associated with the material. A value of -1 means the material is the default implementation.
-	// Size: numMaterials
-	int32_t* materialExtraData;
-	// The index of the currently active material.
-	int32_t activeMaterial = -1;
-	// Whether the materials for this object always needs to be updated before rendering with them.
+	std::vector<uint32_t> materialName;
+	std::vector<int32_t> materialExtraData;
+	int32_t activeMaterial;
 	nif_bool_t materialNeedsUpdate;
 
 
-	MaterialData(NifReader& reader);
-	void resolvePointers(NifData& data);
+	void load(NifReader& reader);
+
+
 	~MaterialData();
+	void resolvePointers(NifData& data);
 };
 
+struct BoneVertData {
+	uint16_t index;
+	float weight;
+
+
+	void load(NifReader& reader);
+
+
+	~BoneVertData();
+	void resolvePointers(NifData& data);
+};

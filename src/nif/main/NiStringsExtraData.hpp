@@ -14,14 +14,15 @@
 #include "NiExtraData.hpp"
 #include <cstdint>
 
-struct NiStringExtraData : public NiExtraData {
-	std::string stringData;
+struct NiStringsExtraData : public NiExtraData {
+	uint32_t numStrings;
+	std::vector<std::string> data;
 
 
-	NiStringExtraData(NifReader& reader);
+	NiStringsExtraData(NifReader& reader);
 
 
-	virtual ~NiStringExtraData();
+	virtual ~NiStringsExtraData();
 	static NiObject* create(NifReader& reader);
 	virtual void resolvePointers(NifData& data);
 };

@@ -1,7 +1,7 @@
 #include "NiAlphaProperty.hpp"
 NiAlphaProperty::NiAlphaProperty(NifReader& reader) : NiProperty(reader) {
 	uint16_t flagsData;
-	reader.read(&flagsData , sizeof(uint16_t), 1);
+	reader.read(&flagsData, sizeof(uint16_t), 1);
 	flags = flagsData;
 	reader.read(&threshold, sizeof(uint8_t), 1);
 }

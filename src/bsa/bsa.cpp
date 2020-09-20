@@ -61,12 +61,12 @@ BSA::BSA(const std::string& path, const std::string& name) :  name { name }
     log_info("Compressed by default: %s", this->compressedByDefault ? "true" : "false");
     log_info("FilenameBlock included: %s", this->fileNamesIncluded ? "true" : "false");
     // TODO: dynamically determine fair cache size
-    uint32_t dynSize = (this->header.fileCount * 0.1);
-    uint32_t size    = (dynSize < MIN_CACHE_SIZE) ? MIN_CACHE_SIZE : dynSize;
-    log_debug("Cache size: %u", size);
-    this->cache = new BSACache(size);
+    //uint32_t dynSize = (this->header.fileCount * 0.1);
+    //uint32_t size    = (dynSize < MIN_CACHE_SIZE) ? MIN_CACHE_SIZE : dynSize;
+    //log_debug("Cache size: %u", size);
+    //this->cache = new BSACache(size);
 };
-
+/*
 bool BSACache::insert(uint64_t key, FileRecord value)
 {
     bool ret = this->cacheEntries.insert(std::make_pair(key, value)).second;
@@ -115,7 +115,7 @@ bool BSACache::exists(uint64_t key)
 {
     return this->cacheEntries.count(key) != 0;
 }
-
+*/
 std::pair<FolderRecord*, bool> BSA::findFolder(uint64_t hashval)
 {
     std::pair<FolderRecord*, bool> ret;
@@ -179,13 +179,13 @@ std::pair<FileRecord, bool> BSA::findFile(FolderRecord* folder, uint64_t hashval
 
     return ret;
 };
-
+/*
 void BSACache::clear()
 {
     cacheEntries.clear();
     frequency.clear();
     lfu.clear();
-}
+}*/
 
 bool BSA::fileExists(const std::string& path)
 {
@@ -205,17 +205,17 @@ bool BSA::fileExists(const std::string& path)
     } else {
         uint64_t folderHval = FNVHash(folderName, "");
         uint64_t fileHval   = FNVHash("", fileName);
-
+        /*
         if (this->cache->exists(folderHval + fileHval)) {
             return true;
-        }
+        }*/
 
         std::pair<FolderRecord*, bool> folderEntry = this->findFolder(folderHval);
 
         if (folderEntry.second) {
             std::pair<FileRecord, bool> fileEntry = this->findFile(folderEntry.first, fileHval);
             if (fileEntry.second) {
-                this->cache->insert((folderHval + fileHval), fileEntry.first);
+                //this->cache->insert((folderHval + fileHval), fileEntry.first);
                 return true;
             }
         }
@@ -243,16 +243,16 @@ std::vector<uint8_t> BSA::getFile(const std::string& path)
 
     uint64_t folderHval = FNVHash(folderName, "");
     uint64_t fileHval   = FNVHash("", fileName);
-    uint64_t cacheKey   = folderHval + fileHval;
+    //uint64_t cacheKey   = folderHval + fileHval;
 
     uint32_t offsetToFile = 0;
 
     bool fileFound    = false;
     bool isCompressed = false;
 
-    std::pair<FileRecord, bool> cacheEntry = this->cache->get(cacheKey);
+    //std::pair<FileRecord, bool> cacheEntry = this->cache->get(cacheKey);
 
-    if (!cacheEntry.second) {
+    //if (!cacheEntry.second) {
         std::pair<FolderRecord*, bool> folderEntry = this->findFolder(folderHval);
 
         if (!folderEntry.second) {
@@ -269,13 +269,13 @@ std::vector<uint8_t> BSA::getFile(const std::string& path)
             file      = fileEntry.first;
             fileFound = true;
 
-            this->cache->insert(cacheKey, file);
+            //this->cache->insert(cacheKey, file);
         }
 
-    } else {
+    /*} else {
         file      = cacheEntry.first;
         fileFound = true;
-    }
+    }*/
 
     if (!fileFound) {
         log_fatal("File %s not found", path.c_str());

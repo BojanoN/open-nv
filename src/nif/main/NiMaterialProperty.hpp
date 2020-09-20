@@ -4,6 +4,9 @@
         #include "enums.hpp"
         #include "bitfields.hpp"
         #include "structs.hpp"
+        #include <memory>
+        #include <vector>
+        #include <array>
         #include "../nifreader.hpp"
         #include "../nifpointer.hpp"
         class NifData;
@@ -12,8 +15,8 @@
 #include <cstdint>
 
 struct NiMaterialProperty : public NiProperty {
-	Color3* specularColor;
-	Color3* emissiveColor;
+	std::shared_ptr<Color3> specularColor;
+	std::shared_ptr<Color3> emissiveColor;
 	float glossiness;
 	float alpha;
 	float emissiveMult;

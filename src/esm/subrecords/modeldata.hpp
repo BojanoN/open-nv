@@ -48,13 +48,10 @@ private:
     const static constexpr ESMType index_3[] = { ESMType::MOD4, ESMType::MO4T, ESMType::MO4S };
 
     const static constexpr ESMType* types[4] = { index_0, index_1, index_2, index_3 };
-    const static constexpr char* pathPrefix = "meshes\\";
-
 
     static bool                     isInCollection(uint32_t type, int index);
 
-    NifData*          model = NULL;
-    bool              loaded = false;
+    std::shared_ptr<NifData>   model = nullptr;
 };
 
 }; // namespace

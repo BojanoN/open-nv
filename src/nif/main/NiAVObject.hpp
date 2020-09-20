@@ -4,6 +4,9 @@
         #include "enums.hpp"
         #include "bitfields.hpp"
         #include "structs.hpp"
+        #include <memory>
+        #include <vector>
+        #include <array>
         #include "../nifreader.hpp"
         #include "../nifpointer.hpp"
         class NifData;
@@ -17,8 +20,8 @@ struct NiCollisionObject;
 
 struct NiAVObject : public NiObjectNET {
 	uint32_t flags;
-	Vector3* translation;
-	Matrix33* rotation;
+	std::shared_ptr<Vector3> translation;
+	std::shared_ptr<Matrix33> rotation;
 	float scale;
 	uint32_t numProperties;
 	NifPointerList<NiProperty> properties;

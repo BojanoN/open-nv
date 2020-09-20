@@ -11,6 +11,7 @@
 #include <cstring>
 #include <unordered_map>
 #include <sstream>
+#include <cassert>
 
 
 class NiObject;
@@ -36,12 +37,12 @@ private:
 	uint16_t numBlockTypes;
 
 	std::vector<int16_t> blockTypeIndices;
-	std::vector<char*> blockTypes;
+	std::vector<std::string> blockTypes;
 	// Strings of the Nif file
 	uint32_t numStrings;
 	uint32_t maxStringLength;
 	
-	std::vector<char*> strings;
+	std::vector<std::string> strings;
 
 public:
 
@@ -51,10 +52,10 @@ public:
 	void readNifHeader();
 
 	void read(void* dst, uint32_t size, uint32_t length);
-	char* readIndexedString();
+	std::string readIndexedString();
 	int skipTerminatedString(char sep); 
 	void skipSizedString();
-	char* loadSizedString();
+	std::string loadSizedString();
 	//std::shared_ptr<NiObject> readBlock(uint32_t index);
 	NiObject* readBlock(uint32_t index);
 	//NiObject* readNifTree();

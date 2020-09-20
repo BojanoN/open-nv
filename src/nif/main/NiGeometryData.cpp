@@ -6,9 +6,9 @@ NiGeometryData::NiGeometryData(NifReader& reader) : NiObject(reader) {
 	reader.read(&compressFlags, sizeof(uint8_t), 1);
 	reader.read(&hasVertices, sizeof(nif_bool_t), 1);
 if(hasVertices && numVertices != 0) {
-	vertices.reserve(numVertices);
+	vertices.resize(numVertices);
 	for(unsigned int i = 0; i < numVertices; i++) {
-		vertices.emplace_back(reader);
+		vertices[i].load(reader);
 	}
 }
 	uint16_t bsDataFlagsData;
@@ -16,35 +16,36 @@ if(hasVertices && numVertices != 0) {
 	bsDataFlags = bsDataFlagsData;
 	reader.read(&hasNormals, sizeof(nif_bool_t), 1);
 if(hasNormals && numVertices != 0) {
-	normals.reserve(numVertices);
+	normals.resize(numVertices);
 	for(unsigned int i = 0; i < numVertices; i++) {
-		normals.emplace_back(reader);
+		normals[i].load(reader);
 	}
 }
 if(hasNormals && bsDataFlags & 4096 && numVertices != 0) {
-	tangents.reserve(numVertices);
+	tangents.resize(numVertices);
 	for(unsigned int i = 0; i < numVertices; i++) {
-		tangents.emplace_back(reader);
+		tangents[i].load(reader);
 	}
 }
 if(hasNormals && bsDataFlags & 4096 && numVertices != 0) {
-	bitangents.reserve(numVertices);
+	bitangents.resize(numVertices);
 	for(unsigned int i = 0; i < numVertices; i++) {
-		bitangents.emplace_back(reader);
+		bitangents[i].load(reader);
 	}
 }
-	boundingSphere = new NiBound(reader);
+	boundingSphere = std::make_shared<NiBound>();
+	boundingSphere->load(reader);
 	reader.read(&hasVertexColors, sizeof(nif_bool_t), 1);
 if(hasVertexColors && numVertices != 0) {
-	vertexColors.reserve(numVertices);
+	vertexColors.resize(numVertices);
 	for(unsigned int i = 0; i < numVertices; i++) {
-		vertexColors.emplace_back(reader);
+		vertexColors[i].load(reader);
 	}
 }
 if(bsDataFlags & 1 && numVertices != 0) {
-	uvSets.reserve(numVertices);
+	uvSets.resize(numVertices);
 	for(unsigned int i = 0; i < numVertices; i++) {
-		uvSets.emplace_back(reader);
+		uvSets[i].load(reader);
 	}
 }
 	reader.read(&consistencyFlags, sizeof(NiEnums::ConsistencyType), 1);
@@ -62,7 +63,6 @@ if(hasNormals && bsDataFlags & 4096 && numVertices != 0) {
 }
 if(hasNormals && bsDataFlags & 4096 && numVertices != 0) {
 }
-	delete boundingSphere;
 if(hasVertexColors && numVertices != 0) {
 }
 if(bsDataFlags & 1 && numVertices != 0) {

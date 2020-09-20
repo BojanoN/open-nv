@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 #else
     log_set_level(LOG_INFO);
 #endif
-    log_set_level(LOG_INFO);
+    //log_set_level(LOG_INFO);
     int         c;
     std::string path = FALLOUTNV_ESM_DEFAULT_PATH;
 
@@ -61,6 +61,7 @@ int main(int argc, char** argv)
         out.close();
     }
 
+    File::Reader::destroyFileProvider();
     //log_info("Loaded %s in %f miliseconds", path.c_str(), (double)(end - start) / (CLOCKS_PER_SEC / 1000));
 
     return 0;

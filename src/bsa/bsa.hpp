@@ -71,6 +71,7 @@ struct UncompressedFileBlock {
     std::vector<uint8_t> data;
 };
 
+/*
 class BSACache {
 
 public:
@@ -90,7 +91,7 @@ private:
     std::multimap<uint64_t, uint64_t>                                         frequency;
     std::unordered_map<uint64_t, std::multimap<uint64_t, uint64_t>::iterator> lfu;
     uint32_t                                                                  maxSize;
-};
+};*/
 
 class BSA {
 public:
@@ -98,7 +99,7 @@ public:
     ~BSA()
     {
         std::fclose(file);
-        delete cache;
+        //delete cache;
     };
 
     std::vector<uint8_t> getFile(const std::string& path);
@@ -109,7 +110,7 @@ public:
 private:
     FILE*              file;
     Header                    header;
-    BSACache* cache;
+    //BSACache* cache;
     // hash, offset
     std::vector<FolderRecord> folders;
     // Contains a list of all file names if ArchiveFlags::IncludeFileNames bit is set

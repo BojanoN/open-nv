@@ -4,6 +4,9 @@
         #include "enums.hpp"
         #include "bitfields.hpp"
         #include "structs.hpp"
+        #include <memory>
+        #include <vector>
+        #include <array>
         #include "../nifreader.hpp"
         #include "../nifpointer.hpp"
         class NifData;
@@ -13,7 +16,7 @@
 #include <cstdint>
 
 struct NiSkinData : public NiObject {
-	NiTransform* skinTransform;
+	std::shared_ptr<NiTransform> skinTransform;
 	uint32_t numBones;
 	uint8_t hasVertexWeights;
 	std::vector<BoneData> boneList;

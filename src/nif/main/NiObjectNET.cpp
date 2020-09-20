@@ -9,7 +9,6 @@ NiObject* NiObjectNET::create(NifReader& reader) {
 	return new NiObjectNET(reader);
 }
 NiObjectNET::~NiObjectNET() {
-	delete[] name;
 }
 void NiObjectNET::resolvePointers(NifData& data) {
 	NiObject::resolvePointers(data);
