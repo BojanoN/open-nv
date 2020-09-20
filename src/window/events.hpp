@@ -6,21 +6,20 @@ enum EventType : int32_t {
     KEY
 };
 
-class Event {
+struct Event {
 public:
     Event(EventType t, WindowID id);
 
-private:
     const EventType type;
     const WindowID  windowID;
 };
 
 class EventHandler {
 public:
-    virtual bool handle(const Event& e) = 0;
+    virtual bool handle(const EventPtr& e) = 0;
 };
 
-class KeyEvent : public Event {
+struct KeyEvent : public Event {
 public:
     KeyEvent(WindowID id, Key k, KeyAction a, KeyModifier m)
         : Event(EventType::KEY, id)

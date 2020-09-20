@@ -32,15 +32,9 @@ public:
     virtual ~WindowSystem() {};
 
     WindowSystem()
-        : currId(0)
     {
     }
 
     virtual WindowHandle createWindow(const int width, const int height, const std::string& title);
     virtual void         registerCallback(WindowHandle window, const EventType type);
-
-protected:
-    int                                                                 currId;
-    std::unordered_map<WindowID, WindowHandle>                          windows;
-    std::unordered_map<WindowID, std::pair<EventType, EventHandlerPtr>> windowRegisteredEvents;
 };

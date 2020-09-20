@@ -10,7 +10,7 @@
 
 namespace Util {
 
-class Camera {
+class Camera : public EventHandler {
 public:
     Camera(Vector3& pos, Vector3& u, Vector3& f, double pt, double y, double s)
         : position(pos)
@@ -53,20 +53,23 @@ public:
     }
 
     // This is called from the callback for glfw key events
-    void handleKeyboard(KeyEvent& e, double delta)
+    virtual void handle(const EventPtr& e, double delta)
     {
-        double v = speed * delta;
+        if (e->type == EventType::KEY) {
+            std::shared_ptr<KeyEvent> ek = std::dynamic_pointer_cast<KeyEvent>(e);
 
-        if (e.key == Key::KEY_W && e.action == KeyAction::PRESSED) {
-            position += front * v;
-        } else if (e.key == Key::KEY_A && e.action == KeyAction::PRESSED) {
-            position -= right * v;
-        } else if (e.key == Key::KEY_S && e.action == KeyAction::PRESSED) {
-            position -= front * v;
-        } else if (e.key == Key::KEY_D && e.action == KeyAction::PRESSED) {
-            position += right * v;
+            double v = speed * delta;
+
+            if (ek->key == Key::KEY_W && ek->action == KeyAction::PRESSED) {
+                position += front * v;
+            } else if (ek->key == Key::KEY_A && ek->action == KeyAction::PRESSED) {
+                position -= right * v;
+            } else if (ek->key == Key::KEY_S && ek->action == KeyAction::PRESSED) {
+                position -= front * v;
+            } else if (ek->key == Key::KEY_D && ek->action == KeyAction::PRESSED) {
+                position += right * v;
+            }
         }
-
         update();
     }
 

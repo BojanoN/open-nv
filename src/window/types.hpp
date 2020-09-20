@@ -9,8 +9,10 @@ typedef uint32_t                WindowID;
 typedef std::shared_ptr<Window> WindowHandle;
 
 class EventHandler;
-
 typedef std::shared_ptr<EventHandler> EventHandlerPtr;
+
+class Event;
+typedef std::shared_ptr<Event> EventPtr;
 
 enum class Key {
     KEY_W,
