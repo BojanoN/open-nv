@@ -2,7 +2,7 @@
 
 #include "types.hpp"
 
-enum EventType : uint32_t {
+enum EventType : int32_t {
     KEY
 };
 
@@ -17,10 +17,7 @@ private:
 
 class EventHandler {
 public:
-    virtual ~EventHandler() {};
-
-    virtual EventType getRegisteredEventTypes() = 0;
-    virtual bool      handle(const Event& e)    = 0;
+    virtual bool handle(const Event& e) = 0;
 };
 
 class KeyEvent : public Event {
