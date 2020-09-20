@@ -9,7 +9,8 @@ ImpactDataset::ImpactDataset(ESMReader& reader) : Record(reader) {
     reader.readStringSubrecord(editorId);
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::DATA);
-    reader.readSubrecord(impacts);
+    //reader.readSubrecord(impacts);
+    reader.readRawDataSubrecSize(impacts);
 }
 
 };

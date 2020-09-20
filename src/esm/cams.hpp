@@ -36,7 +36,7 @@ struct CameraShotData {
 	float 				 globalTimeMultiplier;
 	float 				 maxTime;
 	float 				 minTime;
-	float 				 targetPercentageBetweenActors;
+	float 				 targetPercentageBetweenActors = 0.f;
 };
 
 struct CameraShot : public Record {

@@ -43,11 +43,7 @@ void DestructionData::load(ESMReader& reader, DestructionData& destData)
 
 void Condition::load(ESMReader& reader, Condition& condition)
 {
-    if (reader.getCurrentSubrecord().dataSize == 28) {
-        reader.readSubrecord(*reinterpret_cast<Condition::ConditionNullReference*>(&condition));
-    } else {
-        reader.readSubrecord(condition);
-    }
+    reader.readRawDataSubrecSize(condition);
 }
 
 void ArmorAttributes::load(ESMReader& reader, ArmorAttributes& attrs)

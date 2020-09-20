@@ -34,7 +34,7 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index)
         }
     }
 
-    modelData.loadModel();
+    //modelData.loadModel();
 }
 
 bool ModelData::isInCollection(uint32_t type, int index)

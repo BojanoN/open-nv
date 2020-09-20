@@ -82,7 +82,8 @@ Quest::Quest(ESMReader& reader)
             reader.readStringSubrecord(smallIconFilename);
             break;
         case ESMType::DATA:
-            reader.readSubrecord(data);
+            //reader.readSubrecord(data);
+            reader.readRawDataSubrecSize(data);
             break;
         case ESMType::CTDA:
             conditions.emplace_back();

@@ -319,24 +319,17 @@ enum class FunctionIndex : uint32_t {
 };
 
 struct Condition {
-    struct ConditionNullReference {
-        uint8_t                     type;
-        uint8_t                     unused[3];
-        std::variant<formid, float> comparisonVal;
-        uint32_t                    functionIndex;
-        uint32_t                    firstParameter;
-        uint32_t                    secondParameter;
-        uint32_t                    runOn;
-    };
-
     uint8_t                     type;
     uint8_t                     unused[3];
-    std::variant<formid, float> comparisonVal;
+    union {
+        formid globalVariable;
+        float immediateValue;
+    } comparisonValue;
     FunctionIndex               functionIndex;
     uint32_t                    firstParameter;
     uint32_t                    secondParameter;
-    uint32_t                    runOn;
-    formid                      reference;
+    uint32_t                    runOn = 0;
+    formid                      reference = 0;
 
     static void load(ESMReader& reader, Condition& condition);
 };
