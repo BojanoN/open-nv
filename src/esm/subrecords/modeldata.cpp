@@ -34,7 +34,7 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index)
         }
     }
 
-    //modelData.loadModel();
+    modelData.loadModel();
 }
 
 bool ModelData::isInCollection(uint32_t type, int index)
@@ -75,8 +75,9 @@ std::shared_ptr<NiObject> ModelData::getModel() {
 void ModelData::loadModel() {
     try {
         model = NifData::get(filename);
-    } catch(std::invalid_argument& e) {
-        log_error("Model data file for %s not found", filename.c_str());
+    } catch(std::runtime_error& e) {
+        log_error("%s", e.what());
+        log_error("Cannot read file %s", filename.c_str());
     }
 }
 

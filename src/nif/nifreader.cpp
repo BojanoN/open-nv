@@ -10,7 +10,7 @@ NifReader::~NifReader()
 void NifReader::readNifHeader()
 {
     if (skipTerminatedString('\n') == -1) { //Skip header version string.
-        throw std::invalid_argument(std::string("Invalid file"));
+        throw std::runtime_error(std::string("Invalid file"));
     }
     file.read((char*)&version, sizeof(uint32_t));
     file.seekg(sizeof(uint8_t), std::ios::cur); //Skip endianness.
@@ -61,9 +61,9 @@ NiObject* NifReader::readBlock(uint32_t index)
 {
     std::string type = blockTypes[blockTypeIndices[index]];
 
-    auto mapIterator = NiFactory::creatorMap.find(type);
+    auto mapIterator = NiFactory::creatorMap.find(type.c_str());
     if (mapIterator == NiFactory::creatorMap.end()) {
-        throw std::invalid_argument(std::string("Cannot find factory function for: ") + type);
+        throw std::runtime_error(std::string("Cannot find factory function for: ") + type);
     }
 
     NiObject* (*factory)(NifReader&) = mapIterator->second;

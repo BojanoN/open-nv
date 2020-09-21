@@ -10,22 +10,20 @@
         #include "../nifreader.hpp"
         #include "../nifpointer.hpp"
         class NifData;
-        struct NiProperty;
-#include "NiProperty.hpp"
+        struct NiSkinInstance;
+#include "NiSkinInstance.hpp"
+#include <vector>
 #include <cstdint>
 
-struct NiMaterialProperty : public NiProperty {
-	Color3 specularColor;
-	Color3 emissiveColor;
-	float glossiness;
-	float alpha;
-	float emissiveMult;
+struct BSDismemberSkinInstance : public NiSkinInstance {
+	uint32_t numPartitions;
+	std::vector<BodyPartList> partitions;
 
 
-	NiMaterialProperty(NifReader& reader);
+	BSDismemberSkinInstance(NifReader& reader);
 
 
-	virtual ~NiMaterialProperty();
+	virtual ~BSDismemberSkinInstance();
 	static NiObject* create(NifReader& reader);
 	virtual void resolvePointers(NifData& data);
 };

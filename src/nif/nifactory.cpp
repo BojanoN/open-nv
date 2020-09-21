@@ -15,6 +15,8 @@ std::unordered_map<std::string, NiObject* (*)(NifReader&)> NiFactory::createCrea
 		m["NiCollisionObject"] = &NiCollisionObject::create;
 		m["NiNode"] = &NiNode::create;
 		m["NiStringExtraData"] = &NiStringExtraData::create;
+		m["NiTriShape"] = &NiTriShape::create;
+		m["NiTriShapeData"] = &NiTriShapeData::create;		
 		m["NiTriStrips"] = &NiTriStrips::create;
 		m["NiTriStripsData"] = &NiTriStripsData::create;
 		m["BSShaderPPLightingProperty"] = &BSShaderPPLightingProperty::create;
@@ -24,6 +26,18 @@ std::unordered_map<std::string, NiObject* (*)(NifReader&)> NiFactory::createCrea
 		m["NiShadeProperty"] = &NiShadeProperty::create;
 		m["NiMaterialProperty"] = &NiMaterialProperty::create;
 		m["NiAlphaProperty"] = &NiAlphaProperty::create;
+		m["NiTimeController"] = &NiTimeController::create;
+		m["BSFadeNode"] = &BSFadeNode::create;
+		m["BSDismemberSkinInstance"] = &BSDismemberSkinInstance::create;
+		m["NiSkinData"] = &NiSkinData::create;
+		m["BSBound"] = &BSBound::create;
+		m["NiSkinPartition"] = &NiSkinPartition::create;
+		m["NiIntegerExtraData"] = &NiIntegerExtraData::create;
+		m["NiFloatExtraData"] = &NiIntegerExtraData::create;
+		m["NiFloatsExtraData"] = &NiIntegerExtraData::create;
+		m["BSXFlags"] = &BSXFlags::create;
+
+		log_info("Registered %d nif types", m.size());
         return m;
     }
 

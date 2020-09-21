@@ -21,7 +21,7 @@ struct NiSkinInstance;
 struct NiGeometry : public NiAVObject {
 	NifPointer<NiGeometryData> data;
 	NifPointer<NiSkinInstance> skinInstance;
-	std::shared_ptr<MaterialData> materialData;
+	MaterialData materialData;
 
 
 	NiGeometry(NifReader& reader);

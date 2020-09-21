@@ -25,7 +25,7 @@ struct Vector3 {
 };
 
 struct NiBound {
-	std::shared_ptr<Vector3> center;
+	Vector3 center;
 	float radius;
 
 
@@ -182,6 +182,100 @@ struct Matrix33 {
 
 struct Triangle;
 
+
+struct Triangle {
+	uint16_t v1;
+	uint16_t v2;
+	uint16_t v3;
+
+
+	void load(NifReader& reader);
+
+
+	~Triangle();
+	void resolvePointers(NifData& data);
+};
+
+struct NiTransform {
+	Matrix33 rotation;
+	Vector3 translation;
+	float scale;
+
+
+	void load(NifReader& reader);
+
+
+	~NiTransform();
+	void resolvePointers(NifData& data);
+};
+
+struct BoneVertData {
+	uint16_t index;
+	float weight;
+
+
+	void load(NifReader& reader);
+
+
+	~BoneVertData();
+	void resolvePointers(NifData& data);
+};
+
+struct BoneData {
+	NiTransform skinTransform;
+	NiBound boundingSphere;
+	uint16_t numVertices;
+	std::vector<BoneVertData> vertexWeights;
+
+
+	void load(NifReader& reader, bool hasVertexWeights);
+
+
+	~BoneData();
+	void resolvePointers(NifData& data);
+};
+
+struct MaterialData {
+	uint32_t numMaterials;
+	std::vector<uint32_t> materialName;
+	std::vector<int32_t> materialExtraData;
+	int32_t activeMaterial;
+	nif_bool_t materialNeedsUpdate;
+
+
+	void load(NifReader& reader);
+
+
+	~MaterialData();
+	void resolvePointers(NifData& data);
+};
+
+
+
+struct MatchGroup {
+	uint16_t numVertices;
+	std::vector<uint16_t> vertexIndices;
+
+
+	void load(NifReader& reader);
+
+
+	~MatchGroup();
+	void resolvePointers(NifData& data);
+};
+
+struct BodyPartList {
+	NiEnums::BSPartFlag partFlag;
+	NiEnums::BSDismemberBodyPartType bodyPart;
+
+
+	void load(NifReader& reader);
+
+
+	~BodyPartList();
+	void resolvePointers(NifData& data);
+};
+
 struct SkinPartition {
 	uint16_t numVertices;
 	uint16_t numTriangles;
@@ -205,74 +299,5 @@ struct SkinPartition {
 
 
 	~SkinPartition();
-	void resolvePointers(NifData& data);
-};
-
-struct Triangle {
-	uint16_t v1;
-	uint16_t v2;
-	uint16_t v3;
-
-
-	void load(NifReader& reader);
-
-
-	~Triangle();
-	void resolvePointers(NifData& data);
-};
-
-struct NiTransform {
-	std::shared_ptr<Matrix33> rotation;
-	std::shared_ptr<Vector3> translation;
-	float scale;
-
-
-	void load(NifReader& reader);
-
-
-	~NiTransform();
-	void resolvePointers(NifData& data);
-};
-
-struct BoneVertData;
-
-struct BoneData {
-	std::shared_ptr<NiTransform> skinTransform;
-	std::shared_ptr<NiBound> boundingSphere;
-	uint16_t numVertices;
-	std::vector<BoneVertData> vertexWeights;
-
-
-	void load(NifReader& reader);
-
-
-	~BoneData();
-	void resolvePointers(NifData& data);
-};
-
-struct MaterialData {
-	uint32_t numMaterials;
-	std::vector<uint32_t> materialName;
-	std::vector<int32_t> materialExtraData;
-	int32_t activeMaterial;
-	nif_bool_t materialNeedsUpdate;
-
-
-	void load(NifReader& reader);
-
-
-	~MaterialData();
-	void resolvePointers(NifData& data);
-};
-
-struct BoneVertData {
-	uint16_t index;
-	float weight;
-
-
-	void load(NifReader& reader);
-
-
-	~BoneVertData();
 	void resolvePointers(NifData& data);
 };

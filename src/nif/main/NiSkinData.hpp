@@ -16,7 +16,7 @@
 #include <cstdint>
 
 struct NiSkinData : public NiObject {
-	std::shared_ptr<NiTransform> skinTransform;
+	NiTransform skinTransform;
 	uint32_t numBones;
 	uint8_t hasVertexWeights;
 	std::vector<BoneData> boneList;

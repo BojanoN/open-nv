@@ -10,11 +10,15 @@ NifData::NifData(const std::string& nifPath)
     reader.readNifHeader();
 
     numBlocks = reader.getNumBlocks();
-    //blocks = new NiObject*[numBlocks];
     blocks.resize(numBlocks);
 
     for (unsigned int i = 0; i < numBlocks; i++) {
-        blocks[i]     = std::shared_ptr<NiObject>(reader.readBlock(i));
+        try {
+            blocks[i]     = std::unique_ptr<NiObject>(reader.readBlock(i));
+        } catch (std::bad_alloc& badAlloc) {
+            log_fatal("Bad alloc while reading %s", nifPath.c_str());
+            throw std::runtime_error(badAlloc.what());
+        }
     }
 
     for (unsigned int i = 0; i < numBlocks; i++) {

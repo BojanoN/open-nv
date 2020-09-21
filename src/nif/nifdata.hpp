@@ -21,16 +21,18 @@ class NifData : public File::Reader, public Resource<NifData> {
 private:
 	uint32_t numBlocks;
 
-	std::vector<std::shared_ptr<NiObject>> blocks;
-	//NiObject** blocks; // for now
+	std::vector<std::unique_ptr<NiObject>> blocks;
 
 	static const inline std::string meshPathPrefix = "meshes\\";
 
+	NifData(const std::string& nifPath);
 
 public:
 
-	NifData(const std::string& nifPath);
+	
 	~NifData();
 	NiObject* getRoot() { return blocks[0].get(); } 
 	NiObject* getBlock(uint32_t index) { return blocks[index].get(); }
+
+	friend class Resource<NifData>;
 };

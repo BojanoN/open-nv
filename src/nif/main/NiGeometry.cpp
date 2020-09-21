@@ -2,8 +2,7 @@
 NiGeometry::NiGeometry(NifReader& reader) : NiAVObject(reader) {
 data.load(reader);
 skinInstance.load(reader);
-	materialData = std::make_shared<MaterialData>();
-	materialData->load(reader);
+	materialData.load(reader);
 }
 NiObject* NiGeometry::create(NifReader& reader) {
 	return new NiGeometry(reader);
@@ -14,5 +13,5 @@ void NiGeometry::resolvePointers(NifData& data) {
 	NiAVObject::resolvePointers(data);
 this->data.resolve(data);
 this->skinInstance.resolve(data);
-	materialData->resolvePointers(data);
+	materialData.resolvePointers(data);
 }

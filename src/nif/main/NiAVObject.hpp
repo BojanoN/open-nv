@@ -20,8 +20,8 @@ struct NiCollisionObject;
 
 struct NiAVObject : public NiObjectNET {
 	uint32_t flags;
-	std::shared_ptr<Vector3> translation;
-	std::shared_ptr<Matrix33> rotation;
+	Vector3 translation;
+	Matrix33 rotation;
 	float scale;
 	uint32_t numProperties;
 	NifPointerList<NiProperty> properties;

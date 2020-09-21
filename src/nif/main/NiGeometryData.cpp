@@ -33,8 +33,7 @@ if(hasNormals && bsDataFlags & 4096 && numVertices != 0) {
 		bitangents[i].load(reader);
 	}
 }
-	boundingSphere = std::make_shared<NiBound>();
-	boundingSphere->load(reader);
+	boundingSphere.load(reader);
 	reader.read(&hasVertexColors, sizeof(nif_bool_t), 1);
 if(hasVertexColors && numVertices != 0) {
 	vertexColors.resize(numVertices);
@@ -82,7 +81,7 @@ void NiGeometryData::resolvePointers(NifData& data) {
 	for(unsigned int i = 0; i < numVertices; i++) {
 		bitangents[i].resolvePointers(data);
 	}
-	boundingSphere->resolvePointers(data);
+	boundingSphere.resolvePointers(data);
 	for(unsigned int i = 0; i < numVertices; i++) {
 		vertexColors[i].resolvePointers(data);
 	}

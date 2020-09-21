@@ -211,11 +211,11 @@ MaterialData::~MaterialData() {
 void MaterialData::resolvePointers(NifData& data) {
 }
 
-void BoneData::load(NifReader& reader) {
-	skinTransform->load(reader);
-	boundingSphere->load(reader);
+void BoneData::load(NifReader& reader, bool hasVertexWeights) {
+	skinTransform.load(reader);
+	boundingSphere.load(reader);
 	reader.read(&numVertices, sizeof(uint16_t), 1);
-if(0 != 0 && numVertices != 0) {
+if(hasVertexWeights && numVertices != 0) {
 	vertexWeights.resize(numVertices);
 	for(unsigned int i = 0; i < numVertices; i++) {
 		vertexWeights[i].load(reader);
@@ -227,23 +227,23 @@ if(0 != 0 && numVertices != 0) {
 }
 }
 void BoneData::resolvePointers(NifData& data) {
-	skinTransform->resolvePointers(data);
-	boundingSphere->resolvePointers(data);
+	skinTransform.resolvePointers(data);
+	boundingSphere.resolvePointers(data);
 	for(unsigned int i = 0; i < numVertices; i++) {
 		vertexWeights[i].resolvePointers(data);
 	}
 }
 
 void NiTransform::load(NifReader& reader) {
-	rotation->load(reader);
-	translation->load(reader);
+	rotation.load(reader);
+	translation.load(reader);
 	reader.read(&scale, sizeof(float), 1);
 }
 NiTransform::~NiTransform() {
 }
 void NiTransform::resolvePointers(NifData& data) {
-	rotation->resolvePointers(data);
-	translation->resolvePointers(data);
+	rotation.resolvePointers(data);
+	translation.resolvePointers(data);
 }
 
 void BoneVertData::load(NifReader& reader) {
@@ -256,12 +256,30 @@ void BoneVertData::resolvePointers(NifData& data) {
 }
 
 void NiBound::load(NifReader& reader) {
-	center = std::make_shared<Vector3>();
-	center->load(reader);
+	center.load(reader);
 	reader.read(&radius, sizeof(float), 1);
 }
 NiBound::~NiBound() {
 }
 void NiBound::resolvePointers(NifData& data) {
-	center->resolvePointers(data);
+	center.resolvePointers(data);
+}
+
+void MatchGroup::load(NifReader& reader) {
+	reader.read(&numVertices, sizeof(uint16_t), 1);
+	vertexIndices.resize(numVertices);
+	reader.read(&vertexIndices[0], sizeof(uint16_t), numVertices);
+}
+MatchGroup::~MatchGroup() {
+}
+void MatchGroup::resolvePointers(NifData& data) {
+}
+
+void BodyPartList::load(NifReader& reader) {
+	reader.read(&partFlag, sizeof(NiEnums::BSPartFlag), 1);
+	reader.read(&bodyPart, sizeof(NiEnums::BSDismemberBodyPartType), 1);
+}
+BodyPartList::~BodyPartList() {
+}
+void BodyPartList::resolvePointers(NifData& data) {
 }

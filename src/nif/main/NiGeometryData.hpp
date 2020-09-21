@@ -30,7 +30,7 @@ struct NiGeometryData : public NiObject {
 	std::vector<Vector3> normals;
 	std::vector<Vector3> tangents;
 	std::vector<Vector3> bitangents;
-	std::shared_ptr<NiBound> boundingSphere;
+	NiBound boundingSphere;
 	nif_bool_t hasVertexColors;
 	std::vector<Color4> vertexColors;
 	std::vector<TexCoord> uvSets;

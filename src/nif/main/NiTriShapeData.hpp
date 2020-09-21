@@ -10,22 +10,23 @@
         #include "../nifreader.hpp"
         #include "../nifpointer.hpp"
         class NifData;
-        struct NiProperty;
-#include "NiProperty.hpp"
+        struct NiTriBasedGeomData;
+#include "NiTriBasedGeomData.hpp"
+#include <vector>
 #include <cstdint>
 
-struct NiMaterialProperty : public NiProperty {
-	Color3 specularColor;
-	Color3 emissiveColor;
-	float glossiness;
-	float alpha;
-	float emissiveMult;
+struct NiTriShapeData : public NiTriBasedGeomData {
+	uint32_t numTrianglePoints;
+	nif_bool_t hasTriangles;
+	std::vector<Triangle> triangles;
+	uint16_t numMatchGroups;
+	std::vector<MatchGroup> matchGroups;
 
 
-	NiMaterialProperty(NifReader& reader);
+	NiTriShapeData(NifReader& reader);
 
 
-	virtual ~NiMaterialProperty();
+	virtual ~NiTriShapeData();
 	static NiObject* create(NifReader& reader);
 	virtual void resolvePointers(NifData& data);
 };

@@ -10,22 +10,19 @@
         #include "../nifreader.hpp"
         #include "../nifpointer.hpp"
         class NifData;
-        struct NiProperty;
-#include "NiProperty.hpp"
+        struct NiExtraData;
+#include "NiExtraData.hpp"
 #include <cstdint>
 
-struct NiMaterialProperty : public NiProperty {
-	Color3 specularColor;
-	Color3 emissiveColor;
-	float glossiness;
-	float alpha;
-	float emissiveMult;
+struct BSBound : public NiExtraData {
+	Vector3 center;
+	Vector3 dimensions;
 
 
-	NiMaterialProperty(NifReader& reader);
+	BSBound(NifReader& reader);
 
 
-	virtual ~NiMaterialProperty();
+	virtual ~BSBound();
 	static NiObject* create(NifReader& reader);
 	virtual void resolvePointers(NifData& data);
 };

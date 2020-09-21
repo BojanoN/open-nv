@@ -1,9 +1,8 @@
 
-    #pragma once
-#include <cstdint>
-
-    namespace NiEnums {
-    enum ApplyMode : uint32_t {
+        #pragma once
+        #include <cstdint>
+        namespace NiEnums {
+enum ApplyMode : uint32_t {
 	APPLY_REPLACE = 0,
 	APPLY_DECAL = 1,
 	APPLY_MODULATE = 2,

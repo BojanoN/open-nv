@@ -64,7 +64,7 @@ std::vector<uint8_t> FileProvider::readFile(const std::string& filepath)
     fs::path fullPath = this->root / filepath;
 #endif
 
-    log_info("Searching for loose file: %s", fullPath.string().c_str());
+    log_debug("Searching for loose file: %s", fullPath.string().c_str());
     if(fs::exists(fullPath) && fs::is_regular_file(fullPath)) {
         log_debug("Opening loose file: %s", fullPath.c_str());
         return readLooseFile(fullPath);
@@ -80,7 +80,7 @@ std::vector<uint8_t> FileProvider::readLooseFile(const std::string& filepath)
     FILE* file = std::fopen(filepath.c_str(), "rb");
     if(file == NULL) {
         log_error("Cannot open file %s", filepath.c_str());
-        throw std::invalid_argument("Cannot open file");
+        throw std::runtime_error("Cannot open file");
     }
 
     uint64_t fileSize = fs::file_size(filepath);
@@ -105,7 +105,7 @@ std::vector<uint8_t> FileProvider::readArchiveFile(const std::string& filepath)
 
     if (containingArchive == NULL) {
         log_error("Cannot find file %s in any archive", filepath.c_str());
-        throw std::invalid_argument("Cannot open file");
+        throw std::runtime_error("Cannot open file");
     }
 
     log_debug("Found archived file: %s", lowerCased.c_str());
