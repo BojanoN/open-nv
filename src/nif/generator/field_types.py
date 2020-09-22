@@ -70,6 +70,7 @@ class BasicType:
 
         name = process_name(element.getAttribute('name'))
         self.delete_code = ''
+
         if element.hasAttribute('arr1'):
             self.is_array = True
             size = process_array_size(element.getAttribute('arr1'))
@@ -242,11 +243,12 @@ class CompoundType:
         else:
             self.is_array = False
             #self.declaration_type = '\t' + true_type + '* ' + name + ';\n'
-            self.declaration_type = '\tstd::shared_ptr<' + true_type + '> ' + name + ';\n'
+            #self.declaration_type = '\tstd::shared_ptr<' + true_type + '> ' + name + ';\n'
+            self.declaration_type = '\t' + true_type + ' ' + name + ';\n'
             #self.read_code = '\t' + name + ' = new ' + true_type + '(reader);\n'
-            self.read_code = '\t' + name + ' = std::make_shared<' + true_type + '>();\n'
-            self.read_code += '\t' + name + '->load(reader);\n'
-            self.resolve_code = '\t' + name + '->resolvePointers(data);\n'
+            #self.read_code = '\t' + name + ' = std::make_shared<' + true_type + '>();\n'
+            self.read_code = '\t' + name + '.load(reader);\n'
+            self.resolve_code = '\t' + name + '.resolvePointers(data);\n'
             #self.delete_code = '\tdelete ' + name + ';\n'
 
     def get_type_name(self):

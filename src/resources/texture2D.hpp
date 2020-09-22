@@ -98,10 +98,13 @@ private:
 	DDS::ddsHeader header;
 	std::vector<uint8_t> textureData;
 
+	Texture2D(const std::string& texturePath);
+
 public:
 
-	Texture2D(const std::string& texturePath);
 	~Texture2D() {
 		//std::cout << "Destroying texture" << std::endl;
 	}
+
+	friend class Resource<Texture2D>;
 };
