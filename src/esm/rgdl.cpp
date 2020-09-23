@@ -11,7 +11,8 @@ Ragdoll::Ragdoll(ESMReader& reader) : Record(reader) {
     reader.readSubrecord(version);
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::DATA);
-    reader.readSubrecord(data);
+    //reader.readSubrecord(data);
+    reader.readRawDataSubrecSize(data);
     reader.readNextSubrecordHeader();
     if(reader.subrecordType() == ESMType::XNAM) {
     	reader.readSubrecord(actorBase);

@@ -1,8 +1,10 @@
 #include "gameworld.hpp"
 #include "logc/log.h"
 #include <getopt.h>
-#include <string.h>
 #include <time.h>
+#include "file/reader.hpp"
+#include <chrono>
+
 #define FALLOUTNV_ESM_DEFAULT_PATH "./bin/esm/FalloutNV.esm"
 
 int main(int argc, char** argv)
@@ -13,7 +15,7 @@ int main(int argc, char** argv)
 #else
     log_set_level(LOG_INFO);
 #endif
-    //    log_set_level(LOG_INFO);
+    //log_set_level(LOG_INFO);
     int         c;
     std::string path = FALLOUTNV_ESM_DEFAULT_PATH;
 
@@ -27,20 +29,23 @@ int main(int argc, char** argv)
         }
     }
 
-    GameWorld::GameWorld* world = new GameWorld::GameWorld();
+    File::Reader::setRootFilePath(path.c_str());
+    std::string esmPath = std::string(path) + std::string("FalloutNV.esm");
+
+    auto start = std::chrono::system_clock::now();
+
+    GameWorld::GameWorld world;
     try {
-        ESM::ESMReader reader(path);
-        world->load(reader);
+        ESM::ESMReader reader(esmPath);
+        world.load(reader);
     } catch (std::runtime_error& e) {
         log_fatal(e.what());
-        delete world;
     }
 
-    GameWorld::GameData<ESM::GameSetting>* sStore = (GameWorld::GameData<ESM::GameSetting>*)world->getDataStore(ESM::ESMType::GMST);
-    ;
-    std::string test = "sSleepDeprivationIncrease";
-    assert(sStore->get() != nullptr);
-    /*
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = end-start;
+    std::cout << diff.count() << std::endl;
+
     GameWorld::GameData<ESM::Script>* scriptStore = (GameWorld::GameData<ESM::Script>*)world.getDataStore(ESM::ESMType::SCPT);
 
     std::unordered_map<formid, ESM::Script*>& scriptMap = scriptStore->getMap();
@@ -55,8 +60,9 @@ int main(int argc, char** argv)
         out.write((char*)source.data(), source.size());
         out.close();
     }
-    */
+
+    File::Reader::destroyFileProvider();
     //log_info("Loaded %s in %f miliseconds", path.c_str(), (double)(end - start) / (CLOCKS_PER_SEC / 1000));
-    delete world;
+
     return 0;
 }

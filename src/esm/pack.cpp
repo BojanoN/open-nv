@@ -10,7 +10,8 @@ Package::Package(ESMReader& reader) : Record(reader) {
 
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::PKDT);
-    reader.readSubrecord(data);
+    //reader.readSubrecord(data);
+    reader.readRawDataSubrecSize(data);
 
     reader.readNextSubrecordHeader();
     if(reader.subrecordType() == ESMType::PLDT) {
@@ -40,8 +41,9 @@ Package::Package(ESMReader& reader) : Record(reader) {
     			reader.readSubrecord(idleAnimationFlags);
     			break;
     		case ESMType::IDLC:
-    			reader.readSubrecord(idleAnimationCount);
-    			break;
+    			//reader.readSubrecord(idleAnimationCount);
+    			reader.readRawDataSubrecSize(idleAnimationCount);
+                break;
     		case ESMType::IDLT:
     			reader.readSubrecord(idleTimerSetting);
     			break;
@@ -64,7 +66,8 @@ Package::Package(ESMReader& reader) : Record(reader) {
     			reader.readSubrecord(followTriggerRadius);
     			break;
     		case ESMType::PKPT:
-    			reader.readSubrecord(patrolFlags);
+                reader.readRawDataSubrecSize(patrolFlags);
+    			//reader.readSubrecord(patrolFlags);
     			break;
     		case ESMType::PKW3:
     			reader.readSubrecord(useWeaponData);

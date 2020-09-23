@@ -40,7 +40,8 @@ Water::Water(ESMReader& reader) : Record(reader) {
         reader.readSubrecord(damage);
         reader.readNextSubrecordHeader();
         reader.checkSubrecordHeader(ESMType::DNAM);
-        reader.readSubrecord(visualData);
+        //reader.readSubrecord(visualData);
+        reader.readRawDataSubrecSize(visualData);
     } else {
         reader.readDirect(reinterpret_cast<char*>(&visualData), size - sizeof(uint16_t));
         reader.readDirect(reinterpret_cast<char*>(&damage), sizeof(uint16_t));

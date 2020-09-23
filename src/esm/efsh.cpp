@@ -23,7 +23,8 @@ EffectShader::EffectShader(ESMReader& reader)
             reader.readStringSubrecord(this->holesTexture);
             break;
         case ESMType::DATA:
-            reader.readSubrecord(this->data);
+            //reader.readSubrecord(this->data);
+            reader.readRawDataSubrecSize(this->data);
             break;
         default:
             std::stringstream s;

@@ -5,7 +5,7 @@
 
 namespace BSA {
 
-uint32_t FNVHashStr(std::string s)
+uint32_t FNVHashStr(const std::string& s)
 {
     uint32_t hash = 0;
 
@@ -17,7 +17,7 @@ uint32_t FNVHashStr(std::string s)
     return hash;
 }
 
-uint64_t FNVHashPair(std::string fle, std::string ext)
+uint64_t FNVHashPair(const std::string& fle, const std::string& ext)
 {
     uint64_t hash = 0;
 
@@ -55,8 +55,9 @@ uint64_t FNVHashPair(std::string fle, std::string ext)
     return hash;
 }
 
-uint64_t FNVHash(std::string path, std::string file)
+uint64_t FNVHash(const std::string& path, const std::string& filepath)
 {
+    std::string file = filepath;
     std::transform(file.begin(), file.end(), file.begin(), ::tolower);
     std::replace(file.begin(), file.end(), '/', '\\');
 
@@ -79,3 +80,4 @@ uint64_t FNVHash(std::string path, std::string file)
     return 0;
 }
 }
+

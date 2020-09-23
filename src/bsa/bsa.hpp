@@ -1,10 +1,12 @@
 #pragma once
 
-#include "util/enumflags.hpp"
+#include "../util/enumflags.hpp"
 #include <cstdint>
 #include <fstream>
 #include <map>
+#include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #define BSAId 0x00415342
@@ -69,6 +71,7 @@ struct UncompressedFileBlock {
     std::vector<uint8_t> data;
 };
 
+/*
 class BSACache {
 
 public:
@@ -88,22 +91,30 @@ private:
     std::multimap<uint64_t, uint64_t>                                         frequency;
     std::unordered_map<uint64_t, std::multimap<uint64_t, uint64_t>::iterator> lfu;
     uint32_t                                                                  maxSize;
-};
+};*/
 
 class BSA {
 public:
-    BSA(std::string path);
-    ~BSA() { delete cache; };
+    BSA(const std::string& path, const std::string& name);
+    ~BSA()
+    {
+        std::fclose(file);
+        //delete cache;
+    };
 
-    std::vector<uint8_t>* getFile(std::string path);
-    bool                  fileExists(std::string path);
+    std::vector<uint8_t> getFile(const std::string& path);
+    bool                 fileExists(const std::string& path);
+
+    std::string getName() { return name; }
 
 private:
-    std::ifstream file;
-    Header        header;
-    BSACache*     cache;
+    FILE*              file;
+    Header                    header;
+    //BSACache* cache;
     // hash, offset
     std::vector<FolderRecord> folders;
+    // Contains a list of all file names if ArchiveFlags::IncludeFileNames bit is set
+    std::unordered_set<std::string> fileNames;
 
     std::pair<FolderRecord*, bool> findFolder(uint64_t hashval);
     std::pair<FileRecord, bool>    findFile(FolderRecord* folder, uint64_t hashval);
@@ -111,6 +122,9 @@ private:
     bool compressedByDefault;
     bool filenamesEmbedded;
     bool folderNamesIncluded;
+    bool fileNamesIncluded;
+
+    std::string name;
 };
 
 };

@@ -160,9 +160,9 @@ void ESMReader::startCompressedMode()
 
     this->currentLocation += this->currentRecordHead.dataSize;
 
-    this->compBuf = new decompBuf(this->file, this->currentRecordHead.dataSize, recordSize);
+    this->compBuf = std::make_unique<decompBuf>(this->file, this->currentRecordHead.dataSize, recordSize);
 
-    this->compressed.rdbuf(this->compBuf);
+    this->compressed.rdbuf(this->compBuf.get());
     this->currentStream = &this->compressed;
     savedContext.save(*this);
     this->endOfRecord     = recordSize;
@@ -176,10 +176,10 @@ void ESMReader::endCompressedMode()
         currentStream = &file;
         this->currentStream->seekg(this->currentLocation, std::ios::beg);
 
-        if (compBuf != nullptr) {
+        /*if (compBuf != nullptr) {
             delete compBuf;
             compBuf = nullptr;
-        }
+        }*/
     }
 }
 
