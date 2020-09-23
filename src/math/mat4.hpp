@@ -13,7 +13,7 @@ struct Matrix44 {
         mat[3] = d;
     };
 
-    Matrix44(double diag_val)
+    Matrix44(float diag_val)
     {
         mat[0][1] = 0.;
         mat[0][2] = 0.;
@@ -44,7 +44,7 @@ struct Matrix44 {
         return mat[index];
     }
 
-    void scale(double val)
+    void scale(float val)
     {
         mat[0][0] *= val;
         mat[0][1] *= val;
@@ -104,31 +104,31 @@ struct Matrix44 {
         return ret;
     }
 
-    double determinant()
+    float determinant()
     {
-        double m00 = mat[0][0];
-        double m01 = mat[0][1];
-        double m02 = mat[0][2];
-        double m03 = mat[0][3];
-        double m10 = mat[1][0];
-        double m11 = mat[1][1];
-        double m12 = mat[1][2];
-        double m13 = mat[1][3];
-        double m20 = mat[2][0];
-        double m21 = mat[2][1];
-        double m22 = mat[2][2];
-        double m23 = mat[2][3];
-        double m30 = mat[3][0];
-        double m31 = mat[3][1];
-        double m32 = mat[3][2];
-        double m33 = mat[3][3];
+        float m00 = mat[0][0];
+        float m01 = mat[0][1];
+        float m02 = mat[0][2];
+        float m03 = mat[0][3];
+        float m10 = mat[1][0];
+        float m11 = mat[1][1];
+        float m12 = mat[1][2];
+        float m13 = mat[1][3];
+        float m20 = mat[2][0];
+        float m21 = mat[2][1];
+        float m22 = mat[2][2];
+        float m23 = mat[2][3];
+        float m30 = mat[3][0];
+        float m31 = mat[3][1];
+        float m32 = mat[3][2];
+        float m33 = mat[3][3];
 
-        double min1 = m22 * m33 - m32 * m23;
-        double min2 = m21 * m33 - m31 * m23;
-        double min3 = m21 * m32 - m31 * m22;
-        double min4 = m20 * m33 - m30 * m23;
-        double min5 = m20 * m32 - m30 * m22;
-        double min6 = m20 * m31 - m30 * m21;
+        float min1 = m22 * m33 - m32 * m23;
+        float min2 = m21 * m33 - m31 * m23;
+        float min3 = m21 * m32 - m31 * m22;
+        float min4 = m20 * m33 - m30 * m23;
+        float min5 = m20 * m32 - m30 * m22;
+        float min6 = m20 * m31 - m30 * m21;
 
         return m00 * (m11 * min1 - m12 * min2 + m13 * min3)
             - m01 * (m10 * min1 - m12 * min4 + m13 * min5)
@@ -138,29 +138,29 @@ struct Matrix44 {
 
     void invert()
     {
-        double m00 = mat[0][0];
-        double m01 = mat[0][1];
-        double m02 = mat[0][2];
-        double m03 = mat[0][3];
-        double m10 = mat[1][0];
-        double m11 = mat[1][1];
-        double m12 = mat[1][2];
-        double m13 = mat[1][3];
-        double m20 = mat[2][0];
-        double m21 = mat[2][1];
-        double m22 = mat[2][2];
-        double m23 = mat[2][3];
-        double m30 = mat[3][0];
-        double m31 = mat[3][1];
-        double m32 = mat[3][2];
-        double m33 = mat[3][3];
+        float m00 = mat[0][0];
+        float m01 = mat[0][1];
+        float m02 = mat[0][2];
+        float m03 = mat[0][3];
+        float m10 = mat[1][0];
+        float m11 = mat[1][1];
+        float m12 = mat[1][2];
+        float m13 = mat[1][3];
+        float m20 = mat[2][0];
+        float m21 = mat[2][1];
+        float m22 = mat[2][2];
+        float m23 = mat[2][3];
+        float m30 = mat[3][0];
+        float m31 = mat[3][1];
+        float m32 = mat[3][2];
+        float m33 = mat[3][3];
 
-        double min1 = m22 * m33 - m32 * m23;
-        double min2 = m21 * m33 - m31 * m23;
-        double min3 = m21 * m32 - m31 * m22;
-        double min4 = m20 * m33 - m30 * m23;
-        double min5 = m20 * m32 - m30 * m22;
-        double min6 = m20 * m31 - m30 * m21;
+        float min1 = m22 * m33 - m32 * m23;
+        float min2 = m21 * m33 - m31 * m23;
+        float min3 = m21 * m32 - m31 * m22;
+        float min4 = m20 * m33 - m30 * m23;
+        float min5 = m20 * m32 - m30 * m22;
+        float min6 = m20 * m31 - m30 * m21;
 
         mat[0][0] = m11 * min1 - m12 * min2 + m13 * min3;
         mat[1][0] = -(m10 * min1 - m12 * min4 + m13 * min5);
@@ -196,7 +196,7 @@ struct Matrix44 {
         mat[2][3] = -(m00 * min2 - m01 * min4 + m03 * min6);
         mat[3][3] = m00 * min3 - m01 * min5 + m02 * min6;
 
-        double det = 1. / (m00 * mat[0][0] + m01 * mat[1][0] + m02 * mat[2][0] + m03 * mat[3][0]);
+        float det = 1. / (m00 * mat[0][0] + m01 * mat[1][0] + m02 * mat[2][0] + m03 * mat[3][0]);
 
         scale(det);
     }

@@ -11,7 +11,7 @@ struct Matrix22 {
         mat[1] = b;
     };
 
-    Matrix22(double diag_val)
+    Matrix22(float diag_val)
     {
         mat[0][1] = 0.;
         mat[1][0] = 0.;
@@ -52,15 +52,15 @@ struct Matrix22 {
         return ret;
     }
 
-    double determinant()
+    float determinant()
     {
         return mat[0][0] * mat[1][1] - mat[1][0] * mat[0][1];
     }
 
     void invert()
     {
-        double det = determinant();
-        double tmp = mat[0][0];
+        float det = determinant();
+        float tmp = mat[0][0];
 
         mat[0][0] = mat[1][1] / det;
         mat[0][1] = (-mat[0][1]) / det;
@@ -70,13 +70,13 @@ struct Matrix22 {
 
     void transpose()
     {
-        double tmp = mat[1][0];
+        float tmp = mat[1][0];
 
         mat[1][0] = mat[0][1];
         mat[0][1] = tmp;
     }
 
-    void scale(double val)
+    void scale(float val)
     {
         mat[0][0] *= val;
         mat[0][1] *= val;

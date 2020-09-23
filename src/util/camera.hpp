@@ -6,13 +6,11 @@
 #include <math/util.hpp>
 #include <math/vec3.hpp>
 
-#include <window/events.hpp>
-
 namespace Util {
 
-class Camera : public EventHandler {
+class Camera {
 public:
-    Camera(Vector3& pos, Vector3& u, Vector3& f, double pt, double y, double s)
+    Camera(Vector3& pos, Vector3& u, Vector3& f, float pt, float y, float s)
         : position(pos)
         , up(u)
         , front(f)
@@ -36,10 +34,15 @@ public:
         update();
     }
 
+    Matrix44& getViewMatrix()
+    {
+        return viewMatrix;
+    }
+
     void update()
     {
-        double yaw_rad   = deg2rad(yaw);
-        double pitch_rad = deg2rad(pitch);
+        float yaw_rad   = deg2rad(yaw);
+        float pitch_rad = deg2rad(pitch);
 
         front[0] = cos(yaw_rad) * cos(pitch_rad);
         front[1] = sin(pitch_rad);
@@ -50,15 +53,18 @@ public:
         right = front.cross(up);
         right.normalize();
         up = right.cross(front);
+        up.normalize();
+
+        Vector3 tmp      = position + front;
+        this->viewMatrix = lookat_mat(position, tmp, up);
     }
 
-    // This is called from the callback for glfw key events
-    virtual void handle(const EventPtr& e, double delta)
+    /*void handleKeyboard(const EventPtr& e, float delta)
     {
         if (e->type == EventType::KEY) {
             std::shared_ptr<KeyEvent> ek = std::dynamic_pointer_cast<KeyEvent>(e);
 
-            double v = speed * delta;
+            float v = speed * delta;
 
             if (ek->key == Key::KEY_W && ek->action == KeyAction::PRESSED) {
                 position += front * v;
@@ -71,9 +77,8 @@ public:
             }
         }
         update();
-    }
-
-    void handleMouse(double xOffset, double yOffset)
+    }*/
+    void handleMouse(float xOffset, float yOffset)
     {
         xOffset *= sensitivity;
         yOffset *= sensitivity;
@@ -99,10 +104,12 @@ private:
     Matrix44 view;
     Matrix44 projection;
 
-    double pitch;
-    double yaw;
+    float pitch;
+    float yaw;
 
-    double sensitivity;
-    double speed = 0.2;
+    float sensitivity;
+    float speed = 0.2;
+
+    Matrix44 viewMatrix;
 };
 }

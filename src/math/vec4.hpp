@@ -6,12 +6,12 @@
 
 struct Vector4 {
 
-    double& operator[](int index)
+    float& operator[](int index)
     {
         return arr[index];
     }
 
-    const double& operator[](int index) const
+    const float& operator[](int index) const
     {
         return arr[index];
     }
@@ -24,7 +24,7 @@ struct Vector4 {
         arr[3] = 0.;
     }
 
-    Vector4(double in[4])
+    Vector4(float in[4])
     {
         arr[0] = in[0];
         arr[1] = in[1];
@@ -32,7 +32,7 @@ struct Vector4 {
         arr[3] = in[3];
     }
 
-    Vector4(double x, double y, double z, double w)
+    Vector4(float x, float y, float z, float w)
     {
         arr[0] = x;
         arr[1] = y;
@@ -64,7 +64,7 @@ struct Vector4 {
         return ret;
     }
 
-    Vector4 operator+(double val) const
+    Vector4 operator+(float val) const
     {
         Vector4 ret;
 
@@ -87,7 +87,7 @@ struct Vector4 {
         return ret;
     }
 
-    Vector4 operator-(double val) const
+    Vector4 operator-(float val) const
     {
         Vector4 ret;
 
@@ -110,7 +110,7 @@ struct Vector4 {
         return ret;
     }
 
-    Vector4 operator*(double val) const
+    Vector4 operator*(float val) const
     {
         Vector4 ret;
 
@@ -133,7 +133,7 @@ struct Vector4 {
 
         return ret;
     }
-    Vector4 operator/(double val) const
+    Vector4 operator/(float val) const
     {
         Vector4 ret;
 
@@ -154,7 +154,7 @@ struct Vector4 {
         arr[3] += b[3];
     }
 
-    void operator+=(double val)
+    void operator+=(float val)
     {
 
         arr[0] += val;
@@ -171,7 +171,7 @@ struct Vector4 {
         arr[3] -= b[3];
     }
 
-    void operator-=(double val)
+    void operator-=(float val)
     {
         arr[0] -= val;
         arr[1] -= val;
@@ -187,7 +187,7 @@ struct Vector4 {
         arr[3] *= b[3];
     }
 
-    void operator*=(double val)
+    void operator*=(float val)
     {
         arr[0] *= val;
         arr[1] *= val;
@@ -203,7 +203,7 @@ struct Vector4 {
         arr[3] /= b[3];
     }
 
-    void operator/=(double val)
+    void operator/=(float val)
     {
 
         arr[0] /= val;
@@ -212,26 +212,26 @@ struct Vector4 {
         arr[3] /= val;
     }
 
-    double dot(const Vector4& b) const
+    float dot(const Vector4& b) const
     {
         return arr[0] * b[0] + arr[1] * b[1] + arr[2] * b[2] + arr[3] * b[3];
     }
 
-    double norm() const
+    float norm() const
     {
         return sqrt(arr[0] * arr[0] + arr[1] * arr[1] + arr[2] * arr[2] + arr[3] * arr[3]);
     }
 
     void normalize()
     {
-        double len = norm();
+        float len = norm();
         arr[0] /= len;
         arr[1] /= len;
         arr[2] /= len;
         arr[3] /= len;
     }
 
-    double cos(const Vector4& vec) const
+    float cos(const Vector4& vec) const
     {
         return this->dot(vec) / (this->norm() * vec.norm());
     }
@@ -256,5 +256,5 @@ struct Vector4 {
         arr[3] = -arr[3];
     }
 
-    double arr[4];
+    float arr[4];
 };

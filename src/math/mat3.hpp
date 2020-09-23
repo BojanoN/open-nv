@@ -12,7 +12,7 @@ struct Matrix33 {
         mat[2] = c;
     };
 
-    Matrix33(double diag_val)
+    Matrix33(float diag_val)
     {
         mat[0][1] = 0.;
         mat[0][2] = 0.;
@@ -67,32 +67,32 @@ struct Matrix33 {
         return ret;
     }
 
-    double determinant()
+    float determinant()
     {
-        double m00 = mat[0][0];
-        double m01 = mat[0][1];
-        double m02 = mat[0][2];
-        double m10 = mat[1][0];
-        double m11 = mat[1][1];
-        double m12 = mat[1][2];
-        double m20 = mat[2][0];
-        double m21 = mat[2][1];
-        double m22 = mat[2][2];
+        float m00 = mat[0][0];
+        float m01 = mat[0][1];
+        float m02 = mat[0][2];
+        float m10 = mat[1][0];
+        float m11 = mat[1][1];
+        float m12 = mat[1][2];
+        float m20 = mat[2][0];
+        float m21 = mat[2][1];
+        float m22 = mat[2][2];
 
         return m00 * (m11 * m22 - m21 * m12) - m10 * (m01 * m22 - m02 * m21) + m20 * (m01 * m12 - m02 * m11);
     }
 
     void invert()
     {
-        double m00 = mat[0][0];
-        double m01 = mat[0][1];
-        double m02 = mat[0][2];
-        double m10 = mat[1][0];
-        double m11 = mat[1][1];
-        double m12 = mat[1][2];
-        double m20 = mat[2][0];
-        double m21 = mat[2][1];
-        double m22 = mat[2][2];
+        float m00 = mat[0][0];
+        float m01 = mat[0][1];
+        float m02 = mat[0][2];
+        float m10 = mat[1][0];
+        float m11 = mat[1][1];
+        float m12 = mat[1][2];
+        float m20 = mat[2][0];
+        float m21 = mat[2][1];
+        float m22 = mat[2][2];
 
         mat[0][0] = m11 * m22 - m12 * m21;
         mat[0][1] = -(m01 * m22 - m21 * m02);
@@ -104,7 +104,7 @@ struct Matrix33 {
         mat[2][1] = -(m00 * m21 - m20 * m01);
         mat[2][2] = m00 * m11 - m01 * m10;
 
-        double div = 1. / (m00 * mat[0][0] + m01 * mat[1][0] + m02 * mat[2][0]);
+        float div = 1. / (m00 * mat[0][0] + m01 * mat[1][0] + m02 * mat[2][0]);
 
         scale(div);
     }
@@ -154,7 +154,7 @@ struct Matrix33 {
         mat[2][r2] = tmpcol[2];
     }
 
-    void scale(double val)
+    void scale(float val)
     {
         mat[0][0] *= val;
         mat[0][1] *= val;

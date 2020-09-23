@@ -2,17 +2,18 @@
 
 #include "logc/log.h"
 
-#include "mat2.hpp"
-#include "mat3.hpp"
-#include "mat4.hpp"
-#include "vec2.hpp"
-#include "vec3.hpp"
-#include "vec4.hpp"
+#include <math/mat2.hpp>
+#include <math/mat3.hpp>
+#include <math/mat4.hpp>
+#include <math/vec2.hpp>
+#include <math/vec3.hpp>
+#include <math/vec4.hpp>
+
+#include <GL/glew.h>
 
 #include <cstring>
 #include <errno.h>
 #include <fstream>
-#include <glad/glad.h>
 #include <sstream>
 
 class Shader {
@@ -63,7 +64,7 @@ public:
         glGetShaderiv(vShaderID, GL_COMPILE_STATUS, &err);
 
         if (err == 0) {
-            printCompilationError(vShaderID);
+            printCompilationError(vShaderID, "vertex");
         }
 
         fShaderID = glCreateShader(GL_FRAGMENT_SHADER);
@@ -72,7 +73,7 @@ public:
         glGetShaderiv(fShaderID, GL_COMPILE_STATUS, &err);
 
         if (err == 0) {
-            printCompilationError(fShaderID);
+            printCompilationError(fShaderID, "fragment");
         }
 
         // Program linking
@@ -97,51 +98,57 @@ public:
         glUseProgram(this->shaderProgramID);
     }
 
-    void setVec2(std::string& varName, vec2& vec)
+    void setVec2(std::string& varName, Vector2& vec)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
         glUniform2fv(u, 1, reinterpret_cast<GLfloat*>(&vec));
     }
 
-    void setVec3(std::string& varName, vec3& vec)
+    void setVec3(std::string& varName, Vector3& vec)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
         glUniform3fv(u, 1, reinterpret_cast<GLfloat*>(&vec));
     }
 
-    void setVec4(std::string& varName, vec4& vec)
+    void setVec4(std::string& varName, Vector4& vec)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
         glUniform4fv(u, 1, reinterpret_cast<GLfloat*>(&vec));
     }
 
-    void setMat2(std::string& varName, mat2& mat, bool transpose)
+    void setMat2(std::string& varName, Matrix22& mat, bool transpose)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
         glUniformMatrix2fv(u, 1, transpose, reinterpret_cast<GLfloat*>(&mat));
     }
 
-    void setMat3(std::string& varName, mat3& mat, bool transpose)
+    void setMat3(std::string& varName, Matrix33& mat, bool transpose)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
         glUniformMatrix3fv(u, 1, transpose, reinterpret_cast<GLfloat*>(&mat));
     }
 
-    void setMat4(std::string& varName, mat4& mat, bool transpose)
+    void setMat4(std::string& varName, Matrix44& mat, bool transpose)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
+        glUniformMatrix4fv(u, 1, transpose, reinterpret_cast<GLfloat*>(&mat));
+    }
+
+    void setMat4(const char* varName, Matrix44& mat, bool transpose)
+    {
+        GLint u = glGetUniformLocation(this->shaderProgramID, varName);
         glUniformMatrix4fv(u, 1, transpose, reinterpret_cast<GLfloat*>(&mat));
     }
 
     unsigned int shaderProgramID;
 
 private:
-    void printCompilationError(GLuint shaderID)
+    void printCompilationError(GLuint shaderID, const char* type)
     {
         GLchar msg[512];
         glGetShaderInfoLog(shaderID, 512, NULL, msg);
 
-        log_error("Shader compilation failed: %s", msg);
+        log_error("Shader compilation failed: %s, type: %s", msg, type);
     }
 
     void printLinkingError(GLuint ID)

@@ -12,7 +12,7 @@ struct Quaternion {
     {
     }
 
-    Quaternion(double angle, Vector3 vec)
+    Quaternion(float angle, Vector3 vec)
         : scalar(cos(angle / 2))
         , vector(vec)
     {
@@ -78,12 +78,12 @@ struct Quaternion {
         return ret;
     }
 
-    double normSquared()
+    float normSquared()
     {
         return scalar * scalar + vector.normSquared();
     }
 
-    double norm()
+    float norm()
     {
         return sqrt(scalar * scalar + vector.normSquared());
     }
@@ -102,21 +102,21 @@ struct Quaternion {
     {
         Matrix44 mat;
 
-        double x = vector[0];
-        double y = vector[1];
-        double z = vector[2];
-        double w = scalar;
+        float x = vector[0];
+        float y = vector[1];
+        float z = vector[2];
+        float w = scalar;
 
-        double xy = x * y;
-        double xz = x * z;
-        double xw = x * w;
-        double yz = y * z;
-        double yw = y * w;
-        double zw = z * w;
+        float xy = x * y;
+        float xz = x * z;
+        float xw = x * w;
+        float yz = y * z;
+        float yw = y * w;
+        float zw = z * w;
 
-        double x_sq = 2 * x * x;
-        double y_sq = 2 * y * y;
-        double z_sq = 2 * z * z;
+        float x_sq = 2 * x * x;
+        float y_sq = 2 * y * y;
+        float z_sq = 2 * z * z;
 
         mat[0][0] = 1. - y_sq - z_sq;
         mat[1][1] = 1. - x_sq - z_sq;
@@ -137,7 +137,7 @@ struct Quaternion {
     Quaternion inverse()
     {
         Quaternion ret    = conjugate();
-        double     normsq = normSquared();
+        float      normsq = normSquared();
 
         ret.scalar /= normsq;
         ret.vector /= normsq;
@@ -145,6 +145,6 @@ struct Quaternion {
         return ret;
     }
 
-    double  scalar;
+    float   scalar;
     Vector3 vector;
 };
