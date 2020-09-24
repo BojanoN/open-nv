@@ -6,6 +6,8 @@
 #include <math/util.hpp>
 #include <math/vec3.hpp>
 
+#include <SDL2/SDL.h>
+
 namespace Util {
 
 class Camera {
@@ -59,25 +61,24 @@ public:
         this->viewMatrix = lookat_mat(position, tmp, up);
     }
 
-    /*void handleKeyboard(const EventPtr& e, float delta)
+    void handleKeyboard(int sym, float delta)
     {
-        if (e->type == EventType::KEY) {
-            std::shared_ptr<KeyEvent> ek = std::dynamic_pointer_cast<KeyEvent>(e);
 
-            float v = speed * delta;
+        float v = speed * delta;
 
-            if (ek->key == Key::KEY_W && ek->action == KeyAction::PRESSED) {
-                position += front * v;
-            } else if (ek->key == Key::KEY_A && ek->action == KeyAction::PRESSED) {
-                position -= right * v;
-            } else if (ek->key == Key::KEY_S && ek->action == KeyAction::PRESSED) {
-                position -= front * v;
-            } else if (ek->key == Key::KEY_D && ek->action == KeyAction::PRESSED) {
-                position += right * v;
-            }
+        if (sym == SDLK_w) {
+            position += front * v;
+        } else if (sym == SDLK_a) {
+            position -= right * v;
+        } else if (sym == SDLK_s) {
+            position -= front * v;
+        } else if (sym == SDLK_d) {
+            position += right * v;
         }
+
         update();
-    }*/
+    }
+
     void handleMouse(float xOffset, float yOffset)
     {
         xOffset *= sensitivity;
