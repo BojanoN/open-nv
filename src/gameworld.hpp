@@ -10,10 +10,19 @@
 #include <sstream>
 #include <unordered_map>
 #include <utility>
+#include <vector>
+#include <filesystem>
+#include <unordered_set>
 
 namespace GameWorld {
 
+using ESM::ESMReader;
+namespace fs = std::filesystem;
+
 class GameWorld {
+
+    
+
     GameData<ESM::GameSetting>      gameSettings;
     GameData<ESM::TextureSet>       textureSets;
     GameData<ESM::MenuIcon>         menuIcons;
@@ -138,6 +147,11 @@ class GameWorld {
 
     std::unordered_map<std::string, formid> edidCells;
 
+
+    std::unordered_map<std::string, fs::directory_entry> availableFiles;
+    std::unordered_set<std::string> loadedFiles;
+
+
     void initDataStoreMap();
     void parseCellGroup(ESM::ESMReader& reader);
     //void loadCellChildren(ESM::ESMReader& reader, formid cellId, uint32_t& recordsLoaded, uint32_t& recordsSkipped);
@@ -145,13 +159,22 @@ class GameWorld {
 
     void parseWorldspaceGroup(ESM::ESMReader& reader);
 
+    void storeAvailableFilePaths(std::vector<fs::directory_entry>& mastersPlugins);
+    void addLoadedFileName(const std::string& name);
+    bool isLoaded(const std::string& name);
+
+    void load(fs::directory_entry& file);
+
 public:
     GameWorld()
     {
         initDataStoreMap();
     }
 
-    void load(ESM::ESMReader& reader);
+    //void load(ESM::ESMReader& reader);
+
+
+    void loadMastersAndPlugins(std::vector<fs::directory_entry>& mastersPlugins);
 
     formid getByEditorID(std::string& editorId)
     {

@@ -1,4 +1,4 @@
-#include "gameworld.hpp"
+/*#include "gameworld.hpp"
 #include "logc/log.h"
 #include <getopt.h>
 #include <time.h>
@@ -65,4 +65,4 @@ int main(int argc, char** argv)
     //log_info("Loaded %s in %f miliseconds", path.c_str(), (double)(end - start) / (CLOCKS_PER_SEC / 1000));
 
     return 0;
-}
+}*/
