@@ -1,6 +1,7 @@
 #pragma once
 #include "reader.hpp"
 #include "record.hpp"
+#include "subrecords/scriptdata.hpp"
 #include "structs.hpp"
 
 namespace ESM {

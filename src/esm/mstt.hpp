@@ -1,6 +1,8 @@
 #pragma once
 #include "record.hpp"
 #include "reader.hpp"
+#include "subrecords/objectbounds.hpp"
+#include "subrecords/destructiondata.hpp"
 #include "structs.hpp"
 
 #include <cstdint>

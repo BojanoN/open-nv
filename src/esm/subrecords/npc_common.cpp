@@ -1,0 +1,1 @@
+#include "npc_common.hpp"

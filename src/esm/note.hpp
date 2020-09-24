@@ -1,5 +1,6 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/objectbounds.hpp"
 #include "structs.hpp"
 #include <variant>
 

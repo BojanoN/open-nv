@@ -1,5 +1,6 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/sound_common.hpp"
 #include "structs.hpp"
 
 namespace ESM {

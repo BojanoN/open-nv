@@ -1,5 +1,6 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/scriptdata.hpp"
 #include "structs.hpp"
 
 namespace ESM {

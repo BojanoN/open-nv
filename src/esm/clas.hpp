@@ -1,5 +1,6 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/services_common.hpp"
 #include "structs.hpp"
 
 #include <cstdint>
