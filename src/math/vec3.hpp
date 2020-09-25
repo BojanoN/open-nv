@@ -243,5 +243,10 @@ struct Vector3 {
         arr[2] = -arr[2];
     }
 
+    void print()
+    {
+        printf("(%f %f %f)\n", arr[0], arr[1], arr[2]);
+    }
+
     float arr[3];
 };

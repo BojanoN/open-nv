@@ -36,35 +36,18 @@ public:
         update();
     }
 
-    Matrix44& getViewMatrix()
+    Matrix44 getViewMatrix()
     {
-        return viewMatrix;
-    }
+        Vector3 tmp = position + front;
+        return lookat_mat(position, tmp, up);
 
-    void update()
-    {
-        float yaw_rad   = deg2rad(yaw);
-        float pitch_rad = deg2rad(pitch);
-
-        front[0] = cos(yaw_rad) * cos(pitch_rad);
-        front[1] = sin(pitch_rad);
-        front[2] = cos(yaw_rad) * cos(pitch_rad);
-
-        front.normalize();
-
-        right = front.cross(up);
-        right.normalize();
-        up = right.cross(front);
-        up.normalize();
-
-        Vector3 tmp      = position + front;
-        this->viewMatrix = lookat_mat(position, tmp, up);
+        //   return viewMatrix;
     }
 
     void handleKeyboard(int sym, float delta)
     {
 
-        float v = speed * delta;
+        float v = speed; //* delta;
 
         if (sym == SDLK_w) {
             position += front * v;
@@ -97,6 +80,32 @@ public:
     }
 
 private:
+    void update()
+    {
+        float yaw_rad   = deg2rad(yaw);
+        float pitch_rad = deg2rad(pitch);
+
+        front[0] = cos(yaw_rad) * cos(pitch_rad);
+        front[1] = sin(pitch_rad);
+        front[2] = sin(yaw_rad) * cos(pitch_rad);
+
+        front.normalize();
+
+        right = front.cross(up);
+        right.normalize();
+        up = right.cross(front);
+        up.normalize();
+
+        Vector3 tmp      = position + front;
+        this->viewMatrix = lookat_mat(position, tmp, up);
+
+        position.print();
+
+        front.print();
+        up.print();
+        right.print();
+    }
+
     Vector3 position;
     Vector3 up;
     Vector3 front;
