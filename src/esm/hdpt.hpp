@@ -1,5 +1,6 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/modeldata.hpp"
 #include "structs.hpp"
 
 #include <unordered_set>

@@ -1,6 +1,7 @@
 #pragma once
 #include "record.hpp"
 #include "subrecords/objectbounds.hpp"
+#include "subrecords/decal_data.hpp"
 #include "structs.hpp"
 #include <string>
 #include <cstdint>

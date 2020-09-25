@@ -1,5 +1,6 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/effect.hpp"
 #include "structs.hpp"
 #include "types.hpp"
 

@@ -2,6 +2,7 @@
 #include "record.hpp"
 #include "reader.hpp"
 #include "subrecords/objectbounds.hpp"
+#include "subrecords/modeldata.hpp"
 #include "structs.hpp"
 
 namespace ESM {
