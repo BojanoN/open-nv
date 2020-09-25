@@ -3,6 +3,8 @@
 #include <memory>
 #include <stdexcept>
 
+namespace Allocator {
+
 template <typename T>
 struct Pool {
 public:
@@ -12,37 +14,66 @@ public:
             throw std::runtime_error("Invalid size");
         }
 
-        arr       = std::make_unique<T*>(new T[noElements]);
+        arr = new T[noElements];
+
+        if (arr == nullptr) {
+            throw std::runtime_error("Failed to allocate memory");
+        }
+
         freeIndex = 0;
 
         for (int i = 0; i < noElements; i++) {
-            *reinterpret_cast<int*>(arr[i]) = i + 1;
+            *reinterpret_cast<long*>(&arr[i]) = i + 1;
         }
 
-        // sentinel
-        *reinterpret_cast<int*>(arr[noElements - 1]) = -1;
+        this->capacity = noElements;
+        this->size     = 0;
+        this->end      = &arr[noElements - 1];
     }
 
-    T* allocate()
+    ~Pool() { delete[] arr; }
+
+    T* alloc()
     {
-        T*  ret      = &arr[freeIndex];
-        int nextFree = *reinterpret_cast<int*>(ret);
+        if (size >= capacity) {
+            return nullptr;
+        }
+
+        T*   ret      = &arr[freeIndex];
+        long nextFree = *reinterpret_cast<long*>(ret);
 
         freeIndex = nextFree;
+        this->size++;
 
         return ret;
     }
 
     void free(T* ptr)
     {
-        int ptrIndex = reinterpret_cast<unsigned int>(ptr - &arr[0]) / sizeof(T);
+        long ptrIndex;
 
-        *reinterpret_cast<int*>(ptr) = freeIndex;
+        if (ptr < this->arr || ptr > this->end) {
+            throw std::runtime_error("Invalid pointer sent to free");
+        }
 
-        freeIndex = ptrIndex;
+        ptrIndex = reinterpret_cast<long>(ptr - arr);
+
+        if (ptrIndex == freeIndex) {
+            throw std::runtime_error("Double free");
+        }
+
+        *reinterpret_cast<long*>(ptr) = freeIndex;
+        freeIndex                     = ptrIndex;
+
+        this->size--;
     }
 
 private:
-    std::unique_ptr<T*> arr;
-    int                 freeIndex;
+    T* arr;
+    T* end;
+
+    unsigned int capacity;
+    unsigned int size;
+    long         freeIndex;
 };
+}
