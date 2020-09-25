@@ -3,6 +3,6 @@
 #include <string>
 
 namespace BSA {
-uint64_t FNVHash(std::string path, std::string file);
-uint64_t FNVHashPair(std::string fle, std::string ext);
+uint64_t FNVHash(const std::string& path, const std::string& filepath);
+uint64_t FNVHashPair(const std::string& fle, const std::string& ext);
 }

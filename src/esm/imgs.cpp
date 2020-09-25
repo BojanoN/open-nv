@@ -8,7 +8,8 @@ ImageSpace::ImageSpace(ESMReader& reader) : Record(reader) {
     reader.readStringSubrecord(editorId);
     reader.readNextSubrecordHeader();
     reader.checkSubrecordHeader(ESMType::DNAM);
-    reader.readSubrecord(data);
+    //reader.readSubrecord(data);
+    reader.readRawDataSubrecSize(data);
 }
 
 };

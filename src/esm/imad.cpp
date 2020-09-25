@@ -10,7 +10,8 @@ ImageSpaceAdapter::ImageSpaceAdapter(ESMReader& reader) : Record(reader) {
 				reader.readStringSubrecord(editorId);
 				break;
 			case ESMType::DNAM:
-				reader.readSubrecord(counts);
+				//reader.readSubrecord(counts);
+				reader.readRawDataSubrecSize(counts);
 				break;
 			case ESMType::BNAM:
 				reader.readArraySubrecord(blurRadius);

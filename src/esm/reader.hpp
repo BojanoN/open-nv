@@ -3,19 +3,18 @@
 #include "headers.hpp"
 #include "logc/log.h"
 #include "types.hpp"
-#include "util/bytestream.hpp"
 #include "utils.hpp"
+#include "util/bytestream.hpp"
+
 
 #include <cassert>
-//#include <cerrno>
-//#include <cstdio>
-//#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace ESM {
 
@@ -133,7 +132,8 @@ private:
     std::istream* currentStream;
     std::ifstream file;
     std::istream  compressed;
-    decompBuf*    compBuf;
+    std::unique_ptr<decompBuf> compBuf;
+    //decompBuf*    compBuf;
 
     ssize_t     fileSize;
     std::string fileName;

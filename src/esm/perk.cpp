@@ -43,7 +43,8 @@ Perk::Perk(ESMReader& reader)
         }
         case ESMType::DATA: {
             if (!effectData) {
-                reader.readSubrecord(this->data);
+                //reader.readSubrecord(this->data);
+                reader.readRawDataSubrecSize(this->data);
                 effectData = true;
             } else {
                 PerkEffect& tmp  = this->effects.back();

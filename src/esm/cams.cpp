@@ -13,7 +13,8 @@ CameraShot::CameraShot(ESMReader& reader) : Record(reader) {
     	reader.readNextSubrecordHeader();
     }
     reader.checkSubrecordHeader(ESMType::DATA);
-    reader.readSubrecord(data);
+    //reader.readSubrecord(data);
+    reader.readRawDataSubrecSize(data);
     if(reader.hasMoreSubrecords()) {
         reader.readNextSubrecordHeader();
         reader.checkSubrecordHeader(ESMType::MNAM);

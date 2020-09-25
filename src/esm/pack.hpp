@@ -74,7 +74,7 @@ struct PackageData {
 	PackageType			type;
 	uint8_t				unused;
 	FalloutBehaviorFlags falloutBehaviorFlags;
-	uint16_t            typeSpecificFlags; //type field determines flag meaning
+	uint16_t            typeSpecificFlags; //type field determines flag meaning, some types have no flags
 	uint8_t				padding[2];
 };
 

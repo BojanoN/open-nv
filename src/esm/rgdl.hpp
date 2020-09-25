@@ -5,6 +5,7 @@
 namespace ESM {
 
 
+//Size should be 14.
 struct RagdollData {
 	uint32_t dynamicBoneCount;
 	uint32_t padding;
@@ -14,7 +15,7 @@ struct RagdollData {
 	uint8_t	 grabIkEnabled;
 	uint8_t	 poseMatching;
 	uint8_t  unused;
-};
+} __attribute__((packed));
 
 struct RagdollFeedbackData {
 	float dynamicKeyframeBlendAmount;
