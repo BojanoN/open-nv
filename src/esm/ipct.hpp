@@ -1,5 +1,8 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/modeldata.hpp"
+#include "subrecords/sound_common.hpp"
+#include "subrecords/decal_data.hpp"
 #include "structs.hpp"
 
 namespace ESM {

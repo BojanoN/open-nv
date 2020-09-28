@@ -1,5 +1,6 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/fact_race_relation.hpp"
 #include "structs.hpp"
 
 #include <sstream>

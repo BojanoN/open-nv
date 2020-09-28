@@ -1,6 +1,8 @@
 #pragma once
 
 #include "record.hpp"
+#include "subrecords/fact_race_relation.hpp"
+#include "subrecords/modeldata.hpp"
 #include "structs.hpp"
 #include <unordered_set>
 

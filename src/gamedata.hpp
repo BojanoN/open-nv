@@ -88,19 +88,10 @@ formid GameData<T>::get(std::string& editorId)
 template <class T>
 void GameData<T>::insert(T* record)
 {
-#ifdef DEBUG
-    auto it = dataMap.insert(std::make_pair(record->id, record));
-    assert(it.second);
+    dataMap.insert_or_assign(record->id, record);
     if (record->editorId.size()) {
-        editorIdMap.insert(std::make_pair(record->editorId, record->id));
+        editorIdMap.insert_or_assign(record->editorId, record->id);
     }
-
-#else
-    dataMap.insert(std::make_pair(record->id, record));
-    if (record->editorId.size()) {
-        editorIdMap.insert(std::make_pair(record->editorId, record->id));
-    }
-#endif
 }
 
 template <class T>

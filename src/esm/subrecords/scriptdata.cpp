@@ -1,59 +1,6 @@
-#include "structs.hpp"
-#include "util/strmanip.hpp"
+#include "scriptdata.hpp"
 
 namespace ESM {
-
-bool DestructionData::isInCollection(uint32_t type)
-{
-    for (int i = 0; i < 4; i++) {
-        if (types[i] == type) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void DestructionData::load(ESMReader& reader, DestructionData& destData)
-{
-    reader.checkSubrecordHeader(ESMType::DEST);
-    reader.readSubrecord(destData.header);
-
-    while (reader.hasMoreSubrecords() && isInCollection(reader.peekNextType())) {
-        reader.readNextSubrecordHeader();
-        reader.checkSubrecordHeader(ESMType::DSTD);
-
-        destData.stages.emplace_back();
-        reader.readSubrecord(destData.stages.back().stageData);
-        bool stageEnd = false;
-
-        while (reader.hasMoreSubrecords() && isInCollection(reader.peekNextType()) && !stageEnd) {
-
-            reader.readNextSubrecordHeader();
-            if (reader.subrecordType() == ESMType::DMDL) {
-                reader.readStringSubrecord(destData.stages.back().modelFilename);
-
-            } else if (reader.subrecordType() == ESMType::DMDT) {
-                reader.readArraySubrecord(destData.stages.back().textureHashes);
-            } else if (reader.subrecordType() == ESMType::DSTF) {
-                stageEnd = true;
-            }
-        }
-    }
-}
-
-void Condition::load(ESMReader& reader, Condition& condition)
-{
-    reader.readRawDataSubrecSize(condition);
-}
-
-void ArmorAttributes::load(ESMReader& reader, ArmorAttributes& attrs)
-{
-    if (reader.getCurrentSubrecord().dataSize == 4) {
-        reader.readSubrecord(*reinterpret_cast<ArmorAttributes::ArmorAttributesSmall*>(&attrs));
-    } else {
-        reader.readSubrecord(attrs);
-    }
-}
 
 void ScriptData::load(ESMReader& reader, ScriptData& scriptData)
 {
@@ -101,4 +48,5 @@ void ScriptData::load(ESMReader& reader, ScriptData& scriptData)
         }
     }
 }
-};
+
+}; // namespace ESM

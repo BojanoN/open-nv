@@ -1,5 +1,9 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/objectbounds.hpp"
+#include "subrecords/modeldata.hpp"
+#include "subrecords/destructiondata.hpp"
+#include "subrecords/skill_common.hpp"
 #include "structs.hpp"
 
 namespace ESM {

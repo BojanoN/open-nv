@@ -1,5 +1,9 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/objectbounds.hpp"
+#include "subrecords/modeldata.hpp"
+#include "subrecords/destructiondata.hpp"
+#include "subrecords/condition.hpp"
 #include "structs.hpp"
 
 #include <cstdint>
