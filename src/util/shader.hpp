@@ -2,14 +2,14 @@
 
 #include "logc/log.h"
 
+#include <GL/glew.h>
+#include <glm/mat4x4.hpp>
 #include <math/mat2.hpp>
 #include <math/mat3.hpp>
 #include <math/mat4.hpp>
 #include <math/vec2.hpp>
 #include <math/vec3.hpp>
 #include <math/vec4.hpp>
-
-#include <GL/glew.h>
 
 #include <cstring>
 #include <errno.h>

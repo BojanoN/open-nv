@@ -96,14 +96,9 @@ private:
         up = right.cross(front);
         up.normalize();
 
-        Vector3 tmp      = position + front;
-        this->viewMatrix = lookat_mat(position, tmp, up);
-
-        position.print();
-
-        front.print();
         up.print();
         right.print();
+        front.print();
     }
 
     Vector3 position;
@@ -119,6 +114,8 @@ private:
 
     float sensitivity;
     float speed = 0.2;
+
+    Quaternion orientation;
 
     Matrix44 viewMatrix;
 };

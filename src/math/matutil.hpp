@@ -59,7 +59,7 @@ inline Matrix44 lookat_mat(Vector3& eye, Vector3& center, Vector3& up)
 
     F.normalize();
 
-    s = F.cross(u);
+    s = F.cross(up);
 
     s.normalize();
 
