@@ -5,18 +5,35 @@ extern "C" {
 #include <AL/alc.h>
 }
 
-class AudioEngine {
-public:
-    AudioEngine()
-        : currentDevice(nullptr)
-        , initialized(false) {};
+#include <util/ringbuffer.hpp>
 
-    int init();
-    int openFile(std::string& path);
+class StreamPlayer {
+public:
+    StreamPlayer()
+        : source(0)
+        , buffer(0) {};
+    ~StreamPlayer();
+
+    int openFile(const char* path);
+
+    static ALsizei AL_APIENTRY bufferCallbackStatic(void* objptr, void* data, ALsizei size);
+
+    ALsizei bufferCallback(void* data, ALsizei size);
 
 private:
-    ALint       source;
+    ALuint source;
+    ALuint buffer;
+
+    SPSCRingBuffer* buffer;
+};
+
+class AudioEngine {
+public:
+    AudioEngine();
+    ~AudioEngine();
+    int playFile(const char* path);
+
+private:
     ALCdevice*  currentDevice;
     ALCcontext* currentDeviceContext;
-    bool        initialized;
 };
