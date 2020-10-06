@@ -53,7 +53,30 @@ int StreamPlayer::openFile(const char* path)
     return 0;
 }
 
-static ALsizei AL_APIENTRY bufferCallbackStatic(void* objptr, void* data, ALsizei size)
+int StreamPlayer::bufferCallback(void* data, ALsizei size)
+{
+    size_t got = 0;
+
+    while (got < size) {
+        got += this->decoderRingBuffer.readArr(size - got, (uint8_t*)data);
+    }
+
+    return got;
+}
+
+ALsizei AL_APIENTRY bufferCallbackStatic(void* objptr, void* data, ALsizei size)
 {
     return static_cast<StreamPlayer*>(objptr)->bufferCallback(data, size);
+}
+
+AudioDecoder* AudioEngine::newAudioDecoder()
+{
+    return AudioEngine::audioDecoderAllocator.alloc();
+};
+
+Allocator::Pool<AudioDecoder> AudioEngine::audioDecoderAllocator(POOL_ALLOC_SIZE);
+Allocator::Pool<StreamPlayer> AudioEngine::streamPlayerAllocator(POOL_ALLOC_SIZE);
+
+bool StreamPlayer::update()
+{
 }

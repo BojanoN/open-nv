@@ -8,9 +8,35 @@ extern "C" {
 }
 
 #include <logc/log.h>
+#include <util/ringbuffer.hpp>
 
-int AudioDecoder::decodeFile(const char* path, const int sample_rate, double** data, int* size)
+AudioDecoder::~AudioDecoder()
 {
+    if (this->mCodecCtx) {
+        avcodec_close(mCodecCtx);
+        avcodec_free_context(&mCodecCtx);
+    }
+
+    if (this->mFmtCtx) {
+        avformat_free_context(mFmtCtx);
+    }
+
+    av_free(&mPacket);
+    av_frame_free(&mFrame);
+}
+
+AudioDecoder::AudioDecoder()
+    : finished(false)
+{
+    mPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
+    av_init_packet(mPacket);
+
+    mFrame = (AVFrame*)av_frame_alloc();
+}
+
+int AudioDecoder::openFile(const char* path)
+{
+
     // Get audio file format
     AVFormatContext* pFormat = avformat_alloc_context();
     if (avformat_open_input(&pFormat, path, NULL, NULL) != 0) {
@@ -65,9 +91,31 @@ int AudioDecoder::decodeFile(const char* path, const int sample_rate, double** d
         return -1;
     }
 
-    avcodec_close(pCodecContext);
-    avcodec_free_context(&pCodecContext);
-    avformat_free_context(pFormat);
+    this->mCodecCtx = pCodecContext;
+    this->mFmtCtx   = pFormat;
 
     return 0;
 }
+
+int AudioDecoder::decodeFrame()
+{
+
+    if (finished) {
+        return -1;
+    }
+
+    int ret = av_read_frame(mFmtCtx, mPacket);
+
+    if (ret < 0) {
+        return -1;
+    }
+
+    ret = avcodec_decode_audio4(mCodecCtx, mFrame, &this->finished, mPacket);
+
+    av_packet_free(&mPacket);
+
+    return ret;
+}
+
+unsigned int AudioDecoder::getNoChannels() { return this->mCodecCtx->channels; }
+unsigned int AudioDecoder::getSampleRate() { return this->mCodecCtx->sample_rate; }
