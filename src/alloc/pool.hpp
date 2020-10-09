@@ -20,6 +20,8 @@ public:
             throw std::runtime_error("Failed to allocate memory");
         }
 
+        memset(arr, 0, noElements);
+
         freeIndex = 0;
 
         for (int i = 0; i < noElements; i++) {

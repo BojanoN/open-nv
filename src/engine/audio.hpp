@@ -3,21 +3,21 @@
 extern "C" {
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/alext.h>
 }
 
 #include <alloc/pool.hpp>
 #include <decoder/audio.hpp>
-#include <util/ringbuffer.hpp>
 
-#define DEFAULT_DECODER_BUF_SIZE 440000
+#define DEFAULT_DECODER_BUF_SIZE 10000
 #define POOL_ALLOC_SIZE          16
 
 class StreamPlayer {
 public:
     StreamPlayer()
-        : source(0)
-        , buffer(0)
-        , decoderRingBuffer(DEFAULT_DECODER_BUF_SIZE) {};
+        : mSource(0)
+        , mBuffer(0)
+        , active(false) {};
     ~StreamPlayer() {};
 
     int openFile(const char* path);
@@ -27,27 +27,38 @@ public:
     ALsizei bufferCallback(void* data, ALsizei size);
 
     bool update();
+    bool initCallback();
+    bool start();
+    void close();
 
 private:
-    ALuint source;
-    ALuint buffer;
-
-    SPSCRingBuffer decoderRingBuffer;
-    AudioDecoder   decoder;
+    uint8_t      decodedDataBuffer[DEFAULT_DECODER_BUF_SIZE];
+    ALuint       mSource;
+    ALuint       mBuffer;
+    ALuint       mBuffers[4];
+    AudioDecoder decoder;
+    bool         active;
 };
 
 class AudioEngine {
 public:
-    AudioEngine();
-    ~AudioEngine();
+    static bool init();
+    static void close();
 
-    int                  playFile(const char* path);
-    static AudioDecoder* newAudioDecoder();
+    static StreamPlayer* playFile(const char* path);
+
+    AudioEngine(AudioEngine& other) = delete;
+    void operator=(const AudioEngine&) = delete;
+
+    static void freeStreamPlayer(StreamPlayer* player);
+
+    static AudioEngine* getInstance();
 
 private:
-    ALCdevice*  currentDevice;
-    ALCcontext* currentDeviceContext;
+    static ALCdevice*  currentDevice;
+    static ALCcontext* currentDeviceContext;
+
+    static bool initialized;
 
     static Allocator::Pool<StreamPlayer> streamPlayerAllocator;
-    static Allocator::Pool<AudioDecoder> audioDecoderAllocator;
 };

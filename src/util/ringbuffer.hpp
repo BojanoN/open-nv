@@ -14,7 +14,7 @@ public:
         this->buffer = std::make_unique<uint8_t[]>(size);
     }
 
-    size_t putArr(uint8_t* arr, size_t size)
+    size_t write(uint8_t* arr, size_t size)
     {
         size_t written = 0;
         size_t tail { mTail.load(std::memory_order_acquire) };
@@ -50,7 +50,7 @@ public:
         return written;
     }
 
-    size_t readArr(size_t readSize, uint8_t* dst)
+    size_t read(size_t readSize, uint8_t* dst)
     {
         size_t read = 0;
         size_t head { mHead.load(std::memory_order_acquire) };
@@ -80,6 +80,11 @@ public:
 
         mHead.store(head, std::memory_order_release);
         return read;
+    }
+
+    uint8_t* getPtr()
+    {
+        return buffer.get();
     }
 
 private:

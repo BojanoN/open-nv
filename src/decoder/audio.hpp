@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <queue>
+
 struct AVCodecContext;
 struct AVFormatContext;
 struct AVPacket;
@@ -7,35 +10,33 @@ struct AVFrame;
 
 class SPSCRingBuffer;
 
-struct AudioInfo {
-    unsigned int noChannels;
-    unsigned int sampleRate;
-};
-
-struct AudioFrame {
-    void*        data;
-    unsigned int size;
+struct FrameInfo {
+    size_t    currentOffset;
+    size_t    size;
+    uint8_t** data;
 };
 
 class AudioDecoder {
 
 public:
-    int openFile(const char* path);
-    // Consider adding resampling to this function, unsigned int noChannels, unsigned int sampleRate
-    int decodeFrame();
+    int  openFile(const char* path);
+    void close();
+    bool decodeFrame();
+    int  decodeData(uint8_t* dst, size_t dstSize);
 
     ~AudioDecoder();
     AudioDecoder();
 
-    unsigned int getNoChannels();
     unsigned int getSampleRate();
-    AVFrame*     getFrame() { return mFrame; }
-    bool         isDone() { return finished; }
+    bool         hasMore() const { return !finished; }
 
 private:
+    bool frameEmpty();
+
     AVCodecContext*  mCodecCtx;
     AVFormatContext* mFmtCtx;
     AVPacket*        mPacket;
     AVFrame*         mFrame;
-    int              finished;
+    bool             finished;
+    FrameInfo        currentFrameInfo;
 };

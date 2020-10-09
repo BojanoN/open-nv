@@ -12,30 +12,26 @@ extern "C" {
 
 AudioDecoder::~AudioDecoder()
 {
-    if (this->mCodecCtx) {
-        avcodec_close(mCodecCtx);
-        avcodec_free_context(&mCodecCtx);
-    }
-
-    if (this->mFmtCtx) {
-        avformat_free_context(mFmtCtx);
-    }
-
-    av_free(&mPacket);
-    av_frame_free(&mFrame);
 }
 
 AudioDecoder::AudioDecoder()
-    : finished(false)
-{
-    mPacket = (AVPacket*)av_malloc(sizeof(AVPacket));
-    av_init_packet(mPacket);
+    : mCodecCtx(nullptr)
+    , mFmtCtx(nullptr)
+    , mPacket(nullptr)
+    , mFrame(nullptr)
+    , finished(false)
 
-    mFrame = (AVFrame*)av_frame_alloc();
+{
+    av_log_set_level(AV_LOG_DEBUG);
 }
 
 int AudioDecoder::openFile(const char* path)
 {
+
+    mPacket = av_packet_alloc();
+    av_init_packet(mPacket);
+    avcodec_register_all();
+    mFrame = (AVFrame*)av_frame_alloc();
 
     // Get audio file format
     AVFormatContext* pFormat = avformat_alloc_context();
@@ -50,6 +46,8 @@ int AudioDecoder::openFile(const char* path)
         avformat_free_context(pFormat);
         return -1;
     }
+
+    this->mFmtCtx = pFormat;
 
     // Find first audio stream
     int iAudioStreamIndex = -1;
@@ -92,30 +90,84 @@ int AudioDecoder::openFile(const char* path)
     }
 
     this->mCodecCtx = pCodecContext;
-    this->mFmtCtx   = pFormat;
 
     return 0;
 }
 
-int AudioDecoder::decodeFrame()
+void AudioDecoder::close()
+{
+    if (this->mCodecCtx) {
+        avcodec_close(mCodecCtx);
+        avcodec_free_context(&mCodecCtx);
+    }
+
+    if (this->mFmtCtx) {
+        avformat_free_context(mFmtCtx);
+    }
+
+    av_frame_free(&mFrame);
+}
+
+bool AudioDecoder::frameEmpty()
+{
+    return currentFrameInfo.currentOffset >= currentFrameInfo.size;
+}
+
+int AudioDecoder::decodeData(uint8_t* dst, size_t dstSize)
+{
+    size_t got = 0;
+
+    while (got < dstSize) {
+
+        if (frameEmpty()) {
+            if (!decodeFrame()) {
+                break;
+            }
+            currentFrameInfo.currentOffset = 0;
+            currentFrameInfo.size          = mFrame->nb_samples * av_get_channel_layout_nb_channels(mFrame->channel_layout) * av_get_bytes_per_sample((enum AVSampleFormat)mFrame->format);
+            currentFrameInfo.data          = mFrame->data;
+        }
+
+        size_t remaining = std::min<size_t>(dstSize - got, currentFrameInfo.size - currentFrameInfo.currentOffset);
+
+        memcpy(dst, currentFrameInfo.data[0] + currentFrameInfo.currentOffset, remaining);
+        currentFrameInfo.currentOffset += remaining;
+        got += remaining;
+    }
+
+    return got;
+}
+
+bool AudioDecoder::decodeFrame()
 {
 
     if (finished) {
-        return -1;
+        return false;
     }
 
-    int ret = av_read_frame(mFmtCtx, mPacket);
+    int ret = avcodec_receive_frame(mCodecCtx, mFrame);
 
-    if (ret < 0) {
-        return -1;
+    if (ret == AVERROR_EOF) {
+        this->finished = true;
+        return false;
+    } else if (ret == AVERROR(EAGAIN)) {
+
+        int ret = av_read_frame(mFmtCtx, mPacket);
+
+        ret = avcodec_send_packet(mCodecCtx, mPacket);
+        av_packet_unref(mPacket);
+
+        if (ret < 0) {
+            this->finished = true;
+            log_error("Error sending packet to decoder");
+            return false;
+        }
     }
 
-    ret = avcodec_decode_audio4(mCodecCtx, mFrame, &this->finished, mPacket);
-
-    av_packet_free(&mPacket);
-
-    return ret;
+    return true;
 }
 
-unsigned int AudioDecoder::getNoChannels() { return this->mCodecCtx->channels; }
-unsigned int AudioDecoder::getSampleRate() { return this->mCodecCtx->sample_rate; }
+unsigned int AudioDecoder::getSampleRate()
+{
+    return mFrame->sample_rate;
+}
