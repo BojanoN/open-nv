@@ -28,7 +28,7 @@ int main(void)
     log_info("Started playback");
 
     while (!player->update())
-        std::this_thread::sleep_for(std::chrono::nanoseconds(10000000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(4));
 
     log_info("Finished playback");
     AudioEngine::freeStreamPlayer(player);

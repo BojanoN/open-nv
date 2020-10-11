@@ -9,8 +9,9 @@ extern "C" {
 #include <alloc/pool.hpp>
 #include <decoder/audio.hpp>
 
-#define DEFAULT_DECODER_BUF_SIZE 10000
+#define DEFAULT_DECODER_BUF_SIZE 8096
 #define POOL_ALLOC_SIZE          16
+#define NO_BUFFERS               16
 
 class StreamPlayer {
 public:
@@ -32,11 +33,11 @@ public:
     void close();
 
 private:
-    uint8_t      decodedDataBuffer[DEFAULT_DECODER_BUF_SIZE];
+    uint8_t      decodedDataBuffer[DEFAULT_DECODER_BUF_SIZE] = { 0 };
     ALuint       mSource;
     ALuint       mBuffer;
-    ALuint       mBuffers[4];
-    AudioDecoder decoder;
+    ALuint       mBuffers[NO_BUFFERS];
+    LibAVDecoder decoder;
     bool         active;
 };
 

@@ -63,20 +63,20 @@ int StreamPlayer::openFile(const char* path)
         log_error("Unable to generate audio source");
         return -1;
     }
-
+    alSourcef(mSource, AL_PITCH, 1);
     alGenBuffers(1, &mBuffer);
     if (alGetError() != AL_NO_ERROR) {
         log_error("Unable to generate audio buffer");
         return -1;
     }
 
-    alGenBuffers(4, mBuffers);
+    alGenBuffers(NO_BUFFERS, mBuffers);
     if (alGetError() != AL_NO_ERROR) {
         log_error("Unable to generate audio buffer");
         return -1;
     }
 
-    if (decoder.openFile(path) < 0) {
+    if (decoder.open(path) < 0) {
         return -1;
     }
 
@@ -97,11 +97,10 @@ bool StreamPlayer::update()
     alGetSourcei(mSource, AL_SOURCE_STATE, &state);
     alGetSourcei(mSource, AL_BUFFERS_PROCESSED, &processed);
 
-    // Decode frame and write to the buffer
     while (processed > 0) {
         ALuint bufid;
-
         alSourceUnqueueBuffers(mSource, 1, &bufid);
+
         processed--;
 
         size_t got = decoder.decodeData(decodedDataBuffer, DEFAULT_DECODER_BUF_SIZE);
@@ -109,7 +108,7 @@ bool StreamPlayer::update()
             endOfPlayback = true;
         }
 
-        alBufferData(bufid, AL_FORMAT_STEREO_FLOAT32, decodedDataBuffer, got, decoder.getSampleRate());
+        alBufferData(bufid, AL_FORMAT_STEREO16, decodedDataBuffer, got, 48000);
         alSourceQueueBuffers(mSource, 1, &bufid);
 
         if (alGetError() != AL_NO_ERROR) {
@@ -150,14 +149,14 @@ bool StreamPlayer::start()
     bool endOfPlayback = false;
 
     /* Fill the buffer queue */
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < NO_BUFFERS; i++) {
 
         size_t got = decoder.decodeData(decodedDataBuffer, DEFAULT_DECODER_BUF_SIZE);
         if (got < DEFAULT_DECODER_BUF_SIZE) {
             endOfPlayback = true;
         }
 
-        alBufferData(mBuffers[i], AL_FORMAT_STEREO_FLOAT32, decodedDataBuffer, got, decoder.getSampleRate());
+        alBufferData(mBuffers[i], AL_FORMAT_STEREO16, decodedDataBuffer, got, 48000);
         if (alGetError() != AL_NO_ERROR) {
             log_error("Error buffering audio for playback");
             return true;
@@ -182,7 +181,7 @@ void StreamPlayer::close()
 {
     if (active) {
         alDeleteSources(1, &mSource);
-        alDeleteBuffers(4, mBuffers);
+        alDeleteBuffers(NO_BUFFERS, mBuffers);
         active = false;
 
         decoder.close();

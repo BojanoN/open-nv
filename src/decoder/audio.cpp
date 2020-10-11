@@ -3,34 +3,38 @@
 #include <errno.h>
 extern "C" {
 #include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
 #include <libavutil/opt.h>
+#include <libswresample/swresample.h>
 }
 
 #include <logc/log.h>
 #include <util/ringbuffer.hpp>
 
-AudioDecoder::~AudioDecoder()
+LibAVDecoder::~LibAVDecoder()
 {
 }
 
-AudioDecoder::AudioDecoder()
+LibAVDecoder::LibAVDecoder()
     : mCodecCtx(nullptr)
     , mFmtCtx(nullptr)
     , mPacket(nullptr)
     , mFrame(nullptr)
+    , mResampler(nullptr)
+    , mResampleBuffer(nullptr)
+    , mResampleBufferSize(0)
     , finished(false)
 
 {
+#ifdef DEBUG
     av_log_set_level(AV_LOG_DEBUG);
+#endif
 }
 
-int AudioDecoder::openFile(const char* path)
+int LibAVDecoder::open(const char* path)
 {
 
     mPacket = av_packet_alloc();
     av_init_packet(mPacket);
-    avcodec_register_all();
     mFrame = (AVFrame*)av_frame_alloc();
 
     // Get audio file format
@@ -89,12 +93,40 @@ int AudioDecoder::openFile(const char* path)
         return -1;
     }
 
-    this->mCodecCtx = pCodecContext;
+    this->mCodecCtx          = pCodecContext;
+    AVSampleFormat sampleFmt = (enum AVSampleFormat)mCodecCtx->sample_fmt;
 
+    /*
+    if (sampleFmt == AV_SAMPLE_FMT_FLTP) {
+        mOutSampleFormat = AV_SAMPLE_FMT_FLT;
+    } else {
+        mOutSampleFormat = sampleFmt;
+    }*/
+
+    mOutSampleFormat = AV_SAMPLE_FMT_S16;
+    mResampler       = swr_alloc_set_opts(NULL,
+        mCodecCtx->channel_layout,
+        mOutSampleFormat,
+        48000,
+        mCodecCtx->channel_layout,
+        mCodecCtx->sample_fmt,
+        mCodecCtx->sample_rate,
+        0,
+        nullptr);
+
+    int init = swr_init(mResampler);
+    if (init < 0) {
+        avcodec_close(pCodecContext);
+        avcodec_free_context(&pCodecContext);
+        avformat_free_context(pFormat);
+        log_error("Couldn't init software resampler: %s", path);
+
+        return -1;
+    }
     return 0;
 }
 
-void AudioDecoder::close()
+void LibAVDecoder::close()
 {
     if (this->mCodecCtx) {
         avcodec_close(mCodecCtx);
@@ -108,12 +140,12 @@ void AudioDecoder::close()
     av_frame_free(&mFrame);
 }
 
-bool AudioDecoder::frameEmpty()
+bool LibAVDecoder::frameEmpty()
 {
     return currentFrameInfo.currentOffset >= currentFrameInfo.size;
 }
 
-int AudioDecoder::decodeData(uint8_t* dst, size_t dstSize)
+inline int LibAVDecoder::decodeData(uint8_t* dst, size_t dstSize)
 {
     size_t got = 0;
 
@@ -124,22 +156,22 @@ int AudioDecoder::decodeData(uint8_t* dst, size_t dstSize)
                 break;
             }
             currentFrameInfo.currentOffset = 0;
-            currentFrameInfo.size          = mFrame->nb_samples * av_get_channel_layout_nb_channels(mFrame->channel_layout) * av_get_bytes_per_sample((enum AVSampleFormat)mFrame->format);
-            currentFrameInfo.data          = mFrame->data;
         }
 
         size_t remaining = std::min<size_t>(dstSize - got, currentFrameInfo.size - currentFrameInfo.currentOffset);
 
         memcpy(dst, currentFrameInfo.data[0] + currentFrameInfo.currentOffset, remaining);
         currentFrameInfo.currentOffset += remaining;
+        dst += remaining;
         got += remaining;
     }
 
     return got;
 }
 
-bool AudioDecoder::decodeFrame()
+bool LibAVDecoder::decodeFrame()
 {
+    ssize_t dataSize;
 
     if (finished) {
         return false;
@@ -151,23 +183,44 @@ bool AudioDecoder::decodeFrame()
         this->finished = true;
         return false;
     } else if (ret == AVERROR(EAGAIN)) {
-
+        // The decoder is done with the previous packet, send a new one
         int ret = av_read_frame(mFmtCtx, mPacket);
+        do {
+            ret = avcodec_send_packet(mCodecCtx, mPacket);
+            av_packet_unref(mPacket);
 
-        ret = avcodec_send_packet(mCodecCtx, mPacket);
-        av_packet_unref(mPacket);
+            if (ret < 0) {
+                this->finished = true;
+                log_error("Error sending packet to decoder");
+                return false;
+            }
+            ret = avcodec_receive_frame(mCodecCtx, mFrame);
+            if (ret == AVERROR_EOF) {
+                this->finished = true;
+                return false;
+            }
+        } while (ret == AVERROR(EAGAIN));
+    }
 
-        if (ret < 0) {
-            this->finished = true;
-            log_error("Error sending packet to decoder");
+    if (!mResampleBuffer || mResampleBufferSize < mFrame->nb_samples) {
+        av_freep(&mResampleBuffer);
+        if (av_samples_alloc(&mResampleBuffer, NULL, mFrame->channels, mFrame->nb_samples, mOutSampleFormat, 1)
+            < 0) {
             return false;
         }
     }
+    dataSize = swr_convert(mResampler, &mResampleBuffer, mFrame->nb_samples,
+        (const uint8_t**)mFrame->extended_data, mFrame->nb_samples);
+
+    if (dataSize < 0) {
+        return false;
+    }
+    currentFrameInfo.data = &mResampleBuffer;
+    currentFrameInfo.size = dataSize * mFrame->channels * av_get_bytes_per_sample((enum AVSampleFormat)mOutSampleFormat);
 
     return true;
 }
-
-unsigned int AudioDecoder::getSampleRate()
+unsigned int LibAVDecoder::getSampleRate()
 {
     return mFrame->sample_rate;
 }
