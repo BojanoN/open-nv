@@ -204,17 +204,21 @@ bool LibAVDecoder::decodeFrame()
 
     if (!mResampleBuffer || mResampleBufferSize < mFrame->nb_samples) {
         av_freep(&mResampleBuffer);
-        if (av_samples_alloc(&mResampleBuffer, NULL, mFrame->channels, mFrame->nb_samples, mOutSampleFormat, 1)
-            < 0) {
+        ret = av_samples_alloc(&mResampleBuffer, NULL, mFrame->channels, mFrame->nb_samples, mOutSampleFormat, 1);
+
+        if (ret < 0) {
             return false;
         }
+
+        mResampleBufferSize = mFrame->nb_samples;
     }
-    dataSize = swr_convert(mResampler, &mResampleBuffer, mFrame->nb_samples,
-        (const uint8_t**)mFrame->extended_data, mFrame->nb_samples);
+
+    dataSize = swr_convert(mResampler, &mResampleBuffer, mFrame->nb_samples, (const uint8_t**)mFrame->extended_data, mFrame->nb_samples);
 
     if (dataSize < 0) {
         return false;
     }
+
     currentFrameInfo.data = &mResampleBuffer;
     currentFrameInfo.size = dataSize * mFrame->channels * av_get_bytes_per_sample((enum AVSampleFormat)mOutSampleFormat);
 

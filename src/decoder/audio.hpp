@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <queue>
 extern "C" {
 #include <libavformat/avformat.h>
 }
