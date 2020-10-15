@@ -21,31 +21,21 @@ unsigned int VideoPlayer::elements[6] = {
 // every time we try to play a file
 VideoPlayer::VideoPlayer()
     : videoShader("./res/shader/video.vs", "./res/shader/video.fs")
+
 {
 }
 
 int VideoPlayer::open(const char* path)
 {
-    GLuint VAO;
-    GLuint VBO;
-    GLuint EBO;
 
-    GLuint videoFrameTexture;
+    glGenVertexArrays(1, &mVAO);
+    glBindVertexArray(mVAO);
 
-    int err = decoder.open(path);
-    if (err < 0) {
-        log_error("Unable to open video file for decoding: %s", LibAVVideoDecoder::getError(err));
-        return -1;
-    }
+    glGenBuffers(1, &mVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, mVBO);
 
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glGenBuffers(1, &mEBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(VideoPlayer::vertices), vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
@@ -54,8 +44,17 @@ int VideoPlayer::open(const char* path)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glGenTextures(1, &videoFrameTexture);
-    glBindTexture(GL_TEXTURE_2D, videoFrameTexture);
+    int err = decoder.open(path);
+    if (err < 0) {
+        log_error("Unable to open video file for decoding: %s", LibAVVideoDecoder::getError(err));
+        glDeleteBuffers(1, &mVBO);
+        glDeleteBuffers(1, &mEBO);
+        glDeleteVertexArrays(1, &mVAO);
+        return -1;
+    }
+
+    glGenTextures(1, &mVideoFrameTexture);
+    glBindTexture(GL_TEXTURE_2D, mVideoFrameTexture);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, decoder.getWidth(), decoder.getHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
@@ -64,7 +63,26 @@ int VideoPlayer::open(const char* path)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    glEnable(GL_DEPTH_TEST);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     return 0;
 };
+
+bool VideoPlayer::update()
+{
+
+    if (decoder.isFinished()) {
+        return false;
+    }
+
+    decoder.updateFrame(mCurrentTextureFrame);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, decoder.getWidth(), decoder.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, mCurrentTextureFrame.data);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    return true;
+}

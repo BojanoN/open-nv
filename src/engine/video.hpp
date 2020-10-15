@@ -7,11 +7,19 @@ class VideoPlayer {
 public:
     VideoPlayer();
 
-    int open(const char* path);
+    int  open(const char* path);
+    bool update();
 
 private:
     Shader            videoShader;
     LibAVVideoDecoder decoder;
+
+    GLuint mVAO;
+    GLuint mVBO;
+    GLuint mEBO;
+    GLuint mVideoFrameTexture;
+
+    VideoTextureFrame mCurrentTextureFrame;
 
     static float        vertices[16];
     static unsigned int elements[6];

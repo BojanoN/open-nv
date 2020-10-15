@@ -8,7 +8,24 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+#include <thread>
+
 #include <logc/log.h>
+
+LibAVVideoDecoder::LibAVVideoDecoder()
+    : mFmtCtx(nullptr)
+    , mPacket(nullptr)
+    , mFrame(nullptr)
+    , mRescaler(nullptr)
+    , mConversionBuffer(nullptr)
+    , mVideoCodecCtx(nullptr)
+    , mConvertedFrame(nullptr)
+    , mConvertedFrameSize(0)
+    , mVideoStreamIndex(-1)
+    , mAudioStreamIndex(-1)
+    , finished(false)
+{
+}
 
 unsigned int LibAVVideoDecoder::getWidth()
 {
@@ -22,8 +39,13 @@ unsigned int LibAVVideoDecoder::getHeight()
 
 int LibAVVideoDecoder::open(const char* path)
 {
+#ifdef DEBUG
+    av_log_set_level(AV_LOG_DEBUG);
+#endif
+
     mPacket = av_packet_alloc();
     av_init_packet(mPacket);
+
     mFrame          = (AVFrame*)av_frame_alloc();
     mConvertedFrame = (AVFrame*)av_frame_alloc();
 
@@ -119,74 +141,131 @@ int LibAVVideoDecoder::open(const char* path)
         SWS_BILINEAR,
         NULL, NULL, NULL);
 
+    // Start the clock and the decoding thread
+    mVideoState.videoClock.start();
+    std::thread decodeThread(LibAVVideoDecoder::decodeThread, this);
+    decodeThread.detach();
+
     return 0;
 }
 
-int LibAVVideoDecoder::getFrame(uint8_t* dst, size_t maxDstSize)
+void LibAVVideoDecoder::updateFrame(VideoTextureFrame& frame)
 {
-    if (!decodeFrame()) {
-        this->finished = true;
-        return -1;
+    std::lock_guard<std::mutex> stateLock(mVideoState.stateMutex);
+
+    // Do not fetch new frame until this finished
+    if (mVideoState.videoClock.getElapsedSeconds() < frame.pts) {
+        return;
     }
 
-    if (mConvertedFrameSize > maxDstSize) {
-        log_error("Insufficient video frame buffer size, please increase the buffer size");
-        return AVERROR_BUFFER_TOO_SMALL;
-    }
-
-    memcpy(dst, mConversionBuffer, mConvertedFrameSize);
-
-    return mConvertedFrameSize;
+    // Free allocated data from old frame
+    av_free(frame.data);
+    // Fetch new frame;
+    LibAVVideoDecoder::textureFrameQueue.get(frame);
 }
 
-bool LibAVVideoDecoder::decodeFrame()
+void LibAVVideoDecoder::decodeThread(LibAVVideoDecoder* obj)
 {
-    ssize_t dataSize;
+    int ret;
 
-    if (finished) {
-        return false;
+    const int    videoStreamIndex = obj->mVideoStreamIndex;
+    const int    audioStreamIndex = obj->mAudioStreamIndex;
+    const double timeBaseDouble   = av_q2d(obj->mVideoCodecCtx->time_base);
+
+#ifdef DEBUG
+    log_debug("Video decoding thread with id %u started", std::this_thread::get_id);
+#endif
+
+    LibAVVideoDecoder::textureFrameQueue.reset();
+
+    while (true) {
+        if (obj->finished) {
+            return;
+        }
+
+        ret = avcodec_receive_frame(obj->mVideoCodecCtx, obj->mFrame);
+
+        if (ret == AVERROR_EOF) {
+            obj->finished = true;
+            return;
+        } else if (ret == AVERROR(EAGAIN)) {
+            // The decoder is done with the previous packet, send a new one
+            do {
+                ret = av_read_frame(obj->mFmtCtx, obj->mPacket);
+                if (ret < 0) {
+                    log_error("Video decoding thread: Error reading packet: %s", LibAVVideoDecoder::getError(ret));
+                    obj->finished = true;
+                    return;
+                }
+                if (obj->mPacket->stream_index == videoStreamIndex) {
+                    break;
+                }
+            } while (true);
+            do {
+                ret = avcodec_send_packet(obj->mVideoCodecCtx, obj->mPacket);
+                av_packet_unref(obj->mPacket);
+
+                if (ret < 0) {
+                    obj->finished = true;
+                    log_error("Video decoding thread: Error sending packet to decoder: %s", LibAVVideoDecoder::getError(ret));
+                    return;
+                }
+                ret = avcodec_receive_frame(obj->mVideoCodecCtx, obj->mFrame);
+                if (ret == AVERROR_EOF) {
+                    obj->finished = true;
+                    return;
+                }
+            } while (ret == AVERROR(EAGAIN));
+        }
+
+        ret = sws_scale(
+            obj->mRescaler, obj->mFrame->data,
+            obj->mFrame->linesize, 0, obj->mConvertedFrame->height,
+            obj->mConvertedFrame->data, obj->mConvertedFrame->linesize);
+
+        if (ret < 0) {
+            log_error("Video decoding thread: Error rescaling: %s", LibAVVideoDecoder::getError(ret));
+            obj->finished = true;
+            return;
+        }
+        // TODO: avoid malloc and implement a custom allocator
+        VideoTextureFrame frame;
+        uint8_t*          frameData = (uint8_t*)av_malloc(obj->mConvertedFrameSize); //; new uint8_t[obj->mConvertedFrameSize];
+        if (frameData == nullptr) {
+            log_error("Video decoder thread: out of memory");
+            return;
+        }
+        // Copy converted data to the new frame
+        memcpy(frameData, obj->mConversionBuffer, obj->mConvertedFrameSize);
+
+        frame.data = frameData;
+        frame.size = obj->mConvertedFrameSize;
+
+        double pts = (obj->mPacket->dts != AV_NOPTS_VALUE) ? obj->mFrame->best_effort_timestamp : 0.0;
+
+        // Multiply PTS with base time unit to get the actual time value
+        pts *= timeBaseDouble;
+
+        std::lock_guard<std::mutex> stateLock(obj->mVideoState.stateMutex);
+        // Update video state
+        if (pts == 0.0) {
+            pts = obj->mVideoState.lastFramePTS;
+        } else {
+            obj->mVideoState.lastFramePTS = pts;
+        }
+
+        frame.pts = pts;
+
+        double frameDelay = obj->mFrame->repeat_pict * timeBaseDouble * 0.5;
+
+        LibAVVideoDecoder::textureFrameQueue.put(frame);
+        obj->mVideoState.lastFramePTS += frameDelay;
     }
-
-    int ret = avcodec_receive_frame(mVideoCodecCtx, mFrame);
-
-    if (ret == AVERROR_EOF) {
-        this->finished = true;
-        return false;
-    } else if (ret == AVERROR(EAGAIN)) {
-        // The decoder is done with the previous packet, send a new one
-        ret = av_read_frame(mFmtCtx, mPacket);
-        do {
-            ret = avcodec_send_packet(mVideoCodecCtx, mPacket);
-            av_packet_unref(mPacket);
-
-            if (ret < 0) {
-                this->finished = true;
-                log_error("Error sending packet to decoder");
-                return false;
-            }
-            ret = avcodec_receive_frame(mVideoCodecCtx, mFrame);
-            if (ret == AVERROR_EOF) {
-                this->finished = true;
-                return false;
-            }
-        } while (ret == AVERROR(EAGAIN));
-    }
-
-    dataSize = sws_scale(
-        mRescaler, mFrame->data,
-        mFrame->linesize, 0, mConvertedFrame->height,
-        mConvertedFrame->data, mConvertedFrame->linesize);
-
-    if (dataSize < 0) {
-        return false;
-    }
-
-    return true;
 }
 
-const char* LibAVVideoDecoder::getError(int errno)
+const char* LibAVVideoDecoder::getError(int errorCode)
 {
-    int err = av_strerror(errno, LibAVVideoDecoder::errorMsgBuffer, VIDEO_DECODER_ERROR_BUFFER_SIZE);
+    int err = av_strerror(errorCode, LibAVVideoDecoder::errorMsgBuffer, VIDEO_DECODER_ERROR_BUFFER_SIZE);
 
     if (err < 0) {
         return "Unknown error code";
@@ -194,3 +273,6 @@ const char* LibAVVideoDecoder::getError(int errno)
 
     return (const char*)LibAVVideoDecoder::errorMsgBuffer;
 }
+
+SPSCRingBuffer<VideoTextureFrame> LibAVVideoDecoder::textureFrameQueue { 500 };
+char                              LibAVVideoDecoder::errorMsgBuffer[VIDEO_DECODER_ERROR_BUFFER_SIZE] = { 0 };

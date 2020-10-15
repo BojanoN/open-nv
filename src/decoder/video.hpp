@@ -2,6 +2,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <mutex>
+
+#include <util/ringbuffer.hpp>
+#include <util/timer.hpp>
 
 #define VIDEO_DECODER_ERROR_BUFFER_SIZE 1024
 
@@ -11,19 +15,39 @@ struct AVPacket;
 struct AVFrame;
 struct SwsContext;
 
+struct VideoTextureFrame {
+    uint8_t* data = nullptr;
+    size_t   size = 0;
+    double   pts  = 0.0;
+};
+
+// TODO: add mutex for inter-thread clock syncing
+// Video player class should only handle drawing
+
+struct VideoState {
+    double            lastFramePTS;
+    VideoTextureFrame currentTextureFrame;
+    Timer             videoClock;
+    std::mutex        stateMutex;
+};
+
 class LibAVVideoDecoder {
 public:
-    int open(const char* path);
-    int getFrame(uint8_t* dst, size_t maxDstSize);
+    int  open(const char* path);
+    void updateFrame(VideoTextureFrame& dst);
+    bool isFinished() { return finished; }
 
     unsigned int getHeight();
     unsigned int getWidth();
 
-    static const char* getError(int errno);
+    LibAVVideoDecoder();
+
+    static void        decodeThread(LibAVVideoDecoder* objptr);
+    static const char* getError(int errorCode);
+
+    VideoState mVideoState;
 
 private:
-    bool decodeFrame();
-
     AVFormatContext* mFmtCtx;
 
     AVPacket* mPacket;
@@ -41,5 +65,6 @@ private:
 
     bool finished;
 
-    static char* errorMsgBuffer[VIDEO_DECODER_ERROR_BUFFER_SIZE];
+    static SPSCRingBuffer<VideoTextureFrame> textureFrameQueue;
+    static char                              errorMsgBuffer[VIDEO_DECODER_ERROR_BUFFER_SIZE];
 };

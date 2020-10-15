@@ -152,7 +152,7 @@ int Compiler::compileGameMode(BlockTypeStatement* blocktype, CompiledScript* out
 
 int Compiler::compileBlocktype(Node* node, CompiledScript* out)
 {
-    BlockTypeStatement* blocktype = dynamic_cast<BlockTypeStatement*>(node);
+    BlockTypeStatement* blocktype = static_cast<BlockTypeStatement*>(node);
 
     uint32_t begSize = out->getSize();
     // blocktype ID placeholder
@@ -191,7 +191,7 @@ int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    ScriptBlock* block = dynamic_cast<ScriptBlock*>(node);
+    ScriptBlock* block = static_cast<ScriptBlock*>(node);
     int          size  = block->nodes->size();
 
     uint16_t beg = OutputCodes::BEGIN;
@@ -255,7 +255,7 @@ int Compiler::compileBinaryExpr(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    BinaryExpr* expr    = dynamic_cast<BinaryExpr*>(node);
+    BinaryExpr* expr    = static_cast<BinaryExpr*>(node);
     uint32_t    begSize = out->getSize();
     int         ret;
 
@@ -280,7 +280,7 @@ int Compiler::compileAssignment(Node* node, CompiledScript* out)
 
     CHECK_NULL(node);
 
-    Assignment* expr    = dynamic_cast<Assignment*>(node);
+    Assignment* expr    = static_cast<Assignment*>(node);
     uint32_t    begSize = out->getSize();
 
     Opcode set = { OutputCodes::ASSIGN, 0x00 };
@@ -315,14 +315,14 @@ int Compiler::compileGroupingExpr(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    return compileNode(dynamic_cast<GroupingExpr*>(node)->expression, out);
+    return compileNode(static_cast<GroupingExpr*>(node)->expression, out);
 };
 
 int Compiler::compileLiteralExpr(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    LiteralExpr* expr    = dynamic_cast<LiteralExpr*>(node);
+    LiteralExpr* expr    = static_cast<LiteralExpr*>(node);
     uint32_t     begSize = out->getSize();
 
     out->writeByte(static_cast<uint8_t>(ExprCodes::PUSH));
@@ -370,7 +370,7 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    FunctionCall* func    = dynamic_cast<FunctionCall*>(node);
+    FunctionCall* func    = static_cast<FunctionCall*>(node);
     uint32_t      begSize = out->getSize();
 
     FunctionInfo& info = FunctionResolver::getFunctionInfo(func->functionName);
@@ -413,7 +413,7 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
                 return -1;
             }
 
-            literal = dynamic_cast<LiteralExpr*>(func->arguments[i]);
+            literal = static_cast<LiteralExpr*>(func->arguments[i]);
 
             switch (literal->valueType) {
             case (Type::Integer): {
@@ -454,7 +454,7 @@ int Compiler::compileScriptName(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    ScriptNameStatement* scriptName = dynamic_cast<ScriptNameStatement*>(node);
+    ScriptNameStatement* scriptName = static_cast<ScriptNameStatement*>(node);
 
     this->ctx.scriptName = scriptName->name;
 
@@ -469,7 +469,7 @@ int Compiler::compileExpressionStatement(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    ExpressionStatement* expr = dynamic_cast<ExpressionStatement*>(node);
+    ExpressionStatement* expr = static_cast<ExpressionStatement*>(node);
     return compileNode(expr->expression, out);
 };
 
@@ -477,7 +477,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    IfStatement* ifStmt    = dynamic_cast<IfStatement*>(node);
+    IfStatement* ifStmt    = static_cast<IfStatement*>(node);
     uint32_t     begOffset = out->getSize();
 
     Opcode ifBegin   = { OutputCodes::IF, 0x00 };
@@ -493,7 +493,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 
     compLenOut = 0;
     exprLenOut = 0;
-    jumpOps    = dynamic_cast<StatementBlock*>(ifStmt->body)->nodes->size();
+    jumpOps    = static_cast<StatementBlock*>(ifStmt->body)->nodes->size();
 
     compLenOffset = out->getSize() - sizeof(ifBegin.length);
 
@@ -528,7 +528,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 
             compLenOut = 0;
             exprLenOut = 0;
-            jumpOps    = dynamic_cast<StatementBlock*>(ifStmt->elseIfs[i].second)->nodes->size();
+            jumpOps    = static_cast<StatementBlock*>(ifStmt->elseIfs[i].second)->nodes->size();
 
             compLenOffset = out->getSize() - sizeof(elifBegin.length);
 
@@ -580,7 +580,7 @@ int Compiler::compileReferenceAccess(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    ReferenceAccess* refAccess = dynamic_cast<ReferenceAccess*>(node);
+    ReferenceAccess* refAccess = static_cast<ReferenceAccess*>(node);
     uint32_t         begOffset = out->getSize();
 
     if (refAccess->context == NodeContext::Expression) {
@@ -627,7 +627,7 @@ int Compiler::compileVariable(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
 
-    Variable* var = dynamic_cast<Variable*>(node);
+    Variable* var = static_cast<Variable*>(node);
 
     if (var->variableType != Type::Reference) {
 
@@ -644,7 +644,7 @@ int Compiler::compileVariable(Node* node, CompiledScript* out)
 int Compiler::compileVariableAccess(Node* node, CompiledScript* out)
 {
 
-    VariableAccess* var     = dynamic_cast<VariableAccess*>(node);
+    VariableAccess* var     = static_cast<VariableAccess*>(node);
     uint32_t        begSize = out->getSize();
 
     uint8_t  typeCode;
@@ -678,7 +678,7 @@ int Compiler::compileVariableAccess(Node* node, CompiledScript* out)
 
 int Compiler::compileStatementBlock(Node* node, CompiledScript* out)
 {
-    StatementBlock* block = dynamic_cast<StatementBlock*>(node);
+    StatementBlock* block = static_cast<StatementBlock*>(node);
 
     uint32_t begSize = out->getSize();
     uint32_t n       = block->nodes->size();

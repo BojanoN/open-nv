@@ -3,10 +3,11 @@
 #include <atomic>
 #include <cstring>
 #include <memory>
+#include <mutex>
 
-class SPSCRingBuffer {
+class SPSCByteRingBuffer {
 public:
-    explicit SPSCRingBuffer(size_t size)
+    explicit SPSCByteRingBuffer(size_t size)
         : capacity(size)
         , mHead(0)
         , mTail(0)
@@ -94,4 +95,138 @@ private:
     std::atomic<size_t> mTail;
 
     std::unique_ptr<uint8_t[]> buffer;
+};
+
+template <class T>
+class RingBuffer {
+public:
+    explicit RingBuffer(size_t size)
+        : capacity(size)
+        , mCurrentSize(0)
+        , mHead(0)
+        , mTail(0)
+    {
+        this->buffer = std::make_unique<T[]>(size);
+    }
+
+    int put(const T& elem)
+    {
+        std::unique_lock<std::mutex> bufferLock(mMutex);
+
+        if (capacity == mCurrentSize) {
+            return -1;
+        }
+
+        buffer[mTail] = elem;
+        mTail         = (mTail + 1) % capacity;
+        mCurrentSize++;
+
+        return 0;
+    }
+
+    bool get(T& dst)
+    {
+        std::unique_lock<std::mutex> bufferLock(mMutex);
+
+        if (mCurrentSize == 0) {
+            return false;
+        }
+
+        dst   = buffer[mHead];
+        mHead = (mHead + 1) % capacity;
+        mCurrentSize--;
+
+        return true;
+    }
+
+    bool empty() { return mCurrentSize == 0; }
+    bool full() { return mCurrentSize == capacity; }
+
+    T* getPtr()
+    {
+        return buffer.get();
+    }
+
+    void reset()
+    {
+        mHead = mTail = 0;
+        mCurrentSize  = 0;
+    }
+
+private:
+    const size_t capacity;
+
+    size_t mCurrentSize;
+    size_t mHead;
+    size_t mTail;
+
+    std::mutex mMutex;
+
+    std::unique_ptr<T[]> buffer;
+};
+
+template <class T>
+class SPSCRingBuffer {
+public:
+    explicit SPSCRingBuffer(size_t size)
+        : capacity(size)
+        , mCurrentSize(0)
+        , mHead(0)
+        , mTail(0)
+    {
+        this->buffer = std::make_unique<T[]>(size);
+    }
+
+    int put(const T& elem)
+    {
+
+        if (full()) {
+            return -1;
+        }
+
+        size_t tail   = mTail.load(std::memory_order_acquire);
+        buffer[mTail] = elem;
+        mTail.store((tail + 1) % capacity, std::memory_order_release);
+        mCurrentSize.fetch_add(1, std::memory_order_acq_rel);
+
+        return 0;
+    }
+
+    bool get(T& dst)
+    {
+
+        if (empty()) {
+            return false;
+        }
+
+        size_t head = mHead.load(std::memory_order_acquire);
+        dst         = buffer[head];
+        mHead.store((head + 1) % capacity, std::memory_order_release);
+        mCurrentSize.fetch_sub(1, std::memory_order_acq_rel);
+
+        return true;
+    }
+
+    bool empty() { return mCurrentSize.load(std::memory_order_relaxed) == 0; }
+    bool full() { return mCurrentSize.load(std::memory_order_relaxed) == capacity; }
+
+    T* getPtr()
+    {
+        return buffer.get();
+    }
+
+    void reset()
+    {
+        mHead = mTail = 0;
+        mCurrentSize  = 0;
+    }
+
+private:
+    const size_t capacity;
+
+    std::atomic<size_t> mCurrentSize;
+    std::atomic<size_t> mHead;
+    std::atomic<size_t> mTail;
+
+    std::unique_ptr<T[]> buffer;
 };
