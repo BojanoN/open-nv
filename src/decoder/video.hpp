@@ -16,9 +16,10 @@ struct AVFrame;
 struct SwsContext;
 
 struct VideoTextureFrame {
-    uint8_t* data = nullptr;
-    size_t   size = 0;
-    double   pts  = 0.0;
+    uint8_t* data     = nullptr;
+    size_t   size     = 0;
+    double   pts      = 0.0;
+    size_t   linesize = 0;
 };
 
 // TODO: add mutex for inter-thread clock syncing
@@ -45,7 +46,8 @@ public:
     static void        decodeThread(LibAVVideoDecoder* objptr);
     static const char* getError(int errorCode);
 
-    VideoState mVideoState;
+    VideoState                               mVideoState;
+    static SPSCRingBuffer<VideoTextureFrame> textureFrameQueue;
 
 private:
     AVFormatContext* mFmtCtx;
@@ -65,6 +67,5 @@ private:
 
     bool finished;
 
-    static SPSCRingBuffer<VideoTextureFrame> textureFrameQueue;
-    static char                              errorMsgBuffer[VIDEO_DECODER_ERROR_BUFFER_SIZE];
+    static char errorMsgBuffer[VIDEO_DECODER_ERROR_BUFFER_SIZE];
 };

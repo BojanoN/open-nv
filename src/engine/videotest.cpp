@@ -25,10 +25,10 @@ int main(void)
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
     glewInit();
-
+    glEnable(GL_TEXTURE_2D);
     VideoPlayer* player = new VideoPlayer();
 
-    if (player->open("test.mp4") < 0) {
+    if (player->open("test.bik") < 0) {
         log_error("Unable to open file!");
         SDL_GL_DeleteContext(context);
         SDL_DestroyWindow(window);

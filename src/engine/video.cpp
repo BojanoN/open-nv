@@ -5,15 +5,15 @@
 
 // clang-format off
 float VideoPlayer::vertices[16] = {
-    -1.0,  1.0, 0.0, 0.0,
-     1.0,  1.0, 1.0, 0.0,
-     1.0, -1.0, 1.0, 1.0,
-    -1.0, -1.0, 0.0, 1.0
+  -1.0f,  1.0f,  0.0f, 0.0f,
+  -1.0f, -1.0f,  0.0f, 1.0f,
+  1.0f, -1.0f,  1.0f, 1.0f,
+  1.0f,  1.0f,  1.0f, 0.0f
 };
 
 unsigned int VideoPlayer::elements[6] = {
      0, 1, 2,
-     2, 3, 0
+     0, 2, 3
 };
 // clang-format on
 
@@ -33,11 +33,12 @@ int VideoPlayer::open(const char* path)
 
     glGenBuffers(1, &mVBO);
     glBindBuffer(GL_ARRAY_BUFFER, mVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VideoPlayer::vertices), vertices, GL_STATIC_DRAW);
 
     glGenBuffers(1, &mEBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VideoPlayer::vertices), vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -55,7 +56,7 @@ int VideoPlayer::open(const char* path)
 
     glGenTextures(1, &mVideoFrameTexture);
     glBindTexture(GL_TEXTURE_2D, mVideoFrameTexture);
-
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, decoder.getWidth(), decoder.getHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -73,16 +74,21 @@ int VideoPlayer::open(const char* path)
 bool VideoPlayer::update()
 {
 
-    if (decoder.isFinished()) {
+    if (decoder.isFinished() && LibAVVideoDecoder::textureFrameQueue.empty()) {
         return false;
     }
 
     decoder.updateFrame(mCurrentTextureFrame);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glBindVertexArray(mVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mVideoFrameTexture);
+    videoShader.activate();
+    glUniform1i(glGetUniformLocation(videoShader.shaderProgramID, "videoFrame"), 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, decoder.getWidth(), decoder.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, mCurrentTextureFrame.data);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     return true;
 }
