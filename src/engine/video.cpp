@@ -5,8 +5,8 @@
 
 // clang-format off
 float VideoPlayer::vertices[16] = {
-  -1.0f,  1.0f,  0.0f, 0.0f,
-  -1.0f, -1.0f,  0.0f, 1.0f,
+ -1.0f,  1.0f,  0.0f, 0.0f,
+ -1.0f, -1.0f,  0.0f, 1.0f,
   1.0f, -1.0f,  1.0f, 1.0f,
   1.0f,  1.0f,  1.0f, 0.0f
 };
@@ -21,6 +21,10 @@ unsigned int VideoPlayer::elements[6] = {
 // every time we try to play a file
 VideoPlayer::VideoPlayer()
     : videoShader("./res/shader/video.vs", "./res/shader/video.fs")
+    // TODO: fetch the output values to match our current resolution
+    // possibly from a settings manager
+    , outputVideoParams(1920, 1080)
+    , decoder(outputVideoParams)
 
 {
 }
@@ -57,7 +61,7 @@ int VideoPlayer::open(const char* path)
     glGenTextures(1, &mVideoFrameTexture);
     glBindTexture(GL_TEXTURE_2D, mVideoFrameTexture);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, decoder.getWidth(), decoder.getHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, outputVideoParams.width, outputVideoParams.height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -74,7 +78,7 @@ int VideoPlayer::open(const char* path)
 bool VideoPlayer::update()
 {
 
-    if (decoder.isFinished() && LibAVVideoDecoder::textureFrameQueue.empty()) {
+    if (decoder.isFinished() && decoder.textureFrameQueue.empty()) {
         return false;
     }
 
@@ -87,7 +91,7 @@ bool VideoPlayer::update()
     videoShader.activate();
     glUniform1i(glGetUniformLocation(videoShader.shaderProgramID, "videoFrame"), 0);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, decoder.getWidth(), decoder.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, mCurrentTextureFrame.data);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, outputVideoParams.width, outputVideoParams.height, GL_RGB, GL_UNSIGNED_BYTE, mCurrentTextureFrame.data);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     return true;

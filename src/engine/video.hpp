@@ -11,7 +11,9 @@ public:
     bool update();
 
 private:
-    Shader            videoShader;
+    Shader          videoShader;
+    VideoParameters outputVideoParams;
+
     LibAVVideoDecoder decoder;
 
     GLuint mVAO;

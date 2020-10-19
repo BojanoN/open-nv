@@ -21,15 +21,19 @@ struct VideoTextureFrame {
     double   pts      = 0.0;
     size_t   linesize = 0;
 };
-
-// TODO: add mutex for inter-thread clock syncing
-// Video player class should only handle drawing
-
 struct VideoState {
-    double            lastFramePTS;
-    VideoTextureFrame currentTextureFrame;
-    Timer             videoClock;
-    std::mutex        stateMutex;
+    double lastFramePTS;
+};
+
+struct VideoParameters {
+    size_t width;
+    size_t height;
+
+    VideoParameters(size_t w, size_t h)
+        : width(w)
+        , height(h)
+    {
+    }
 };
 
 class LibAVVideoDecoder {
@@ -38,16 +42,16 @@ public:
     void updateFrame(VideoTextureFrame& dst);
     bool isFinished() { return finished; }
 
-    unsigned int getHeight();
-    unsigned int getWidth();
+    unsigned int getHeight() { return mOutputVideoParams.height; };
+    unsigned int getWidth() { return mOutputVideoParams.width; };
 
-    LibAVVideoDecoder();
+    LibAVVideoDecoder(VideoParameters& outputVideoPameters);
 
     static void        decodeThread(LibAVVideoDecoder* objptr);
     static const char* getError(int errorCode);
 
-    VideoState                               mVideoState;
-    static SPSCRingBuffer<VideoTextureFrame> textureFrameQueue;
+    VideoState                        mVideoState;
+    SPSCRingBuffer<VideoTextureFrame> textureFrameQueue;
 
 private:
     AVFormatContext* mFmtCtx;
@@ -64,6 +68,8 @@ private:
 
     int mVideoStreamIndex;
     int mAudioStreamIndex;
+
+    VideoParameters mOutputVideoParams;
 
     bool finished;
 

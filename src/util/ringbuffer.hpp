@@ -5,6 +5,8 @@
 #include <memory>
 #include <mutex>
 
+#include <iostream>
+
 class SPSCByteRingBuffer {
 public:
     explicit SPSCByteRingBuffer(size_t size)
@@ -177,15 +179,15 @@ public:
         this->buffer = std::make_unique<T[]>(size);
     }
 
-    int put(const T& elem)
+    int put(T& elem)
     {
 
         if (full()) {
             return -1;
         }
 
-        size_t tail   = mTail.load(std::memory_order_acquire);
-        buffer[mTail] = elem;
+        size_t tail  = mTail.load(std::memory_order_acquire);
+        buffer[tail] = elem;
         mTail.store((tail + 1) % capacity, std::memory_order_release);
         mCurrentSize.fetch_add(1, std::memory_order_acq_rel);
 
