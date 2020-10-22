@@ -21,7 +21,7 @@ private:
     GLuint mEBO;
     GLuint mVideoFrameTexture;
 
-    VideoTextureFrame mCurrentTextureFrame;
+    MediaFrame mCurrentTextureFrame;
 
     static float        vertices[16];
     static unsigned int elements[6];

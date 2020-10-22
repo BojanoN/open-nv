@@ -7,6 +7,12 @@
 #include <util/ringbuffer.hpp>
 #include <util/timer.hpp>
 
+extern "C" {
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alext.h>
+}
+
 #define VIDEO_DECODER_ERROR_BUFFER_SIZE 1024
 
 struct AVCodecContext;
@@ -14,12 +20,12 @@ struct AVFormatContext;
 struct AVPacket;
 struct AVFrame;
 struct SwsContext;
+struct SwrContext;
 
-struct VideoTextureFrame {
-    uint8_t* data     = nullptr;
-    size_t   size     = 0;
-    double   pts      = 0.0;
-    size_t   linesize = 0;
+struct MediaFrame {
+    uint8_t* data = nullptr;
+    size_t   size = 0;
+    double   pts  = 0.0;
 };
 struct VideoState {
     double lastFramePTS;
@@ -36,10 +42,21 @@ struct VideoParameters {
     }
 };
 
+enum class VideoSync {
+    AudioSync,
+    VideoSync,
+    ExternalSync
+};
+
+#define VIDEO_AUDIO_BUFFER_NO   8
+#define VIDEO_AUDIO_BUFFER_SIZE 8192
+
 class LibAVVideoDecoder {
 public:
-    int  open(const char* path);
-    void updateFrame(VideoTextureFrame& dst);
+    int open(const char* path);
+    int close() { return 42; }; // TODO:
+
+    void updateFrame(MediaFrame& dst);
     bool isFinished() { return finished; }
 
     unsigned int getHeight() { return mOutputVideoParams.height; };
@@ -47,24 +64,56 @@ public:
 
     LibAVVideoDecoder(VideoParameters& outputVideoPameters);
 
-    static void        decodeThread(LibAVVideoDecoder* objptr);
+    static void        videoDecodeThread(LibAVVideoDecoder* objptr);
+    static void        dispatchThread(LibAVVideoDecoder* obj);
     static const char* getError(int errorCode);
 
-    VideoState                        mVideoState;
-    SPSCRingBuffer<VideoTextureFrame> textureFrameQueue;
+    VideoState                 mVideoState;
+    SPSCRingBuffer<MediaFrame> textureFrameQueue;
+
+    SPSCRingBuffer<AVPacket*> videoPacketQueue;
 
 private:
+    class VideoAudioPlayer {
+    public:
+        VideoAudioPlayer();
+        int                       init(AVCodecContext* audioCodecContext);
+        void                      close();
+        static void               audioThread(VideoAudioPlayer* objptr);
+        SPSCRingBuffer<AVPacket*> audioPacketQueue;
+
+    private:
+        bool decodeAudioFrame();
+        int  bufferData(uint8_t* dst, size_t dstSize);
+
+        AVCodecContext* mAudioCodecCtx;
+        SwrContext*     mResampler;
+        AVFrame*        mFrame;
+        AVPacket*       mPacket;
+
+        uint8_t* mResampleBuffer;
+        size_t   mResampleBufferSize;
+
+        uint8_t decodedDataBuffer[VIDEO_AUDIO_BUFFER_SIZE] = { 0 };
+
+        ALuint mSource;
+        ALuint mBuffers[VIDEO_AUDIO_BUFFER_NO];
+
+        MediaFrame currentFrame;
+        size_t     mCurrentFrameReadPos;
+
+        bool finished;
+    };
+
+    VideoAudioPlayer audioPlayer;
+
+    VideoSync        syncType;
     AVFormatContext* mFmtCtx;
-
-    AVPacket* mPacket;
-    AVFrame*  mFrame;
-
-    SwsContext* mRescaler;
-    uint8_t*    mConversionBuffer;
-
-    AVCodecContext* mVideoCodecCtx;
-    AVFrame*        mConvertedFrame;
-    size_t          mConvertedFrameSize;
+    AVFrame*         mFrame;
+    SwsContext*      mRescaler;
+    AVCodecContext*  mVideoCodecCtx;
+    AVFrame*         mConvertedFrame;
+    size_t           mConvertedFrameSize;
 
     int mVideoStreamIndex;
     int mAudioStreamIndex;

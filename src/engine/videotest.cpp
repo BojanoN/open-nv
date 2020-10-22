@@ -1,4 +1,5 @@
 #include "video.hpp"
+#include "audio.hpp"
 
 #include <logc/log.h>
 
@@ -6,8 +7,15 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
-int main(void)
+int main(int argc, char** argv)
 {
+
+    if (argc != 2) {
+        log_error("Only one file needed");
+        return -1;
+    }
+
+    AudioEngine::init();
 
     SDL_Init(SDL_INIT_VIDEO);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -21,14 +29,14 @@ int main(void)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    SDL_Window*   window  = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    SDL_Window*   window  = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
     glewInit();
     glEnable(GL_TEXTURE_2D);
     VideoPlayer* player = new VideoPlayer();
 
-    if (player->open("test.bik") < 0) {
+    if (player->open(argv[1]) < 0) {
         log_error("Unable to open file!");
         SDL_GL_DeleteContext(context);
         SDL_DestroyWindow(window);
