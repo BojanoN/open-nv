@@ -29,6 +29,10 @@ struct MediaFrame {
 };
 struct VideoState {
     double lastFramePTS;
+    double videoClock;
+    double frameTimer;
+    double lastDelay;
+    Timer  clock;
 };
 
 struct VideoParameters {
@@ -56,8 +60,8 @@ public:
     int open(const char* path);
     int close() { return 42; }; // TODO:
 
-    void updateFrame(MediaFrame& dst);
-    bool isFinished() { return finished; }
+    unsigned int updateFrame(MediaFrame& dst);
+    bool         isFinished() { return finished; }
 
     unsigned int getHeight() { return mOutputVideoParams.height; };
     unsigned int getWidth() { return mOutputVideoParams.width; };
@@ -68,10 +72,10 @@ public:
     static void        dispatchThread(LibAVVideoDecoder* obj);
     static const char* getError(int errorCode);
 
-    VideoState                 mVideoState;
-    SPSCRingBuffer<MediaFrame> textureFrameQueue;
+    VideoState mVideoState;
 
-    SPSCRingBuffer<AVPacket*> videoPacketQueue;
+    SPSCRingBuffer<MediaFrame> textureFrameQueue;
+    SPSCRingBuffer<AVPacket*>  videoPacketQueue;
 
 private:
     class VideoAudioPlayer {
@@ -81,6 +85,7 @@ private:
         void                      close();
         static void               audioThread(VideoAudioPlayer* objptr);
         SPSCRingBuffer<AVPacket*> audioPacketQueue;
+        double                    lastAudioFramePTS;
 
     private:
         bool decodeAudioFrame();
@@ -119,6 +124,8 @@ private:
     int mAudioStreamIndex;
 
     VideoParameters mOutputVideoParams;
+
+    double timeBase;
 
     bool finished;
 

@@ -5,6 +5,7 @@ extern "C" {
 #include <libavformat/avformat.h>
 #include <libavutil/imgutils.h>
 #include <libavutil/opt.h>
+#include <libavutil/time.h>
 #include <libavutil/timestamp.h>
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
@@ -13,8 +14,11 @@ extern "C" {
 #include <logc/log.h>
 #include <thread>
 
-#define TEXFRAME_QUEUE_SIZE 32
+#define TEXFRAME_QUEUE_SIZE 48
 #define PACKET_QUEUE_SIZE   16
+
+#define AV_SYNC_THRESHOLD   0.01
+#define AV_NOSYNC_THRESHOLD 10.0
 
 LibAVVideoDecoder::LibAVVideoDecoder(VideoParameters& outputParameters)
     : textureFrameQueue(TEXFRAME_QUEUE_SIZE)
@@ -83,10 +87,11 @@ int LibAVVideoDecoder::open(const char* path)
         log_error("Couldn't find any audio streams in file: %s", path);
         return AVERROR_INVALIDDATA;
     }
-    syncType = VideoSync::VideoSync;
+
+    syncType = VideoSync::AudioSync;
 
     if (mAudioStreamIndex < 0) {
-        syncType = VideoSync::AudioSync;
+        syncType = VideoSync::VideoSync;
     }
 
     // Setup the video stream
@@ -117,6 +122,7 @@ int LibAVVideoDecoder::open(const char* path)
     }
 
     this->mVideoCodecCtx = pVideoCodecContext;
+    this->timeBase       = av_q2d(pVideoStream->time_base);
 
     // Setup the converted frame buffer
     mConvertedFrameSize = av_image_get_buffer_size(AV_PIX_FMT_RGB24, mOutputVideoParams.width,
@@ -181,14 +187,17 @@ int LibAVVideoDecoder::open(const char* path)
             return -1;
         }
     }
+
+    mVideoState.clock.start();
+    mVideoState.frameTimer = (double)av_gettime() / 1000000.0;
+    mVideoState.lastDelay  = 40e-3;
     // Start the dispatching thread
     std::thread dispatchThread(LibAVVideoDecoder::dispatchThread, this);
     dispatchThread.detach();
-
-    // Start the decoding threads
     std::thread videoThread(LibAVVideoDecoder::videoDecodeThread, this);
     videoThread.detach();
 
+    // Start the decoding threads
     std::thread audioThread(LibAVVideoDecoder::VideoAudioPlayer::audioThread, &this->audioPlayer);
     audioThread.detach();
 
@@ -218,29 +227,49 @@ void log_frame(AVFrame* pFrame, AVCodecContext* pCodecContext)
         pFrame->coded_picture_number,
         pFrame->display_picture_number);
 }
-
-void LibAVVideoDecoder::updateFrame(MediaFrame& frame)
+unsigned int LibAVVideoDecoder::updateFrame(MediaFrame& frame)
 {
-    if (this->textureFrameQueue.empty()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    uint8_t* oldData = frame.data;
-    if (!this->textureFrameQueue.get(frame)) {
-        return;
-    }
+    double audioClock = audioPlayer.lastAudioFramePTS;
+    log_info("%f, %f", frame.pts, audioClock);
 
+    while (this->textureFrameQueue.empty()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        //eturn;
+    }
+    uint8_t* oldData
+        = frame.data;
+    if (!this->textureFrameQueue.get(frame)) {
+        return 0;
+    }
     if (oldData != nullptr) {
         // Free allocated data from old frame
         av_free(oldData);
     }
+
+    // double audioClock;
+    double diff;
+    double syncThreshold;
+    double actualDelay;
+    double delay = frame.pts - mVideoState.lastFramePTS;
+
+    actualDelay = frame.pts - audioClock;
+
+    if (actualDelay - timeBase < 10E-7) {
+        actualDelay = timeBase;
+    }
+
+    log_info("Actual delay: %f", actualDelay);
+    log_info("Queue size: %u", audioPlayer.audioPacketQueue.mCurrentSize.load());
+
+    return (unsigned int)(actualDelay * 1000);
 }
 
 void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
 {
     AVPacket* packet = av_packet_alloc();
 
-    const int videoStreamIndex = obj->mVideoStreamIndex;
-    const int audioStreamIndex = obj->mAudioStreamIndex;
+    int videoStreamIndex = obj->mVideoStreamIndex;
+    int audioStreamIndex = obj->mAudioStreamIndex;
 
     bool audioQueueActive = true;
 
@@ -249,7 +278,6 @@ void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
 
     int ret;
 
-    // TODO: think about adding a routine for clearing leftover packets
     videoPacketQueue.reset();
     audioPacketQueue.reset();
 
@@ -268,20 +296,17 @@ void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
             av_packet_free(&packet);
             return;
         }
-
         if (audioQueueActive && packet->stream_index == audioStreamIndex) {
-            if (audioPacketQueue.full()) {
+            while (audioPacketQueue.full()) {
                 std::this_thread::sleep_for(std::chrono::microseconds(100));
-                if (audioPacketQueue.full()) {
-                    log_warn("Dispatch thread: Audio thread appears to have exited prematurely, skipping queue");
-                    audioQueueActive = false;
-                }
             }
+
             AVPacket* audioPacket = av_packet_clone(packet);
+            //log_packet(obj->mFmtCtx, packet);
+
             audioPacketQueue.put(audioPacket);
             av_packet_unref(packet);
         } else if (packet->stream_index == videoStreamIndex) {
-            //AVPacket* videoPacket = av_packet_ref(obj->mPacket);
             while (videoPacketQueue.full()) {
                 std::this_thread::sleep_for(std::chrono::microseconds(100));
             }
@@ -297,8 +322,8 @@ void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
 
 void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
 {
-    int          ret;
-    const double timeBaseDouble   = av_q2d(obj->mVideoCodecCtx->time_base);
+    int ret;
+    //    double       timeBaseDouble   = ;
     const size_t inputFrameHeight = obj->mVideoCodecCtx->height;
     AVPacket*    packet;
 
@@ -326,6 +351,7 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
             log_error("Video decoding thread: Error sending packet to decoder: %s", LibAVVideoDecoder::getError(ret));
             return;
         }
+        size_t dts = packet->dts;
         av_packet_unref(packet);
 
         // Decode all frames from the packet
@@ -339,7 +365,6 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
             if (ret == AVERROR(EAGAIN)) {
                 continue;
             }
-
             // TODO: avoid malloc and implement a custom allocator
             uint8_t* frameData = (uint8_t*)av_malloc(obj->mConvertedFrameSize);
             if (frameData == nullptr) {
@@ -363,28 +388,28 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
             frame.data = frameData;
             frame.size = obj->mConvertedFrameSize;
 
-            double pts = (packet->dts != AV_NOPTS_VALUE) ? obj->mFrame->best_effort_timestamp : 0.0;
-
+            double pts = obj->mFrame->best_effort_timestamp;
             // Multiply PTS with base time unit to get the actual time value
-            pts *= timeBaseDouble;
+            pts *= av_q2d(obj->mFmtCtx->streams[obj->mVideoStreamIndex]->time_base);
 
             // Update video state
             if (pts == 0.0) {
-                pts = obj->mVideoState.lastFramePTS;
+                pts = obj->mVideoState.videoClock;
             } else {
-                obj->mVideoState.lastFramePTS = pts;
+                obj->mVideoState.videoClock = pts;
             }
 
-            frame.pts = pts;
+            double frameDelay = obj->mFrame->repeat_pict * av_q2d(obj->mFmtCtx->streams[obj->mVideoStreamIndex]->time_base) * 0.5;
+            obj->mVideoState.videoClock += frameDelay;
+            frame.pts = obj->mVideoState.videoClock;
 
-            double frameDelay = obj->mFrame->repeat_pict * timeBaseDouble * 0.5;
+            //obj->mVideoState.videoClock;
 
             while (obj->textureFrameQueue.full()) {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
             }
 
             obj->textureFrameQueue.put(frame);
-            obj->mVideoState.lastFramePTS += frameDelay;
         } while (ret >= 0);
     }
 }
@@ -400,7 +425,7 @@ const char* LibAVVideoDecoder::getError(int errorCode)
 }
 
 LibAVVideoDecoder::VideoAudioPlayer::VideoAudioPlayer()
-    : audioPacketQueue(PACKET_QUEUE_SIZE)
+    : audioPacketQueue(256)
     , mAudioCodecCtx(nullptr)
     , mResampler(nullptr)
     , mFrame(nullptr)
@@ -475,7 +500,6 @@ bool LibAVVideoDecoder::VideoAudioPlayer::decodeAudioFrame()
 
         do {
             ret = avcodec_send_packet(mAudioCodecCtx, mPacket);
-            av_packet_unref(mPacket);
 
             if (ret < 0) {
                 this->finished = true;
@@ -487,7 +511,10 @@ bool LibAVVideoDecoder::VideoAudioPlayer::decodeAudioFrame()
                 this->finished = true;
                 return false;
             }
+
         } while (ret == AVERROR(EAGAIN));
+        av_packet_unref(mPacket);
+
     } else if (ret < 0) {
         log_error("Video player: Audio thread: %s", LibAVVideoDecoder::getError(ret));
         return false;
@@ -511,9 +538,14 @@ bool LibAVVideoDecoder::VideoAudioPlayer::decodeAudioFrame()
         return false;
     }
 
+    lastAudioFramePTS = av_q2d(mAudioCodecCtx->time_base) * mFrame->pts - (0.09 * (VIDEO_AUDIO_BUFFER_NO - 2));
+
+    if (lastAudioFramePTS < 0.) {
+        lastAudioFramePTS = 0.0;
+    }
+
     currentFrame.data = mResampleBuffer;
     currentFrame.size = dataSize * mFrame->channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
-
     return true;
 }
 
@@ -574,7 +606,6 @@ void LibAVVideoDecoder::VideoAudioPlayer::audioThread(VideoAudioPlayer* obj)
             break;
         }
     }
-
     alSourceQueueBuffers(mSource, i, mBuffers);
     alSourcePlay(mSource);
     if (alGetError() != AL_NO_ERROR) {
@@ -592,7 +623,7 @@ void LibAVVideoDecoder::VideoAudioPlayer::audioThread(VideoAudioPlayer* obj)
 
         bool endOfPlayback = false;
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(4));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
         /* Get relevant source info */
         alGetSourcei(mSource, AL_SOURCE_STATE, &state);

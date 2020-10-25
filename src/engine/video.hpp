@@ -10,6 +10,8 @@ public:
     int  open(const char* path);
     bool update();
 
+    static void scheduleVideoRefresh(unsigned int milliseconds);
+
 private:
     Shader          videoShader;
     VideoParameters outputVideoParams;

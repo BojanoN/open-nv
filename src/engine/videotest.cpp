@@ -46,6 +46,8 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    player->update();
+
     while (true) {
 
         SDL_Event event;
@@ -61,18 +63,17 @@ int main(int argc, char** argv)
 
                     return 0;
                 }
+            case SDL_USEREVENT:
+                if (!player->update()) {
+                    SDL_GL_DeleteContext(context);
+                    SDL_DestroyWindow(window);
+                    SDL_Quit();
+
+                    break;
+                }
+                SDL_GL_SwapWindow(window);
             }
         }
-
-        if (!player->update()) {
-            SDL_GL_DeleteContext(context);
-            SDL_DestroyWindow(window);
-            SDL_Quit();
-
-            break;
-        }
-
-        SDL_GL_SwapWindow(window);
     }
 
     delete player;

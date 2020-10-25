@@ -179,6 +179,11 @@ public:
         this->buffer = std::make_unique<T[]>(size);
     }
 
+    T& peek()
+    {
+        return buffer[mHead.load(std::memory_order_acq_rel)];
+    }
+
     int put(T& elem)
     {
 
@@ -222,11 +227,12 @@ public:
         mHead = mTail = 0;
         mCurrentSize  = 0;
     }
+    std::atomic<size_t> mCurrentSize;
 
 private:
     const size_t capacity;
 
-    std::atomic<size_t> mCurrentSize;
+    //    std::atomic<size_t> mCurrentSize;
     std::atomic<size_t> mHead;
     std::atomic<size_t> mTail;
 

@@ -2,6 +2,7 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <SDL2/SDL.h>
 
 // clang-format off
 float VideoPlayer::vertices[16] = {
@@ -75,6 +76,19 @@ int VideoPlayer::open(const char* path)
     return 0;
 };
 
+uint32_t sdl_refresh_timer_cb(uint32_t interval, void* asdf)
+{
+    SDL_Event event;
+    event.type = SDL_USEREVENT;
+    SDL_PushEvent(&event);
+    return 0; /* 0 means stop timer */
+}
+
+void VideoPlayer::scheduleVideoRefresh(unsigned int milliseconds)
+{
+    SDL_AddTimer(milliseconds, sdl_refresh_timer_cb, NULL);
+}
+
 bool VideoPlayer::update()
 {
 
@@ -82,7 +96,10 @@ bool VideoPlayer::update()
         return false;
     }
 
-    decoder.updateFrame(mCurrentTextureFrame);
+    unsigned int delay = decoder.updateFrame(mCurrentTextureFrame);
+
+    VideoPlayer::scheduleVideoRefresh(delay);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBindVertexArray(mVAO);
