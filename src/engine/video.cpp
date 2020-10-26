@@ -24,8 +24,8 @@ VideoPlayer::VideoPlayer()
     : videoShader("./res/shader/video.vs", "./res/shader/video.fs")
     // TODO: fetch the output values to match our current resolution
     // possibly from a settings manager
-    , decoder(1920, 1080)
     , outputVideoParams(1920, 1080)
+    , decoder(1920, 1080)
 
 {
 }

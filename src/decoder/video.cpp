@@ -68,7 +68,7 @@ int LibAVVideoDecoder::open(const char* path)
     this->mFmtCtx = pFormat;
 
     // Find first audio stream
-    for (int i = 0; i < pFormat->nb_streams; i++) {
+    for (unsigned int i = 0; i < pFormat->nb_streams; i++) {
         if (mAudioStreamIndex == -1 && pFormat->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
             mAudioStreamIndex = i;
         }
@@ -142,7 +142,7 @@ int LibAVVideoDecoder::open(const char* path)
 
     // Init rescaler
     // TODO: determine optimal sampling method via output resolution
-    int scalingAlg = ((pVideoCodecContext->width * pVideoCodecContext->height) > (mOutputVideoParams.width * mOutputVideoParams.height)) ? SWS_BICUBIC : SWS_BILINEAR;
+    int scalingAlg = ((unsigned long)(pVideoCodecContext->width * pVideoCodecContext->height) > (mOutputVideoParams.width * mOutputVideoParams.height)) ? SWS_BICUBIC : SWS_BILINEAR;
 
     mRescaler = sws_getContext(
         pVideoCodecContext->width,
@@ -350,8 +350,6 @@ void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
     int videoStreamIndex = obj->mVideoStreamIndex;
     int audioStreamIndex = obj->mAudioStreamIndex;
 
-    bool audioQueueActive = true;
-
     SPSCRingBuffer<AVPacket*>& videoPacketQueue = obj->videoPacketQueue;
     SPSCRingBuffer<AVPacket*>& audioPacketQueue = obj->audioPlayer.audioPacketQueue;
 
@@ -446,7 +444,6 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
             log_error("Video decoding thread: Error sending packet to decoder: %s", LibAV::getError(ret));
             return;
         }
-        size_t dts = packet->dts;
         av_packet_unref(packet);
 
         // Decode all frames from the packet

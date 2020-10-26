@@ -55,7 +55,7 @@ int LibAVDecoder::open(const char* path)
 
     // Find first audio stream
     int iAudioStreamIndex = -1;
-    for (int i = 0; i < pFormat->nb_streams; i++) {
+    for (unsigned int i = 0; i < pFormat->nb_streams; i++) {
         if (pFormat->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
             iAudioStreamIndex = i;
             break;
@@ -93,15 +93,7 @@ int LibAVDecoder::open(const char* path)
         return -1;
     }
 
-    this->mCodecCtx          = pCodecContext;
-    AVSampleFormat sampleFmt = (enum AVSampleFormat)mCodecCtx->sample_fmt;
-
-    /*
-    if (sampleFmt == AV_SAMPLE_FMT_FLTP) {
-        mOutSampleFormat = AV_SAMPLE_FMT_FLT;
-    } else {
-        mOutSampleFormat = sampleFmt;
-    }*/
+    this->mCodecCtx = pCodecContext;
 
     mOutSampleFormat = AV_SAMPLE_FMT_S16;
     mResampler       = swr_alloc_set_opts(NULL,
@@ -202,7 +194,7 @@ bool LibAVDecoder::decodeFrame()
         } while (ret == AVERROR(EAGAIN));
     }
 
-    if (!mResampleBuffer || mResampleBufferSize < mFrame->nb_samples) {
+    if (!mResampleBuffer || (int)mResampleBufferSize < mFrame->nb_samples) {
         av_freep(&mResampleBuffer);
         ret = av_samples_alloc(&mResampleBuffer, NULL, mFrame->channels, mFrame->nb_samples, mOutSampleFormat, 1);
 

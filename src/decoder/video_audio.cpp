@@ -65,7 +65,7 @@ int VideoAudioPlayer::init(AVCodecContext* audioCodecContext, AVStream* stream)
 
     int init = swr_init(mResampler);
 
-    return 0;
+    return init;
 }
 // TODO: fill buffer with silence to avoid spurious crackles
 bool VideoAudioPlayer::decodeAudioFrame()
@@ -113,7 +113,7 @@ bool VideoAudioPlayer::decodeAudioFrame()
         return false;
     }
     // log_frame(mFrame, mAudioCodecCtx);
-    if (!mResampleBuffer || mResampleBufferSize < mFrame->nb_samples) {
+    if (!mResampleBuffer || (int)mResampleBufferSize < mFrame->nb_samples) {
         av_freep(&mResampleBuffer);
         ret = av_samples_alloc(&mResampleBuffer, NULL, mFrame->channels, mFrame->nb_samples, AV_SAMPLE_FMT_S16, 1);
 
@@ -143,8 +143,7 @@ bool VideoAudioPlayer::decodeAudioFrame()
 
 inline int VideoAudioPlayer::bufferData(uint8_t* dst, size_t dstSize)
 {
-    size_t  got             = 0;
-    ssize_t decodedDataSize = 0;
+    size_t got = 0;
 
     while (got < dstSize) {
 
