@@ -24,8 +24,8 @@ VideoPlayer::VideoPlayer()
     : videoShader("./res/shader/video.vs", "./res/shader/video.fs")
     // TODO: fetch the output values to match our current resolution
     // possibly from a settings manager
-    , outputVideoParams(1280, 720)
-    , decoder(outputVideoParams)
+    , decoder(1920, 1080)
+    , outputVideoParams(1920, 1080)
 
 {
 }
@@ -52,7 +52,7 @@ int VideoPlayer::open(const char* path)
 
     int err = decoder.open(path);
     if (err < 0) {
-        log_error("Unable to open video file for decoding: %s", LibAVVideoDecoder::getError(err));
+        log_error("Unable to open video file for decoding");
         glDeleteBuffers(1, &mVBO);
         glDeleteBuffers(1, &mEBO);
         glDeleteVertexArrays(1, &mVAO);
@@ -76,17 +76,16 @@ int VideoPlayer::open(const char* path)
     return 0;
 };
 
-uint32_t sdl_refresh_timer_cb(uint32_t interval, void* asdf)
+void VideoPlayer::close()
 {
-    SDL_Event event;
-    event.type = SDL_USEREVENT;
-    SDL_PushEvent(&event);
-    return 0; /* 0 means stop timer */
-}
+    glDeleteBuffers(1, &mVBO);
+    glDeleteBuffers(1, &mEBO);
+    glDeleteVertexArrays(1, &mVAO);
 
-void VideoPlayer::scheduleVideoRefresh(unsigned int milliseconds)
-{
-    SDL_AddTimer(milliseconds, sdl_refresh_timer_cb, NULL);
+    glDeleteTextures(1, &mVideoFrameTexture);
+
+    decoder.close();
+    delete[] mCurrentTextureFrame.data;
 }
 
 bool VideoPlayer::update()
@@ -96,9 +95,7 @@ bool VideoPlayer::update()
         return false;
     }
 
-    unsigned int delay = decoder.updateFrame(mCurrentTextureFrame);
-
-    VideoPlayer::scheduleVideoRefresh(delay);
+    decoder.updateFrame(mCurrentTextureFrame);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

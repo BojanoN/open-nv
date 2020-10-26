@@ -8,9 +8,9 @@ public:
     VideoPlayer();
 
     int  open(const char* path);
-    bool update();
+    void close();
 
-    static void scheduleVideoRefresh(unsigned int milliseconds);
+    bool update();
 
 private:
     Shader          videoShader;
@@ -23,8 +23,7 @@ private:
     GLuint mEBO;
     GLuint mVideoFrameTexture;
 
-    MediaFrame mCurrentTextureFrame;
-
+    MediaFrame          mCurrentTextureFrame;
     static float        vertices[16];
     static unsigned int elements[6];
 };

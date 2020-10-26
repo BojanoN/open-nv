@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    SDL_Window*   window  = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    SDL_Window*   window  = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
     glewInit();
@@ -42,11 +42,11 @@ int main(int argc, char** argv)
         SDL_DestroyWindow(window);
         SDL_Quit();
 
+        AudioEngine::close();
+
         delete player;
         return -1;
     }
-
-    player->update();
 
     while (true) {
 
@@ -59,23 +59,28 @@ int main(int argc, char** argv)
                     SDL_DestroyWindow(window);
                     SDL_Quit();
 
+                    player->close();
+                    AudioEngine::close();
+
                     delete player;
 
                     return 0;
                 }
-            case SDL_USEREVENT:
-                if (!player->update()) {
-                    SDL_GL_DeleteContext(context);
-                    SDL_DestroyWindow(window);
-                    SDL_Quit();
-
-                    break;
-                }
-                SDL_GL_SwapWindow(window);
             }
         }
-    }
+        if (!player->update()) {
+            SDL_GL_DeleteContext(context);
+            SDL_DestroyWindow(window);
+            SDL_Quit();
 
+            player->close();
+
+            AudioEngine::close();
+
+            break;
+        }
+        SDL_GL_SwapWindow(window);
+    }
     delete player;
 
     return 0;

@@ -1,4 +1,5 @@
 #include "video.hpp"
+#include "av_utils.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -7,20 +8,18 @@ extern "C" {
 #include <libavutil/opt.h>
 #include <libavutil/time.h>
 #include <libavutil/timestamp.h>
-#include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 }
 
 #include <logc/log.h>
 #include <thread>
 
-#define TEXFRAME_QUEUE_SIZE 48
+#define TEXFRAME_QUEUE_SIZE 16
 #define PACKET_QUEUE_SIZE   16
 
-#define AV_SYNC_THRESHOLD   0.01
-#define AV_NOSYNC_THRESHOLD 10.0
+#define MIN_VIDEO_DELAY_SEC 0.01
 
-LibAVVideoDecoder::LibAVVideoDecoder(VideoParameters& outputParameters)
+LibAVVideoDecoder::LibAVVideoDecoder(size_t width, size_t height)
     : textureFrameQueue(TEXFRAME_QUEUE_SIZE)
     , videoPacketQueue(PACKET_QUEUE_SIZE)
     , mFmtCtx(nullptr)
@@ -31,7 +30,7 @@ LibAVVideoDecoder::LibAVVideoDecoder(VideoParameters& outputParameters)
     , mConvertedFrameSize(0)
     , mVideoStreamIndex(-1)
     , mAudioStreamIndex(-1)
-    , mOutputVideoParams(outputParameters)
+    , mOutputVideoParams(width, height)
     , finished(false)
 {
 }
@@ -42,11 +41,6 @@ int LibAVVideoDecoder::open(const char* path)
     av_log_set_level(AV_LOG_DEBUG);
 #endif
 
-    //av_init_packet(mPacket);
-
-    mFrame          = (AVFrame*)av_frame_alloc();
-    mConvertedFrame = (AVFrame*)av_frame_alloc();
-
     int err;
 
     // Get file format
@@ -55,14 +49,19 @@ int LibAVVideoDecoder::open(const char* path)
     err = avformat_open_input(&pFormat, path, NULL, NULL);
     if (err < 0) {
         log_error("Cannot open file %s: %s", path, strerror(errno));
+
         avformat_free_context(pFormat);
+
         return err;
     }
 
     err = avformat_find_stream_info(pFormat, NULL);
     if (err < 0) {
         log_error("Cannot retrieve stream information %s", path);
+
+        avformat_close_input(&pFormat);
         avformat_free_context(pFormat);
+
         return err;
     }
 
@@ -85,6 +84,8 @@ int LibAVVideoDecoder::open(const char* path)
 
     if (mVideoStreamIndex < 0) {
         log_error("Couldn't find any audio streams in file: %s", path);
+        avformat_close_input(&pFormat);
+        avformat_free_context(pFormat);
         return AVERROR_INVALIDDATA;
     }
 
@@ -103,6 +104,7 @@ int LibAVVideoDecoder::open(const char* path)
 
     if (cpVideoDecoder == NULL) {
         log_error("Couldnt find decoder for codecID: %d", pVideoCodecParams->codec_id);
+        avformat_close_input(&pFormat);
         avformat_free_context(pFormat);
         return AVERROR_DECODER_NOT_FOUND;
     }
@@ -116,6 +118,7 @@ int LibAVVideoDecoder::open(const char* path)
 
         avcodec_close(pVideoCodecContext);
         avcodec_free_context(&pVideoCodecContext);
+        avformat_close_input(&pFormat);
         avformat_free_context(pFormat);
 
         return err;
@@ -123,6 +126,10 @@ int LibAVVideoDecoder::open(const char* path)
 
     this->mVideoCodecCtx = pVideoCodecContext;
     this->timeBase       = av_q2d(pVideoStream->time_base);
+
+    // Allocate frames
+    mFrame          = (AVFrame*)av_frame_alloc();
+    mConvertedFrame = (AVFrame*)av_frame_alloc();
 
     // Setup the converted frame buffer
     mConvertedFrameSize = av_image_get_buffer_size(AV_PIX_FMT_RGB24, mOutputVideoParams.width,
@@ -135,6 +142,8 @@ int LibAVVideoDecoder::open(const char* path)
 
     // Init rescaler
     // TODO: determine optimal sampling method via output resolution
+    int scalingAlg = ((pVideoCodecContext->width * pVideoCodecContext->height) > (mOutputVideoParams.width * mOutputVideoParams.height)) ? SWS_BICUBIC : SWS_BILINEAR;
+
     mRescaler = sws_getContext(
         pVideoCodecContext->width,
         pVideoCodecContext->height,
@@ -142,11 +151,20 @@ int LibAVVideoDecoder::open(const char* path)
         mOutputVideoParams.width,
         mOutputVideoParams.height,
         AV_PIX_FMT_RGB24,
-        SWS_BILINEAR,
+        scalingAlg,
         NULL, NULL, NULL);
 
     if (mRescaler == NULL) {
         log_error("Cannot initialize rescaler");
+
+        avcodec_close(pVideoCodecContext);
+        avcodec_free_context(&pVideoCodecContext);
+        avformat_close_input(&pFormat);
+        avformat_free_context(pFormat);
+
+        av_frame_free(&mFrame);
+        av_frame_free(&mConvertedFrame);
+
         return -1;
     }
 
@@ -164,7 +182,17 @@ int LibAVVideoDecoder::open(const char* path)
 
         if (cpAudioDecoder == NULL) {
             log_error("Couldnt find decoder for codecID: %d", pAudioCodecParams->codec_id);
+
+            sws_freeContext(mRescaler);
+
+            avcodec_close(pVideoCodecContext);
+            avcodec_free_context(&pVideoCodecContext);
+            avformat_close_input(&pFormat);
             avformat_free_context(pFormat);
+
+            av_frame_free(&mFrame);
+            av_frame_free(&mConvertedFrame);
+
             return AVERROR_DECODER_NOT_FOUND;
         }
 
@@ -175,33 +203,87 @@ int LibAVVideoDecoder::open(const char* path)
         if (err < 0) {
             log_error("Couldn't open audio codec for file: %s", path);
 
+            sws_freeContext(mRescaler);
+
             avcodec_close(pVideoCodecContext);
             avcodec_free_context(&pVideoCodecContext);
+
+            avcodec_close(pAudioCodecContext);
+            avcodec_free_context(&pAudioCodecContext);
+            avformat_close_input(&pFormat);
             avformat_free_context(pFormat);
+
+            av_frame_free(&mFrame);
+            av_frame_free(&mConvertedFrame);
 
             return err;
         }
 
-        if (audioPlayer.init(pAudioCodecContext) < 0) {
+        if (audioPlayer.init(pAudioCodecContext, pAudioStream) < 0) {
             log_error("Unable to initialize audio player");
+
+            sws_freeContext(mRescaler);
+
+            avcodec_close(pVideoCodecContext);
+            avcodec_free_context(&pVideoCodecContext);
+
+            avcodec_close(pAudioCodecContext);
+            avcodec_free_context(&pAudioCodecContext);
+            avformat_close_input(&pFormat);
+            avformat_free_context(pFormat);
+
+            av_frame_free(&mFrame);
+            av_frame_free(&mConvertedFrame);
+
             return -1;
         }
     }
 
-    mVideoState.clock.start();
-    mVideoState.frameTimer = (double)av_gettime() / 1000000.0;
-    mVideoState.lastDelay  = 40e-3;
     // Start the dispatching thread
     std::thread dispatchThread(LibAVVideoDecoder::dispatchThread, this);
     dispatchThread.detach();
+
     std::thread videoThread(LibAVVideoDecoder::videoDecodeThread, this);
     videoThread.detach();
 
     // Start the decoding threads
-    std::thread audioThread(LibAVVideoDecoder::VideoAudioPlayer::audioThread, &this->audioPlayer);
+    std::thread audioThread(VideoAudioPlayer::audioThread, &this->audioPlayer);
     audioThread.detach();
 
     return 0;
+}
+
+void LibAVVideoDecoder::close()
+{
+    this->finished = true;
+
+    audioPlayer.close();
+
+    // Sleep a bit to make sure the threads dont segfault
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
+
+    AVPacket* leftover;
+
+    while (!videoPacketQueue.empty()) {
+        videoPacketQueue.get(leftover);
+        av_packet_free(&leftover);
+    }
+
+    MediaFrame leftoverTextureFrame;
+    while (!textureFrameQueue.empty()) {
+        textureFrameQueue.get(leftoverTextureFrame);
+        av_free(leftoverTextureFrame.data);
+    }
+
+    sws_freeContext(mRescaler);
+
+    avcodec_close(mVideoCodecCtx);
+    avcodec_free_context(&mVideoCodecCtx);
+    avformat_close_input(&mFmtCtx);
+    avformat_free_context(mFmtCtx);
+
+    av_frame_free(&mFrame);
+    av_frame_free(&mConvertedFrame);
 }
 
 void log_packet(const AVFormatContext* fmt_ctx, const AVPacket* pkt)
@@ -227,41 +309,38 @@ void log_frame(AVFrame* pFrame, AVCodecContext* pCodecContext)
         pFrame->coded_picture_number,
         pFrame->display_picture_number);
 }
-unsigned int LibAVVideoDecoder::updateFrame(MediaFrame& frame)
+
+void LibAVVideoDecoder::updateFrame(MediaFrame& frame)
 {
     double audioClock = audioPlayer.lastAudioFramePTS;
-    log_info("%f, %f", frame.pts, audioClock);
+    log_debug("%f, %f", frame.pts, audioClock);
 
     while (this->textureFrameQueue.empty()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        //eturn;
+        std::this_thread::sleep_for(std::chrono::milliseconds((int)(timeBase - MIN_VIDEO_DELAY_SEC)));
     }
-    uint8_t* oldData
-        = frame.data;
+
+    uint8_t* oldData = frame.data;
     if (!this->textureFrameQueue.get(frame)) {
-        return 0;
+        return;
     }
     if (oldData != nullptr) {
         // Free allocated data from old frame
         av_free(oldData);
     }
 
-    // double audioClock;
-    double diff;
-    double syncThreshold;
-    double actualDelay;
-    double delay = frame.pts - mVideoState.lastFramePTS;
+    double actualDelay = frame.pts - audioClock;
 
-    actualDelay = frame.pts - audioClock;
-
-    if (actualDelay - timeBase < 10E-7) {
-        actualDelay = timeBase;
+    if (actualDelay - (timeBase - MIN_VIDEO_DELAY_SEC) < 10E-7) {
+        actualDelay = timeBase - MIN_VIDEO_DELAY_SEC; //0.023;
     }
 
-    log_info("Actual delay: %f", actualDelay);
-    log_info("Queue size: %u", audioPlayer.audioPacketQueue.mCurrentSize.load());
+    log_debug("Actual delay: %f", actualDelay);
+    log_debug("Audio queue size: %u", audioPlayer.audioPacketQueue.mCurrentSize.load());
+    log_debug("Video queue size: %u", videoPacketQueue.mCurrentSize.load());
 
-    return (unsigned int)(actualDelay * 1000);
+    std::this_thread::sleep_for(std::chrono::milliseconds((unsigned int)(actualDelay * 1000)));
+
+    return;
 }
 
 void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
@@ -283,6 +362,11 @@ void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
 
     // Receive and dispatch packets
     do {
+
+        if (obj->finished) {
+            break;
+        }
+
         ret = av_read_frame(obj->mFmtCtx, packet);
         if (ret == AVERROR_EOF) {
             obj->finished = true;
@@ -291,25 +375,33 @@ void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
         }
 
         if (ret < 0) {
-            log_error("Dispatch thread: Error reading packet: %s", LibAVVideoDecoder::getError(ret));
+            log_error("Dispatch thread: Error reading packet: %s", LibAV::getError(ret));
             obj->finished = true;
             av_packet_free(&packet);
             return;
         }
-        if (audioQueueActive && packet->stream_index == audioStreamIndex) {
-            while (audioPacketQueue.full()) {
+
+        if (packet->stream_index == audioStreamIndex) {
+            while (audioPacketQueue.full() && !obj->finished) {
                 std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
+
+            if (obj->finished) {
+                break;
             }
 
             AVPacket* audioPacket = av_packet_clone(packet);
-            //log_packet(obj->mFmtCtx, packet);
-
             audioPacketQueue.put(audioPacket);
             av_packet_unref(packet);
         } else if (packet->stream_index == videoStreamIndex) {
-            while (videoPacketQueue.full()) {
+            while (videoPacketQueue.full() && !obj->finished) {
                 std::this_thread::sleep_for(std::chrono::microseconds(100));
             }
+
+            if (obj->finished) {
+                break;
+            }
+
             AVPacket* videoPacket = av_packet_clone(packet);
             videoPacketQueue.put(videoPacket);
             av_packet_unref(packet);
@@ -318,12 +410,15 @@ void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
             av_packet_unref(packet);
         }
     } while (true);
+
+    av_packet_free(&packet);
+
+    return;
 }
 
 void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
 {
-    int ret;
-    //    double       timeBaseDouble   = ;
+    int          ret;
     const size_t inputFrameHeight = obj->mVideoCodecCtx->height;
     AVPacket*    packet;
 
@@ -348,7 +443,7 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
         ret = avcodec_send_packet(obj->mVideoCodecCtx, packet);
         if (ret < 0) {
             obj->finished = true;
-            log_error("Video decoding thread: Error sending packet to decoder: %s", LibAVVideoDecoder::getError(ret));
+            log_error("Video decoding thread: Error sending packet to decoder: %s", LibAV::getError(ret));
             return;
         }
         size_t dts = packet->dts;
@@ -379,7 +474,7 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
                 obj->mFrame->linesize, 0, inputFrameHeight,
                 dst, obj->mConvertedFrame->linesize);
             if (ret < 0) {
-                log_error("Video decoding thread: Error rescaling: %s", LibAVVideoDecoder::getError(ret));
+                log_error("Video decoding thread: Error rescaling: %s", LibAV::getError(ret));
                 obj->finished = true;
                 break;
             }
@@ -392,18 +487,8 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
             // Multiply PTS with base time unit to get the actual time value
             pts *= av_q2d(obj->mFmtCtx->streams[obj->mVideoStreamIndex]->time_base);
 
-            // Update video state
-            if (pts == 0.0) {
-                pts = obj->mVideoState.videoClock;
-            } else {
-                obj->mVideoState.videoClock = pts;
-            }
-
             double frameDelay = obj->mFrame->repeat_pict * av_q2d(obj->mFmtCtx->streams[obj->mVideoStreamIndex]->time_base) * 0.5;
-            obj->mVideoState.videoClock += frameDelay;
-            frame.pts = obj->mVideoState.videoClock;
-
-            //obj->mVideoState.videoClock;
+            frame.pts         = pts - frameDelay;
 
             while (obj->textureFrameQueue.full()) {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));
@@ -413,279 +498,3 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
         } while (ret >= 0);
     }
 }
-
-const char* LibAVVideoDecoder::getError(int errorCode)
-{
-    int err = av_strerror(errorCode, LibAVVideoDecoder::errorMsgBuffer, VIDEO_DECODER_ERROR_BUFFER_SIZE);
-    if (err < 0) {
-        return "Unknown error code";
-    }
-
-    return (const char*)LibAVVideoDecoder::errorMsgBuffer;
-}
-
-LibAVVideoDecoder::VideoAudioPlayer::VideoAudioPlayer()
-    : audioPacketQueue(256)
-    , mAudioCodecCtx(nullptr)
-    , mResampler(nullptr)
-    , mFrame(nullptr)
-    , mPacket(nullptr)
-    , mResampleBuffer(nullptr)
-    , mResampleBufferSize(0)
-    , finished(false)
-{
-}
-
-int LibAVVideoDecoder::VideoAudioPlayer::init(AVCodecContext* audioCodecContext)
-{
-    alGenSources(1, &mSource);
-    if (alGetError() != AL_NO_ERROR) {
-        log_error("Unable to generate audio source");
-        return -1;
-    }
-    alSourcef(mSource, AL_PITCH, 1);
-
-    alGenBuffers(VIDEO_AUDIO_BUFFER_NO, mBuffers);
-    if (alGetError() != AL_NO_ERROR) {
-        log_error("Unable to generate audio buffer");
-        return -1;
-    }
-
-    if (audioCodecContext == nullptr) {
-        log_error("Error initializing video audio stream: AVCodecContext* nullptr");
-        return -1;
-    }
-    mAudioCodecCtx = audioCodecContext;
-
-    mFrame  = (AVFrame*)av_frame_alloc();
-    mPacket = av_packet_alloc();
-
-    mResampler = swr_alloc_set_opts(NULL,
-        mAudioCodecCtx->channel_layout,
-        AV_SAMPLE_FMT_S16,
-        48000,
-        mAudioCodecCtx->channel_layout,
-        mAudioCodecCtx->sample_fmt,
-        mAudioCodecCtx->sample_rate,
-        0,
-        nullptr);
-
-    int init = swr_init(mResampler);
-
-    return 0;
-}
-// TODO: fill buffer with silence to avoid spurious crackles
-bool LibAVVideoDecoder::VideoAudioPlayer::decodeAudioFrame()
-{
-    ssize_t dataSize;
-
-    if (finished) {
-        return false;
-    }
-
-    int ret = avcodec_receive_frame(mAudioCodecCtx, mFrame);
-
-    if (ret == AVERROR_EOF) {
-        this->finished = true;
-        return false;
-    } else if (ret == AVERROR(EAGAIN)) {
-        // The decoder is done with the previous packet, fetch and send a new one
-        if (audioPacketQueue.empty()) {
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
-        }
-        if (!audioPacketQueue.get(mPacket)) {
-            this->finished = true;
-            return false;
-        }
-
-        do {
-            ret = avcodec_send_packet(mAudioCodecCtx, mPacket);
-
-            if (ret < 0) {
-                this->finished = true;
-                log_error("Error sending packet to decoder");
-                return false;
-            }
-            ret = avcodec_receive_frame(mAudioCodecCtx, mFrame);
-            if (ret == AVERROR_EOF) {
-                this->finished = true;
-                return false;
-            }
-
-        } while (ret == AVERROR(EAGAIN));
-        av_packet_unref(mPacket);
-
-    } else if (ret < 0) {
-        log_error("Video player: Audio thread: %s", LibAVVideoDecoder::getError(ret));
-        return false;
-    }
-
-    if (!mResampleBuffer || mResampleBufferSize < mFrame->nb_samples) {
-        av_freep(&mResampleBuffer);
-        ret = av_samples_alloc(&mResampleBuffer, NULL, mFrame->channels, mFrame->nb_samples, AV_SAMPLE_FMT_S16, 1);
-
-        if (ret < 0) {
-            log_error("Video player: Audio thread: %s", LibAVVideoDecoder::getError(ret));
-            return false;
-        }
-
-        mResampleBufferSize = mFrame->nb_samples;
-    }
-
-    dataSize = swr_convert(mResampler, &mResampleBuffer, mFrame->nb_samples, (const uint8_t**)mFrame->extended_data, mFrame->nb_samples);
-
-    if (dataSize < 0) {
-        return false;
-    }
-
-    lastAudioFramePTS = av_q2d(mAudioCodecCtx->time_base) * mFrame->pts - (0.09 * (VIDEO_AUDIO_BUFFER_NO - 2));
-
-    if (lastAudioFramePTS < 0.) {
-        lastAudioFramePTS = 0.0;
-    }
-
-    currentFrame.data = mResampleBuffer;
-    currentFrame.size = dataSize * mFrame->channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
-    return true;
-}
-
-inline int LibAVVideoDecoder::VideoAudioPlayer::bufferData(uint8_t* dst, size_t dstSize)
-{
-    size_t  got             = 0;
-    ssize_t decodedDataSize = 0;
-
-    while (got < dstSize) {
-
-        if (mCurrentFrameReadPos >= currentFrame.size) {
-
-            if (!decodeAudioFrame()) {
-                break;
-            }
-            mCurrentFrameReadPos = 0;
-        }
-
-        size_t remaining = std::min<size_t>(dstSize - got, currentFrame.size - mCurrentFrameReadPos);
-
-        memcpy(dst, currentFrame.data + mCurrentFrameReadPos, remaining);
-        mCurrentFrameReadPos += remaining;
-        dst += remaining;
-        got += remaining;
-    }
-
-    return got;
-}
-
-void LibAVVideoDecoder::VideoAudioPlayer::audioThread(VideoAudioPlayer* obj)
-{
-    ALsizei i;
-
-    ALuint  mSource  = obj->mSource;
-    ALuint* mBuffers = obj->mBuffers;
-
-    alSourceRewind(mSource);
-    alSourcei(mSource, AL_BUFFER, 0);
-
-    bool endOfPlayback = false;
-
-    // Initial fill
-    /* Fill the buffer queue */
-    for (i = 0; i < VIDEO_AUDIO_BUFFER_NO; i++) {
-
-        size_t got = obj->bufferData(obj->decodedDataBuffer, VIDEO_AUDIO_BUFFER_SIZE);
-        if (got < VIDEO_AUDIO_BUFFER_SIZE) {
-            endOfPlayback = true;
-        }
-
-        alBufferData(mBuffers[i], AL_FORMAT_STEREO16, obj->decodedDataBuffer, got, 48000);
-        if (alGetError() != AL_NO_ERROR) {
-            log_error("Error buffering audio for playback");
-            return;
-        }
-
-        if (endOfPlayback) {
-            break;
-        }
-    }
-    alSourceQueueBuffers(mSource, i, mBuffers);
-    alSourcePlay(mSource);
-    if (alGetError() != AL_NO_ERROR) {
-        fprintf(stderr, "Error starting playback\n");
-        return;
-    }
-
-    if (endOfPlayback) {
-        obj->finished = true;
-        return;
-    }
-
-    while (true) {
-        ALint processed, state;
-
-        bool endOfPlayback = false;
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-
-        /* Get relevant source info */
-        alGetSourcei(mSource, AL_SOURCE_STATE, &state);
-        alGetSourcei(mSource, AL_BUFFERS_PROCESSED, &processed);
-
-        while (processed > 0) {
-            ALuint bufid;
-            alSourceUnqueueBuffers(mSource, 1, &bufid);
-
-            processed--;
-
-            size_t got = obj->bufferData(obj->decodedDataBuffer, VIDEO_AUDIO_BUFFER_SIZE);
-            if (got < VIDEO_AUDIO_BUFFER_SIZE) {
-                endOfPlayback = true;
-            }
-
-            alBufferData(bufid, AL_FORMAT_STEREO16, obj->decodedDataBuffer, got, 48000);
-            alSourceQueueBuffers(mSource, 1, &bufid);
-
-            if (alGetError() != AL_NO_ERROR) {
-                log_error("Error buffering audio data");
-                return;
-            }
-
-            if (endOfPlayback) {
-                break;
-            }
-        }
-
-        if (state != AL_PLAYING && state != AL_PAUSED) {
-
-            ALint queued;
-
-            alGetSourcei(mSource, AL_BUFFERS_QUEUED, &queued);
-            if (queued == 0) {
-                return;
-            }
-
-            alSourcePlay(mSource);
-            if (alGetError() != AL_NO_ERROR) {
-                return;
-            }
-        }
-    }
-    if (endOfPlayback) {
-        obj->finished = true;
-        return;
-    }
-}
-
-void LibAVVideoDecoder::VideoAudioPlayer::close()
-{
-    alDeleteSources(1, &mSource);
-    if (alGetError() != AL_NO_ERROR) {
-        log_error("Unable to delete audio source");
-        return;
-    }
-
-    alDeleteBuffers(VIDEO_AUDIO_BUFFER_NO, mBuffers);
-    if (alGetError() != AL_NO_ERROR) {
-        log_error("Unable to delete audio buffer");
-        return;
-    }
-}
-char LibAVVideoDecoder::errorMsgBuffer[VIDEO_DECODER_ERROR_BUFFER_SIZE] = { 0 };
