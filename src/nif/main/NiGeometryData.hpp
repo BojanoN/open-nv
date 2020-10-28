@@ -15,6 +15,12 @@ struct NiObject;
 #include <vector>
 struct AbstractAdditionalGeometryData;
 #include "AbstractAdditionalGeometryData.hpp"
+namespace SceneGraph {
+    class Node;
+    class GroupNode;
+};
+
+#include <scene_graph/node.hpp>
 #include <cstdint>
 
 struct NiGeometryData : public NiObject {
@@ -42,4 +48,6 @@ struct NiGeometryData : public NiObject {
     virtual ~NiGeometryData();
     static NiObject* create(NifReader& reader);
     virtual void     resolvePointers(NifData& data);
+
+    virtual Node* createLeafNode(Vector3 translation, Matrix33 rotation, float scale, uint32_t numProperties, NodeProperty* properties) = 0;
 };

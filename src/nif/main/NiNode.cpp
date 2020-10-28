@@ -15,3 +15,17 @@ void NiNode::resolvePointers(NifData& data) {
 this->children.resolve(data);
 this->effects.resolve(data);
 }
+
+
+Node* NiNode::createGraphNode() {
+	Node** nodeChildren = new Node*[numChildren];
+	for(unsigned int i = 0; i < numChildren; i++) {
+		nodeChildren[i] = children.get(i).createGraphNode();
+	}
+	NodeProperty* nodeProperties = new NodeProperty[numProperties];
+	for(unsigned int i = 0; i < numProperties; i++) {
+		nodeProperties[i] = properties.get(i).createNodeProperty();
+	}
+	return new GroupNode(translation, rotation, scale, numProperties, nodeProperties, numChildren, nodeChildren);
+}
+

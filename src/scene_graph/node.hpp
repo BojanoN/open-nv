@@ -59,12 +59,7 @@ public:
         , colour(1.)
         , dirty(false) {}*/
 
-    Node(Matrix44& transformFromParent, uint32_t numProperties, NodeProperty* properties) : mNumProperties{numProperties} {
-        mProperties = new NodeProperty[numProperties];
-        for(unsigned int i = 0; i < numProperties; i++) {
-            mProperties[i] = properties;
-        }
-    }
+    Node(Vector3 translation, Matrix33 rotation, float scale, uint32_t numProperties, NodeProperty* properties) : mNumProperties{numProperties}, mProperties{properties} {}
 
     virtual ~Node()
     {   
@@ -86,22 +81,16 @@ protected:
 
     uint32_t mNumProperties;
     NodeProperty* mProperties;
-    //Node** children;
 };
 
 
-class GraphNode : public Node {
+class GroupNode : public Node {
 
 public:
 
-    GraphNode(Matrix44& transformFromParent, uint32_t numChildren, Node** children) : Node(transformFromParent), mNumChildren{numChildren} {
-        mChildren = new Node*[numChildren];
-        for(unsigned int i = 0; i < numChildren; i++) {
-            mChildren[i] = children[i];
-        }
-    }
+    GroupNode(Vector3 translation, Matrix33 rotation, float scale, uint32_t numProperties, NodeProperty* properties, uint32_t numChildren, Node** children) : Node(translation, rotation, scale, numProperties, properties), mNumChildren{numChildren}, mChildren{children} {    }
 
-    virtual ~GraphNode() {
+    virtual ~GroupNode() {
         if(mChildren) {
             for (unsigned int i = 0; i < mNumChildren; i++) {
                 if(mChildren[i]) {
@@ -186,8 +175,8 @@ struct GeometryData {
 
 class LeafNode : public Node {
  public:
-  LeafNode(Matrix44& transformFromParent, GeometryData* geometryData)
-      : Node(transformFromParent), mGeometryData{geometryData} {
+  LeafNode(Vector3 translation, Matrix33 rotation, float scale, uint32_t numProperties, NodeProperty* properties, GeometryData* geometryData)
+      : Node(translation, rotation, scale, numProperties, properties), mGeometryData{geometryData} {
 
   }
 
@@ -205,7 +194,7 @@ class TriStripsNode : public LeafNode {
 
 public:
 
-    TriStripsNode(Matrix44& transformFromParent, GeometryData* geometryData, uint16_t numStrips, uint16_t* stripLengths, uint16_t** points) : LeafNode(transformFromParent, geometryData), mNumStrips{numStrips} {
+    TriStripsNode(Vector3 translation, Matrix33 rotation, float scale, uint32_t numProperties, NodeProperty* properties, GeometryData* geometryData, uint16_t numStrips, uint16_t* stripLengths, uint16_t** points) : LeafNode(translation, rotation, scale, geometryData), mNumStrips{numStrips} {
         mStripLengths = new uint16_t[numStrips];
         mPoints = new uint16_t*[numStrips];
         

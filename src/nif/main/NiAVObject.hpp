@@ -16,6 +16,15 @@ struct NiProperty;
 #include "NiProperty.hpp"
 struct NiCollisionObject;
 #include "NiCollisionObject.hpp"
+
+namespace SceneGraph {
+    class Node;
+    class GroupNode;
+};
+
+#include <scene_graph/node.hpp>
+
+
 #include <cstdint>
 
 struct NiAVObject : public NiObjectNET {
@@ -34,4 +43,5 @@ struct NiAVObject : public NiObjectNET {
 	virtual ~NiAVObject();
 	static NiObject* create(NifReader& reader);
 	virtual void resolvePointers(NifData& data);
+        virtual Node* createGraphNode() = 0;
 };

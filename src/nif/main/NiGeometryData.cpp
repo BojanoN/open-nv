@@ -90,3 +90,8 @@ void NiGeometryData::resolvePointers(NifData& data) {
 	}
 this->additionalData.resolve(data);
 }
+
+
+Node* NiGeometryData::createGeometryData() {
+	return new GeometryData(numVertices, &vertices[0], hasNormals ? &normals[0] : nullptr, hasNormals ? &tangents[0] : nullptr, hasNormals ? &bitangents[0] : nullptr, &uvSets[0], hasVertexColors ? &vertexColors[0] : nullptr);
+}

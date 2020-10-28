@@ -12,6 +12,12 @@
         class NifData;
         struct NiTriBasedGeom;
 #include "NiTriBasedGeom.hpp"
+namespace SceneGraph {
+    class Node;
+    class GroupNode;
+};
+
+#include <scene_graph/node.hpp>
 #include <cstdint>
 
 struct NiTriStrips : public NiTriBasedGeom {
@@ -23,4 +29,5 @@ struct NiTriStrips : public NiTriBasedGeom {
 	virtual ~NiTriStrips();
 	static NiObject* create(NifReader& reader);
 	virtual void resolvePointers(NifData& data);
+        virtual Node* createGraphNode();
 };
