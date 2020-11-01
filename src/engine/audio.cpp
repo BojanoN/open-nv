@@ -3,196 +3,233 @@
 #include <cstddef>
 #include <logc/log.h>
 #include <stdexcept>
+#include <thread>
+#include <unordered_set>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
+#define PLAY_QUEUE_SIZE 64
+
 bool AudioEngine::init()
 {
-    if (initialized) {
+    if (currentDevice.device) {
         return false;
     }
 
     const char* defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
-    currentDevice                 = alcOpenDevice(defaultDeviceName);
+    ALCdevice*  defaultDevice     = alcOpenDevice(defaultDeviceName);
 
-    if (!currentDevice) {
+    if (!defaultDevice) {
         log_error("Unable to open default device: %s", defaultDeviceName);
         return true;
     }
 
-    currentDeviceContext = alcCreateContext(currentDevice, NULL);
-    if (!alcMakeContextCurrent(currentDeviceContext)) {
+    ALCcontext* defaultDeviceContext = alcCreateContext(defaultDevice, NULL);
+    if (!alcMakeContextCurrent(defaultDeviceContext)) {
         log_error("Unable to make context for default device");
         return true;
     }
 
-    initialized = true;
+    ALCint defaultDeviceSampleRate;
+    alcGetIntegerv(defaultDevice, ALC_FREQUENCY, 1, &defaultDeviceSampleRate);
+
+    currentDevice.device        = defaultDevice;
+    currentDevice.deviceContext = defaultDeviceContext;
+    currentDevice.deviceName    = defaultDeviceName;
+    currentDevice.sampleRate    = defaultDeviceSampleRate;
+    // TODO: determine optimal buffer size
+    currentDevice.bufferSize = DEFAULT_DECODER_BUF_SIZE;
+    // TODO: query current format from settings
+    currentDevice.outputFormat = AL_FORMAT_STEREO16;
+    currentDevice.active       = true;
+
+    // TODO: spawn playing thread
 
     return false;
 }
 
+inline int updateStream(StreamPlayer* stream)
+{
+    ALint processed, streamState;
+
+    const AudioDevice& currentDevice = AudioEngine::getCurrentDevice();
+
+    DecoderMessage frameRequest;
+    frameRequest.messageType           = DecoderMessageType::FrameRequest;
+    frameRequest.messageData.contextID = stream->audioContext.ID;
+
+    AudioFrame* framePtr;
+
+    /* Get relevant source info */
+    alGetSourcei(stream->mSource, AL_SOURCE_STATE, &streamState);
+    alGetSourcei(stream->mSource, AL_BUFFERS_PROCESSED, &processed);
+
+    while (processed > 0) {
+        ALuint bufid;
+        alSourceUnqueueBuffers(stream->mSource, 1, &bufid);
+
+        processed--;
+
+        framePtr = stream->deviceBuffer.peek();
+        if (framePtr == nullptr) {
+            LibAVDecoder::messageQueue.put(frameRequest);
+            continue;
+        }
+
+        alBufferData(bufid, currentDevice.outputFormat, framePtr, DEFAULT_DECODER_BUF_SIZE, currentDevice.sampleRate);
+        if (alGetError() != AL_NO_ERROR) {
+            log_error("Error buffering audio data");
+            return -1;
+        }
+        alSourceQueueBuffers(stream->mSource, 1, &bufid);
+
+        stream->deviceBuffer.pop();
+        LibAVDecoder::messageQueue.put(frameRequest);
+    }
+
+    if (streamState != AL_PLAYING && streamState != AL_PAUSED) {
+        alSourcePlay(stream->mSource);
+        if (alGetError() != AL_NO_ERROR) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+inline int startStream(StreamPlayer* stream)
+{
+    alGenSources(1, &stream->mSource);
+    if (alGetError() != AL_NO_ERROR) {
+        log_error("Unable to generate audio source");
+        return -1;
+    }
+    alSourcef(stream->mSource, AL_PITCH, 1);
+
+    alGenBuffers(NO_BUFFERS, stream->mBuffers);
+    if (alGetError() != AL_NO_ERROR) {
+        log_error("Unable to generate audio buffer");
+        return -1;
+    }
+
+    ALsizei i;
+
+    alSourceRewind(stream->mSource);
+    alSourcei(stream->mSource, AL_BUFFER, 0);
+
+    const AudioDevice& currentDevice = AudioEngine::getCurrentDevice();
+
+    DecoderMessage frameRequest;
+    frameRequest.messageType           = DecoderMessageType::FrameRequest;
+    frameRequest.messageData.contextID = stream->audioContext.ID;
+
+    AudioFrame* framePtr;
+
+    /* Fill the buffer queue */
+    for (i = 0; i < NO_BUFFERS; i++) {
+        ALuint bufid = stream->mBuffers[i];
+
+        framePtr = stream->deviceBuffer.peek();
+        if (framePtr == nullptr) {
+            LibAVDecoder::messageQueue.put(frameRequest);
+            continue;
+        }
+
+        alBufferData(bufid, currentDevice.outputFormat, framePtr, DEFAULT_DECODER_BUF_SIZE, currentDevice.sampleRate);
+        if (alGetError() != AL_NO_ERROR) {
+            log_error("Error buffering audio for playback");
+            return -1;
+        }
+        alSourceQueueBuffers(stream->mSource, 1, &bufid);
+
+        stream->deviceBuffer.pop();
+        LibAVDecoder::messageQueue.put(frameRequest);
+
+        if (stream->audioContext.isFinished()) {
+            break;
+        }
+    }
+
+    alSourceQueueBuffers(stream->mSource, i, stream->mBuffers);
+    alSourcePlay(stream->mSource);
+    if (alGetError() != AL_NO_ERROR) {
+        fprintf(stderr, "Error starting playback\n");
+        return -1;
+    }
+    if (!stream->audioContext.isFinished()) {
+        stream->active = true;
+    }
+
+    return 0;
+}
+
+void AudioEngine::playingThread()
+{
+    std::unordered_set<StreamPlayer*> activeStreams {};
+
+    StreamPlayer* tmpPtr;
+    unsigned int  currentID = 0;
+
+    DecoderMessage message;
+
+    while (true) {
+
+        while (playThreadQueue.empty() && activeStreams.empty()) {
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
+        }
+
+        while (!playThreadQueue.empty()) {
+            playThreadQueue.get(tmpPtr);
+            activeStreams.insert(tmpPtr);
+
+            tmpPtr->audioContext.ID = currentID++;
+
+            message.messageType = DecoderMessageType::QueueAudioContext;
+            // TODO: consider separating the context from the stream using a pointer
+            message.messageData.audioContext = &tmpPtr->audioContext;
+            LibAVDecoder::messageQueue.put(message);
+        }
+
+        for (StreamPlayer* stream : activeStreams) {
+            if (!stream->active) {
+                // TODO: initial buffer fill
+                startStream(stream);
+                continue;
+            }
+            updateStream(stream);
+        }
+    }
+}
 void AudioEngine::close()
 {
     alcMakeContextCurrent(NULL);
-    alcDestroyContext(currentDeviceContext);
-    alcCloseDevice(currentDevice);
+    alcDestroyContext(currentDevice.deviceContext);
+    alcCloseDevice(currentDevice.device);
+    currentDevice.active = false;
 }
 
 StreamPlayer* AudioEngine::playFile(const char* path)
 {
-    StreamPlayer* ret = streamPlayerAllocator.alloc();
-
+    StreamPlayer* ret = new StreamPlayer();
     if (ret == nullptr) {
         return nullptr;
     }
 
-    if (ret->openFile(path) < 0) {
-        freeStreamPlayer(ret);
+    ret->audioContext.path = path;
+
+    if (!playThreadQueue.put(ret)) {
+        log_warn("Audio playing queue is full!");
+        delete ret;
         return nullptr;
     }
 
     return ret;
 }
 
-int StreamPlayer::openFile(const char* path)
-{
-    alGenSources(1, &mSource);
-    if (alGetError() != AL_NO_ERROR) {
-        log_error("Unable to generate audio source");
-        return -1;
-    }
-    alSourcef(mSource, AL_PITCH, 1);
-    alGenBuffers(1, &mBuffer);
-    if (alGetError() != AL_NO_ERROR) {
-        log_error("Unable to generate audio buffer");
-        return -1;
-    }
+const AudioDevice& AudioEngine::getCurrentDevice() { return AudioEngine::currentDevice; };
 
-    alGenBuffers(NO_BUFFERS, mBuffers);
-    if (alGetError() != AL_NO_ERROR) {
-        log_error("Unable to generate audio buffer");
-        return -1;
-    }
+AudioDevice AudioEngine::currentDevice {};
 
-    if (decoder.open(path) < 0) {
-        return -1;
-    }
-
-    active = true;
-
-    return 0;
-}
-
-Allocator::Pool<StreamPlayer> AudioEngine::streamPlayerAllocator(POOL_ALLOC_SIZE);
-
-bool StreamPlayer::update()
-{
-    ALint processed, state;
-
-    bool endOfPlayback = false;
-
-    /* Get relevant source info */
-    alGetSourcei(mSource, AL_SOURCE_STATE, &state);
-    alGetSourcei(mSource, AL_BUFFERS_PROCESSED, &processed);
-
-    while (processed > 0) {
-        ALuint bufid;
-        alSourceUnqueueBuffers(mSource, 1, &bufid);
-
-        processed--;
-
-        size_t got = decoder.decodeData(decodedDataBuffer, DEFAULT_DECODER_BUF_SIZE);
-        if (got < DEFAULT_DECODER_BUF_SIZE) {
-            endOfPlayback = true;
-        }
-
-        alBufferData(bufid, AL_FORMAT_STEREO16, decodedDataBuffer, got, 48000);
-        alSourceQueueBuffers(mSource, 1, &bufid);
-
-        if (alGetError() != AL_NO_ERROR) {
-            log_error("Error buffering audio data");
-            return false;
-        }
-
-        if (endOfPlayback) {
-            break;
-        }
-    }
-
-    if (state != AL_PLAYING && state != AL_PAUSED) {
-
-        ALint queued;
-
-        alGetSourcei(mSource, AL_BUFFERS_QUEUED, &queued);
-        if (queued == 0) {
-            return true;
-        }
-
-        alSourcePlay(mSource);
-        if (alGetError() != AL_NO_ERROR) {
-            return true;
-        }
-    }
-
-    return endOfPlayback;
-}
-
-bool StreamPlayer::start()
-{
-    ALsizei i;
-
-    alSourceRewind(mSource);
-    alSourcei(mSource, AL_BUFFER, 0);
-
-    bool endOfPlayback = false;
-
-    /* Fill the buffer queue */
-    for (i = 0; i < NO_BUFFERS; i++) {
-
-        size_t got = decoder.decodeData(decodedDataBuffer, DEFAULT_DECODER_BUF_SIZE);
-        if (got < DEFAULT_DECODER_BUF_SIZE) {
-            endOfPlayback = true;
-        }
-
-        alBufferData(mBuffers[i], AL_FORMAT_STEREO16, decodedDataBuffer, got, 48000);
-        if (alGetError() != AL_NO_ERROR) {
-            log_error("Error buffering audio for playback");
-            return true;
-        }
-
-        if (endOfPlayback) {
-            break;
-        }
-    }
-
-    alSourceQueueBuffers(mSource, i, mBuffers);
-    alSourcePlay(mSource);
-    if (alGetError() != AL_NO_ERROR) {
-        fprintf(stderr, "Error starting playback\n");
-        return true;
-    }
-
-    return endOfPlayback;
-}
-
-void StreamPlayer::close()
-{
-    if (active) {
-        alDeleteSources(1, &mSource);
-        alDeleteBuffers(NO_BUFFERS, mBuffers);
-        active = false;
-
-        decoder.close();
-    }
-}
-
-void AudioEngine::freeStreamPlayer(StreamPlayer* player)
-{
-    player->close();
-    return AudioEngine::streamPlayerAllocator.free(player);
-}
-bool        AudioEngine::initialized          = false;
-ALCdevice*  AudioEngine::currentDevice        = nullptr;
-ALCcontext* AudioEngine::currentDeviceContext = nullptr;
+SPSCRingBuffer<StreamPlayer*> AudioEngine::playThreadQueue { PLAY_QUEUE_SIZE };

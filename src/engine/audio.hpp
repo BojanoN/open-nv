@@ -8,37 +8,39 @@ extern "C" {
 
 #include <alloc/pool.hpp>
 #include <decoder/audio.hpp>
+#include <util/ringbuffer.hpp>
 
-#define DEFAULT_DECODER_BUF_SIZE 8096
-#define POOL_ALLOC_SIZE          16
-#define NO_BUFFERS               16
+#define POOL_ALLOC_SIZE 16
+#define NO_BUFFERS      8
+
+struct AudioDevice {
+    ALCdevice*  device        = nullptr;
+    ALCcontext* deviceContext = nullptr;
+
+    std::string  deviceName;
+    unsigned int sampleRate;
+    ALenum       outputFormat;
+    unsigned int bufferSize;
+
+    bool active = false;
+};
+
+class AudioEngine;
 
 class StreamPlayer {
 public:
     StreamPlayer()
         : mSource(0)
-        , mBuffer(0)
+        , deviceBuffer(NO_BUFFERS * 2)
         , active(false) {};
     ~StreamPlayer() {};
 
-    int openFile(const char* path);
-
-    static ALsizei AL_APIENTRY bufferCallbackStatic(void* objptr, void* data, ALsizei size);
-
-    ALsizei bufferCallback(void* data, ALsizei size);
-
-    bool update();
-    bool initCallback();
-    bool start();
-    void close();
-
-private:
-    uint8_t      decodedDataBuffer[DEFAULT_DECODER_BUF_SIZE] = { 0 };
-    ALuint       mSource;
-    ALuint       mBuffer;
-    ALuint       mBuffers[NO_BUFFERS];
-    LibAVDecoder decoder;
-    bool         active;
+    ALuint                     mSource;
+    ALuint                     mBuffers[NO_BUFFERS];
+    const int                  noBuffers = NO_BUFFERS;
+    SPSCRingBuffer<AudioFrame> deviceBuffer;
+    LibAVAudioContext          audioContext;
+    bool                       active;
 };
 
 class AudioEngine {
@@ -46,20 +48,18 @@ public:
     static bool init();
     static void close();
 
-    static StreamPlayer* playFile(const char* path);
+    static StreamPlayer*      playFile(const char* path);
+    static const AudioDevice& getCurrentDevice();
+
+    static void playingThread();
 
     AudioEngine(AudioEngine& other) = delete;
     void operator=(const AudioEngine&) = delete;
 
-    static void freeStreamPlayer(StreamPlayer* player);
-
     static AudioEngine* getInstance();
 
 private:
-    static ALCdevice*  currentDevice;
-    static ALCcontext* currentDeviceContext;
+    static AudioDevice currentDevice;
 
-    static bool initialized;
-
-    static Allocator::Pool<StreamPlayer> streamPlayerAllocator;
+    static SPSCRingBuffer<StreamPlayer*> playThreadQueue;
 };

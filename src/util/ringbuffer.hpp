@@ -5,12 +5,13 @@
 #include <memory>
 #include <mutex>
 
-#include <iostream>
+#include <logc/log.h>
 
 class SPSCByteRingBuffer {
 public:
     explicit SPSCByteRingBuffer(size_t size)
         : capacity(size)
+        , mCurrentSize(0)
         , mHead(0)
         , mTail(0)
     {
@@ -20,35 +21,32 @@ public:
     size_t write(uint8_t* arr, size_t size)
     {
         size_t written = 0;
-        size_t tail { mTail.load(std::memory_order_acquire) };
 
-        if (tail == (mHead.load(std::memory_order_acquire) - 1)) {
+        if (full()) {
             return 0;
         }
 
+        if (mCurrentSize.load(std::memory_order_relaxed) + size >= capacity) {
+            size -= capacity - mCurrentSize.load(std::memory_order_relaxed);
+        }
+
+        size_t tail { mTail.load(std::memory_order_relaxed) };
+
+        // Wrap tail if needed
         if (tail + size >= capacity) {
-            size_t sizeUntilEnd = (capacity - tail);
-            size -= sizeUntilEnd;
-            memcpy(&buffer[tail], arr, sizeUntilEnd);
+            size_t sizeUntilWrap = (capacity - tail);
+            size -= sizeUntilWrap;
+            memcpy(&buffer[tail], arr, sizeUntilWrap);
 
-            tail = 0;
-            written += sizeUntilEnd;
+            mTail.store(0, std::memory_order_acq_rel);
+            mCurrentSize.fetch_add(sizeUntilWrap, std::memory_order_acq_rel);
+            written += sizeUntilWrap;
         }
 
-        if (tail == (mHead.load(std::memory_order_acquire) - 1)) {
-            return written;
-        }
-
-        size_t head { mHead.load(std::memory_order_acquire) };
-        if (tail + size >= head) {
-            size = head - tail - 1;
-        }
-
-        memcpy(&buffer[tail], arr + written, size);
-        tail += size;
+        memcpy(&buffer[mTail.load(std::memory_order_acquire)], arr + written, size);
+        mTail.fetch_add(size, std::memory_order_acq_rel);
+        mCurrentSize.fetch_add(size, std::memory_order_acq_rel);
         written += size;
-
-        mTail.store(tail, std::memory_order_release);
 
         return written;
     }
@@ -56,43 +54,45 @@ public:
     size_t read(size_t readSize, uint8_t* dst)
     {
         size_t read = 0;
-        size_t head { mHead.load(std::memory_order_acquire) };
 
-        if (mTail.load(std::memory_order_acquire) == (head - 1)) {
+        if (empty()) {
             return 0;
         }
 
+        if (readSize > mCurrentSize.load(std::memory_order_relaxed)) {
+            readSize = mCurrentSize.load(std::memory_order_relaxed);
+        }
+
+        size_t head { mHead.load(std::memory_order_acquire) };
         if (head + readSize >= capacity) {
-            size_t sizeUntilEnd = capacity - head;
-            memcpy(dst, &buffer[head], sizeUntilEnd);
-            head = 0;
-            read += sizeUntilEnd;
+            size_t sizeUntilWrap = capacity - head;
+            readSize -= sizeUntilWrap;
+            memcpy(dst, &buffer[head], sizeUntilWrap);
+            mHead.store(0, std::memory_order_acq_rel);
+            read += sizeUntilWrap;
         }
 
-        if (mTail.load(std::memory_order_acquire) == (head - 1)) {
-            mHead.store(head, std::memory_order_release);
-            return read;
-        }
-
-        size_t tail { mTail.load(std::memory_order_acquire) };
-        if (head + (readSize - read) > tail) {
-            readSize -= (head - tail);
-        }
-
-        memcpy(dst, &buffer[head], readSize);
-
+        memcpy(dst, &buffer[mHead.load(std::memory_order_acquire)], readSize);
         mHead.store(head, std::memory_order_release);
+        read += readSize;
+
         return read;
     }
 
-    uint8_t* getPtr()
+    bool full()
     {
-        return buffer.get();
+        return mCurrentSize.load(std::memory_order_relaxed) >= capacity;
     }
 
-private:
+    bool empty()
+    {
+        return mCurrentSize.load(std::memory_order_relaxed) <= 0;
+    }
+
     const size_t capacity;
 
+private:
+    std::atomic<size_t> mCurrentSize;
     std::atomic<size_t> mHead;
     std::atomic<size_t> mTail;
 
@@ -144,11 +144,6 @@ public:
     bool empty() { return mCurrentSize == 0; }
     bool full() { return mCurrentSize == capacity; }
 
-    T* getPtr()
-    {
-        return buffer.get();
-    }
-
     void reset()
     {
         mHead = mTail = 0;
@@ -171,17 +166,46 @@ template <class T>
 class SPSCRingBuffer {
 public:
     explicit SPSCRingBuffer(size_t size)
-        : capacity(size)
-        , mCurrentSize(0)
+        : mCurrentSize(0)
+        , capacity(size)
         , mHead(0)
         , mTail(0)
     {
         this->buffer = std::make_unique<T[]>(size);
     }
 
-    T& peek()
+    T* peek()
     {
-        return buffer[mHead.load(std::memory_order_acq_rel)];
+        if (empty()) {
+            return nullptr;
+        }
+
+        return &buffer[mHead.load(std::memory_order_acq_rel)];
+    }
+
+    T* peekTail()
+    {
+        if (empty()) {
+            return nullptr;
+        }
+
+        return &buffer[mTail.load(std::memory_order_acq_rel)];
+    }
+
+    void incTail()
+    {
+        size_t tail = mTail.load(std::memory_order_acquire);
+        mTail.store((tail + 1) % capacity, std::memory_order_release);
+    }
+
+    void pop()
+    {
+        if (empty()) {
+            return;
+        }
+
+        size_t head = mHead.load(std::memory_order_acquire);
+        mHead.store((head + 1) % capacity, std::memory_order_release);
     }
 
     int put(T& elem)
@@ -190,7 +214,6 @@ public:
         if (full()) {
             return -1;
         }
-
         size_t tail  = mTail.load(std::memory_order_acquire);
         buffer[tail] = elem;
         mTail.store((tail + 1) % capacity, std::memory_order_release);
@@ -217,21 +240,15 @@ public:
     bool empty() { return mCurrentSize.load(std::memory_order_relaxed) == 0; }
     bool full() { return mCurrentSize.load(std::memory_order_relaxed) == capacity; }
 
-    T* getPtr()
-    {
-        return buffer.get();
-    }
-
     void reset()
     {
         mHead = mTail = 0;
         mCurrentSize  = 0;
     }
     std::atomic<size_t> mCurrentSize;
+    const size_t        capacity;
 
 private:
-    const size_t capacity;
-
     //    std::atomic<size_t> mCurrentSize;
     std::atomic<size_t> mHead;
     std::atomic<size_t> mTail;

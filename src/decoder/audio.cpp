@@ -7,51 +7,39 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
+#include "av_utils.hpp"
+#include <engine/audio.hpp>
 #include <logc/log.h>
 #include <util/ringbuffer.hpp>
 
-LibAVDecoder::~LibAVDecoder()
+#include <thread>
+#include <unordered_map>
+
+#define DEFAULT_AUDIO_SAMPLE_FMT AV_SAMPLE_FMT_S16
+#define MESSAGE_QUEUE_SIZE       64
+
+inline int openContext(LibAVAudioContext* ctx)
 {
-}
-
-LibAVDecoder::LibAVDecoder()
-    : mCodecCtx(nullptr)
-    , mFmtCtx(nullptr)
-    , mPacket(nullptr)
-    , mFrame(nullptr)
-    , mResampler(nullptr)
-    , mResampleBuffer(nullptr)
-    , mResampleBufferSize(0)
-    , finished(false)
-
-{
-#ifdef DEBUG
-    av_log_set_level(AV_LOG_DEBUG);
-#endif
-}
-
-int LibAVDecoder::open(const char* path)
-{
-
-    mPacket = av_packet_alloc();
-    av_init_packet(mPacket);
-    mFrame = (AVFrame*)av_frame_alloc();
-
+    const char* path = ctx->path;
+    int         err;
     // Get audio file format
     AVFormatContext* pFormat = avformat_alloc_context();
-    if (avformat_open_input(&pFormat, path, NULL, NULL) != 0) {
+
+    err = avformat_open_input(&pFormat, path, NULL, NULL);
+    if (err < 0) {
         log_error("Cannot open file %s: %s", path, strerror(errno));
         avformat_free_context(pFormat);
-        return -1;
+        return err;
     }
 
-    if (avformat_find_stream_info(pFormat, NULL) < 0) {
+    err = avformat_find_stream_info(pFormat, NULL);
+    if (err < 0) {
         log_error("Cannot retrieve stream information %s", path);
-        avformat_free_context(pFormat);
-        return -1;
-    }
 
-    this->mFmtCtx = pFormat;
+        avformat_close_input(&pFormat);
+        avformat_free_context(pFormat);
+        return err;
+    }
 
     // Find first audio stream
     int iAudioStreamIndex = -1;
@@ -64,8 +52,10 @@ int LibAVDecoder::open(const char* path)
 
     if (iAudioStreamIndex < 0) {
         log_error("Couldn't find any audio streams in file: %s", path);
+
+        avformat_close_input(&pFormat);
         avformat_free_context(pFormat);
-        return -1;
+        return AVERROR_INVALIDDATA;
     }
 
     AVStream* pStream = pFormat->streams[iAudioStreamIndex];
@@ -76,147 +66,220 @@ int LibAVDecoder::open(const char* path)
 
     if (cpDecoder == NULL) {
         log_error("Couldnt find decoder for codecID: %d", pCodecParams->codec_id);
+
+        avformat_close_input(&pFormat);
         avformat_free_context(pFormat);
-        return -1;
+        return AVERROR_DECODER_NOT_FOUND;
     }
 
     AVCodecContext* pCodecContext = avcodec_alloc_context3(cpDecoder);
     avcodec_parameters_to_context(pCodecContext, pCodecParams);
 
-    if (avcodec_open2(pCodecContext, cpDecoder, NULL) < 0) {
+    err = avcodec_open2(pCodecContext, cpDecoder, NULL);
+    if (err < 0) {
         log_error("Couldn't open codec for file: %s", path);
 
         avcodec_close(pCodecContext);
         avcodec_free_context(&pCodecContext);
+        avformat_close_input(&pFormat);
         avformat_free_context(pFormat);
 
-        return -1;
+        return err;
     }
 
-    this->mCodecCtx = pCodecContext;
+    ctx->mCodecCtx = pCodecContext;
+    ctx->mFmtCtx   = pFormat;
 
-    mOutSampleFormat = AV_SAMPLE_FMT_S16;
-    mResampler       = swr_alloc_set_opts(NULL,
-        mCodecCtx->channel_layout,
-        mOutSampleFormat,
-        48000,
-        mCodecCtx->channel_layout,
-        mCodecCtx->sample_fmt,
-        mCodecCtx->sample_rate,
+    unsigned int deviceSampleRate = AudioEngine::getCurrentDevice().sampleRate;
+
+    ctx->mResampler = swr_alloc_set_opts(NULL,
+        pCodecContext->channel_layout,
+        DEFAULT_AUDIO_SAMPLE_FMT,
+        deviceSampleRate,
+        pCodecContext->channel_layout,
+        pCodecContext->sample_fmt,
+        pCodecContext->sample_rate,
         0,
         nullptr);
 
-    int init = swr_init(mResampler);
-    if (init < 0) {
+    err = swr_init(ctx->mResampler);
+    if (err < 0) {
         avcodec_close(pCodecContext);
         avcodec_free_context(&pCodecContext);
+        avformat_close_input(&pFormat);
         avformat_free_context(pFormat);
-        log_error("Couldn't init software resampler: %s", path);
 
-        return -1;
+        log_error("Couldn't initialize software resampler: %s", path);
+
+        return err;
     }
+
+    ctx->mPacket = av_packet_alloc();
+    ctx->mFrame  = (AVFrame*)av_frame_alloc();
+    av_init_packet(ctx->mPacket);
+
     return 0;
 }
 
-void LibAVDecoder::close()
+inline void closeContext(LibAVAudioContext* ctx)
 {
-    if (this->mCodecCtx) {
-        avcodec_close(mCodecCtx);
-        avcodec_free_context(&mCodecCtx);
-    }
 
-    if (this->mFmtCtx) {
-        avformat_free_context(mFmtCtx);
-    }
+    av_frame_free(&ctx->mFrame);
+    av_packet_free(&ctx->mPacket);
 
-    av_frame_free(&mFrame);
+    avcodec_close(ctx->mCodecCtx);
+    avcodec_free_context(&ctx->mCodecCtx);
+    avformat_close_input(&ctx->mFmtCtx);
+    avformat_free_context(ctx->mFmtCtx);
+
+    swr_free(&ctx->mResampler);
 }
 
-bool LibAVDecoder::frameEmpty()
+inline int decodeFrame(LibAVAudioContext* ctx)
 {
-    return currentFrameInfo.currentOffset >= currentFrameInfo.size;
-}
+    ssize_t dataSize;
 
-inline int LibAVDecoder::decodeData(uint8_t* dst, size_t dstSize)
-{
-    size_t got = 0;
+    if (ctx->isFinished()) {
+        return -1;
+    }
 
-    while (got < dstSize) {
+    AVPacket* pPacket = ctx->mPacket;
+    AVFrame*  pFrame  = ctx->mFrame;
 
-        if (frameEmpty()) {
-            if (!decodeFrame()) {
-                break;
+    int ret = avcodec_receive_frame(ctx->mCodecCtx, pFrame);
+
+    if (ret == AVERROR_EOF) {
+        return false;
+    } else if (ret == AVERROR(EAGAIN)) {
+        // The decoder is done with the previous packet, send a new one
+        int ret = av_read_frame(ctx->mFmtCtx, ctx->mPacket);
+        do {
+            ret = avcodec_send_packet(ctx->mCodecCtx, pPacket);
+            av_packet_unref(pPacket);
+
+            if (ret < 0) {
+                log_error("Error sending packet to decoder");
+                return ret;
             }
-            currentFrameInfo.currentOffset = 0;
+            ret = avcodec_receive_frame(ctx->mCodecCtx, pFrame);
+            if (ret == AVERROR_EOF) {
+                return ret;
+            }
+        } while (ret == AVERROR(EAGAIN));
+    }
+
+    if (!ctx->mResampledFrame.data || (int)ctx->mResampledFrame.size < pFrame->nb_samples) {
+        av_freep(&ctx->mResampleBuffer);
+        ret = av_samples_alloc(&ctx->mResampleBuffer, NULL, pFrame->channels, pFrame->nb_samples, DEFAULT_AUDIO_SAMPLE_FMT, 1);
+
+        if (ret < 0) {
+            return ret;
         }
 
-        size_t remaining = std::min<size_t>(dstSize - got, currentFrameInfo.size - currentFrameInfo.currentOffset);
+        ctx->mResampleBufferSize = pFrame->nb_samples;
+    }
 
-        memcpy(dst, currentFrameInfo.data[0] + currentFrameInfo.currentOffset, remaining);
-        currentFrameInfo.currentOffset += remaining;
-        dst += remaining;
+    dataSize = swr_convert(ctx->mResampler, &ctx->mResampleBuffer, pFrame->nb_samples, (const uint8_t**)pFrame->extended_data, pFrame->nb_samples);
+    if (dataSize < 0) {
+        return ret;
+    }
+
+    ctx->mResampledFrame.size = dataSize * pFrame->channels * av_get_bytes_per_sample((enum AVSampleFormat)DEFAULT_AUDIO_SAMPLE_FMT);
+
+    return 0;
+}
+
+inline int decodeData(LibAVAudioContext* ctx, size_t dstSize)
+{
+    size_t     got          = 0;
+    FrameInfo& currentFrame = ctx->mResampledFrame;
+    int        err;
+
+    AudioFrame* dstFrame = ctx->deviceBuffer->peek();
+    if (dstFrame == nullptr) {
+        return -1;
+    }
+
+    uint8_t* dstBuffer = dstFrame->data;
+
+    while (got < dstSize) {
+        if (currentFrame.currentOffset >= currentFrame.size) {
+            err = decodeFrame(ctx);
+            if (err < 0) {
+                ctx->finished.store(true, std::memory_order_acq_rel);
+                break;
+            }
+            currentFrame.currentOffset = 0;
+        }
+
+        size_t remaining = std::min<size_t>(dstSize - got, currentFrame.size - currentFrame.currentOffset);
+
+        memcpy(dstBuffer, currentFrame.data + currentFrame.currentOffset, remaining);
+        dstBuffer += remaining;
+        currentFrame.currentOffset += remaining;
         got += remaining;
     }
 
     return got;
 }
 
-bool LibAVDecoder::decodeFrame()
+void LibAVDecoder::decodeThread()
 {
-    ssize_t dataSize;
 
-    if (finished) {
-        return false;
-    }
+#ifdef DEBUG
+    av_log_set_level(AV_LOG_DEBUG);
+#endif
 
-    int ret = avcodec_receive_frame(mCodecCtx, mFrame);
+    // TODO: pool allocator for LibAVAudioContext structs
+    std::unordered_map<unsigned int, LibAVAudioContext*> currentAudioContexts {};
+    DecoderMessage                                       currentMessage;
 
-    if (ret == AVERROR_EOF) {
-        this->finished = true;
-        return false;
-    } else if (ret == AVERROR(EAGAIN)) {
-        // The decoder is done with the previous packet, send a new one
-        int ret = av_read_frame(mFmtCtx, mPacket);
-        do {
-            ret = avcodec_send_packet(mCodecCtx, mPacket);
-            av_packet_unref(mPacket);
+    log_info("Audio decoding thread: starting...");
 
-            if (ret < 0) {
-                this->finished = true;
-                log_error("Error sending packet to decoder");
-                return false;
-            }
-            ret = avcodec_receive_frame(mCodecCtx, mFrame);
-            if (ret == AVERROR_EOF) {
-                this->finished = true;
-                return false;
-            }
-        } while (ret == AVERROR(EAGAIN));
-    }
-
-    if (!mResampleBuffer || (int)mResampleBufferSize < mFrame->nb_samples) {
-        av_freep(&mResampleBuffer);
-        ret = av_samples_alloc(&mResampleBuffer, NULL, mFrame->channels, mFrame->nb_samples, mOutSampleFormat, 1);
-
-        if (ret < 0) {
-            return false;
+    while (true) {
+        while (messageQueue.empty()) {
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
 
-        mResampleBufferSize = mFrame->nb_samples;
+        messageQueue.get(currentMessage);
+        switch (currentMessage.messageType) {
+        case DecoderMessageType::FrameRequest: {
+            auto entry = currentAudioContexts.find(currentMessage.messageData.contextID);
+            if (entry == currentAudioContexts.end()) {
+                // ignore bogus requests
+                break;
+            }
+            LibAVAudioContext* ctx = entry->second;
+
+            decodeData(ctx, DEFAULT_DECODER_BUF_SIZE);
+            if (ctx->isFinished()) {
+                currentAudioContexts.erase(ctx->ID);
+                closeContext(ctx);
+            }
+            break;
+        }
+        case DecoderMessageType::QueueAudioContext: {
+            // TODO: cache files in memory to avoid IO overhead
+            LibAVAudioContext* ctx = currentMessage.messageData.audioContext;
+
+            int err = openContext(ctx);
+            if (err < 0) {
+                log_error("Audio decoding thread: Unable to open audio context %u: %s", ctx->ID, LibAV::getError(err));
+                break;
+            }
+
+            // Fill whole buffer
+            decodeData(ctx, ctx->deviceBuffer->capacity);
+            if (!ctx->isFinished()) {
+                currentAudioContexts.erase(ctx->ID);
+                closeContext(ctx);
+            }
+            currentAudioContexts[ctx->ID] = ctx;
+
+            break;
+        }
+        }
     }
-
-    dataSize = swr_convert(mResampler, &mResampleBuffer, mFrame->nb_samples, (const uint8_t**)mFrame->extended_data, mFrame->nb_samples);
-
-    if (dataSize < 0) {
-        return false;
-    }
-
-    currentFrameInfo.data = &mResampleBuffer;
-    currentFrameInfo.size = dataSize * mFrame->channels * av_get_bytes_per_sample((enum AVSampleFormat)mOutSampleFormat);
-
-    return true;
 }
-unsigned int LibAVDecoder::getSampleRate()
-{
-    return mFrame->sample_rate;
-}
+
+SPSCRingBuffer<DecoderMessage> LibAVDecoder::messageQueue { MESSAGE_QUEUE_SIZE };
