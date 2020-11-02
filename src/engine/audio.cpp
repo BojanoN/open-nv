@@ -144,7 +144,6 @@ inline int startStream(StreamPlayer* stream)
 
     /* Fill the buffer queue */
     for (i = 0; i < NO_BUFFERS; i++) {
-        ALuint bufid = stream->mBuffers[i];
 
         framePtr = stream->deviceBuffer.peek();
         if (framePtr == nullptr) {
@@ -152,12 +151,11 @@ inline int startStream(StreamPlayer* stream)
             continue;
         }
 
-        alBufferData(bufid, currentDevice.outputFormat, framePtr->data, DEFAULT_DECODER_BUF_SIZE, currentDevice.sampleRate);
+        alBufferData(stream->mBuffers[i], currentDevice.outputFormat, framePtr->data, DEFAULT_DECODER_BUF_SIZE, currentDevice.sampleRate);
         if (alGetError() != AL_NO_ERROR) {
             log_error("Error buffering audio for playback");
             return -1;
         }
-        alSourceQueueBuffers(stream->mSource, 1, &bufid);
 
         stream->deviceBuffer.pop();
         LibAVDecoder::messageQueue.put(frameRequest);
