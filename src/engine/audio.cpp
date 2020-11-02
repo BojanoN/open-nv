@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <thread>
 #include <unordered_set>
+#include <vector>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -45,7 +46,10 @@ bool AudioEngine::init()
     currentDevice.outputFormat = AL_FORMAT_STEREO16;
     currentDevice.active       = true;
 
-    // TODO: spawn playing thread
+    LibAVDecoder::init();
+
+    std::thread playThread(playingThread);
+    playThread.detach();
 
     return false;
 }
@@ -78,9 +82,10 @@ inline int updateStream(StreamPlayer* stream)
             continue;
         }
 
-        alBufferData(bufid, currentDevice.outputFormat, framePtr, DEFAULT_DECODER_BUF_SIZE, currentDevice.sampleRate);
+        alBufferData(bufid, currentDevice.outputFormat, framePtr->data, DEFAULT_DECODER_BUF_SIZE, currentDevice.sampleRate);
         if (alGetError() != AL_NO_ERROR) {
             log_error("Error buffering audio data");
+            stream->active = false;
             return -1;
         }
         alSourceQueueBuffers(stream->mSource, 1, &bufid);
@@ -90,8 +95,18 @@ inline int updateStream(StreamPlayer* stream)
     }
 
     if (streamState != AL_PLAYING && streamState != AL_PAUSED) {
+
+        ALint queued;
+
+        alGetSourcei(stream->mSource, AL_BUFFERS_QUEUED, &queued);
+        if (queued == 0 && stream->audioContext.isFinished()) {
+            stream->active = false;
+            return -1;
+        }
+
         alSourcePlay(stream->mSource);
         if (alGetError() != AL_NO_ERROR) {
+            stream->active = false;
             return -1;
         }
     }
@@ -137,7 +152,7 @@ inline int startStream(StreamPlayer* stream)
             continue;
         }
 
-        alBufferData(bufid, currentDevice.outputFormat, framePtr, DEFAULT_DECODER_BUF_SIZE, currentDevice.sampleRate);
+        alBufferData(bufid, currentDevice.outputFormat, framePtr->data, DEFAULT_DECODER_BUF_SIZE, currentDevice.sampleRate);
         if (alGetError() != AL_NO_ERROR) {
             log_error("Error buffering audio for playback");
             return -1;
@@ -153,26 +168,41 @@ inline int startStream(StreamPlayer* stream)
     }
 
     alSourceQueueBuffers(stream->mSource, i, stream->mBuffers);
+    if (alGetError() != AL_NO_ERROR) {
+        fprintf(stderr, "Error starting playback\n");
+        return -1;
+    }
     alSourcePlay(stream->mSource);
     if (alGetError() != AL_NO_ERROR) {
         fprintf(stderr, "Error starting playback\n");
         return -1;
     }
-    if (!stream->audioContext.isFinished()) {
-        stream->active = true;
-    }
+
+    stream->active = true;
 
     return 0;
+}
+
+inline void closeStream(StreamPlayer* stream)
+{
+
+    alDeleteSources(1, &stream->mSource);
+    alDeleteBuffers(NO_BUFFERS, stream->mBuffers);
+
+    stream->active = false;
 }
 
 void AudioEngine::playingThread()
 {
     std::unordered_set<StreamPlayer*> activeStreams {};
+    std::vector<StreamPlayer*>        deletionQueue {};
 
     StreamPlayer* tmpPtr;
     unsigned int  currentID = 0;
 
     DecoderMessage message;
+
+    log_info("Audio playing thread: starting...");
 
     while (true) {
 
@@ -183,22 +213,48 @@ void AudioEngine::playingThread()
         while (!playThreadQueue.empty()) {
             playThreadQueue.get(tmpPtr);
             activeStreams.insert(tmpPtr);
+            // tmpPtr->active = true;
 
             tmpPtr->audioContext.ID = currentID++;
 
             message.messageType = DecoderMessageType::QueueAudioContext;
             // TODO: consider separating the context from the stream using a pointer
             message.messageData.audioContext = &tmpPtr->audioContext;
+
+            tmpPtr->audioContext.deviceBuffer = &tmpPtr->deviceBuffer;
+
             LibAVDecoder::messageQueue.put(message);
         }
 
         for (StreamPlayer* stream : activeStreams) {
             if (!stream->active) {
                 // TODO: initial buffer fill
-                startStream(stream);
+                if (startStream(stream) < 0) {
+                    deletionQueue.push_back(stream);
+                    closeStream(stream);
+                    continue;
+                }
                 continue;
             }
-            updateStream(stream);
+
+            if (updateStream(stream) < 0) {
+                deletionQueue.push_back(stream);
+                closeStream(stream);
+                continue;
+            }
+
+            if (!stream->active) {
+                deletionQueue.push_back(stream);
+                closeStream(stream);
+            }
+        }
+        if (!deletionQueue.empty()) {
+            for (StreamPlayer* stream : deletionQueue) {
+                activeStreams.erase(stream);
+                delete stream;
+            }
+
+            deletionQueue.clear();
         }
     }
 }
@@ -218,6 +274,7 @@ StreamPlayer* AudioEngine::playFile(const char* path)
     }
 
     ret->audioContext.path = path;
+    //ret->active            = true;
 
     if (!playThreadQueue.put(ret)) {
         log_warn("Audio playing queue is full!");

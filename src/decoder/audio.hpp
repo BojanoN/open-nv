@@ -27,17 +27,17 @@ struct AudioFrame {
 struct LibAVAudioContext {
     bool isFinished() { return this->finished.load(std::memory_order_relaxed); };
 
-    AVCodecContext*             mCodecCtx;
-    AVFormatContext*            mFmtCtx;
-    AVPacket*                   mPacket;
-    AVFrame*                    mFrame;
-    SwrContext*                 mResampler;
-    uint8_t*                    mResampleBuffer;
-    size_t                      mResampleBufferSize;
+    AVCodecContext*             mCodecCtx           = nullptr;
+    AVFormatContext*            mFmtCtx             = nullptr;
+    AVPacket*                   mPacket             = nullptr;
+    AVFrame*                    mFrame              = nullptr;
+    SwrContext*                 mResampler          = nullptr;
+    uint8_t*                    mResampleBuffer     = nullptr;
+    size_t                      mResampleBufferSize = 0;
     FrameInfo                   mResampledFrame;
-    SPSCRingBuffer<AudioFrame>* deviceBuffer;
-    std::atomic<bool>           finished;
-    unsigned int                ID;
+    SPSCRingBuffer<AudioFrame>* deviceBuffer = nullptr;
+    std::atomic<bool>           finished     = false;
+    unsigned int                ID           = 0;
 
     const char* path;
 };
@@ -57,7 +57,10 @@ struct DecoderMessage {
 
 class LibAVDecoder {
 public:
-    static void decodeThread();
+    static void init();
 
     static SPSCRingBuffer<DecoderMessage> messageQueue;
+
+private:
+    static void decodeThread();
 };

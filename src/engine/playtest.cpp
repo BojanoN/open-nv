@@ -12,9 +12,9 @@ int main(void)
     if (AudioEngine::init()) {
         return -1;
     }
-    /*
-    StreamPlayer* player = AudioEngine::playFile("test.mp3");
 
+    StreamPlayer* player = AudioEngine::playFile("test.mp3");
+    /*
     if (player == nullptr) {
         return -2;
     }
@@ -32,5 +32,10 @@ int main(void)
 
     log_info("Finished playback");
     */
+
+    do {
+        std::this_thread::sleep_for(std::chrono::milliseconds(4));
+    } while (true);
+
     return 0;
 }

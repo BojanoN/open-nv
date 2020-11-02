@@ -118,6 +118,8 @@ inline int openContext(LibAVAudioContext* ctx)
     ctx->mFrame  = (AVFrame*)av_frame_alloc();
     av_init_packet(ctx->mPacket);
 
+    ctx->finished.store(false, std::memory_order_relaxed);
+
     return 0;
 }
 
@@ -168,7 +170,8 @@ inline int decodeFrame(LibAVAudioContext* ctx)
         } while (ret == AVERROR(EAGAIN));
     }
 
-    if (!ctx->mResampledFrame.data || (int)ctx->mResampledFrame.size < pFrame->nb_samples) {
+    if (!ctx->mResampleBuffer || (int)ctx->mResampleBufferSize < pFrame->nb_samples) {
+
         av_freep(&ctx->mResampleBuffer);
         ret = av_samples_alloc(&ctx->mResampleBuffer, NULL, pFrame->channels, pFrame->nb_samples, DEFAULT_AUDIO_SAMPLE_FMT, 1);
 
@@ -185,6 +188,7 @@ inline int decodeFrame(LibAVAudioContext* ctx)
     }
 
     ctx->mResampledFrame.size = dataSize * pFrame->channels * av_get_bytes_per_sample((enum AVSampleFormat)DEFAULT_AUDIO_SAMPLE_FMT);
+    ctx->mResampledFrame.data = ctx->mResampleBuffer;
 
     return 0;
 }
@@ -220,7 +224,16 @@ inline int decodeData(LibAVAudioContext* ctx, size_t dstSize)
         got += remaining;
     }
 
+    ctx->deviceBuffer->incTail();
+
     return got;
+}
+
+void initialBufferFill(LibAVAudioContext* ctx)
+{
+    for (unsigned int i = 0; i < ctx->deviceBuffer->capacity; i++) {
+        decodeData(ctx, DEFAULT_DECODER_BUF_SIZE);
+    }
 }
 
 void LibAVDecoder::decodeThread()
@@ -269,17 +282,25 @@ void LibAVDecoder::decodeThread()
             }
 
             // Fill whole buffer
-            decodeData(ctx, ctx->deviceBuffer->capacity);
-            if (!ctx->isFinished()) {
+            initialBufferFill(ctx);
+            if (ctx->isFinished()) {
                 currentAudioContexts.erase(ctx->ID);
                 closeContext(ctx);
+                break;
             }
             currentAudioContexts[ctx->ID] = ctx;
 
             break;
         }
         }
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
     }
+}
+
+void LibAVDecoder::init()
+{
+    std::thread decodingThread(decodeThread);
+    decodingThread.detach();
 }
 
 SPSCRingBuffer<DecoderMessage> LibAVDecoder::messageQueue { MESSAGE_QUEUE_SIZE };

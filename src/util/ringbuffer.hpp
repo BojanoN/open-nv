@@ -176,26 +176,25 @@ public:
 
     T* peek()
     {
-        if (empty()) {
-            return nullptr;
-        }
 
         return &buffer[mHead.load(std::memory_order_acq_rel)];
     }
 
     T* peekTail()
     {
-        if (empty()) {
-            return nullptr;
-        }
 
         return &buffer[mTail.load(std::memory_order_acq_rel)];
     }
 
     void incTail()
     {
+        if (full()) {
+            return;
+        }
+
         size_t tail = mTail.load(std::memory_order_acquire);
         mTail.store((tail + 1) % capacity, std::memory_order_release);
+        mCurrentSize++;
     }
 
     void pop()
@@ -206,20 +205,21 @@ public:
 
         size_t head = mHead.load(std::memory_order_acquire);
         mHead.store((head + 1) % capacity, std::memory_order_release);
+        mCurrentSize--;
     }
 
-    int put(T& elem)
+    bool put(T& elem)
     {
 
         if (full()) {
-            return -1;
+            return false;
         }
         size_t tail  = mTail.load(std::memory_order_acquire);
         buffer[tail] = elem;
         mTail.store((tail + 1) % capacity, std::memory_order_release);
         mCurrentSize.fetch_add(1, std::memory_order_acq_rel);
 
-        return 0;
+        return true;
     }
 
     bool get(T& dst)
