@@ -494,6 +494,11 @@ enum ESMType : uint32_t {
     KNAM     = 0x4d414e4b,
     INTV     = 0x56544e49,
     CARD     = 0x44524143,
+
+    HEDR = 0x52444548,
+    DELE = 0x454c4544,
+    MAST = 0x5453414d,
+    SCRN = 0x4e524353,
 };
 
 };

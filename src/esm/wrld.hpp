@@ -1,5 +1,6 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/material_common.hpp"
 #include "structs.hpp"
 #include "cell.hpp"
 #include "../cellblock.hpp"

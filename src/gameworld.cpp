@@ -7,9 +7,44 @@
 
 namespace GameWorld {
 
-void GameWorld::load(ESM::ESMReader& reader)
-{
+namespace fs = std::filesystem;
+using ESM::MasterPluginInfo;
 
+void GameWorld::loadMastersAndPlugins(std::vector<fs::directory_entry>& mastersPlugins) {
+    
+    storeAvailableFilePaths(mastersPlugins);
+
+    for(auto& filePath : mastersPlugins) {
+        if(!isLoaded(filePath.path().filename().string())) {
+            load(filePath);
+        }
+    }
+}
+
+void GameWorld::storeAvailableFilePaths(std::vector<fs::directory_entry>& mastersPlugins) {
+
+    log_debug("Available master and plugin files.");
+    
+    for(auto& filePath : mastersPlugins) {
+        log_debug("%s", filePath.path().string().c_str());
+        
+        availableFiles.insert(std::make_pair(filePath.path().filename().string(), filePath));
+    }
+}
+
+void GameWorld::addLoadedFileName(const std::string& name) {
+    loadedFiles.insert(name);
+}
+
+bool GameWorld::isLoaded(const std::string& name) {
+    return loadedFiles.find(name) != loadedFiles.end();
+}
+
+void GameWorld::load(fs::directory_entry& file) {
+
+    addLoadedFileName(file.path().filename().string());
+    
+    ESMReader reader(file.path().string());
     if (!reader.hasMoreBytes()) {
         std::stringstream s;
         s << "File " << reader.getFileName() << " is empty!\n";
@@ -23,7 +58,14 @@ void GameWorld::load(ESM::ESMReader& reader)
         throw std::runtime_error(s.str());
     }
 
-    reader.skipRecord();
+    MasterPluginInfo currentInfo(reader);
+    for(auto& parent : currentInfo.parentMasters) {
+        if(!isLoaded(parent)) {
+            load(availableFiles.at(parent));
+        }
+    }
+
+    log_info("Loading file: %s", file.path().string().c_str());
 
     while (reader.hasMoreBytes()) {
         reader.readNextGroupHeader();
@@ -69,10 +111,12 @@ void GameWorld::load(ESM::ESMReader& reader)
         GameDataBase* dataStore;
         try {
             dataStore = getDataStore(reader.recordType());
-            log_info("Read a total of %u records of type %s", dataStore->size(), ESM::Util::typeValueToName(reader.recordType()).c_str());
+            //log_info("Read a total of %u records of type %s", dataStore->size(), ESM::Util::typeValueToName(reader.recordType()).c_str());
         } catch (std::runtime_error& e) {
         }
     }
+
+    log_info("Loaded file: %s", file.path().string().c_str());
 }
 
 void GameWorld::initDataStoreMap()
@@ -239,7 +283,7 @@ void GameWorld::loadCellChildren(ESM::ESMReader& reader, ESM::Cell& parentCell, 
                     loadedRecord = children->load(reader);
                 }
                 if (loadedRecord->editorId.size()) {
-                    log_info("REGISTERED editorid %s", loadedRecord->editorId.c_str());
+                    //log_debug("REGISTERED editorid %s", loadedRecord->editorId.c_str());
                     this->edidCells[loadedRecord->editorId] = cellId;
                 }
                 loaded++;
@@ -249,7 +293,7 @@ void GameWorld::loadCellChildren(ESM::ESMReader& reader, ESM::Cell& parentCell, 
                 skipped++;
             }
         }
-        log_debug("Loaded %d children, skipped %d children of record: %d", loaded, skipped, parentCell.id);
+        //log_debug("Loaded %d children, skipped %d children of record: %d", loaded, skipped, parentCell.id);
         totalChildrenLoaded += loaded;
         totalChildrenSkipped += skipped;
     }
@@ -329,7 +373,20 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
         }*/
         ESM::Worldspace* loadedWorldspace = this->worldspaces.get(worldspaceId);
 
+        if(loadedWorldspace->name == "Boulder City Ruins") {
+            log_info("aaa");
+        }
+
+        if(reader.peekNextType() == ESM::ESMType::WRLD || reader.getCurrentPosition() == worldspaceGroupEnd) {
+            // no children
+            continue;
+        }
+
         reader.readNextGroupHeader();
+
+        if(reader.groupType() != ESM::GroupType::WorldChildren) {
+            throw std::runtime_error("asa");
+        }
         assert(reader.groupType() == ESM::GroupType::WorldChildren);
         uint32_t parent = reader.groupLabel();
 
@@ -357,30 +414,6 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
                 reader.rewind(sizeof(ESM::GroupHeader));
             }
         }
-
-        /*while (reader.peekNextType() == ESM::ESMType::CELL) {
-            reader.readNextRecordHeader();
-            //log_info("Fpointer before cell 0x%x", reader.getCurrentPosition());
-            formid cellId = reader.recordId();
-
-            if (reader.isCurrentRecordCompressed()) {
-                reader.startCompressedMode();
-                this->exteriorCells.load(reader);
-                reader.endCompressedMode();
-            } else {
-                this->exteriorCells.load(reader);
-            }
-            recordsLoaded++;
-
-            children->exteriorCells.insert(cellId);
-
-            if (reader.peekNextType() != ESM::ESMType::GRUP) {
-                //Not every cell has children
-                continue;
-            }
-
-            loadCellChildren(reader, cellId, recordsLoaded, recordsSkipped);
-        }*/
 
         while (reader.isCurrentLocationBefore(worldChildrenEnd)) {
 

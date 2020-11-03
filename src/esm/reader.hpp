@@ -20,7 +20,7 @@ namespace ESM {
 
 class ESMReader {
 public:
-    ESMReader(std::string& path)
+    explicit ESMReader(const std::string& path)
         : currentStream { &file }
         , file { path.c_str() }
         , compressed(nullptr)

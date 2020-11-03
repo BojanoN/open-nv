@@ -1,5 +1,10 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/objectbounds.hpp"
+#include "subrecords/modeldata.hpp"
+#include "subrecords/destructiondata.hpp"
+#include "subrecords/npc_common.hpp"
+#include "subrecords/item_common.hpp"
 #include "structs.hpp"
 
 namespace ESM {

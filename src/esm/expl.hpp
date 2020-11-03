@@ -1,5 +1,8 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/objectbounds.hpp"
+#include "subrecords/modeldata.hpp"
+#include "subrecords/sound_common.hpp"
 #include "structs.hpp"
 #include "types.hpp"
 

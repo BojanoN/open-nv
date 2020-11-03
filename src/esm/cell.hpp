@@ -2,6 +2,7 @@
 #include "../gamedata.hpp"
 #include "childrecords.hpp"
 #include "record.hpp"
+#include "subrecords/material_common.hpp"
 #include "structs.hpp"
 
 #include <cstdint>

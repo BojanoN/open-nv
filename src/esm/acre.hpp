@@ -1,6 +1,8 @@
 #pragma once
 #include "reader.hpp"
 #include "record.hpp"
+#include "subrecords/patroldata.hpp"
+#include "subrecords/instance_record_common.hpp"
 #include "structs.hpp"
 
 namespace ESM {

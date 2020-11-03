@@ -1,5 +1,9 @@
 #pragma once
 #include "record.hpp"
+#include "subrecords/objectbounds.hpp"
+#include "subrecords/modeldata.hpp"
+#include "subrecords/armor_common.hpp"
+#include "subrecords/equipment_type.hpp"
 #include "structs.hpp"
 
 #include <cstdint>

@@ -35,7 +35,7 @@ Record* CellChildren::load(ESM::ESMReader& reader)
     GameWorld::GameDataBase* dataStore = it->second;
     Record*                  ret       = dataStore->load(reader);
 #ifdef DEBUG
-    log_debug("Child with id: %d, of type %s", id, ESM::Util::typeValueToName(type).c_str());
+    //log_debug("Child with id: %d, of type %s", id, ESM::Util::typeValueToName(type).c_str());
 #endif
     return ret;
 }
