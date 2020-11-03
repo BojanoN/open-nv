@@ -46,6 +46,8 @@ bool AudioEngine::init()
     currentDevice.outputFormat = AL_FORMAT_STEREO16;
     currentDevice.active       = true;
 
+    alIsExtensionPresent("EAX2.0");
+
     LibAVDecoder::init();
 
     std::thread playThread(playingThread);
@@ -74,13 +76,19 @@ inline int updateStream(StreamPlayer* stream)
         ALuint bufid;
         alSourceUnqueueBuffers(stream->mSource, 1, &bufid);
 
+        if (stream->deviceBuffer.empty()) {
+            if (!stream->audioContext.isFinished()) {
+
+                LibAVDecoder::messageQueue.put(frameRequest);
+                continue;
+            } else {
+                break;
+            }
+        }
+
         processed--;
 
         framePtr = stream->deviceBuffer.peek();
-        if (framePtr == nullptr) {
-            LibAVDecoder::messageQueue.put(frameRequest);
-            continue;
-        }
 
         alBufferData(bufid, currentDevice.outputFormat, framePtr->data, DEFAULT_DECODER_BUF_SIZE, currentDevice.sampleRate);
         if (alGetError() != AL_NO_ERROR) {
@@ -121,15 +129,15 @@ inline int startStream(StreamPlayer* stream)
         log_error("Unable to generate audio source");
         return -1;
     }
-    alSourcef(stream->mSource, AL_PITCH, 1);
+    alSourcef(stream->mSource, AL_PITCH, 0.5f);
+    alSourcef(stream->mSource, AL_GAIN, 1.0f);
+    alListenerf(AL_GAIN, 2.0f);
 
     alGenBuffers(NO_BUFFERS, stream->mBuffers);
     if (alGetError() != AL_NO_ERROR) {
         log_error("Unable to generate audio buffer");
         return -1;
     }
-
-    ALsizei i;
 
     alSourceRewind(stream->mSource);
     alSourcei(stream->mSource, AL_BUFFER, 0);
@@ -142,14 +150,23 @@ inline int startStream(StreamPlayer* stream)
 
     AudioFrame* framePtr;
 
+    ALsizei i;
+
     /* Fill the buffer queue */
     for (i = 0; i < NO_BUFFERS; i++) {
 
+        /*
+        if (stream->deviceBuffer.empty()) {
+            if (!stream->audioContext.isFinished()) {
+
+                LibAVDecoder::messageQueue.put(frameRequest);
+                continue;
+            } else {
+                break;
+            }
+        }*/
+
         framePtr = stream->deviceBuffer.peek();
-        if (framePtr == nullptr) {
-            LibAVDecoder::messageQueue.put(frameRequest);
-            continue;
-        }
 
         alBufferData(stream->mBuffers[i], currentDevice.outputFormat, framePtr->data, DEFAULT_DECODER_BUF_SIZE, currentDevice.sampleRate);
         if (alGetError() != AL_NO_ERROR) {
@@ -159,10 +176,6 @@ inline int startStream(StreamPlayer* stream)
 
         stream->deviceBuffer.pop();
         LibAVDecoder::messageQueue.put(frameRequest);
-
-        if (stream->audioContext.isFinished()) {
-            break;
-        }
     }
 
     alSourceQueueBuffers(stream->mSource, i, stream->mBuffers);
@@ -224,6 +237,8 @@ void AudioEngine::playingThread()
             LibAVDecoder::messageQueue.put(message);
         }
 
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+
         for (StreamPlayer* stream : activeStreams) {
             if (!stream->active) {
                 // TODO: initial buffer fill
@@ -232,6 +247,10 @@ void AudioEngine::playingThread()
                     closeStream(stream);
                     continue;
                 }
+                continue;
+            }
+
+            if (!stream->audioContext.isReady()) {
                 continue;
             }
 
@@ -246,6 +265,7 @@ void AudioEngine::playingThread()
                 closeStream(stream);
             }
         }
+
         if (!deletionQueue.empty()) {
             for (StreamPlayer* stream : deletionQueue) {
                 activeStreams.erase(stream);

@@ -26,6 +26,7 @@ struct AudioFrame {
 
 struct LibAVAudioContext {
     bool isFinished() { return this->finished.load(std::memory_order_relaxed); };
+    bool isReady() { return this->ready.load(std::memory_order_relaxed); };
 
     AVCodecContext*             mCodecCtx           = nullptr;
     AVFormatContext*            mFmtCtx             = nullptr;
@@ -37,6 +38,7 @@ struct LibAVAudioContext {
     FrameInfo                   mResampledFrame;
     SPSCRingBuffer<AudioFrame>* deviceBuffer = nullptr;
     std::atomic<bool>           finished     = false;
+    std::atomic<bool>           ready        = false;
     unsigned int                ID           = 0;
 
     const char* path;

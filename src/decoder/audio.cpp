@@ -224,6 +224,10 @@ inline int decodeData(LibAVAudioContext* ctx, size_t dstSize)
         got += remaining;
     }
 
+    if (got < DEFAULT_DECODER_BUF_SIZE) {
+        std::memset(dstBuffer + got, 0, DEFAULT_DECODER_BUF_SIZE - got);
+    }
+
     ctx->deviceBuffer->incTail();
 
     return got;
@@ -234,6 +238,8 @@ void initialBufferFill(LibAVAudioContext* ctx)
     for (unsigned int i = 0; i < ctx->deviceBuffer->capacity; i++) {
         decodeData(ctx, DEFAULT_DECODER_BUF_SIZE);
     }
+
+    ctx->ready.store(true, std::memory_order_acq_rel);
 }
 
 void LibAVDecoder::decodeThread()
@@ -251,7 +257,7 @@ void LibAVDecoder::decodeThread()
 
     while (true) {
         while (messageQueue.empty()) {
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
+            std::this_thread::sleep_for(std::chrono::nanoseconds(100));
         }
 
         messageQueue.get(currentMessage);

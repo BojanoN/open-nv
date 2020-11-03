@@ -13,7 +13,11 @@ int main(void)
         return -1;
     }
 
-    StreamPlayer* player = AudioEngine::playFile("test.mp3");
+    StreamPlayer* player = AudioEngine::playFile("piano_D.mp3");
+    // StreamPlayer* player1 = AudioEngine::playFile("piano_E.mp3");
+    // StreamPlayer* player2 = AudioEngine::playFile("piano_G.mp3");
+    //StreamPlayer* player3 = AudioEngine::playFile("piano_B.mp3");
+
     /*
     if (player == nullptr) {
         return -2;
