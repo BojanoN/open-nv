@@ -1,6 +1,4 @@
-#include <math/mat4.hpp>
-#include <math/matutil.hpp>
-#include <math/util.hpp>
+
 #include <util/camera.hpp>
 #include <util/shader.hpp>
 
@@ -9,6 +7,7 @@
 #include <GL/glu.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
+#include <glm/glm.hpp>
 
 float vertices[] = {
     -0.5f, -0.5f, -0.5f,
@@ -97,19 +96,19 @@ int main(void)
 
     sh.activate();
 
-    Vector3 pos { 0.0, 0.0, 0.0 };
-    Vector3 up { 0.0, 1.0, 0.0 };
-    Vector3 f { 0.0, 0.0, -1.0 };
+    glm::vec3 pos { 0.0, 0.0, 0.0 };
+    glm::vec3 up { 0.0, 1.0, 0.0 };
+    glm::vec3 f { 0.0, 0.0, -1.0 };
 
     Util::Camera camera { pos, up, f };
 
-    Matrix44 model { 10.0 };
-    Matrix44 projection = perspective_mat(deg2rad(45.0), 800. / 600., 0.1, 100.0);
+    glm::mat4 model { 10.0 };
+    glm::mat4 projection = glm::perspective(glm::radians(45.0), 800. / 600., 0.1, 100.0);
 
     unsigned int start = SDL_GetPerformanceCounter();
     unsigned int end   = 0;
 
-    Matrix44 view;
+    glm::mat4 view;
 
     while (true) {
 
