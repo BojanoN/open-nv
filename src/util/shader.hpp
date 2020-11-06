@@ -2,14 +2,8 @@
 
 #include "logc/log.h"
 
-#include <math/mat2.hpp>
-#include <math/mat3.hpp>
-#include <math/mat4.hpp>
-#include <math/vec2.hpp>
-#include <math/vec3.hpp>
-#include <math/vec4.hpp>
-
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 
 #include <cstring>
 #include <errno.h>
@@ -98,43 +92,43 @@ public:
         glUseProgram(this->shaderProgramID);
     }
 
-    void setVec2(std::string& varName, Vector2& vec)
+    void setVec2(std::string& varName, glm::vec2& vec)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
         glUniform2fv(u, 1, reinterpret_cast<GLfloat*>(&vec));
     }
 
-    void setVec3(std::string& varName, Vector3& vec)
+    void setVec3(std::string& varName, glm::vec3& vec)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
         glUniform3fv(u, 1, reinterpret_cast<GLfloat*>(&vec));
     }
 
-    void setVec4(std::string& varName, Vector4& vec)
+    void setVec4(std::string& varName, glm::vec4& vec)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
         glUniform4fv(u, 1, reinterpret_cast<GLfloat*>(&vec));
     }
 
-    void setMat2(std::string& varName, Matrix22& mat, bool transpose)
+    void setMat2(std::string& varName, glm::mat2& mat, bool transpose)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
         glUniformMatrix2fv(u, 1, transpose, reinterpret_cast<GLfloat*>(&mat));
     }
 
-    void setMat3(std::string& varName, Matrix33& mat, bool transpose)
+    void setMat3(std::string& varName, glm::mat3& mat, bool transpose)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
         glUniformMatrix3fv(u, 1, transpose, reinterpret_cast<GLfloat*>(&mat));
     }
 
-    void setMat4(std::string& varName, Matrix44& mat, bool transpose)
+    void setMat4(std::string& varName, glm::mat4& mat, bool transpose)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName.c_str());
         glUniformMatrix4fv(u, 1, transpose, reinterpret_cast<GLfloat*>(&mat));
     }
 
-    void setMat4(const char* varName, Matrix44& mat, bool transpose)
+    void setMat4(const char* varName, glm::mat4& mat, bool transpose)
     {
         GLint u = glGetUniformLocation(this->shaderProgramID, varName);
         glUniformMatrix4fv(u, 1, transpose, reinterpret_cast<GLfloat*>(&mat));

@@ -64,26 +64,25 @@ inline Matrix44 lookat_mat(Vector3& eye, Vector3& center, Vector3& up)
     s.normalize();
 
     u = s.cross(F);
-    F.negate();
 
     mat[0][0] = s[0];
     mat[0][1] = u[0];
-    mat[0][2] = F[0];
+    mat[0][2] = -F[0];
     mat[0][3] = 0.;
 
     mat[1][0] = s[1];
     mat[1][1] = u[1];
-    mat[1][2] = F[1];
+    mat[1][2] = -F[1];
     mat[1][3] = 0.;
 
     mat[2][0] = s[2];
     mat[2][1] = u[2];
-    mat[2][2] = F[2];
+    mat[2][2] = -F[2];
     mat[2][3] = 0.;
 
-    mat[3][0] = 0.;
-    mat[3][1] = 0.;
-    mat[3][2] = 0.;
+    mat[3][0] = -(s.dot(eye));
+    mat[3][1] = -(u.dot(eye));
+    mat[3][2] = (F.dot(eye));
     mat[3][3] = 1.;
 
     return mat;

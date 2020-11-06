@@ -1,18 +1,15 @@
 #pragma once
 
-#include <math.h>
-#include <math/mat4.hpp>
-#include <math/quat.hpp>
-#include <math/util.hpp>
-#include <math/vec3.hpp>
-
 #include <SDL2/SDL.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <math.h>
 
 namespace Util {
 
 class Camera {
 public:
-    Camera(Vector3& pos, Vector3& u, Vector3& f, float pt, float y, float s)
+    Camera(glm::vec3& pos, glm::vec3& u, glm::vec3& f, float pt, float y, float s)
         : position(pos)
         , up(u)
         , front(f)
@@ -24,7 +21,7 @@ public:
         update();
     }
 
-    Camera(Vector3& pos, Vector3& u, Vector3& f)
+    Camera(glm::vec3& pos, glm::vec3& u, glm::vec3& f)
         : position(pos)
         , up(u)
         , front(f)
@@ -36,35 +33,15 @@ public:
         update();
     }
 
-    Matrix44& getViewMatrix()
+    glm::mat4 getViewMatrix()
     {
-        return viewMatrix;
-    }
-
-    void update()
-    {
-        float yaw_rad   = deg2rad(yaw);
-        float pitch_rad = deg2rad(pitch);
-
-        front[0] = cos(yaw_rad) * cos(pitch_rad);
-        front[1] = sin(pitch_rad);
-        front[2] = cos(yaw_rad) * cos(pitch_rad);
-
-        front.normalize();
-
-        right = front.cross(up);
-        right.normalize();
-        up = right.cross(front);
-        up.normalize();
-
-        Vector3 tmp      = position + front;
-        this->viewMatrix = lookat_mat(position, tmp, up);
+        return glm::lookAt(position, position + front, localUp);
     }
 
     void handleKeyboard(int sym, float delta)
     {
 
-        float v = speed * delta;
+        float v = speed; //* delta;
 
         if (sym == SDLK_w) {
             position += front * v;
@@ -97,13 +74,28 @@ public:
     }
 
 private:
-    Vector3 position;
-    Vector3 up;
-    Vector3 front;
-    Vector3 right;
+    void update()
+    {
+        float yaw_rad   = glm::radians(yaw);
+        float pitch_rad = glm::radians(pitch);
 
-    Matrix44 view;
-    Matrix44 projection;
+        front.x = cos(yaw_rad) * cos(pitch_rad);
+        front.y = sin(pitch_rad);
+        front.z = sin(yaw_rad) * cos(pitch_rad);
+
+        front   = glm::normalize(front);
+        right   = glm::normalize(glm::cross(front, up));
+        localUp = glm::normalize(glm::cross(right, front));
+    }
+
+    glm::vec3 position;
+    glm::vec3 up;
+    glm::vec3 localUp;
+    glm::vec3 front;
+    glm::vec3 right;
+
+    glm::mat4 view;
+    glm::mat4 projection;
 
     float pitch;
     float yaw;
@@ -111,6 +103,6 @@ private:
     float sensitivity;
     float speed = 0.2;
 
-    Matrix44 viewMatrix;
+    glm::mat4 viewMatrix;
 };
 }

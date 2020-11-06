@@ -213,9 +213,9 @@ struct Vector3 {
     {
         Vector3 ret;
 
-        ret[0] = arr[1] * b[2] - b[1] * arr[2];
-        ret[1] = arr[2] * b[0] - b[2] * arr[0];
-        ret[2] = arr[0] * b[1] - b[0] * arr[1];
+        ret[0] = arr[1] * b[2] - arr[2] * b[1];
+        ret[1] = arr[2] * b[0] - arr[0] * b[2];
+        ret[2] = arr[0] * b[1] - arr[1] * b[0];
 
         return ret;
     }
@@ -241,6 +241,11 @@ struct Vector3 {
         arr[0] = -arr[0];
         arr[1] = -arr[1];
         arr[2] = -arr[2];
+    }
+
+    void print()
+    {
+        printf("(%f %f %f)\n", arr[0], arr[1], arr[2]);
     }
 
     float arr[3];
