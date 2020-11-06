@@ -9,12 +9,14 @@ namespace Script {
 
 enum class FunctionType {
     Standalone,
-    ReferenceBound
+    ReferenceBound,
+    Mixed
 };
 
 struct FunctionParameterInfo {
     // The defaultValue field also holds the parameter type
     Value defaultValue;
+    bool  optional;
 };
 
 struct FunctionInfo {
@@ -23,7 +25,6 @@ struct FunctionInfo {
     std::string                        description;
     FunctionType                       type;
     Type                               returnType;
-    unsigned int                       paramCount;
     std::vector<FunctionParameterInfo> params;
 };
 

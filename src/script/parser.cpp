@@ -149,34 +149,12 @@ std::vector<Node*>* Parser::parse(std::vector<Token>* toks)
     if (end()) {
         return ret;
     }
-    /*
-    while (advanceMatches(TokenType::Newline)) { };
-    current = peekCurrent();
-
-    // Variable declaration block
-    while (varTypeMatch.count(current.type)) {
-        Node* tmp = varDeclaration();
-        ret->push_back(tmp);
-        while (advanceMatches(TokenType::Newline)) { };
-        current = peekCurrent();
-    };
-    while (advanceMatches(TokenType::Newline)) { };
-*/
 
     while (!end()) {
         while (advanceMatches(TokenType::Newline)) { };
         ret->push_back(scriptBlock());
         while (advanceMatches(TokenType::Newline)) { };
     }
-
-    /*if (end()) {
-      for (Node* n : *ret) {
-        delete n;
-      }
-      delete ret;
-
-      this->error("Missing End keyword", peekCurrent());
-      }*/
 
     return ret;
 }
@@ -321,7 +299,11 @@ parse_args:
     std::vector<Node*> arguments;
 
     while (functionCallArgType.count(peekCurrent().type)) {
-        arguments.push_back(expression());
+        if (comparisonAndLogicalMatch.count(peekNext().type)) {
+            arguments.push_back(addition());
+        } else {
+            arguments.push_back(expression());
+        }
         if (peekCurrent().type == TokenType::Comma)
             advance();
     }
@@ -445,21 +427,21 @@ inline Node* Parser::ifStatement()
     while (advanceMatches(TokenType::Newline)) { }
     log_debug("%s", TokenEnumToString(peekCurrent().type));
 
-    Node* body = statementBlock(ifBlockDelimiters);
+    StatementBlock* body = (StatementBlock*)statementBlock(ifBlockDelimiters);
 
     log_debug("%s", TokenEnumToString(peekCurrent().type));
 
-    std::vector<std::pair<Node*, Node*>> elifs;
+    std::vector<std::pair<Node*, StatementBlock*>> elifs;
 
     while (peekCurrent().type == TokenType::Elseif) {
         advance();
         Node* elifCondition = expression();
         while (advanceMatches(TokenType::Newline)) { };
 
-        Node* elifBody = statementBlock(ifBlockDelimiters);
+        StatementBlock* elifBody = (StatementBlock*)statementBlock(ifBlockDelimiters);
         elifs.push_back(std::make_pair(elifCondition, elifBody));
     }
-    Node* elseBody = nullptr;
+    StatementBlock* elseBody = nullptr;
 
     log_debug("PENIS: %s", TokenEnumToString(peekCurrent().type));
 
@@ -469,7 +451,7 @@ inline Node* Parser::ifStatement()
         advance();
         while (advanceMatches(TokenType::Newline)) { };
 
-        elseBody = statementBlock(elseBlockDelimiters);
+        elseBody = (StatementBlock*)statementBlock(elseBlockDelimiters);
 
         // What the fuck, why
         if (peekCurrent().type == TokenType::Return) {
@@ -478,7 +460,7 @@ inline Node* Parser::ifStatement()
             while (advanceMatches(TokenType::Newline)) { };
 
             if (peekCurrent().type == TokenType::Endif) {
-                ((StatementBlock*)elseBody)->nodes->emplace_back(new ReturnStatement());
+                elseBody->nodes->emplace_back(new ReturnStatement());
                 advance();
             }
         }

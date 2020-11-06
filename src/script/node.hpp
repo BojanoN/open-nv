@@ -40,6 +40,9 @@ constexpr const char* NodeEnumToString(NodeType e) noexcept
 
     switch (e) {
         NODE_ENUM
+
+    default:
+        return "Unknown node type";
     }
 #undef X
 }
@@ -349,9 +352,36 @@ public:
     std::string arg;
 };
 
+class StatementBlock : public Node {
+public:
+    StatementBlock(std::vector<Node*>* ns)
+        : Node(NodeType::StatementBlock)
+        , nodes(ns) {};
+
+    ~StatementBlock()
+    {
+        uint32_t size = nodes->size();
+
+        for (uint32_t i = 0; i < size; i++) {
+            delete nodes->at(i);
+        }
+
+        delete nodes;
+    }
+
+    void print()
+    {
+        for (Node* n : *nodes) {
+            n->print();
+        }
+    }
+
+    std::vector<Node*>* nodes;
+};
+
 class IfStatement : public Node {
 public:
-    IfStatement(Node* expr, Node* ifBod, std::vector<std::pair<Node*, Node*>>& elifBod, Node* elseBod)
+    IfStatement(Node* expr, StatementBlock* ifBod, std::vector<std::pair<Node*, StatementBlock*>>& elifBod, StatementBlock* elseBod)
         : Node(NodeType::IfStatement)
         , condition(expr)
         , body(ifBod)
@@ -395,10 +425,10 @@ public:
         std::cout << ")\n";
     }
 
-    Node*                                condition;
-    Node*                                body;
-    std::vector<std::pair<Node*, Node*>> elseIfs;
-    Node*                                elseBody;
+    Node*                                          condition;
+    StatementBlock*                                body;
+    std::vector<std::pair<Node*, StatementBlock*>> elseIfs;
+    StatementBlock*                                elseBody;
 };
 
 class Variable : public Node {
@@ -476,30 +506,4 @@ public:
     }
 };
 
-class StatementBlock : public Node {
-public:
-    StatementBlock(std::vector<Node*>* ns)
-        : Node(NodeType::StatementBlock)
-        , nodes(ns) {};
-
-    ~StatementBlock()
-    {
-        uint32_t size = nodes->size();
-
-        for (uint32_t i = 0; i < size; i++) {
-            delete nodes->at(i);
-        }
-
-        delete nodes;
-    }
-
-    void print()
-    {
-        for (Node* n : *nodes) {
-            n->print();
-        }
-    }
-
-    std::vector<Node*>* nodes;
-};
 }

@@ -6,8 +6,11 @@
 #include <dirent.h>
 #include <fstream>
 #include <getopt.h>
+#include <set>
 #include <sys/stat.h>
 #include <unistd.h>
+
+std::set<uint8_t> ignoredByte = { 0x73, 0x72, 0x66, 0x5A, 0x1C };
 
 bool compareCompiled(Script::CompiledScript* out, std::vector<uint8_t> original)
 {
@@ -16,7 +19,13 @@ bool compareCompiled(Script::CompiledScript* out, std::vector<uint8_t> original)
         return false;
 
     for (uint32_t i = 0; i < original.size(); i++) {
-        if (out->readAt(i) != original[i]) {
+        if (ignoredByte.count(out->readAt(i))) {
+            if (out->readAt(i) == 0x1C) {
+                i += 3;
+            } else {
+                i += 2;
+            }
+        } else if (out->readAt(i) != original[i]) {
             return false;
         }
     }
@@ -34,7 +43,7 @@ int main(int argc, char** argv)
 
     const char* fname = argv[1];
 
-    std::string path = "../../bin/esm/FalloutNV.esm";
+    std::string path = "../../../bin/esm/FalloutNV.esm";
 
     GameWorld::GameWorld world;
     try {
@@ -42,6 +51,7 @@ int main(int argc, char** argv)
         world.load(reader);
     } catch (std::runtime_error& e) {
         log_fatal(e.what());
+        return 1;
     }
 
     Script::Tokenizer* tok      = new Script::Tokenizer();

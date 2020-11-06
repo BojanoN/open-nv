@@ -89,16 +89,16 @@ int Compiler::compileNode(Node* node, CompiledScript* out)
 
 int Compiler::compileOnTriggerEnter(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
 {
-    uint8_t  onTriggerEnterID[] = { 0x1A, 0x00 };
-    uint16_t argumentCount      = 1;
-    uint16_t varIndex           = 0;
+    BlocktypeCode onTriggerEnterID = BlocktypeCode::OnTriggerEnter;
+    uint16_t      argumentCount    = 1;
+    uint16_t      varIndex         = 0;
 
     if (blocktype->arg.size() == 0) {
         log_fatal("OnTriggerEnter blocktype requires an argument");
         return -1;
     }
 
-    out->writeAt(blocktypeCodeOffset, onTriggerEnterID, sizeof(uint16_t));
+    out->writeShortAt(blocktypeCodeOffset, onTriggerEnterID);
     out->writeShort(argumentCount);
 
     out->writeByte(ExprCodes::REF_FUNC_PARAM);
@@ -115,16 +115,16 @@ int Compiler::compileOnTriggerEnter(BlockTypeStatement* blocktype, CompiledScrip
 
 int Compiler::compileOnTrigger(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeIDOffset)
 {
-    uint8_t  onTriggerEnterID[] = { 0x18, 0x00 };
-    uint16_t argumentCount      = 1;
-    uint16_t varIndex           = 0;
+    BlocktypeCode onTriggerID   = BlocktypeCode::OnTrigger;
+    uint16_t      argumentCount = 1;
+    uint16_t      varIndex      = 0;
 
     if (blocktype->arg.size() == 0) {
         log_fatal("OnTriggerEnter blocktype requires an argument");
         return -1;
     }
 
-    out->writeAt(blocktypeIDOffset, onTriggerEnterID, sizeof(uint16_t));
+    out->writeShortAt(blocktypeIDOffset, onTriggerID);
     out->writeShort(argumentCount);
 
     out->writeByte(ExprCodes::REF_FUNC_PARAM);
@@ -141,11 +141,193 @@ int Compiler::compileOnTrigger(BlockTypeStatement* blocktype, CompiledScript* ou
 
 int Compiler::compileGameMode(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
 {
-    uint8_t gameModeID[] = { 0x00, 0x00 };
-    // TODO: check bytecode for argcount
-    //uint16_t argumentCount = 0;
+    BlocktypeCode gameModeID = BlocktypeCode::GameMode;
 
-    out->writeAt(blocktypeCodeOffset, gameModeID, sizeof(uint16_t));
+    if (blocktype->arg.size()) {
+        log_fatal("GameMode blocktype takes no arguments");
+        return -1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, gameModeID);
+
+    return 0;
+}
+
+int Compiler::compileMenuMode(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode menuModeID    = BlocktypeCode::MenuMode;
+    uint16_t      argumentCount = 0;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size() > 0) {
+        argumentCount = 1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, menuModeID);
+    out->writeShort(argumentCount);
+
+    if (argumentCount) {
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+        varIndex = ctx.SCROLookup(blocktype->arg);
+        if (varIndex == 0) {
+            return -1;
+        }
+
+        out->writeShort(varIndex);
+    }
+
+    return 0;
+}
+
+int Compiler::compileOnAdd(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onAddID       = BlocktypeCode::OnAdd;
+    uint16_t      argumentCount = 1;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size() == 0) {
+        log_fatal("OnTriggerEnter blocktype requires an argument");
+        return -1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onAddID);
+    out->writeShort(argumentCount);
+
+    out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+    varIndex = ctx.SCROLookup(blocktype->arg);
+    if (varIndex == 0) {
+        return -1;
+    }
+
+    out->writeShort(varIndex);
+
+    return 0;
+}
+
+int Compiler::compileOnClose(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onCloseID = BlocktypeCode::OnClose;
+
+    if (blocktype->arg.size()) {
+        log_fatal("OnClose blocktype takes no arguments");
+        return -1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onCloseID);
+
+    return 0;
+}
+
+int Compiler::compileOnCombatEnd(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onCombatEndID = BlocktypeCode::OnCombatEnd;
+    uint16_t      argumentCount = 0;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size() > 0) {
+        argumentCount = 1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onCombatEndID);
+    out->writeShort(argumentCount);
+
+    if (argumentCount) {
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+        varIndex = ctx.SCROLookup(blocktype->arg);
+        if (varIndex == 0) {
+            return -1;
+        }
+
+        out->writeShort(varIndex);
+    }
+
+    return 0;
+}
+
+int Compiler::compileOnDeath(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onDeathID     = BlocktypeCode::OnDeath;
+    uint16_t      argumentCount = 0;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size() > 0) {
+        argumentCount = 1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onDeathID);
+    out->writeShort(argumentCount);
+
+    if (argumentCount) {
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+        varIndex = ctx.SCROLookup(blocktype->arg);
+        if (varIndex == 0) {
+            return -1;
+        }
+
+        out->writeShort(varIndex);
+    }
+
+    return 0;
+}
+
+int Compiler::compileOnActivate(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onActivateID  = BlocktypeCode::OnActivate;
+    uint16_t      argumentCount = 0;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size()) {
+        log_fatal("OnActivate blocktype takes no arguments");
+        return -1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onActivateID);
+    out->writeShort(argumentCount);
+
+    return 0;
+}
+
+int Compiler::compileOnDestructionStageChange(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onDestructionStageChangeID = BlocktypeCode::OnDestructionStageChange;
+
+    if (blocktype->arg.size()) {
+        log_fatal("OnDestructionStageChange blocktype takes no arguments");
+        return -1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onDestructionStageChangeID);
+
+    return 0;
+}
+
+int Compiler::compileOnDrop(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset)
+{
+    BlocktypeCode onDropID      = BlocktypeCode::OnDrop;
+    uint16_t      argumentCount = 0;
+    uint16_t      varIndex      = 0;
+
+    if (blocktype->arg.size() > 0) {
+        argumentCount = 1;
+    }
+
+    out->writeShortAt(blocktypeCodeOffset, onDropID);
+    out->writeShort(argumentCount);
+
+    if (argumentCount) {
+        out->writeByte(ExprCodes::REF_FUNC_PARAM);
+
+        varIndex = ctx.SCROLookup(blocktype->arg);
+        if (varIndex == 0) {
+            return -1;
+        }
+
+        out->writeShort(varIndex);
+    }
 
     return 0;
 }
@@ -174,7 +356,38 @@ int Compiler::compileBlocktype(Node* node, CompiledScript* out)
         ret = compileGameMode(blocktype, out, begSize);
         break;
     }
-
+    case BlockType::MenuMode: {
+        ret = compileMenuMode(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnActivate: {
+        ret = compileOnActivate(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnAdd: {
+        ret = compileOnAdd(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnClose: {
+        ret = compileOnClose(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnDrop: {
+        ret = compileOnDrop(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnDeath: {
+        ret = compileOnDeath(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnCombatEnd: {
+        ret = compileOnCombatEnd(blocktype, out, begSize);
+        break;
+    }
+    case BlockType::OnDestructionStageChange: {
+        ret = compileOnDestructionStageChange(blocktype, out, begSize);
+        break;
+    }
     default:
         log_fatal("Unknown blocktype %s", BlockTypeEnumToString(blocktype->blocktype));
         return -1;
@@ -224,7 +437,7 @@ int Compiler::compileScriptBlock(Node* node, CompiledScript* out)
         return -1;
     }
 
-    out->writeAt(blocktypeSizeOffset, (uint8_t*)&blocktypeSize, sizeof(uint16_t));
+    out->writeShortAt(blocktypeSizeOffset, blocktypeSize);
 
     uint32_t blocksizeOffset = blocktypeSizeOffset + sizeof(uint16_t) + sizeof(uint16_t);
 
@@ -303,10 +516,10 @@ int Compiler::compileAssignment(Node* node, CompiledScript* out)
     }
 
     uint16_t exprLenOut = (uint16_t)exprLen;
-    out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(exprLenOut));
+    out->writeShortAt(exprLenOffset, exprLenOut);
 
     set.length = varLen + sizeof(uint16_t) + exprLenOut;
-    out->writeAt(lengthOffset, (uint8_t*)&set.length, sizeof(set.length));
+    out->writeShortAt(lengthOffset, set.length);
 
     return out->getSize() - begSize;
 };
@@ -373,10 +586,33 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
     FunctionCall* func    = static_cast<FunctionCall*>(node);
     uint32_t      begSize = out->getSize();
 
-    FunctionInfo& info = FunctionResolver::getFunctionInfo(func->functionName);
+    FunctionInfo& info       = FunctionResolver::getFunctionInfo(func->functionName);
+    int           paramCount = info.params.size();
+
+    // Parameter count check
+    if (paramCount) {
+        int totalReqParam = 0;
+
+        for (int i = 0; i < paramCount; i++) {
+            if (!info.params[i].optional) {
+                totalReqParam++;
+            }
+        }
+
+        if (totalReqParam > func->arguments.size()) {
+            log_error("Attempted to call function %s with insufficient parameters!", func->functionName.c_str());
+            return -1;
+        }
+    }
 
     // Reference function call, inside an expression
     if (func->reference.size()) {
+
+        if (info.type == FunctionType::Standalone) {
+            log_error("Attempted to call a standalone function %s as reference bound!", func->functionName.c_str());
+            return -1;
+        }
+
         if (func->context == NodeContext::Expression || func->context == NodeContext::Assignment) {
             out->writeByte(ExprCodes::PUSH);
             out->writeByte(ExprCodes::REF_FUNC_PARAM);
@@ -386,6 +622,7 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
         uint16_t index = ctx.SCROLookup(func->reference);
         out->writeShort(index);
     }
+
     if (func->context == NodeContext::Expression) {
         out->writeByte(ExprCodes::PUSH);
         out->writeByte(ExprCodes::FUNC_CALL);
@@ -397,17 +634,16 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
     uint32_t paramBytesOffset = out->getSize();
     out->writeShort(0x00);
 
-    if (info.paramCount > 0) {
+    if (paramCount > 0) {
 
-        uint16_t paramCount = func->arguments.size();
-        out->writeShort(paramCount);
+        uint16_t paramCountOut = func->arguments.size();
+        out->writeShort(paramCountOut);
 
+        paramCount              = paramCountOut;
         uint16_t     paramBytes = sizeof(uint16_t);
         LiteralExpr* literal;
 
         for (uint32_t i = 0; i < paramCount; i++) {
-            // TODO: add information about the number of parameters required for each available function
-            // so we can enable nested function calls
             if (func->arguments[i]->type != NodeType::LiteralExpr) {
                 log_fatal("Function arguments can only be constant values");
                 return -1;
@@ -444,7 +680,13 @@ int Compiler::compileFunctionCall(Node* node, CompiledScript* out)
             }
         }
 
-        out->writeAt(paramBytesOffset, (uint8_t*)&paramBytes, sizeof(uint16_t));
+        // TODO: remove this bethesda idiocy once all compiler tests pass
+        if (strcmp(info.name.c_str(), "ShowMessage") == 0) {
+            out->writeZeros(6);
+            paramBytes += 6;
+        }
+
+        out->writeShortAt(paramBytesOffset, paramBytes);
     }
 
     return out->getSize() - begSize;
@@ -473,6 +715,37 @@ int Compiler::compileExpressionStatement(Node* node, CompiledScript* out)
     return compileNode(expr->expression, out);
 };
 
+int getNumberOfOps(StatementBlock* statements)
+{
+    int                 opNum = 0;
+    std::vector<Node*>* nodes = statements->nodes;
+
+    for (int i = 0; i < nodes->size(); i++) {
+        if (nodes->at(i)->type == NodeType::IfStatement) {
+            IfStatement* stmt = (IfStatement*)nodes->at(i);
+
+            opNum += 2; // if and endif opcodes
+            opNum += getNumberOfOps(stmt->body);
+
+            // Process all elseif blocks
+            for (int j = 0; j < stmt->elseIfs.size(); j++) {
+                // elseif opcode
+                opNum++;
+                opNum += getNumberOfOps(stmt->elseIfs.at(j).second);
+            }
+
+            // else blocks
+            if (stmt->elseBody != nullptr) {
+                opNum += getNumberOfOps(stmt->elseBody);
+            }
+        } else {
+            opNum++;
+        }
+    }
+
+    return opNum;
+}
+
 int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 {
     CHECK_NULL(node);
@@ -486,6 +759,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     Opcode endif     = { OutputCodes::ENDIF, 0x00 };
 
     int      exprLen, bodyLen;
+    int      err;
     uint16_t exprLenOut, compLenOut, jumpOps;
     uint32_t exprLenOffset, jumpOpsOffset, compLenOffset;
 
@@ -493,7 +767,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 
     compLenOut = 0;
     exprLenOut = 0;
-    jumpOps    = static_cast<StatementBlock*>(ifStmt->body)->nodes->size();
+    jumpOps    = getNumberOfOps(ifStmt->body);
 
     compLenOffset = out->getSize() - sizeof(ifBegin.length);
 
@@ -506,19 +780,20 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
     if (exprLen < 0) {
         return -1;
     }
-    exprLenOut = (uint16_t)exprLen;
 
     bodyLen = compileNode(ifStmt->body, out);
     if (bodyLen < 0) {
         return -1;
     }
 
+    exprLenOut = (uint16_t)exprLen;
+
     //    jumpOps    = bodyLen;
     compLenOut = exprLenOut + sizeof(uint16_t) + sizeof(uint16_t);
 
-    out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
+    out->writeShortAt(compLenOffset, compLenOut);
     //out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
-    out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(uint16_t));
+    out->writeShortAt(exprLenOffset, exprLenOut);
 
     uint32_t elifsSize = ifStmt->elseIfs.size();
 
@@ -528,7 +803,7 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 
             compLenOut = 0;
             exprLenOut = 0;
-            jumpOps    = static_cast<StatementBlock*>(ifStmt->elseIfs[i].second)->nodes->size();
+            jumpOps    = getNumberOfOps(ifStmt->elseIfs[i].second);
 
             compLenOffset = out->getSize() - sizeof(elifBegin.length);
 
@@ -550,25 +825,22 @@ int Compiler::compileIfStatement(Node* node, CompiledScript* out)
 
             compLenOut = exprLenOut + sizeof(uint16_t) + sizeof(uint16_t);
 
-            out->writeAt(compLenOffset, (uint8_t*)&compLenOut, sizeof(uint16_t));
-            out->writeAt(exprLenOffset, (uint8_t*)&exprLenOut, sizeof(uint16_t));
+            out->writeShortAt(compLenOffset, compLenOut);
+            out->writeShortAt(exprLenOffset, exprLenOut);
         }
     }
 
     if (ifStmt->elseBody != nullptr) {
         out->writeOpcode(elseBegin);
 
-        jumpOpsOffset = out->getSize();
+        jumpOps = getNumberOfOps(ifStmt->elseBody);
         out->writeShort(jumpOps);
 
-        bodyLen = compileNode(ifStmt->elseBody, out);
+        err = compileNode(ifStmt->elseBody, out);
 
-        if (bodyLen < 0) {
+        if (err < 0) {
             return -1;
         }
-
-        jumpOps = bodyLen;
-        out->writeAt(jumpOpsOffset, (uint8_t*)&jumpOps, sizeof(uint16_t));
     }
 
     out->writeOpcode(endif);

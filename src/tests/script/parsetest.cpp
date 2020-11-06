@@ -1,5 +1,4 @@
 #include "compile.hpp"
-#include "interpreter.hpp"
 #include "logc/log.h"
 #include "parser.hpp"
 #include "tokenizer.hpp"

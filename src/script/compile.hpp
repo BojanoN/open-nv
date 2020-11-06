@@ -56,6 +56,18 @@ public:
         return true;
     }
 
+    bool writeShortAt(uint32_t offset, uint16_t value)
+    {
+
+        if ((offset + sizeof(value)) > capacity) {
+            return false;
+        }
+
+        *((uint16_t*)&bytecode[offset]) = value;
+
+        return true;
+    }
+
     bool writeZeros(uint32_t n)
     {
         if ((currentSize + n) > capacity) {
@@ -301,9 +313,18 @@ private:
     int compileReturnStatement(Node* node, CompiledScript* out);
     int compileVariableAccess(Node* node, CompiledScript* out);
 
+    // Blocktypes
     int compileOnTrigger(BlockTypeStatement* node, CompiledScript* out, uint32_t blocktypeIDOffset);
     int compileOnTriggerEnter(BlockTypeStatement* node, CompiledScript* out, uint32_t blocktypeIDOffset);
     int compileGameMode(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset);
+    int compileMenuMode(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset);
+    int compileOnActivate(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset);
+    int compileOnAdd(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset);
+    int compileOnDeath(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset);
+    int compileOnCombatEnd(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset);
+    int compileOnDestructionStageChange(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset);
+    int compileOnDrop(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset);
+    int compileOnClose(BlockTypeStatement* blocktype, CompiledScript* out, uint32_t blocktypeCodeOffset);
 
     int error(std::string cause)
     {
