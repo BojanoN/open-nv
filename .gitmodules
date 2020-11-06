@@ -1,0 +1,6 @@
+[submodule "lib/src/libav"]
+	path = lib/src/libav
+	url = https://github.com/libav/libav
+[submodule "lib/src/glew"]
+	path = lib/src/glew
+	url = https://github.com/nigels-com/glew
