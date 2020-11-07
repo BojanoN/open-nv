@@ -207,12 +207,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 add_compile_options("-DLOG_USE_COLOR -Wall -Wextra")
 
 
-if(NOT LINK_DYNAMIC)
-  message(STATUS "Using static linking for libraries...")
-  set(LibrarySuffix ".a")
-else()
+if(NOT LINK_STATIC)
   message(STATUS "Using dynamic linking for libraries...")
   set(LibrarySuffix ".so")
+else()
+  message(STATUS "Using static linking for libraries...")
+  set(LibrarySuffix ".a")
 endif()
 
 # Required libraries, linked statically or dynamically
@@ -229,26 +229,25 @@ list(APPEND RequiredLibraries
   avformat
   )
 
-# Required dynamic libraries
-list(APPEND RequiredDynamicLibraries
-  pthread
-
-  GL
-  GLU
-
-  openal
-  )
 
 foreach(library IN LISTS RequiredLibraries)
-  find_library(${library} "lib${library}${LibrarySuffix}" PATHS "${LibraryDirectory}" REQUIRED)
+  find_library(${library}  lib${library}${LibrarySuffix} PATHS "${LibraryDirectory}" REQUIRED)
+endforeach()
+
+
+list(APPEND LibraryPaths)
+
+foreach(library IN LISTS RequiredLibraries)
+  list(APPEND LibraryPaths "${LibraryDirectory}/lib${library}${LibrarySuffix}")
 endforeach()
 
 
 foreach(library IN LISTS RequiredDynamicLibraries)
-  find_library(${library} "lib${library}.so" HINTS "${LibraryDirectory}" REQUIRED)
+  list(APPEND LibraryPaths "${LibraryDirectory}/lib${library}.so")
 endforeach()
 
-target_link_libraries(${PROJECT_NAME} ${RequiredDynamicLibraries} ${RequiredLibraries})
+
+target_link_libraries(${PROJECT_NAME} ${LibraryPaths} pthread GL GLU openal)
 
 add_subdirectories(".")
 

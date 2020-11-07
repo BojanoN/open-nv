@@ -4,9 +4,6 @@
 [submodule "lib/src/zlib"]
 	path = lib/src/zlib
 	url = https://github.com/madler/zlib
-[submodule "lib/sdl2"]
-	path = lib/sdl2
-	url = https://github.com/spurious/SDL-mirror
 [submodule "lib/src/glm"]
 	path = lib/src/glm
 	url = https://github.com/g-truc/glm
