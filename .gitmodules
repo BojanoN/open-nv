@@ -9,7 +9,7 @@
 	url = https://github.com/g-truc/glm
 [submodule "lib/src/libav"]
 	path = lib/src/libav
-	url = git://git.ffmpeg.org/ffmpeg.git
+	url = https://github.com/FFmpeg/FFmpeg
 [submodule "lib/src/openal-soft"]
 	path = lib/src/openal-soft
 	url = https://github.com/kcat/openal-soft/
