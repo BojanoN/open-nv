@@ -138,7 +138,6 @@ set(sources
   ./nif/nifdata.cpp
   ./nif/nifreader.cpp
   ./nif/nifpointer.cpp
-  ./nif/shrot/gl_tester.cpp
   ./nif/nifactory.cpp
   ./nif/main/BSShaderPPLightingProperty.cpp
   ./nif/main/NiProperty.cpp
@@ -180,9 +179,7 @@ set(sources
   ./nif/main/BSXFlags.cpp
   ./nif/main/BSFadeNode.cpp
   ./nif/main/NiTimeController.cpp
-  ./engine/videotest.cpp
   ./engine/video.cpp
-  ./engine/playtest.cpp
   ./engine/audio.cpp
   ./openNV.cpp
   ./logc/log.cpp
@@ -251,7 +248,7 @@ foreach(library IN LISTS RequiredDynamicLibraries)
   find_library(${library} "lib${library}.so" HINTS "${LibraryDirectory}" REQUIRED)
 endforeach()
 
-
+target_link_libraries(${PROJECT_NAME} ${RequiredDynamicLibraries} ${RequiredLibraries})
 
 add_subdirectories(".")
 
