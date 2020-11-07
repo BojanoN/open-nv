@@ -202,7 +202,6 @@ add_executable(${PROJECT_NAME}
   "${sources}"
 )
 
-
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${IncludeDirectories}
 )
@@ -210,14 +209,48 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 add_compile_options("-DLOG_USE_COLOR -Wall -Wextra")
 
-link_directories(${LibraryDirectory})
 
-find_library(ZLIB libz.a REQUIRED)
-find_library(GLEW libglew.a REQUIRED)
-find_library(SDL2 libsdl2.a REQUIRED)
-find_library(AVUTIL libavutil.a REQUIRED)
-find_library(SWRESAMPLE libswresample.a REQUIRED)
-find_library(SWRESCALE libswrescale.a REQUIRED)
+if(NOT LINK_DYNAMIC)
+  message(STATUS "Using static linking for libraries...")
+  set(LibrarySuffix ".a")
+else()
+  message(STATUS "Using dynamic linking for libraries...")
+  set(LibrarySuffix ".so")
+endif()
+
+# Required libraries, linked statically or dynamically
+list(APPEND RequiredLibraries
+  z
+
+  GLEW
+  SDL2
+
+  avutil
+  swresample
+  swscale
+  avcodec
+  avformat
+  )
+
+# Required dynamic libraries
+list(APPEND RequiredDynamicLibraries
+  pthread
+
+  GL
+  GLU
+
+  openal
+  )
+
+foreach(library IN LISTS RequiredLibraries)
+  find_library(${library} "lib${library}${LibrarySuffix}" PATHS "${LibraryDirectory}" REQUIRED)
+endforeach()
+
+
+foreach(library IN LISTS RequiredDynamicLibraries)
+  find_library(${library} "lib${library}.so" HINTS "${LibraryDirectory}" REQUIRED)
+endforeach()
+
 
 
 add_subdirectories(".")

@@ -1,8 +1,0 @@
-PROJECT=openNV
-
-
-CC=clang++
-INCLUDEFLAGS = $(foreach d, $(INCLUDEDIRS), -I$d)
-CFLAGS := --std=c++17 --stdlib=libc++ $(INCLUDEFLAGS) #-nostdinc++ -I$(LIBCPP)/include/c++/v1    -DLOG_USE_COLOR $(INCLUDEFLAGS) -Wall -MD
-
-LDFLAGS= -L$(LIBDIR) -lz  -lc++  -lc++abi  # -L$(LIBCPP)/lib  -Wl,-rpath,$(LIBCPP)/lib
