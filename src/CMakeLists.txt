@@ -222,6 +222,10 @@ list(APPEND RequiredLibraries
   GLEW
   SDL2
 
+
+  )
+
+list(APPEND RequiredDynamicLibraries
   avutil
   swresample
   swscale

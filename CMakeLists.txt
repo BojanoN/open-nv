@@ -10,7 +10,15 @@ set(SourceDirectory "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(TestsDirectory "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 
 set(LibraryIncludeDirectory "${CMAKE_CURRENT_SOURCE_DIR}/lib/include")
-set(IncludeDirectories "${CMAKE_CURRENT_SOURCE_DIR}/src" "${LibraryIncludeDirectory}")
+
+list(APPEND IncludeDirectories
+  "${CMAKE_CURRENT_SOURCE_DIR}/src"
+  "${LibraryDirectory}/src/glm"
+  "${LibraryDirectory}/src/glew/include"
+  "${LibraryDirectory}/src/sdl2/include"
+  "${LibraryDirectory}/src/zlib"
+  "${LibraryDirectory}/src/libav"
+  )
 
 
 add_subdirectory(${SourceDirectory})

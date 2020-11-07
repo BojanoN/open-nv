@@ -1,7 +1,7 @@
 #pragma once
-#include "zlib/zlib.h"
 #include <cstdint>
 #include <vector>
+#include <zlib.h>
 
 namespace Util {
 

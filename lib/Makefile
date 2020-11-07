@@ -20,18 +20,13 @@ glew:
 	- ln -s ./src/glew/lib/libGLEW.so ./libGLEW.so
 
 libav:
-	cd src/libav  && ./configure --enable-shared --disable-doc  --disable-programs   --enable-avutil --enable-avcodec --enable-avformat --enable-swresample --enable-swscale --disable-
+	cd src/libav  && ./configure --enable-shared --disable-doc  --disable-programs   --enable-avutil --enable-avcodec --enable-avformat --enable-swresample --enable-swscale
 	$(MAKE) -C ./src/libav
-	- ln -s ./src/libav/libavcodec/libavcodec.so. libavcodec.so
-	- ln -s ./src/libav/libavcodec/libavcodec.a libavcodec.a
+	- ln -s ./src/libav/libavcodec/libavcodec.so libavcodec.so
 	- ln -s ./src/libav/libavutil/libavutil.so libavutil.so
-	- ln -s ./src/libav/libavutil/libavutil.a libavutil.a
 	- ln -s ./src/libav/libavformat/libavformat.so libavformat.so
-	- ln -s ./src/libav/libavformat/libavformat.a libavformat.a
 	- ln -s ./src/libav/libswscale/libswscale.so libswscale.so
-	- ln -s ./src/libav/libswscale/libswscale.a libswscale.a
 	- ln -s ./src/libav/libswresample/libswresample.so libswresample.so
-	- ln -s ./src/libav/libswresample/libswresample.a libswresample.a
 
 sdl2:
 	cd src/sdl2 && ./autogen.sh && ./configure --prefix=$(CURDIR)/src/sdl2  --disable-audio --disable-power --disable-sensor --disable-pulseaudio --disable-alsa --disable-sndio --disable-jack --disable-alsatest --enable-video-opengl --disable-video-opengles1 --disable-video-opengles2 --disable-video-vulkan --disable-render-d3d 
