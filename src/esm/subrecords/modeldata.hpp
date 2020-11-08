@@ -3,13 +3,11 @@
 #include "../reader.hpp"
 #include "../types.hpp"
 #include "nif/nifdata.hpp"
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
-
-class NiObject;
-
+struct NiObject;
 
 namespace ESM {
 
@@ -28,9 +26,8 @@ struct ModelData {
     std::vector<AlternateTexture> alternateTextures;
     uint8_t                       FaceGenModelFlags;
 
-
     //std::shared_ptr<NiObject> getModel();
-    void            loadModel();
+    void loadModel();
     ~ModelData();
 
     static void load(ESMReader& reader, ModelData& modelData, int index);
@@ -49,9 +46,9 @@ private:
 
     const static constexpr ESMType* types[4] = { index_0, index_1, index_2, index_3 };
 
-    static bool                     isInCollection(uint32_t type, int index);
+    static bool isInCollection(uint32_t type, int index);
 
-    std::shared_ptr<NifData>   model = nullptr;
+    std::shared_ptr<NifData> model = nullptr;
 };
 
 }; // namespace

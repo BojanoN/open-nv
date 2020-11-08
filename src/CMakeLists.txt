@@ -133,6 +133,7 @@ set(sources
   ./gamedata.cpp
   ./resources/texture2D.cpp
   ./resources/resource.cpp
+  ./resources/shader.cpp
   ./gameworld.cpp
   ./main.cpp
   ./nif/nifdata.cpp
@@ -204,9 +205,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 
-add_compile_options("-DLOG_USE_COLOR -Wall -Wextra")
-
-
 if(NOT LINK_STATIC)
   message(STATUS "Using dynamic linking for libraries...")
   set(LibrarySuffix ".so")
@@ -251,7 +249,7 @@ foreach(library IN LISTS RequiredDynamicLibraries)
 endforeach()
 
 
-target_link_libraries(${PROJECT_NAME} ${LibraryPaths} pthread GL GLU openal)
+target_link_libraries(${PROJECT_NAME} ${LibraryPaths} pthread GL GLU openal dl)
 
 add_subdirectories(".")
 

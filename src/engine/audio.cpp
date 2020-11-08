@@ -16,7 +16,7 @@ extern "C" {
 bool AudioEngine::init()
 {
     if (currentDevice.device) {
-        return false;
+        return true;
     }
 
     const char* defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
@@ -24,13 +24,13 @@ bool AudioEngine::init()
 
     if (!defaultDevice) {
         log_error("Unable to open default device: %s", defaultDeviceName);
-        return true;
+        return false;
     }
 
     ALCcontext* defaultDeviceContext = alcCreateContext(defaultDevice, NULL);
     if (!alcMakeContextCurrent(defaultDeviceContext)) {
         log_error("Unable to make context for default device");
-        return true;
+        return false;
     }
 
     ALCint defaultDeviceSampleRate;
@@ -53,7 +53,7 @@ bool AudioEngine::init()
     std::thread playThread(playingThread);
     playThread.detach();
 
-    return false;
+    return true;
 }
 
 inline int updateStream(StreamPlayer* stream)

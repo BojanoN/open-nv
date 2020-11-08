@@ -1,3 +1,5 @@
+#pragma clang diagnostic ignored "-Weverything"
+
 #include "function.hpp"
 #include "logc/log.h"
 

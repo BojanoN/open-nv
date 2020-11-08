@@ -33,7 +33,6 @@ int main(int argc, char** argv)
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
     glewInit();
-    glEnable(GL_TEXTURE_2D);
     VideoPlayer* player = new VideoPlayer();
 
     if (player->open(argv[1]) < 0) {

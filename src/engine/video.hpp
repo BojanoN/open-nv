@@ -3,18 +3,22 @@
 #include <decoder/video.hpp>
 #include <util/shader.hpp>
 
+#include <memory>
+
+struct SDL_Window;
+
 class VideoPlayer {
 public:
     VideoPlayer();
 
-    int  open(const char* path);
+    int  play(const char* path, SDL_Window* window);
     void close();
 
     bool update();
 
 private:
-    Shader          videoShader;
-    VideoParameters outputVideoParams;
+    std::shared_ptr<Shader> videoShader;
+    VideoParameters         outputVideoParams;
 
     LibAVVideoDecoder decoder;
 
@@ -26,4 +30,7 @@ private:
     MediaFrame          mCurrentTextureFrame;
     static float        vertices[16];
     static unsigned int elements[6];
+
+    static const std::string videoVertexShader;
+    static const std::string videoFragmentShader;
 };
