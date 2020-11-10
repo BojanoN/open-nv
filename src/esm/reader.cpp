@@ -49,7 +49,7 @@ void ESMReader::readNextSubrecordHeader()
 
     // Check if we ran out of compressed data
     /*if (!currentStream && this->file) {
-        this->currentStream   = &this->file;
+      this->currentStream   = &this->file;
         this->currentLocation = this->currentLocationBackup;
         std::streambuf* stb   = this->compressed.rdbuf();
         delete stb;
@@ -213,6 +213,16 @@ void ESMReader::readStringArray(std::vector<std::string>& vec)
             beg = i + 1;
         }
     }
+}
+
+void ESMReader::seek(ssize_t offset)
+{
+    assert(offset >= 0);
+    assert(offset < this->fileSize);
+
+    this->file.seekg(offset, std::ios::beg);
+    this->currentLocation = offset;
+    this->fileLeft        = this->fileSize - offset;
 }
 
 };

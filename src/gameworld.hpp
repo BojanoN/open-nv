@@ -6,22 +6,29 @@
 #include "cellblock.hpp"
 #include "gamedata.hpp"
 
+#include <filesystem>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
-#include <filesystem>
-#include <unordered_set>
 
 namespace GameWorld {
 
 using ESM::ESMReader;
 namespace fs = std::filesystem;
 
-class GameWorld {
+struct GameFileInfo {
+    GameFileInfo() {};
+    ~GameFileInfo() {};
 
-    
+    std::unique_ptr<ESMReader>                fileReader;
+    std::unordered_map<ESM::ESMType, ssize_t> topLevelGroupOffsets;
+};
+
+class GameWorld {
 
     GameData<ESM::GameSetting>      gameSettings;
     GameData<ESM::TextureSet>       textureSets;
@@ -147,10 +154,8 @@ class GameWorld {
 
     std::unordered_map<std::string, formid> edidCells;
 
-
     std::unordered_map<std::string, fs::directory_entry> availableFiles;
-    std::unordered_set<std::string> loadedFiles;
-
+    std::unordered_map<std::string, GameFileInfo>        registeredGameFiles;
 
     void initDataStoreMap();
     void parseCellGroup(ESM::ESMReader& reader);
@@ -160,10 +165,10 @@ class GameWorld {
     void parseWorldspaceGroup(ESM::ESMReader& reader);
 
     void storeAvailableFilePaths(std::vector<fs::directory_entry>& mastersPlugins);
-    void addLoadedFileName(const std::string& name);
     bool isLoaded(const std::string& name);
 
-    void load(fs::directory_entry& file);
+    void registerGameFile(fs::directory_entry& file);
+    bool loadTopLevelGroup(const std::string& gameFileName, ESM::ESMType groupLabel);
 
 public:
     GameWorld()
@@ -172,7 +177,6 @@ public:
     }
 
     //void load(ESM::ESMReader& reader);
-
 
     void loadMastersAndPlugins(std::vector<fs::directory_entry>& mastersPlugins);
 

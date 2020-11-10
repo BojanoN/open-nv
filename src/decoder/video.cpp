@@ -313,7 +313,6 @@ void log_frame(AVFrame* pFrame, AVCodecContext* pCodecContext)
 void LibAVVideoDecoder::updateFrame(MediaFrame& frame)
 {
     double audioClock = audioPlayer.lastAudioFramePTS;
-    log_debug("%f, %f", frame.pts, audioClock);
 
     while (this->textureFrameQueue.empty()) {
         std::this_thread::sleep_for(std::chrono::milliseconds((int)(timeBase - MIN_VIDEO_DELAY_SEC)));
@@ -334,10 +333,6 @@ void LibAVVideoDecoder::updateFrame(MediaFrame& frame)
         actualDelay = timeBase - MIN_VIDEO_DELAY_SEC; //0.023;
     }
 
-    log_debug("Actual delay: %f", actualDelay);
-    log_debug("Audio queue size: %u", audioPlayer.audioPacketQueue.mCurrentSize.load());
-    log_debug("Video queue size: %u", videoPacketQueue.mCurrentSize.load());
-
     std::this_thread::sleep_for(std::chrono::milliseconds((unsigned int)(actualDelay * 1000)));
 
     return;
@@ -346,6 +341,11 @@ void LibAVVideoDecoder::updateFrame(MediaFrame& frame)
 void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
 {
     AVPacket* packet = av_packet_alloc();
+
+    if (packet == nullptr) {
+        log_fatal("Video decoding thread: Out of memory!");
+        return;
+    }
 
     int videoStreamIndex = obj->mVideoStreamIndex;
     int audioStreamIndex = obj->mAudioStreamIndex;
@@ -448,6 +448,10 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
 
         // Decode all frames from the packet
         do {
+
+            if (obj->finished) {
+                return;
+            }
 
             ret = avcodec_receive_frame(obj->mVideoCodecCtx, obj->mFrame);
             if (ret == AVERROR_EOF) {

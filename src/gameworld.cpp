@@ -10,113 +10,143 @@ namespace GameWorld {
 namespace fs = std::filesystem;
 using ESM::MasterPluginInfo;
 
-void GameWorld::loadMastersAndPlugins(std::vector<fs::directory_entry>& mastersPlugins) {
-    
+void GameWorld::loadMastersAndPlugins(std::vector<fs::directory_entry>& mastersPlugins)
+{
+
     storeAvailableFilePaths(mastersPlugins);
 
-    for(auto& filePath : mastersPlugins) {
-        if(!isLoaded(filePath.path().filename().string())) {
-            load(filePath);
+    for (auto& filePath : mastersPlugins) {
+        if (!isLoaded(filePath.path().filename().string())) {
+            registerGameFile(filePath);
         }
     }
 }
 
-void GameWorld::storeAvailableFilePaths(std::vector<fs::directory_entry>& mastersPlugins) {
+void GameWorld::storeAvailableFilePaths(std::vector<fs::directory_entry>& mastersPlugins)
+{
 
     log_debug("Available master and plugin files.");
-    
-    for(auto& filePath : mastersPlugins) {
+
+    for (auto& filePath : mastersPlugins) {
         log_debug("%s", filePath.path().string().c_str());
-        
+
         availableFiles.insert(std::make_pair(filePath.path().filename().string(), filePath));
     }
 }
 
-void GameWorld::addLoadedFileName(const std::string& name) {
-    loadedFiles.insert(name);
+bool GameWorld::isLoaded(const std::string& name)
+{
+    return registeredGameFiles.count(name) != 0;
 }
 
-bool GameWorld::isLoaded(const std::string& name) {
-    return loadedFiles.find(name) != loadedFiles.end();
-}
+void GameWorld::registerGameFile(fs::directory_entry& file)
+{
 
-void GameWorld::load(fs::directory_entry& file) {
-
-    addLoadedFileName(file.path().filename().string());
-    
-    ESMReader reader(file.path().string());
-    if (!reader.hasMoreBytes()) {
+    ESM::ESMReader* reader = new ESMReader(file.path().string());
+    if (!reader->hasMoreBytes()) {
         std::stringstream s;
-        s << "File " << reader.getFileName() << " is empty!\n";
+        s << "File " << reader->getFileName() << " is empty!\n";
         throw std::runtime_error(s.str());
     }
 
-    reader.readNextRecordHeader();
-    if (reader.recordType() != ESM::ESMType::TES4) {
+    reader->readNextRecordHeader();
+    if (reader->recordType() != ESM::ESMType::TES4) {
         std::stringstream s;
-        s << "File " << reader.getFileName() << " is not a valid plugin file!\n";
+        s << "File " << reader->getFileName() << " is not a valid plugin file!\n";
         throw std::runtime_error(s.str());
     }
 
-    MasterPluginInfo currentInfo(reader);
-    for(auto& parent : currentInfo.parentMasters) {
-        if(!isLoaded(parent)) {
-            load(availableFiles.at(parent));
+    ESM::MasterPluginInfo currentInfo(*reader);
+    for (auto& parent : currentInfo.parentMasters) {
+        if (!isLoaded(parent)) {
+            registerGameFile(availableFiles.at(parent));
         }
     }
 
     log_info("Loading file: %s", file.path().string().c_str());
 
-    while (reader.hasMoreBytes()) {
-        reader.readNextGroupHeader();
+    if (!reader->hasMoreBytes()) {
+        std::stringstream s;
+        s << "File " << reader->getFileName() << " is empty!\n";
+        throw std::runtime_error(s.str());
+    }
 
-        if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::CELL) {
-            parseCellGroup(reader);
-            continue;
-        }
-        if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::WRLD) {
-            parseWorldspaceGroup(reader);
-            continue;
-        }
-        if (reader.groupType() == ESM::GroupType::TopLevel && reader.groupLabel() == ESM::ESMType::DIAL) {
-            reader.skipGroup();
-            continue;
+    reader->readNextRecordHeader();
+    if (reader->recordType() != ESM::ESMType::TES4) {
+        std::stringstream s;
+        s << "File " << reader->getFileName() << " is not a valid plugin file!\n";
+        throw std::runtime_error(s.str());
+    }
+
+    std::string fileName = file.path().filename().string();
+
+    GameFileInfo currentFileInfo;
+
+    currentFileInfo.fileReader = std::unique_ptr<ESM::ESMReader>(reader);
+
+    while (reader->hasMoreBytes()) {
+        reader->readNextGroupHeader();
+
+        if (reader->groupType() == ESM::GroupType::TopLevel) {
+            ESM::ESMType currentGroupRecordType                          = static_cast<ESM::ESMType>(reader->groupLabel());
+            currentFileInfo.topLevelGroupOffsets[currentGroupRecordType] = reader->getCurrentPosition() - sizeof(ESM::GroupHeader);
         }
 
-        while (reader.hasMoreRecordsInGroup()) {
+        reader->skipGroup();
+    }
 
-            reader.readNextRecordHeader();
-            GameDataBase* dataStore;
-            try {
-                dataStore = getDataStore(reader.recordType());
-            } catch (std::runtime_error& e) {
-                log_error(e.what());
-                reader.skipGroup();
-                break;
-            }
+    reader->reset();
 
-            try {
-                if (reader.isCurrentRecordCompressed()) {
-                    reader.startCompressedMode();
-                    dataStore->load(reader);
-                    reader.endCompressedMode();
-                } else {
-                    dataStore->load(reader);
-                }
-            } catch (std::runtime_error& e) {
-                log_error(e.what());
-                reader.skipRecord();
-            }
-        }
-        GameDataBase* dataStore;
+    log_info("Registered game file: %s", fileName.c_str());
+}
+
+bool GameWorld::loadTopLevelGroup(const std::string& gameFileName, ESM::ESMType groupLabel)
+{
+
+    if (!isLoaded(gameFileName)) {
+        log_error("Game file %s is not loaded!", gameFileName.c_str());
+        return false;
+    }
+
+    GameFileInfo& gameFileInfo = this->registeredGameFiles[gameFileName];
+
+    if (gameFileInfo.topLevelGroupOffsets.count(groupLabel) == 0) {
+        log_error("No toplevel group with label %s present in game file %s!", ESM::Util::typeValueToName(groupLabel).c_str(), gameFileName.c_str());
+        return false;
+    }
+
+    ssize_t         targetGroupOffset = gameFileInfo.topLevelGroupOffsets[groupLabel];
+    ESM::ESMReader* gameFileReader    = gameFileInfo.fileReader.get();
+
+    gameFileReader->seek(targetGroupOffset);
+    gameFileReader->readNextGroupHeader();
+
+    GameDataBase* dataStore;
+    try {
+        dataStore = getDataStore(gameFileReader->recordType());
+    } catch (std::runtime_error& e) {
+        log_error(e.what());
+        return false;
+    }
+
+    while (gameFileReader->hasMoreRecordsInGroup()) {
+        gameFileReader->readNextRecordHeader();
+
         try {
-            dataStore = getDataStore(reader.recordType());
-            //log_info("Read a total of %u records of type %s", dataStore->size(), ESM::Util::typeValueToName(reader.recordType()).c_str());
+            if (gameFileReader->isCurrentRecordCompressed()) {
+                gameFileReader->startCompressedMode();
+                dataStore->load(*gameFileReader);
+                gameFileReader->endCompressedMode();
+            } else {
+                dataStore->load(*gameFileReader);
+            }
         } catch (std::runtime_error& e) {
+            log_error(e.what());
+            gameFileReader->skipRecord();
         }
     }
 
-    log_info("Loaded file: %s", file.path().string().c_str());
+    return true;
 }
 
 void GameWorld::initDataStoreMap()
@@ -373,18 +403,18 @@ void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
         }*/
         ESM::Worldspace* loadedWorldspace = this->worldspaces.get(worldspaceId);
 
-        if(loadedWorldspace->name == "Boulder City Ruins") {
+        if (loadedWorldspace->name == "Boulder City Ruins") {
             log_info("aaa");
         }
 
-        if(reader.peekNextType() == ESM::ESMType::WRLD || reader.getCurrentPosition() == worldspaceGroupEnd) {
+        if (reader.peekNextType() == ESM::ESMType::WRLD || reader.getCurrentPosition() == worldspaceGroupEnd) {
             // no children
             continue;
         }
 
         reader.readNextGroupHeader();
 
-        if(reader.groupType() != ESM::GroupType::WorldChildren) {
+        if (reader.groupType() != ESM::GroupType::WorldChildren) {
             throw std::runtime_error("asa");
         }
         assert(reader.groupType() == ESM::GroupType::WorldChildren);

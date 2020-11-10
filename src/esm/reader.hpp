@@ -3,18 +3,18 @@
 #include "headers.hpp"
 #include "logc/log.h"
 #include "types.hpp"
-#include "utils.hpp"
 #include "util/bytestream.hpp"
-
+#include "utils.hpp"
 
 #include <cassert>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
-#include <memory>
 
 namespace ESM {
 
@@ -97,7 +97,7 @@ public:
     uint32_t getCurrentPosition();
 
     std::string getFileName() { return this->fileName; };
-    void readDirect(char* dest, ssize_t length);
+    void        readDirect(char* dest, ssize_t length);
 
     template <typename T>
     void readSubrecord(T& subrecValue);
@@ -125,13 +125,20 @@ public:
 
     void readFixedSizeString(std::string& dest, size_t size);
 
-    void
-    reportError(std::string err);
+    void reportError(std::string err);
+    void reset()
+    {
+        this->fileLeft        = this->fileSize;
+        this->currentLocation = 0;
+        this->file.seekg(0, std::ios::beg);
+    }
+
+    void seek(ssize_t offset);
 
 private:
-    std::istream* currentStream;
-    std::ifstream file;
-    std::istream  compressed;
+    std::istream*              currentStream;
+    std::ifstream              file;
+    std::istream               compressed;
     std::unique_ptr<decompBuf> compBuf;
     //decompBuf*    compBuf;
 
