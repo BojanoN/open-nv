@@ -204,6 +204,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${IncludeDirectories}
 )
 
+target_compile_options(${PROJECT_NAME} PUBLIC $<$<CONFIG:DEBUG>: -DDEBUG>)
 
 if(NOT LINK_STATIC)
   message(STATUS "Using dynamic linking for libraries...")

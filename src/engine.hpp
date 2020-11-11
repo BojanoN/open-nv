@@ -30,13 +30,15 @@ private:
     fs::path dataPath;
     fs::path resourcePath;
 
-    std::vector<fs::directory_entry> mastersPlugins;
-    GameWorld                        world;
+    std::vector<fs::path> mastersPlugins;
+    GameWorld             world;
 
     SDL_Window*   window;
     SDL_GLContext openGLContext;
 
     bool initSDL();
+    bool loadConfigurationFiles();
+    bool loadGameSettings();
 
 public:
     Engine(const std::string& configPath, const std::string& installPath);

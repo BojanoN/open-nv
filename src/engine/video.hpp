@@ -9,7 +9,7 @@ struct SDL_Window;
 
 class VideoPlayer {
 public:
-    VideoPlayer();
+    VideoPlayer(unsigned int displayWidth, unsigned int displayHeight);
 
     int  play(const char* path, SDL_Window* window);
     void close();

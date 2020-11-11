@@ -15,6 +15,10 @@
 #include <utility>
 #include <vector>
 
+namespace File {
+class ConfigurationManager;
+}
+
 namespace GameWorld {
 
 using ESM::ESMReader;
@@ -154,8 +158,8 @@ class GameWorld {
 
     std::unordered_map<std::string, formid> edidCells;
 
-    std::unordered_map<std::string, fs::directory_entry> availableFiles;
-    std::unordered_map<std::string, GameFileInfo>        registeredGameFiles;
+    std::unordered_map<std::string, fs::path>     availableFiles;
+    std::unordered_map<std::string, GameFileInfo> registeredGameFiles;
 
     void initDataStoreMap();
     void parseCellGroup(ESM::ESMReader& reader);
@@ -164,11 +168,10 @@ class GameWorld {
 
     void parseWorldspaceGroup(ESM::ESMReader& reader);
 
-    void storeAvailableFilePaths(std::vector<fs::directory_entry>& mastersPlugins);
+    void storeAvailableFilePaths(std::vector<fs::path>& mastersPlugins);
     bool isLoaded(const std::string& name);
 
-    void registerGameFile(fs::directory_entry& file);
-    bool loadTopLevelGroup(const std::string& gameFileName, ESM::ESMType groupLabel);
+    void registerGameFile(fs::path& file);
 
 public:
     GameWorld()
@@ -178,7 +181,9 @@ public:
 
     //void load(ESM::ESMReader& reader);
 
-    void loadMastersAndPlugins(std::vector<fs::directory_entry>& mastersPlugins);
+    void loadMastersAndPlugins(std::vector<fs::path>& mastersPlugins);
+    bool loadTopLevelGroup(const std::string& gameFileName, ESM::ESMType groupLabel);
+    bool loadGameSettings(fs::path& gameFile, File::ConfigurationManager& configurationManager);
 
     formid getByEditorID(std::string& editorId)
     {

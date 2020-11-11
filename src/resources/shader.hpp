@@ -13,11 +13,8 @@ class ShaderManager {
 public:
     static std::shared_ptr<Shader> getShader(const std::string& vertexShader, const std::string& fragmentShader)
     {
-        fs::path vertexShaderFullPath   = shaderPath;
-        fs::path fragmentShaderFullPath = shaderPath;
-
-        vertexShaderFullPath += vertexShader;
-        fragmentShaderFullPath += fragmentShader;
+        fs::path vertexShaderFullPath   = shaderPath / vertexShader;
+        fs::path fragmentShaderFullPath = shaderPath / fragmentShader;
 
         std::lock_guard<std::mutex> guard(_mutex);
 

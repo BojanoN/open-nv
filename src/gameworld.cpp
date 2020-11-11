@@ -3,6 +3,8 @@
 #include "esm/utils.hpp"
 #include "logc/log.h"
 
+#include <file/configuration_manager.hpp>
+
 #include <cstring>
 
 namespace GameWorld {
@@ -10,27 +12,27 @@ namespace GameWorld {
 namespace fs = std::filesystem;
 using ESM::MasterPluginInfo;
 
-void GameWorld::loadMastersAndPlugins(std::vector<fs::directory_entry>& mastersPlugins)
+void GameWorld::loadMastersAndPlugins(std::vector<fs::path>& mastersPlugins)
 {
 
     storeAvailableFilePaths(mastersPlugins);
 
     for (auto& filePath : mastersPlugins) {
-        if (!isLoaded(filePath.path().filename().string())) {
+        if (!isLoaded(filePath.filename().string())) {
             registerGameFile(filePath);
         }
     }
 }
 
-void GameWorld::storeAvailableFilePaths(std::vector<fs::directory_entry>& mastersPlugins)
+void GameWorld::storeAvailableFilePaths(std::vector<fs::path>& mastersPlugins)
 {
 
     log_debug("Available master and plugin files.");
 
     for (auto& filePath : mastersPlugins) {
-        log_debug("%s", filePath.path().string().c_str());
+        log_debug("%s", filePath.string().c_str());
 
-        availableFiles.insert(std::make_pair(filePath.path().filename().string(), filePath));
+        availableFiles.insert(std::make_pair(filePath.filename().string(), filePath));
     }
 }
 
@@ -39,16 +41,16 @@ bool GameWorld::isLoaded(const std::string& name)
     return registeredGameFiles.count(name) != 0;
 }
 
-void GameWorld::registerGameFile(fs::directory_entry& file)
+void GameWorld::registerGameFile(fs::path& file)
 {
 
-    ESM::ESMReader* reader = new ESMReader(file.path().string());
+    ESM::ESMReader* reader = new ESMReader(file.string());
     if (!reader->hasMoreBytes()) {
         std::stringstream s;
         s << "File " << reader->getFileName() << " is empty!\n";
         throw std::runtime_error(s.str());
     }
-
+    log_info("Loading file: %s", file.string().c_str());
     reader->readNextRecordHeader();
     if (reader->recordType() != ESM::ESMType::TES4) {
         std::stringstream s;
@@ -63,24 +65,8 @@ void GameWorld::registerGameFile(fs::directory_entry& file)
         }
     }
 
-    log_info("Loading file: %s", file.path().string().c_str());
-
-    if (!reader->hasMoreBytes()) {
-        std::stringstream s;
-        s << "File " << reader->getFileName() << " is empty!\n";
-        throw std::runtime_error(s.str());
-    }
-
-    reader->readNextRecordHeader();
-    if (reader->recordType() != ESM::ESMType::TES4) {
-        std::stringstream s;
-        s << "File " << reader->getFileName() << " is not a valid plugin file!\n";
-        throw std::runtime_error(s.str());
-    }
-
-    std::string fileName = file.path().filename().string();
-
-    GameFileInfo currentFileInfo;
+    std::string   fileName        = file.filename().string();
+    GameFileInfo& currentFileInfo = registeredGameFiles[fileName];
 
     currentFileInfo.fileReader = std::unique_ptr<ESM::ESMReader>(reader);
 
@@ -143,6 +129,51 @@ bool GameWorld::loadTopLevelGroup(const std::string& gameFileName, ESM::ESMType 
         } catch (std::runtime_error& e) {
             log_error(e.what());
             gameFileReader->skipRecord();
+        }
+    }
+
+    return true;
+}
+
+bool GameWorld::loadGameSettings(fs::path& gameFilePath, File::ConfigurationManager& configurationManager)
+{
+    std::string filename = gameFilePath.filename().string();
+
+    if (!isLoaded(filename)) {
+        log_error("Game file %s is not loaded!", filename.c_str());
+        return false;
+    }
+
+    GameFileInfo& fileInfo = this->registeredGameFiles[filename];
+
+    File::Configuration& gameSettings = configurationManager.getGameSettingsConfiguration();
+
+    ssize_t         targetGroupOffset = fileInfo.topLevelGroupOffsets[ESM::ESMType::GMST];
+    ESM::ESMReader* gameFileReader    = fileInfo.fileReader.get();
+
+    gameFileReader->seek(targetGroupOffset);
+    gameFileReader->readNextGroupHeader();
+
+    while (gameFileReader->hasMoreRecordsInGroup()) {
+        gameFileReader->readNextRecordHeader();
+
+        ESM::GameSetting tmpGMSTRecord(*gameFileReader);
+        std::string&     editorId = tmpGMSTRecord.editorId;
+
+#ifdef DEBUG
+        log_debug("Loading GMST record: %s", editorId.c_str());
+#endif
+
+        switch (editorId[0]) {
+        case 's':
+            gameSettings.setString(editorId, std::get<std::string>(tmpGMSTRecord.value));
+            break;
+        case 'f':
+            gameSettings.setDouble(editorId, std::get<float>(tmpGMSTRecord.value));
+            break;
+        default:
+            gameSettings.setInt(editorId, std::get<int32_t>(tmpGMSTRecord.value));
+            break;
         }
     }
 

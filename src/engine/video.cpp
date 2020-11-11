@@ -22,11 +22,11 @@ unsigned int VideoPlayer::elements[6] = {
 
 // TODO: serve the video shader from some type of cache or manager to avoid recompiling the shaders
 // every time we try to play a file
-VideoPlayer::VideoPlayer()
+VideoPlayer::VideoPlayer(unsigned int width, unsigned int height)
     : // TODO: fetch the output values to match our current resolution
     // possibly from a settings manager
-    outputVideoParams(1920, 1080)
-    , decoder(1920, 1080)
+    outputVideoParams(width, height)
+    , decoder(width, height)
 
 {
     videoShader = ShaderManager::getShader(VideoPlayer::videoVertexShader, VideoPlayer::videoFragmentShader);
