@@ -2,6 +2,7 @@
 
 #include <esm/reader.hpp>
 #include <file/configuration_manager.hpp>
+#include <game/fnv.hpp>
 #include <gameworld.hpp>
 #include <resources/shader.hpp>
 
@@ -32,6 +33,7 @@ private:
 
     std::vector<fs::path> mastersPlugins;
     GameWorld             world;
+    FalloutNVGame         game;
 
     SDL_Window*   window;
     SDL_GLContext openGLContext;

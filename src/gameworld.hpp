@@ -184,6 +184,7 @@ public:
     void loadMastersAndPlugins(std::vector<fs::path>& mastersPlugins);
     bool loadTopLevelGroup(const std::string& gameFileName, ESM::ESMType groupLabel);
     bool loadGameSettings(fs::path& gameFile, File::ConfigurationManager& configurationManager);
+    bool loadTopLevelGroups(const std::string& gameFileName, const std::unordered_set<ESM::ESMType>& groupLabels);
 
     formid getByEditorID(std::string& editorId)
     {

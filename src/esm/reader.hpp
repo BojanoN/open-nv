@@ -65,6 +65,7 @@ public:
     formid      recordId();
 
     uint16_t subrecordSize() { return currentSubrecordHead.dataSize; }
+    uint32_t recordSize() { return currentRecordHead.dataSize; }
 
     void readNextSubrecordHeader();
     void readNextRecordHeader();

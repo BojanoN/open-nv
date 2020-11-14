@@ -81,9 +81,60 @@ void GameWorld::registerGameFile(fs::path& file)
         reader->skipGroup();
     }
 
+    // Record cell positions
+
     reader->reset();
 
     log_info("Registered game file: %s", fileName.c_str());
+}
+
+bool GameWorld::loadTopLevelGroups(const std::string& gameFileName, const std::unordered_set<ESM::ESMType>& groupLabels)
+{
+    if (!isLoaded(gameFileName)) {
+        log_error("Game file %s is not loaded!", gameFileName.c_str());
+        return false;
+    }
+
+    GameFileInfo& gameFileInfo = this->registeredGameFiles[gameFileName];
+
+    for (ESM::ESMType groupLabel : groupLabels) {
+        if (gameFileInfo.topLevelGroupOffsets.count(groupLabel) == 0) {
+            continue;
+        }
+
+        ssize_t         targetGroupOffset = gameFileInfo.topLevelGroupOffsets[groupLabel];
+        ESM::ESMReader* gameFileReader    = gameFileInfo.fileReader.get();
+
+        gameFileReader->seek(targetGroupOffset);
+        gameFileReader->readNextGroupHeader();
+
+        GameDataBase* dataStore;
+        try {
+            dataStore = getDataStore(groupLabel);
+        } catch (std::runtime_error& e) {
+            log_error(e.what());
+            return false;
+        }
+
+        while (gameFileReader->hasMoreRecordsInGroup()) {
+            gameFileReader->readNextRecordHeader();
+
+            try {
+                if (gameFileReader->isCurrentRecordCompressed()) {
+                    gameFileReader->startCompressedMode();
+                    dataStore->load(*gameFileReader);
+                    gameFileReader->endCompressedMode();
+                } else {
+                    dataStore->load(*gameFileReader);
+                }
+            } catch (std::runtime_error& e) {
+                log_error(e.what());
+                gameFileReader->skipRecord();
+            }
+        }
+    }
+
+    return true;
 }
 
 bool GameWorld::loadTopLevelGroup(const std::string& gameFileName, ESM::ESMType groupLabel)
@@ -414,6 +465,7 @@ void GameWorld::parseCellGroup(ESM::ESMReader& reader)
     }
     log_info("Read a total of %d records in the CELL group. Skipped a total of %d records.", recordsLoaded, recordsSkipped);
 }
+
 void GameWorld::parseWorldspaceGroup(ESM::ESMReader& reader)
 {
     uint32_t worldspaceGroupEnd = reader.groupSize() + reader.getCurrentPosition();

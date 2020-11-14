@@ -135,6 +135,7 @@ set(sources
   ./resources/resource.cpp
   ./resources/shader.cpp
   ./gameworld.cpp
+  ./game/fnv.cpp
   ./main.cpp
   ./nif/nifdata.cpp
   ./nif/nifreader.cpp

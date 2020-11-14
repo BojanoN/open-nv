@@ -15,6 +15,7 @@ namespace Engine {
 namespace fs = std::filesystem;
 
 Engine::Engine(const std::string& configPath, const std::string& installPath)
+    : game(this->world)
 {
 
     this->workingDirectory = fs::current_path();
@@ -183,6 +184,8 @@ bool Engine::start()
     for (fs::path& gameFile : mastersPlugins) {
         world.loadGameSettings(gameFile, this->configManager);
     }
+
+    game.load();
 
     return true;
 }
