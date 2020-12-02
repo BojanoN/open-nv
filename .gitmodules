@@ -13,3 +13,6 @@
 [submodule "lib/src/openal-soft"]
 	path = lib/src/openal-soft
 	url = https://github.com/kcat/openal-soft/
+[submodule "lib/src/sdl2"]
+	path = lib/src/sdl2
+	url = https://github.com/spurious/SDL-mirror.git
