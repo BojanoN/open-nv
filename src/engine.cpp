@@ -9,68 +9,23 @@
 #include <vector>
 
 #include <cstdlib>
+#include <system_error>
+
 
 namespace Engine {
 
 namespace fs = std::filesystem;
 
-Engine::Engine(const std::string& configPath, const std::string& installPath)
+Engine::Engine(const std::string& configPath, const std::string& dirInstall)
     : game(this->world)
 {
-
-    this->workingDirectory = fs::current_path();
-    this->resourcePath     = this->workingDirectory / "res";
-    this->dataPath         = fs::path(installPath) / dataFolderName;
-
-    File::Reader::setRootFilePath(this->dataPath);
-    ShaderManager::shaderPath = this->resourcePath / "shader";
-
-    // Probe user config directory
-    // Load all configuration present in user directory
-    const char* userHomeDir = std::getenv("HOME");
-    if (!userHomeDir) {
-        throw std::runtime_error("Unable to get user home directory!");
-    }
-
-    fs::path userHomeDirPath { userHomeDir };
-
-    // Check if user config directory exists
-    fs::path        userConfigurationDirectory       = userHomeDirPath / ".opennv";
-    fs::file_status userConfigurationDirectoryStatus = fs::status(userConfigurationDirectory);
-
-    if (!fs::exists(userConfigurationDirectoryStatus)) {
-        // Create and copy ini files to user directory
-        log_info("User configuration directory not found at %s, creating...", userConfigurationDirectory.string().c_str());
-        bool created = fs::create_directory(userConfigurationDirectory);
-
-        if (!created) {
-            throw std::runtime_error("Unable to create user configuration directory!");
-        }
-
-        fs::copy(dataPath / "Fallout_default.ini", userConfigurationDirectory / "Fallout.ini");
-
-        log_info("Loading configuration files from install directory...");
-        for (auto& file : fs::directory_iterator(configPath)) {
-            if (file.path().extension() == ".ini") {
-                configManager.loadFile(file.path().string());
-            }
-        }
-
-    } else {
-        log_info("Loading configuration files from %s ...", userConfigurationDirectory.string().c_str());
-        for (auto& file : fs::directory_iterator(userConfigurationDirectory)) {
-            if (file.path().extension() == ".ini") {
-                configManager.loadFile(file.path().string());
-            }
-        }
-    }
-
-    for (auto& file : fs::directory_iterator(dataPath)) {
-        if (file.path().extension() == ".esm" || file.path().extension() == ".esp") {
-            this->mastersPlugins.push_back(file.path());
-        }
-    }
+    this->dirInstall = fs::path(dirInstall);
+    this->dirWorking = fs::current_path();
+    this->dirResource     = this->dirWorking / dirNameResource;
+    this->dirData         = this->dirInstall / dirNameGameData;
+    File::Reader::setRootFilePath(this->dirData);
 }
+
 
 Engine::~Engine()
 {
@@ -82,6 +37,69 @@ Engine::~Engine()
 
     File::Reader::destroyFileProvider();
 }
+
+
+bool Engine::initConfiguration() {
+    ShaderManager::shaderPath = this->dirResource / dirNameShader;
+
+    // Probe user config directory
+    // Load all configuration present in user directory
+    const char* envvalHome = std::getenv(envHome);
+    if (envvalHome == NULL) {
+        log_error("Unable to get user home directory!");
+        return false;
+    }
+
+    fs::path dirUserHome { envvalHome };
+
+    // Check if user config directory exists
+    fs::path        dirUserConfiguration       = dirUserHome / dirNameUserConfiguration;
+    fs::file_status statusDirUserConfiguration = fs::status(dirUserConfiguration);
+
+    if (!fs::exists(statusDirUserConfiguration)) {
+        // Create and copy ini files to user directory
+        log_info("User configuration directory not found at %s, creating...", dirUserConfiguration.string().c_str());
+        bool createdDirUserConfiguration = fs::create_directory(dirUserConfiguration);
+
+        if (!createdDirUserConfiguration) {
+            log_error("Unable to create user configuration directory!");
+            return false;
+        }
+
+        std::error_code errorInCopy;
+        fs::copy(fs::path(this->dirInstall) / fileNameGameDefaultConfiguration, dirUserConfiguration / fileNameGameDefaultConfiguration, errorInCopy);
+
+        if(errorInCopy) {
+            log_error("Unable to copy configuration file.");
+            return false;
+        }
+
+    }
+
+    log_info("Loading configuration files from %s ...", dirUserConfiguration.string().c_str());
+ 
+    for (auto& file : fs::directory_iterator(dirUserConfiguration)) {
+        
+        if (file.path().extension() == extConfigurationFile) {
+            log_info("Loading configuration file: %s ...", file.path().string().c_str());
+            
+            bool loadedConfigFromFile = configManager.loadFile(file.path().string());
+            if(!loadedConfigFromFile) {
+                log_warn("Error while reading configuration from file %s", file.path().string().c_str());
+            }
+        }
+    }
+
+    log_info("Configuration files loaded.");
+    log_info("Finding master and plugin files...");
+
+    for (auto& file : fs::directory_iterator(this->dirData)) {
+        if (file.path().extension() == extMasterFile || file.path().extension() == extPluginFile) {
+            this->mastersPlugins.push_back(file.path());
+        }
+    }
+}
+
 
 bool Engine::initSDL()
 {
@@ -102,13 +120,13 @@ bool Engine::initSDL()
 
     size_t windowHeight, windowWidth;
 
-    File::Configuration& displayConfiguration = this->configManager.getConfiguration("Display");
+    File::Configuration& displayConfiguration = this->configManager.getConfiguration(displayConfigurationName);
 
     // Check for previously defined resolution
     try {
 
-        windowWidth  = displayConfiguration.getUInt("iSize W");
-        windowHeight = displayConfiguration.getUInt("iSize H");
+        windowWidth  = displayConfiguration.getUInt(cfgScreenWidth);
+        windowHeight = displayConfiguration.getUInt(cfgScreenHeight);
 
     } catch (std::runtime_error& e) {
         // Fallback to native is none
@@ -126,11 +144,11 @@ bool Engine::initSDL()
         windowWidth  = currentDisplayMode.w;
         windowHeight = currentDisplayMode.h;
 
-        displayConfiguration.setUInt("iSize W", windowWidth);
-        displayConfiguration.setUInt("iSize H", windowHeight);
+        displayConfiguration.setUInt(cfgScreenWidth, windowWidth);
+        displayConfiguration.setUInt(cfgScreenHeight, windowHeight);
     }
 
-    this->window = SDL_CreateWindow("OpenNV", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    this->window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (this->window == nullptr) {
         return false;
     }
@@ -144,8 +162,18 @@ bool Engine::initSDL()
 
 bool Engine::start()
 {
+    log_info("Loading configuration...");
+    
+    bool initializedConfiguration = initConfiguration();
+    if(!initializedConfiguration) {
+        
+        log_fatal("Cannot initialize configuration.");
+        return false;
+    }
 
-    File::Configuration& displayConfiguration = this->configManager.getConfiguration("Display");
+    log_info("Initializing engine components.");
+
+    File::Configuration& displayConfiguration = this->configManager.getConfiguration(displayConfigurationName);
 
     if (!AudioEngine::init()) {
         log_fatal("Audio engine initialization failed!");
@@ -164,13 +192,13 @@ bool Engine::start()
         return false;
     }
 
-    unsigned int displayWidth  = displayConfiguration.getUInt("iSize W");
-    unsigned int displayHeight = displayConfiguration.getUInt("iSize H");
+    unsigned int displayWidth  = displayConfiguration.getUInt(cfgScreenWidth);
+    unsigned int displayHeight = displayConfiguration.getUInt(cfgScreenHeight);
 
-    fs::path introMoviePath = this->dataPath / "Video/FNVIntro.bik";
+    fs::path fileIntroMovie = (this->dirData / dirNameVideo) / fileNameIntroMovie;
 
     VideoPlayer* introMoviePlayer = new VideoPlayer(displayWidth, displayHeight);
-    if (introMoviePlayer->play(introMoviePath.string().c_str(), this->window) < 0) {
+    if (introMoviePlayer->play(fileIntroMovie.string().c_str(), this->window) < 0) {
         log_error("Failed to play intro video!");
     }
 

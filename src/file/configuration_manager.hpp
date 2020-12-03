@@ -35,9 +35,8 @@ public:
     };
     ~ConfigurationManager() = default;
 
-    // throws invalid_argument if file cannot be opened
-    // throws runtime_error if error while reading
-    void loadFile(const std::string& path);
+    //
+    bool loadFile(const std::string& path) noexcept;
 
     // throws out_of_range
     Configuration& getConfiguration(const std::string& name) { return configurations.at(name); }

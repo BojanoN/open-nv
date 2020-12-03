@@ -9,19 +9,20 @@ namespace File {
 
 namespace fs = std::filesystem;
 
-void ConfigurationManager::loadFile(const std::string& filename)
+bool ConfigurationManager::loadFile(const std::string& filename) noexcept
 {
     fs::path path(filename);
 
     if (!fs::exists(path) || !fs::is_regular_file(path)) {
         log_error("%s is not a configuration file", filename.data());
-        throw std::invalid_argument("Not a configuration file");
+        return false;
     }
 
     std::ifstream configFile(path);
 
     if (!configFile.good()) {
-        throw std::invalid_argument("Cannot open config file");
+        log_error("Cannot open config file");
+        return false;
     }
 
     Configuration* currentConfiguration = &configurations[defaultConfigurationName];
@@ -32,11 +33,12 @@ void ConfigurationManager::loadFile(const std::string& filename)
         readLine(configFile, line);
 
         if (configFile.eof()) {
-            return;
+            return true;
         }
 
         if (configFile.fail()) {
-            throw std::runtime_error("Error while reading config file");
+            log_error("Error while reading config file");
+            return false;
         }
 
         if (line.empty() || line.find(commentStart) == 0) {
@@ -80,7 +82,8 @@ void ConfigurationManager::loadFile(const std::string& filename)
                 currentConfiguration->setString(name, value);
                 break;
             default:
-                throw std::invalid_argument("Invalid type");
+                log_warn("Invalid type: %s, for attribute", value.data(), name.data());
+                break;
             }
 
         } catch (std::invalid_argument& inv_arg) {

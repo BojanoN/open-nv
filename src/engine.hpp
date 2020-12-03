@@ -23,13 +23,30 @@ namespace fs = std::filesystem;
 class Engine {
 
 private:
-    static inline const std::string dataFolderName = "Data";
+    static inline const std::string dirNameGameData = "Data";
+    static inline const char* envHome = "HOME";
+    static inline const std::string dirNameShader = "shader";
+    static inline const std::string dirNameResource = "res";
+    static inline const std::string dirNameUserConfiguration = ".opennv";
+    static inline const std::string fileNameGameDefaultConfiguration = "Fallout_default.ini";
+    static inline const std::string dirNameVideo = "Video";
+    static inline const std::string fileNameIntroMovie = "FNVIntro.bik";
+    static inline const std::string extConfigurationFile = ".ini";
+    static inline const std::string extMasterFile = ".esm";
+    static inline const std::string extPluginFile = ".esp";
+
+    static inline const char* displayConfigurationName = "Display";
+    static inline const char* cfgScreenWidth = "iSize W";
+    static inline const char* cfgScreenHeight = "iSize H";
+    static inline const char* windowName = "OpenNV";
+
 
     ConfigurationManager configManager;
 
-    fs::path workingDirectory;
-    fs::path dataPath;
-    fs::path resourcePath;
+    fs::path dirInstall;
+    fs::path dirWorking;
+    fs::path dirData;
+    fs::path dirResource;
 
     std::vector<fs::path> mastersPlugins;
     GameWorld             world;
@@ -39,11 +56,12 @@ private:
     SDL_GLContext openGLContext;
 
     bool initSDL();
+    bool initConfiguration();
     bool loadConfigurationFiles();
     bool loadGameSettings();
 
 public:
-    Engine(const std::string& configPath, const std::string& installPath);
+    Engine(const std::string& configPath, const std::string& dirInstall);
     ~Engine();
 
     bool start();
