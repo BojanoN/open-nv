@@ -1,10 +1,13 @@
 #pragma once
-#include "logc/log.h"
+//#include "logc/log.h"
+#include "types/errorpair.hpp"
 
 #include <filesystem>
 #include <unordered_map>
 #include <string>
 #include <variant>
+#include <cstring>
+#include <cstdint>
 
 
 namespace fs = std::filesystem;
@@ -12,9 +15,29 @@ namespace fs = std::filesystem;
 namespace File {
 
 
+// TODO: refactor strings to remove copying and allocation
+
 class Configuration {
 
+	union ConfigurationValue {
+
+		uint64_t uValue;
+		int64_t iValue;
+		float fValue;
+		bool bValue;
+		char* szValue;
+
+	};
+
 private:
+
+	static inline const char uIntPrefix = 'u'; 
+	static inline const char intPrefix = 'i';
+	static inline const char floatPrefix = 'f';
+	static inline const char boolPrefix = 'b';
+	static inline const char stringPrefix = 's'; 
+
+	std::unordered_map<std::string, ConfigurationValue> nValues;
 
 	std::unordered_map<std::string, std::variant<std::string, int64_t, uint64_t, double, bool>> values;
 
@@ -25,16 +48,33 @@ private:
 	template <typename T>
 	void set(const std::string& name, T value); 
 
+	bool isValidConfigurationName(const std::string& name, char prefix) const;
+
 public:
 
 	Configuration() = default;
-	~Configuration() = default;
+	~Configuration();
 
 	const std::string& getString(const std::string& name) const { return get<std::string>(name); }
 	const int64_t& getInt(const std::string& name) const { return get<int64_t>(name); }
 	const uint64_t& getUInt(const std::string& name) const { return get<uint64_t>(name); }
 	const double& getDouble(const std::string& name) const { return get<double>(name); }
 	const bool& getBool(const std::string& name) const { return get<bool>(name); }
+
+	Types::ErrorPair<uint64_t> nGetUInt(const std::string& name);
+	Types::ErrorPair<int64_t> nGetInt(const std::string& name);
+	Types::ErrorPair<float> nGetFloat(const std::string& name);
+	Types::ErrorPair<bool> nGetBool(const std::string& name);
+	Types::ErrorPair<const char*> nGetString(const std::string& name);
+	
+	bool contains(const std::string& name) const;
+
+	bool nSetString(const std::string& name, const char* value);
+	bool nSetInt(const std::string& name, int64_t value);
+	bool nSetUInt(const std::string& name, uint64_t value);
+	bool nSetFloat(const std::string& name, float value);
+	bool nSetBool(const std::string& name, bool value);
+
 
 	void setString(const std::string& name, std::string value) { set<std::string>(name, value);}
 	void setInt(const std::string& name, int64_t value) { set<int64_t>(name, value);}
@@ -47,7 +87,9 @@ public:
 #endif
 
 };
-	
+
+
+
 
 template <typename T>
 const T& Configuration::get(const std::string& name) const {

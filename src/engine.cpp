@@ -95,9 +95,11 @@ bool Engine::initConfiguration() {
 
     for (auto& file : fs::directory_iterator(this->dirData)) {
         if (file.path().extension() == extMasterFile || file.path().extension() == extPluginFile) {
+            log_info("Registering file: %s", file.path().string().c_str());
             this->mastersPlugins.push_back(file.path());
         }
     }
+    return true;
 }
 
 
