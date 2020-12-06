@@ -135,7 +135,10 @@ set(sources
   ./resources/resource.cpp
   ./resources/shader.cpp
   ./gameworld.cpp
-  ./game/fnv.cpp
+  ./types/conversion.cpp
+  ./game/rendermanager.cpp
+  ./game/fnv/fnv.cpp
+  ./game/fnv/states/loadingscreen.cpp
   ./main.cpp
   ./nif/nifdata.cpp
   ./nif/nifreader.cpp

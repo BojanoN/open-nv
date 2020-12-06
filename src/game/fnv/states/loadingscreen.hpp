@@ -1,11 +1,15 @@
 #pragma once
 
 #include <game/state.hpp>
+#include <types/errorpair.hpp>
+
 #include <memory>
 #include <vector>
 
 class Texture2D;
 class Shader;
+
+using namespace Types;
 
 class LoadingScreen : public Game::DrawableGameState {
 public:
@@ -16,9 +20,13 @@ public:
 
     virtual void draw();
 
-    LoadingScreen();
+    static ErrorPair<std::shared_ptr<LoadingScreen>> create();
+
+    virtual ~LoadingScreen() {};
 
 private:
+    LoadingScreen() {};
+
     std::shared_ptr<Shader> mShader;
 
     std::vector<std::shared_ptr<Texture2D>> mLoadingScreenTextures;

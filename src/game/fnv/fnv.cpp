@@ -7,7 +7,7 @@ const std::unordered_set<ESM::ESMType> FalloutNVGame::initialToplevelGroups {
     ESM::ESMType::LVLC,
     ESM::ESMType::NPC_,
     ESM::ESMType::LVLI,
-    ESM::ESMType::WEAP,
+    //    ESM::ESMType::WEAP,
     ESM::ESMType::FURN,
     ESM::ESMType::TREE,
     ESM::ESMType::GRAS,
@@ -50,7 +50,6 @@ const std::unordered_set<ESM::ESMType> FalloutNVGame::initialToplevelGroups {
     ESM::ESMType::MISC,
     ESM::ESMType::ARMO,
     ESM::ESMType::TXST,
-    ESM::ESMType::CELL,
     ESM::ESMType::SCOL,
 };
 
