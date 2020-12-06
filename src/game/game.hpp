@@ -2,6 +2,8 @@
 
 #include <gameworld.hpp>
 
+namespace Game {
+
 class Game {
 public:
     Game(GameWorld::GameWorld& w)
@@ -12,3 +14,5 @@ public:
 protected:
     GameWorld::GameWorld& world;
 };
+
+}
