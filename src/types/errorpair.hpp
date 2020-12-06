@@ -1,24 +1,27 @@
 #pragma once
+#include "error/error.hpp"
 #include <cstdint>
 
 namespace Types {
 
+using Err::Error;
+
 template <typename ValueType>
 struct ErrorPair {
 
-	uint32_t error;
+	Error error;
 	ValueType value;
 
 	ErrorPair() {}
-	ErrorPair(uint32_t error, ValueType value) : error{error}, value{value} {}
-	ErrorPair(uint32_t error) : error{error} {}
+	ErrorPair(Error error, ValueType value) : error{error}, value{value} {}
+	ErrorPair(Error error) : error{error} {}
 
 	bool fail() {
-		return error != 0;
+		return error.fail();
 	}
 
 	bool success() {
-		return !fail();
+		return error.success();
 	}
 };
 

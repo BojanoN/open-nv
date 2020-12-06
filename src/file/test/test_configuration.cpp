@@ -1,6 +1,9 @@
 #include <cstdint>
 #include "../configuration.hpp"
 #include "types/errorpair.hpp"
+#include "error/error.hpp"
+
+using Err::Error;
 
 static File::Configuration configuration;
 
@@ -48,7 +51,7 @@ static const char* _dots =
                   &_dots[std::strlen(__FUNCTION__) + STRLEN_PASSED]);         \
     } else {                                                                 \
       unsigned int length = 0;                                               \
-      for (unsigned int i = __LINE__; i > 0; i / 10) {                       \
+      for (unsigned int i = __LINE__; i > 0; i /= 10) {                       \
         length += 1;                                                         \
       }                                                                      \
       std::printf(                                                           \
@@ -129,8 +132,8 @@ static void test_uIntNoValueBeforeSet() {
 }
 
 static void test_uIntCannotSetValueEmptyName() {
-  bool result = configuration.nSetUInt(emptyName, uintValue);
-  GAMAL_ABDUL_NASSERT(!result);
+  Error result = configuration.nSetUInt(emptyName, uintValue);
+  GAMAL_ABDUL_NASSERT(result.fail());
 }
 
 static void test_uIntCannotGetValueEmptyName() {
@@ -139,8 +142,8 @@ static void test_uIntCannotGetValueEmptyName() {
 }
 
 static void test_uIntCannotSetValueForNameWithInvalidPrefix() {
-  bool result = configuration.nSetUInt(invalidUIntConfigurationName, uintValue);
-  GAMAL_ABDUL_NASSERT(!result);
+  Error result = configuration.nSetUInt(invalidUIntConfigurationName, uintValue);
+  GAMAL_ABDUL_NASSERT(result.fail());
 }
 
 static void test_uIntCannotGetValueForNameWithInvalidPrefix() {
@@ -150,34 +153,34 @@ static void test_uIntCannotGetValueForNameWithInvalidPrefix() {
 }
 
 static void test_uIntCanSetValueForNameWithValidPrefix() {
-  bool result = configuration.nSetUInt(uIntConfigurationName, uintValue);
-  GAMAL_ABDUL_NASSERT(result);
+  Error result = configuration.nSetUInt(uIntConfigurationName, uintValue);
+  GAMAL_ABDUL_NASSERT(result.success());
 }
 
 static void test_uIntCanGetPreviouslySetValueForNameWithValidPrefix() {
-  bool setResult = configuration.nSetUInt(uIntConfigurationName, uintValue);
+  Error setResult = configuration.nSetUInt(uIntConfigurationName, uintValue);
   Types::ErrorPair getResult = configuration.nGetUInt(uIntConfigurationName);
   GAMAL_ABDUL_NASSERT(!getResult.fail());
 }
 
 static void test_uIntWillReturnCorrectValue() {
-  bool setResult = configuration.nSetUInt(uIntConfigurationName, uintValue);
+  Error setResult = configuration.nSetUInt(uIntConfigurationName, uintValue);
   Types::ErrorPair getResult = configuration.nGetUInt(uIntConfigurationName);
   GAMAL_ABDUL_NASSERT(getResult.value == uintValue);
 }
 
 static void test_uIntCanReplaceValue() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetUInt(uIntConfigurationName, uintValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetUInt(uIntConfigurationName, reUIntValue);
-  GAMAL_ABDUL_NASSERT(secondSetResult);
+  GAMAL_ABDUL_NASSERT(secondSetResult.success());
 }
 
 static void test_uIntWillReturnCorrectValueAfterReplacement() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetUInt(uIntConfigurationName, uintValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetUInt(uIntConfigurationName, reUIntValue);
   Types::ErrorPair getResult = configuration.nGetUInt(uIntConfigurationName);
   GAMAL_ABDUL_NASSERT(getResult.value == reUIntValue);
@@ -202,8 +205,8 @@ static void test_intNoValueBeforeSet() {
 }
 
 static void test_intCannotSetValueEmptyName() {
-  bool result = configuration.nSetInt(emptyName, intValue);
-  GAMAL_ABDUL_NASSERT(!result);
+  Error result = configuration.nSetInt(emptyName, intValue);
+  GAMAL_ABDUL_NASSERT(result.fail());
 }
 
 static void test_intCannotGetValueEmptyName() {
@@ -212,8 +215,8 @@ static void test_intCannotGetValueEmptyName() {
 }
 
 static void test_intCannotSetValueForNameWithInvalidPrefix() {
-  bool result = configuration.nSetInt(invalidUIntConfigurationName, intValue);
-  GAMAL_ABDUL_NASSERT(!result);
+  Error result = configuration.nSetInt(invalidUIntConfigurationName, intValue);
+  GAMAL_ABDUL_NASSERT(result.fail());
 }
 
 static void test_intCannotGetValueForNameWithInvalidPrefix() {
@@ -222,32 +225,32 @@ static void test_intCannotGetValueForNameWithInvalidPrefix() {
 }
 
 static void test_intCanSetValueForNameWithValidPrefix() {
-  bool result = configuration.nSetInt(intConfigurationName, intValue);
-  GAMAL_ABDUL_NASSERT(result);
+  Error result = configuration.nSetInt(intConfigurationName, intValue);
+  GAMAL_ABDUL_NASSERT(result.success());
 }
 
 static void test_intCanGetPreviouslySetValueForNameWithValidPrefix() {
-  bool setResult = configuration.nSetInt(intConfigurationName, intValue);
+  Error setResult = configuration.nSetInt(intConfigurationName, intValue);
   Types::ErrorPair getResult = configuration.nGetInt(intConfigurationName);
   GAMAL_ABDUL_NASSERT(!getResult.fail());
 }
 
 static void test_intWillReturnCorrectValue() {
-  bool setResult = configuration.nSetInt(intConfigurationName, intValue);
+  Error setResult = configuration.nSetInt(intConfigurationName, intValue);
   Types::ErrorPair getResult = configuration.nGetInt(intConfigurationName);
   GAMAL_ABDUL_NASSERT(getResult.value == intValue);
 }
 
 static void test_intCanReplaceValue() {
-  bool firstSetResult = configuration.nSetInt(intConfigurationName, intValue);
-  bool secondSetResult =
+  Error firstSetResult = configuration.nSetInt(intConfigurationName, intValue);
+  Error secondSetResult =
       configuration.nSetInt(intConfigurationName, reIntValue);
-  GAMAL_ABDUL_NASSERT(secondSetResult);
+  GAMAL_ABDUL_NASSERT(secondSetResult.success());
 }
 
 static void test_intWillReturnCorrectValueAfterReplacement() {
-  bool firstSetResult = configuration.nSetInt(intConfigurationName, intValue);
-  bool secondSetResult =
+  Error firstSetResult = configuration.nSetInt(intConfigurationName, intValue);
+  Error secondSetResult =
       configuration.nSetInt(intConfigurationName, reIntValue);
   Types::ErrorPair getResult = configuration.nGetInt(intConfigurationName);
   GAMAL_ABDUL_NASSERT(getResult.value == reIntValue);
@@ -272,8 +275,8 @@ static void test_floatNoValueBeforeSet() {
 }
 
 static void test_floatCannotSetValueEmptyName() {
-  bool result = configuration.nSetFloat(emptyName, floatValue);
-  GAMAL_ABDUL_NASSERT(!result);
+  Error result = configuration.nSetFloat(emptyName, floatValue);
+  GAMAL_ABDUL_NASSERT(result.fail());
 }
 
 static void test_floatCannotGetValueEmptyName() {
@@ -282,9 +285,9 @@ static void test_floatCannotGetValueEmptyName() {
 }
 
 static void test_floatCannotSetValueForNameWithInvalidPrefix() {
-  bool result =
+  Error result =
       configuration.nSetFloat(invalidFloatConfigurationName, floatValue);
-  GAMAL_ABDUL_NASSERT(!result);
+  GAMAL_ABDUL_NASSERT(result.fail());
 }
 
 static void test_floatCannotGetValueForNameWithInvalidPrefix() {
@@ -294,34 +297,34 @@ static void test_floatCannotGetValueForNameWithInvalidPrefix() {
 }
 
 static void test_floatCanSetValueForNameWithValidPrefix() {
-  bool result = configuration.nSetFloat(floatConfigurationName, floatValue);
-  GAMAL_ABDUL_NASSERT(result);
+  Error result = configuration.nSetFloat(floatConfigurationName, floatValue);
+  GAMAL_ABDUL_NASSERT(result.success());
 }
 
 static void test_floatCanGetPreviouslySetValueForNameWithValidPrefix() {
-  bool setResult = configuration.nSetFloat(floatConfigurationName, floatValue);
+  Error setResult = configuration.nSetFloat(floatConfigurationName, floatValue);
   Types::ErrorPair getResult = configuration.nGetFloat(floatConfigurationName);
   GAMAL_ABDUL_NASSERT(!getResult.fail());
 }
 
 static void test_floatWillReturnCorrectValue() {
-  bool setResult = configuration.nSetFloat(floatConfigurationName, floatValue);
+  Error setResult = configuration.nSetFloat(floatConfigurationName, floatValue);
   Types::ErrorPair getResult = configuration.nGetFloat(floatConfigurationName);
   GAMAL_ABDUL_NASSERT(getResult.value == floatValue);
 }
 
 static void test_floatCanReplaceValue() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetFloat(floatConfigurationName, floatValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetFloat(floatConfigurationName, reFloatValue);
-  GAMAL_ABDUL_NASSERT(secondSetResult);
+  GAMAL_ABDUL_NASSERT(secondSetResult.success());
 }
 
 static void test_floatWillReturnCorrectValueAfterReplacement() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetFloat(floatConfigurationName, floatValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetFloat(floatConfigurationName, reFloatValue);
   Types::ErrorPair getResult = configuration.nGetFloat(floatConfigurationName);
   GAMAL_ABDUL_NASSERT(getResult.value == reFloatValue);
@@ -346,8 +349,8 @@ static void test_boolNoValueBeforeSet() {
 }
 
 static void test_boolCannotSetValueEmptyName() {
-  bool result = configuration.nSetBool(emptyName, boolValue);
-  GAMAL_ABDUL_NASSERT(!result);
+  Error result = configuration.nSetBool(emptyName, boolValue);
+  GAMAL_ABDUL_NASSERT(result.fail());
 }
 
 static void test_boolCannotGetValueEmptyName() {
@@ -356,8 +359,8 @@ static void test_boolCannotGetValueEmptyName() {
 }
 
 static void test_boolCannotSetValueForNameWithInvalidPrefix() {
-  bool result = configuration.nSetBool(invalidBoolConfigurationName, boolValue);
-  GAMAL_ABDUL_NASSERT(!result);
+  Error result = configuration.nSetBool(invalidBoolConfigurationName, boolValue);
+  GAMAL_ABDUL_NASSERT(result.fail());
 }
 
 static void test_boolCannotGetValueForNameWithInvalidPrefix() {
@@ -367,34 +370,34 @@ static void test_boolCannotGetValueForNameWithInvalidPrefix() {
 }
 
 static void test_boolCanSetValueForNameWithValidPrefix() {
-  bool result = configuration.nSetBool(boolConfigurationName, boolValue);
-  GAMAL_ABDUL_NASSERT(result);
+  Error result = configuration.nSetBool(boolConfigurationName, boolValue);
+  GAMAL_ABDUL_NASSERT(result.success());
 }
 
 static void test_boolCanGetPreviouslySetValueForNameWithValidPrefix() {
-  bool setResult = configuration.nSetBool(boolConfigurationName, boolValue);
+  Error setResult = configuration.nSetBool(boolConfigurationName, boolValue);
   Types::ErrorPair getResult = configuration.nGetBool(boolConfigurationName);
   GAMAL_ABDUL_NASSERT(!getResult.fail());
 }
 
 static void test_boolWillReturnCorrectValue() {
-  bool setResult = configuration.nSetBool(boolConfigurationName, boolValue);
+  Error setResult = configuration.nSetBool(boolConfigurationName, boolValue);
   Types::ErrorPair getResult = configuration.nGetBool(boolConfigurationName);
   GAMAL_ABDUL_NASSERT(getResult.value == boolValue);
 }
 
 static void test_boolCanReplaceValue() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetBool(boolConfigurationName, boolValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetBool(boolConfigurationName, reBoolValue);
-  GAMAL_ABDUL_NASSERT(secondSetResult);
+  GAMAL_ABDUL_NASSERT(secondSetResult.success());
 }
 
 static void test_boolWillReturnCorrectValueAfterReplacement() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetBool(boolConfigurationName, boolValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetBool(boolConfigurationName, reBoolValue);
   Types::ErrorPair getResult = configuration.nGetBool(boolConfigurationName);
   GAMAL_ABDUL_NASSERT(getResult.value == reBoolValue);
@@ -419,8 +422,8 @@ static void test_stringNoValueBeforeSet() {
 }
 
 static void test_stringCannotSetValueEmptyName() {
-  bool result = configuration.nSetString(emptyName, stringValue);
-  GAMAL_ABDUL_NASSERT(!result);
+  Error result = configuration.nSetString(emptyName, stringValue);
+  GAMAL_ABDUL_NASSERT(result.fail());
 }
 
 static void test_stringCannotGetValueEmptyName() {
@@ -429,9 +432,9 @@ static void test_stringCannotGetValueEmptyName() {
 }
 
 static void test_stringCannotSetValueForNameWithInvalidPrefix() {
-  bool result =
+  Error result =
       configuration.nSetString(invalidStringConfigurationName, stringValue);
-  GAMAL_ABDUL_NASSERT(!result);
+  GAMAL_ABDUL_NASSERT(result.fail());
 }
 
 static void test_stringCannotGetValueForNameWithInvalidPrefix() {
@@ -441,12 +444,12 @@ static void test_stringCannotGetValueForNameWithInvalidPrefix() {
 }
 
 static void test_stringCanSetValueForNameWithValidPrefix() {
-  bool result = configuration.nSetString(stringConfigurationName, stringValue);
-  GAMAL_ABDUL_NASSERT(result);
+  Error result = configuration.nSetString(stringConfigurationName, stringValue);
+  GAMAL_ABDUL_NASSERT(result.success());
 }
 
 static void test_stringCanGetPreviouslySetValueForNameWithValidPrefix() {
-  bool setResult =
+  Error setResult =
       configuration.nSetString(stringConfigurationName, stringValue);
   Types::ErrorPair getResult =
       configuration.nGetString(stringConfigurationName);
@@ -454,7 +457,7 @@ static void test_stringCanGetPreviouslySetValueForNameWithValidPrefix() {
 }
 
 static void test_stringWillReturnCorrectValue() {
-  bool setResult =
+  Error setResult =
       configuration.nSetString(stringConfigurationName, stringValue);
   Types::ErrorPair getResult =
       configuration.nGetString(stringConfigurationName);
@@ -462,33 +465,33 @@ static void test_stringWillReturnCorrectValue() {
 }
 
 static void test_stringCanReplaceValueSameSizeString() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetString(stringConfigurationName, stringValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetString(stringConfigurationName, sameSizeStringValue);
-  GAMAL_ABDUL_NASSERT(secondSetResult);
+  GAMAL_ABDUL_NASSERT(secondSetResult.success());
 }
 
 static void test_stringCanReplaceValueLongerString() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetString(stringConfigurationName, stringValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetString(stringConfigurationName, longerStringValue);
-  GAMAL_ABDUL_NASSERT(secondSetResult);
+  GAMAL_ABDUL_NASSERT(secondSetResult.success());
 }
 
 static void test_stringCanReplaceValueShorterString() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetString(stringConfigurationName, stringValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetString(stringConfigurationName, reStringValue);
-  GAMAL_ABDUL_NASSERT(secondSetResult);
+  GAMAL_ABDUL_NASSERT(secondSetResult.success());
 }
 
 static void test_stringWillReturnCorrectValueAfterReplacementSameSizeString() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetString(stringConfigurationName, stringValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetString(stringConfigurationName, sameSizeStringValue);
   Types::ErrorPair getResult =
       configuration.nGetString(stringConfigurationName);
@@ -496,9 +499,9 @@ static void test_stringWillReturnCorrectValueAfterReplacementSameSizeString() {
 }
 
 static void test_stringWillReturnCorrectValueAfterReplacementLongerString() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetString(stringConfigurationName, stringValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetString(stringConfigurationName, longerStringValue);
   Types::ErrorPair getResult =
       configuration.nGetString(stringConfigurationName);
@@ -506,9 +509,9 @@ static void test_stringWillReturnCorrectValueAfterReplacementLongerString() {
 }
 
 static void test_stringWillReturnCorrectValueAfterReplacementShorterString() {
-  bool firstSetResult =
+  Error firstSetResult =
       configuration.nSetString(stringConfigurationName, stringValue);
-  bool secondSetResult =
+  Error secondSetResult =
       configuration.nSetString(stringConfigurationName, reStringValue);
   Types::ErrorPair getResult =
       configuration.nGetString(stringConfigurationName);

@@ -22,118 +22,128 @@ bool Configuration::contains(const std::string& name) const {
 	}
 }
 
-bool Configuration::isValidConfigurationName(const std::string& name, char prefix) const {
+Error Configuration::isValidConfigurationName(const std::string& name, char prefix) const {
 	if(name.empty()) {
-		return false;
+		return Err::InvalidArgument;
 	}
 
 	if(name[0] != prefix) {
-		return false;
+		return Err::TypeError;
 	}
 
-	return true;
+	return Err::Success;
 }
 
 Types::ErrorPair<uint64_t> Configuration::nGetUInt(const std::string& name) {
-	if(!isValidConfigurationName(name, uIntPrefix)) {
-		return Types::ErrorPair<uint64_t>(1, 0);
+	Error nameError = isValidConfigurationName(name, uIntPrefix);
+	if(nameError.fail()) {
+		return Types::ErrorPair<uint64_t>(nameError);
 	}
 
 	if(!contains(name)) {
-		return Types::ErrorPair<uint64_t>(1, 0);
+		return Types::ErrorPair<uint64_t>(Err::KeyNotFound);
 	}
 
 	uint64_t configurationValue = nValues[name].uValue;
-	return Types::ErrorPair<uint64_t>(0, configurationValue);
+	return Types::ErrorPair<uint64_t>(Err::Success, configurationValue);
 }
 
-bool Configuration::nSetUInt(const std::string& name, uint64_t value) {
-	if(!isValidConfigurationName(name, uIntPrefix)) {
-		return false;
+Error Configuration::nSetUInt(const std::string& name, uint64_t value) {
+	Error nameError = isValidConfigurationName(name, uIntPrefix);
+	if(nameError.fail()) {
+		return nameError;
 	}
 
 	nValues[name].uValue = value;
-	return true;
+	return Err::Success;
 }
 
 Types::ErrorPair<int64_t> Configuration::nGetInt(const std::string& name) {
-	if(!isValidConfigurationName(name, intPrefix)) {
-		return Types::ErrorPair<int64_t>(1, 0);
+	Error nameError = isValidConfigurationName(name, intPrefix);
+	if(nameError.fail()) {
+		return Types::ErrorPair<int64_t>(nameError);
 	}
 
 	if(!contains(name)) {
-		return Types::ErrorPair<int64_t>(1, 0);
+		return Types::ErrorPair<int64_t>(Err::KeyNotFound);
 	}
 
-	return Types::ErrorPair<int64_t>(0, nValues[name].iValue);
+	return Types::ErrorPair<int64_t>(Err::Success, nValues[name].iValue);
 }
 
-bool Configuration::nSetInt(const std::string& name, int64_t value) {
-	if(!isValidConfigurationName(name, intPrefix)) {
-		return false;
+Error Configuration::nSetInt(const std::string& name, int64_t value) {
+	Error nameError = isValidConfigurationName(name, intPrefix);
+	if(nameError.fail()) {
+		return nameError;
 	}
 
 	nValues[name].iValue = value;
-	return true;
+	return Err::Success;
 }
 
 Types::ErrorPair<float> Configuration::nGetFloat(const std::string& name) {
-	if(!isValidConfigurationName(name, floatPrefix)) {
-		return Types::ErrorPair<float>(1, 0);
+	Error nameError = isValidConfigurationName(name, floatPrefix);
+	if(nameError.fail()) {
+		return Types::ErrorPair<float>(nameError);
 	}
 
 	if(!contains(name)) {
-		return Types::ErrorPair<float>(1, 0);
+		return Types::ErrorPair<float>(Err::KeyNotFound);
 	}
 
-	return Types::ErrorPair<float>(0, nValues[name].fValue);
+	return Types::ErrorPair<float>(Err::Success, nValues[name].fValue);
 }
 
-bool Configuration::nSetFloat(const std::string& name, float value) {
-	if(!isValidConfigurationName(name, floatPrefix)) {
-		return false;
+Error Configuration::nSetFloat(const std::string& name, float value) {
+	Error nameError = isValidConfigurationName(name, floatPrefix);
+	if(nameError.fail()) {
+		return nameError;
 	}
 
 	nValues[name].fValue = value;
-	return true;
+	return Err::Success;
 }
 
 Types::ErrorPair<bool> Configuration::nGetBool(const std::string& name) {
-	if(!isValidConfigurationName(name, boolPrefix)) {
-		return Types::ErrorPair<bool>(1, 0);
+	Error nameError = isValidConfigurationName(name, boolPrefix);
+	if(nameError.fail()) {
+		return Types::ErrorPair<bool>(nameError);
 	}
 
 	if(!contains(name)) {
-		return Types::ErrorPair<bool>(1, 0);
+		return Types::ErrorPair<bool>(Err::KeyNotFound);
 	}
 
-	return Types::ErrorPair<bool>(0, nValues[name].bValue);
+	return Types::ErrorPair<bool>(Err::Success, nValues[name].bValue);
 }
 
-bool Configuration::nSetBool(const std::string& name, bool value) {
-	if(!isValidConfigurationName(name, boolPrefix)) {
-		return false;
+Error Configuration::nSetBool(const std::string& name, bool value) {
+	Error nameError = isValidConfigurationName(name, boolPrefix);
+	if(nameError.fail()) {
+		return nameError;
 	}
 
 	nValues[name].bValue = value;
-	return true;
+	return Err::Success;
 }
 
 Types::ErrorPair<const char*> Configuration::nGetString(const std::string& name) {
-	if(!isValidConfigurationName(name, stringPrefix)) {
-		return Types::ErrorPair<const char*>(1, 0);
+	Error nameError = isValidConfigurationName(name, stringPrefix);
+	if(nameError.fail()) {
+		return Types::ErrorPair<const char*>(nameError);
 	}
 
 	if(!contains(name)) {
-		return Types::ErrorPair<const char*>(1, 0);
+		return Types::ErrorPair<const char*>(Err::KeyNotFound);
 	}
 
-	return Types::ErrorPair<const char*>(0, (const char*) nValues[name].szValue);
+	return Types::ErrorPair<const char*>(Err::Success, (const char*) nValues[name].szValue);
 }
 
-bool Configuration::nSetString(const std::string& name, const char* value) {
-	if(!isValidConfigurationName(name, stringPrefix)) {
-		return false;
+Error Configuration::nSetString(const std::string& name, const char* value) {
+	Error nameError = isValidConfigurationName(name, stringPrefix);
+	if(nameError.fail()) {
+		return nameError;
 	}
 
 	char* configurationValue = nValues[name].szValue;
@@ -143,7 +153,7 @@ bool Configuration::nSetString(const std::string& name, const char* value) {
 		
 		char* newMemory = (char*) std::malloc(sizeof(char) * memorySize);
 		if(newMemory == NULL) {
-			return false;
+			return Err::MemoryError;
 		}
 		configurationValue = newMemory;
 
@@ -151,7 +161,7 @@ bool Configuration::nSetString(const std::string& name, const char* value) {
 		
 		char* newMemory = (char*) std::realloc(configurationValue, sizeof(char) * memorySize);
 		if(newMemory == NULL) {
-			return false;
+			return Err::MemoryError;
 		}
 		
 		configurationValue = newMemory;
@@ -159,7 +169,7 @@ bool Configuration::nSetString(const std::string& name, const char* value) {
 
 	std::strcpy(configurationValue, value);
 	nValues[name].szValue = configurationValue;
-	return true;
+	return Err::Success;
 }
 
 };

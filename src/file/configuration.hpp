@@ -1,6 +1,7 @@
 #pragma once
 //#include "logc/log.h"
 #include "types/errorpair.hpp"
+#include "error/error.hpp"
 
 #include <filesystem>
 #include <unordered_map>
@@ -14,7 +15,7 @@ namespace fs = std::filesystem;
 
 namespace File {
 
-
+using Err::Error;
 // TODO: refactor strings to remove copying and allocation
 
 class Configuration {
@@ -48,7 +49,7 @@ private:
 	template <typename T>
 	void set(const std::string& name, T value); 
 
-	bool isValidConfigurationName(const std::string& name, char prefix) const;
+	Error isValidConfigurationName(const std::string& name, char prefix) const;
 
 public:
 
@@ -69,11 +70,11 @@ public:
 	
 	bool contains(const std::string& name) const;
 
-	bool nSetString(const std::string& name, const char* value);
-	bool nSetInt(const std::string& name, int64_t value);
-	bool nSetUInt(const std::string& name, uint64_t value);
-	bool nSetFloat(const std::string& name, float value);
-	bool nSetBool(const std::string& name, bool value);
+	Error nSetString(const std::string& name, const char* value);
+	Error nSetInt(const std::string& name, int64_t value);
+	Error nSetUInt(const std::string& name, uint64_t value);
+	Error nSetFloat(const std::string& name, float value);
+	Error nSetBool(const std::string& name, bool value);
 
 
 	void setString(const std::string& name, std::string value) { set<std::string>(name, value);}

@@ -1,18 +1,18 @@
 #include "conversion.hpp"
-
+#include "error/error.hpp"
 
 namespace Types {
 
 ErrorPair<uint64_t> parseUInt(const char* stringValue) {
 
 	if(stringValue == NULL) {
-		return ErrorPair<uint64_t>(1, 0);
+		return ErrorPair<uint64_t>(Err::NullPointerError, 0);
 	}
 
 	uint32_t numberOfDigits = std::strlen(stringValue);
 
 	if(numberOfDigits > maximumUnsignedDigits || numberOfDigits == 0) {
-		return ErrorPair<uint64_t>(1, 0);
+		return ErrorPair<uint64_t>(Err::NumberFormatError, 0);
 	}
 
 	uint64_t digitMagnitude = numberOfDigits;
@@ -22,13 +22,13 @@ ErrorPair<uint64_t> parseUInt(const char* stringValue) {
 	while(*digit != '\0') {
 		
 		if(*digit < '0' || *digit > '9') {
-			return ErrorPair<uint64_t>(1, 0);
+			return ErrorPair<uint64_t>(Err::NumberFormatError, 0);
 		}
 
 		uint64_t nextValue = parsedValue + decdigits[(*digit - '0') * rowSize + digitMagnitude - 1];
 
 		if(nextValue < parsedValue) {
-			return ErrorPair<uint64_t>(1, 0);
+			return ErrorPair<uint64_t>(Err::OutOfRange, 0);
 		}
 
 		parsedValue = nextValue;
@@ -36,12 +36,12 @@ ErrorPair<uint64_t> parseUInt(const char* stringValue) {
 		digit++;
 	}
 
-	return ErrorPair<uint64_t>(0, parsedValue);
+	return ErrorPair<uint64_t>(Err::Success, parsedValue);
 }
 
 ErrorPair<int64_t> parseInt(const char* stringValue) {
 	if(stringValue == NULL) {
-		return ErrorPair<int64_t>(1, 0);
+		return ErrorPair<int64_t>(Err::NullPointerError, 0);
 	}
 
 	bool negative = false;
@@ -60,7 +60,7 @@ ErrorPair<int64_t> parseInt(const char* stringValue) {
 	}
 
 	if(numberOfDigits > maximumSignedDigits || numberOfDigits == 0) {
-		return ErrorPair<int64_t>(1, 0);
+		return ErrorPair<int64_t>(Err::NumberFormatError, 0);
 	}
 
 	uint64_t digitMagnitude = numberOfDigits;
@@ -69,13 +69,13 @@ ErrorPair<int64_t> parseInt(const char* stringValue) {
 	while(*digit != '\0') {
 		
 		if(*digit < '0' || *digit > '9') {
-			return ErrorPair<int64_t>(1, 0);
+			return ErrorPair<int64_t>(Err::NumberFormatError, 0);
 		}
 
 		int64_t nextValue = parsedValue + decdigits[(*digit - '0') * rowSize + digitMagnitude - 1];
 
 		if(nextValue < parsedValue) {
-			return ErrorPair<int64_t>(1, 0);
+			return ErrorPair<int64_t>(Err::OutOfRange, 0);
 		}
 
 		parsedValue = nextValue;
@@ -84,16 +84,16 @@ ErrorPair<int64_t> parseInt(const char* stringValue) {
 	}
 
 	if(negative) {
-		return ErrorPair<int64_t>(0, -parsedValue);
+		return ErrorPair<int64_t>(Err::Success, -parsedValue);
 	} else {
-		return ErrorPair<int64_t>(0, parsedValue);
+		return ErrorPair<int64_t>(Err::Success, parsedValue);
 	}
 }
 
 
 ErrorPair<float> parseFloat(const char* stringValue) {
 	if(stringValue == NULL) {
-		return ErrorPair<float>(1, 0);
+		return ErrorPair<float>(Err::NullPointerError, 0);
 	}
 
 	bool negative = false;
@@ -127,7 +127,7 @@ ErrorPair<float> parseFloat(const char* stringValue) {
 	while(*digit != '\0') {
 
 		if((*digit < '0' || *digit > '9') && *digit != '.') {
-			return ErrorPair<float>(1, 0);
+			return ErrorPair<float>(Err::NumberFormatError, 0);
 		}
 
 		if(numberOfDigits == 0) {
@@ -161,7 +161,7 @@ ErrorPair<float> parseFloat(const char* stringValue) {
 
 			} else {
 				if(*digit == '.') {
-					return ErrorPair<float>(1, 0.0f);
+					return ErrorPair<float>(Err::NumberFormatError, 0.0f);
 				} else {
 					currentDecimalDivisor /= 10.0f;
 
@@ -183,18 +183,18 @@ ErrorPair<float> parseFloat(const char* stringValue) {
 
 		if(parsedValue == HUGE_VAL) {
 			if(negative) {
-				return ErrorPair<float>(1, -HUGE_VAL);
+				return ErrorPair<float>(Err::FloatInfinity, -HUGE_VAL);
 			} 
-			return ErrorPair<float>(1, HUGE_VAL);
+			return ErrorPair<float>(Err::FloatInfinity, HUGE_VAL);
 		}
 		
 		digit++;
 	}
 
 	if(negative) {
-		return ErrorPair<float>(0, -parsedValue);
+		return ErrorPair<float>(Err::Success, -parsedValue);
 	} else {
-		return ErrorPair<float>(0, parsedValue);
+		return ErrorPair<float>(Err::Success, parsedValue);
 	}
 } 
 
