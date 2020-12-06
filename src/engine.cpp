@@ -3,6 +3,7 @@
 #include <engine/audio.hpp>
 #include <engine/video.hpp>
 #include <logc/log.h>
+#include "types/errorpair.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -13,6 +14,8 @@
 
 
 namespace Engine {
+
+using Types::ErrorPair;
 
 namespace fs = std::filesystem;
 
@@ -125,12 +128,15 @@ bool Engine::initSDL()
     File::Configuration& displayConfiguration = this->configManager.getConfiguration(displayConfigurationName);
 
     // Check for previously defined resolution
-    try {
+    ErrorPair<uint64_t> cfgValScreenWidth = displayConfiguration.nGetUInt(cfgScreenWidth); 
+    ErrorPair<uint64_t> cfgValScreenHeight = displayConfiguration.nGetUInt(cfgScreenHeight); 
 
-        windowWidth  = displayConfiguration.getUInt(cfgScreenWidth);
-        windowHeight = displayConfiguration.getUInt(cfgScreenHeight);
+    if(cfgValScreenWidth.success() && cfgValScreenHeight.success()) {
 
-    } catch (std::runtime_error& e) {
+        windowWidth = cfgValScreenWidth.value;
+        windowHeight = cfgValScreenHeight.value;
+
+    } else {
         // Fallback to native is none
         log_info("No previous screen size defined, using native display size...");
 
@@ -146,9 +152,11 @@ bool Engine::initSDL()
         windowWidth  = currentDisplayMode.w;
         windowHeight = currentDisplayMode.h;
 
-        displayConfiguration.setUInt(cfgScreenWidth, windowWidth);
-        displayConfiguration.setUInt(cfgScreenHeight, windowHeight);
+        displayConfiguration.nSetUInt(cfgScreenWidth, windowWidth);
+        displayConfiguration.nSetUInt(cfgScreenHeight, windowHeight);
+
     }
+
 
     this->window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (this->window == nullptr) {
@@ -194,14 +202,21 @@ bool Engine::start()
         return false;
     }
 
-    unsigned int displayWidth  = displayConfiguration.getUInt(cfgScreenWidth);
-    unsigned int displayHeight = displayConfiguration.getUInt(cfgScreenHeight);
+    ErrorPair<uint64_t> cfgValScreenWidth  = displayConfiguration.nGetUInt(cfgScreenWidth);
+    ErrorPair<uint64_t> cfgValScreenHeight = displayConfiguration.nGetUInt(cfgScreenHeight);
 
-    fs::path fileIntroMovie = (this->dirData / dirNameVideo) / fileNameIntroMovie;
+    if(cfgValScreenWidth.fail() || cfgValScreenHeight.fail()) {
+        log_error("Screen size uninitialied when initializing SDL.");
+    } else {
+        fs::path fileIntroMovie = (this->dirData / dirNameVideo) / fileNameIntroMovie;
 
-    VideoPlayer* introMoviePlayer = new VideoPlayer(displayWidth, displayHeight);
-    if (introMoviePlayer->play(fileIntroMovie.string().c_str(), this->window) < 0) {
-        log_error("Failed to play intro video!");
+        uint64_t displayWidth = cfgValScreenWidth.value;
+        uint64_t displayHeight = cfgValScreenHeight.value;
+
+        VideoPlayer* introMoviePlayer = new VideoPlayer(displayWidth, displayHeight);
+        if (introMoviePlayer->play(fileIntroMovie.string().c_str(), this->window) < 0) {
+            log_error("Failed to play intro video!");
+        }
     }
 
     try {

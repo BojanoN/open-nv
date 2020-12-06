@@ -36,8 +36,8 @@ private:
     static inline const std::string extPluginFile = ".esp";
 
     static inline const char* displayConfigurationName = "Display";
-    static inline const char* cfgScreenWidth = "iSize W";
-    static inline const char* cfgScreenHeight = "iSize H";
+    static inline const char* cfgScreenWidth = "uSize W";
+    static inline const char* cfgScreenHeight = "uSize H";
     static inline const char* windowName = "OpenNV";
 
 

@@ -1,11 +1,15 @@
 #include "configuration_manager.hpp"
 #include "logc/log.h"
+#include "types/conversion.hpp"
 #include <cassert>
 #include <cctype>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 
 namespace File {
+
+using Types::ErrorPair;
 
 namespace fs = std::filesystem;
 
@@ -62,34 +66,54 @@ bool ConfigurationManager::loadFile(const std::string& filename) noexcept
         std::string name  = line.substr(0, delimiterLoc);
         std::string value = line.substr(delimiterLoc + 1);
 
-        try {
+        ErrorPair<int64_t> intValue;
+        ErrorPair<uint64_t> uIntValue;
+        ErrorPair<float> floatValue;
 
-            switch (name[0]) {
+        switch (name[0]) {
             case integerPrefix:
-                currentConfiguration->setInt(name, std::stol(value));
+                intValue = Types::parseInt(value.c_str());
+                if(intValue.fail()){
+                    log_warn("Invalid value %s for attribute %s", value.c_str(), name.c_str());
+                } else {
+                   currentConfiguration->nSetInt(name, intValue.value);
+                }
+
                 break;
             case unsignedPrefix:
-                currentConfiguration->setUInt(name, std::stol(value));
+                uIntValue = Types::parseUInt(value.c_str());
+                if(uIntValue.fail()){
+                    log_warn("Invalid value %s for attribute %s", value.c_str(), name.c_str());
+                } else {
+                   currentConfiguration->nSetUInt(name, uIntValue.value);
+                }
                 break;
+
             case booleanPrefix:
-                currentConfiguration->setBool(name, std::stoi(value) != 0 ? true : false);
+                intValue = Types::parseInt(value.c_str());
+                if(intValue.fail()){
+                    log_warn("Invalid value %s for attribute %s", value.c_str(), name.c_str());
+                } else {
+                    currentConfiguration->nSetBool(name, intValue.value != 0 ? true : false);
+                }
+
                 break;
             case doublePrefix:
-                currentConfiguration->setDouble(name, std::stod(value));
+                floatValue = Types::parseFloat(value.c_str());
+                if(floatValue.fail()) {
+                    log_warn("Invalid value %s for attribute %s", value.c_str(), name.c_str());                    
+                } else {
+                    currentConfiguration->nSetFloat(name, floatValue.value);                    
+                }
                 break;
             case altStringPrefix:
             case stringPrefix:
-                currentConfiguration->setString(name, value);
+                currentConfiguration->nSetString(name, value.c_str());
                 break;
             default:
                 log_warn("Invalid type: %s, for attribute", value.data(), name.data());
                 break;
-            }
-
-        } catch (std::invalid_argument& inv_arg) {
-            log_error("Invalid value %s for attribute %s: incorrect type", value.data(), name.data());
-        } catch (std::out_of_range& out_range) {
-            log_error("Invalid value %s for attribute %s: value out of range", value.data(), name.data());
+            
         }
     }
 }
