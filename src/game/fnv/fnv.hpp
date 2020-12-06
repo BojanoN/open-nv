@@ -1,14 +1,14 @@
 #pragma once
 
-#include "game.hpp"
+#include "../game.hpp"
 
 #include <esm/types.hpp>
 #include <unordered_set>
 
-class FalloutNVGame : public Game {
+class FalloutNVGame : public Game::Game {
 public:
     FalloutNVGame(GameWorld::GameWorld& gw)
-        : Game(gw)
+        : Game::Game(gw)
     {
     }
     void load();

@@ -3,6 +3,9 @@
 #include "../reader.hpp"
 #include "../types.hpp"
 #include "nif/nifdata.hpp"
+
+#include <types/errorpair.hpp>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -27,7 +30,7 @@ struct ModelData {
     uint8_t                       FaceGenModelFlags;
 
     //std::shared_ptr<NiObject> getModel();
-    void loadModel();
+    Types::ErrorPair<std::shared_ptr<NifData>> loadModel();
     ~ModelData();
 
     static void load(ESMReader& reader, ModelData& modelData, int index);

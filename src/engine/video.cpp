@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 
 #include <resources/shader.hpp>
+#include <types/errorpair.hpp>
 
 // clang-format off
 float VideoPlayer::vertices[16] = {
@@ -29,7 +30,11 @@ VideoPlayer::VideoPlayer(unsigned int width, unsigned int height)
     , decoder(width, height)
 
 {
-    videoShader = ShaderManager::getShader(VideoPlayer::videoVertexShader, VideoPlayer::videoFragmentShader);
+    Types::ErrorPair<std::shared_ptr<Shader>> err = ShaderManager::getShader(VideoPlayer::videoVertexShader, VideoPlayer::videoFragmentShader);
+    if (err.fail()) {
+        throw std::runtime_error("Unable to get video player shaders!");
+    }
+    videoShader = err.value;
 }
 
 int VideoPlayer::play(const char* path, SDL_Window* window)

@@ -2,7 +2,7 @@
 
 #include <esm/reader.hpp>
 #include <file/configuration_manager.hpp>
-#include <game/fnv.hpp>
+#include <game/fnv/fnv.hpp>
 #include <gameworld.hpp>
 #include <resources/shader.hpp>
 
@@ -23,23 +23,22 @@ namespace fs = std::filesystem;
 class Engine {
 
 private:
-    static inline const std::string dirNameGameData = "Data";
-    static inline const char* envHome = "HOME";
-    static inline const std::string dirNameShader = "shader";
-    static inline const std::string dirNameResource = "res";
-    static inline const std::string dirNameUserConfiguration = ".opennv";
+    static inline const std::string dirNameGameData                  = "Data";
+    static inline const char*       envHome                          = "HOME";
+    static inline const std::string dirNameShader                    = "shader";
+    static inline const std::string dirNameResource                  = "res";
+    static inline const std::string dirNameUserConfiguration         = ".opennv";
     static inline const std::string fileNameGameDefaultConfiguration = "Fallout_default.ini";
-    static inline const std::string dirNameVideo = "Video";
-    static inline const std::string fileNameIntroMovie = "FNVIntro.bik";
-    static inline const std::string extConfigurationFile = ".ini";
-    static inline const std::string extMasterFile = ".esm";
-    static inline const std::string extPluginFile = ".esp";
+    static inline const std::string dirNameVideo                     = "Video";
+    static inline const std::string fileNameIntroMovie               = "FNVIntro.bik";
+    static inline const std::string extConfigurationFile             = ".ini";
+    static inline const std::string extMasterFile                    = ".esm";
+    static inline const std::string extPluginFile                    = ".esp";
 
     static inline const char* displayConfigurationName = "Display";
-    static inline const char* cfgScreenWidth = "uSize W";
-    static inline const char* cfgScreenHeight = "uSize H";
-    static inline const char* windowName = "OpenNV";
-
+    static inline const char* cfgScreenWidth           = "uSize W";
+    static inline const char* cfgScreenHeight          = "uSize H";
+    static inline const char* windowName               = "OpenNV";
 
     ConfigurationManager configManager;
 

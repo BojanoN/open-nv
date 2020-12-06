@@ -5,30 +5,60 @@ namespace Err {
 
 typedef uint32_t error_t;
 
+#define ERROR_CODE_ENUM          \
+    X(codeSuccess)               \
+    X(codeInvalidArgument)       \
+    X(codeKeyNotFound)           \
+    X(codeTypeError)             \
+    X(codeNullPointerError)      \
+    X(codeNumberFormatError)     \
+    X(codeOutOfRange)            \
+    X(codeFloatInfinity)         \
+    X(codeFloatNaN)              \
+    X(codeMemoryError)           \
+    X(codeResourceCreationError) \
+    X(codeShaderCreationError)
+
+#define X(name) name,
+
 enum ErrorCodes : error_t {
-	codeSuccess = 0,
-	codeInvalidArgument = 1,
-	codeKeyNotFound = 2,
-	codeTypeError,
-	codeNullPointerError,
-	codeNumberFormatError,
-	codeOutOfRange,
-	codeFloatInfinity,
-	codeFloatNaN,
-	codeMemoryError,
+    ERROR_CODE_ENUM
 };
 
+#undef X
 
 class Error {
 
-	error_t value;
+    error_t value;
+
 public:
+    Error(error_t value)
+        : value { value }
+    {
+    }
 
-	Error(error_t value) : value{value} {}
+    Error()
+        : value { Err::ErrorCodes::codeSuccess }
+    {
+    }
 
-	bool fail() { return value != codeSuccess; }
-	bool success() { return !fail(); }
+    bool fail() { return value != codeSuccess; }
+    bool success() { return !fail(); }
 
+    static constexpr const char* toString(ErrorCodes e)
+    {
+#define X(name)              \
+    case (ErrorCodes::name): \
+        return #name;
+
+        switch (e) {
+            ERROR_CODE_ENUM
+
+        default:
+            return "Unknown error code type";
+        }
+#undef X
+    }
 };
 
 inline Error Success(codeSuccess);
@@ -41,5 +71,7 @@ inline Error OutOfRange(codeOutOfRange);
 inline Error FloatInfinity(codeFloatInfinity);
 inline Error FloatNaN(codeFloatNaN);
 inline Error MemoryError(codeMemoryError);
+inline Error ResourceCreationError(codeResourceCreationError);
+inline Error ShaderCreationError(codeShaderCreationError);
 
 };

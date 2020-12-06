@@ -1,17 +1,20 @@
 #pragma once
 
 #include <filesystem>
-#include <util/shader.hpp>
-
 #include <memory>
 #include <mutex>
 #include <unordered_map>
 
+#include <types/errorpair.hpp>
+#include <util/shader.hpp>
+
 namespace fs = std::filesystem;
+
+using namespace Types;
 
 class ShaderManager {
 public:
-    static std::shared_ptr<Shader> getShader(const std::string& vertexShader, const std::string& fragmentShader)
+    static ErrorPair<std::shared_ptr<Shader>> getShader(const std::string& vertexShader, const std::string& fragmentShader)
     {
         fs::path vertexShaderFullPath   = shaderPath / vertexShader;
         fs::path fragmentShaderFullPath = shaderPath / fragmentShader;
@@ -20,19 +23,29 @@ public:
 
         std::string resourcePath = vertexShaderFullPath.string() + fragmentShaderFullPath.string();
 
+        ErrorPair<std::shared_ptr<Shader>> ret;
+
         auto res = cache[resourcePath].lock();
 
         if (!res) {
-            cache[resourcePath] = res = std::shared_ptr<Shader> {
-                new Shader(vertexShaderFullPath.string().c_str(), fragmentShaderFullPath.string().c_str()),
-                [&, resourcePath](Shader* res) {
-                    cache.erase(resourcePath);
-                    delete res;
-                }
-            };
+            try {
+                cache[resourcePath] = res = std::shared_ptr<Shader> {
+                    new Shader(vertexShaderFullPath.string().c_str(), fragmentShaderFullPath.string().c_str()),
+                    [&, resourcePath](Shader* res) {
+                        cache.erase(resourcePath);
+                        delete res;
+                    }
+                };
+                ret.value = res;
+                ret.error = Err::Success;
+            } catch (std::runtime_error& e) {
+                ret.error = Err::ShaderCreationError;
+            }
         }
-        return res;
+
+        return ret;
     }
+
     static fs::path shaderPath;
 
 private:

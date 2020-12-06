@@ -33,7 +33,7 @@ void ModelData::load(ESMReader& reader, ModelData& modelData, int index)
             reader.readSubrecord(modelData.FaceGenModelFlags);
         }
     }
-
+    // TODO: check error return value once this is enabled
     //modelData.loadModel();
 }
 
@@ -72,16 +72,23 @@ std::shared_ptr<NiObject> ModelData::getModel() {
     return model->getRoot();
 }*/
 
-void ModelData::loadModel() {
-    try {
-        model = NifData::get(filename);
-    } catch(std::runtime_error& e) {
-        log_error("%s", e.what());
+Types::ErrorPair<std::shared_ptr<NifData>> ModelData::loadModel()
+{
+    Types::ErrorPair<std::shared_ptr<NifData>> err = NifData::get(filename);
+
+    if (err.fail()) {
         log_error("Cannot read file %s", filename.c_str());
+
+        return err;
     }
+
+    model = err.value;
+
+    return err;
 }
 
-ModelData::~ModelData() {
+ModelData::~ModelData()
+{
 }
 
 }; // namespace
