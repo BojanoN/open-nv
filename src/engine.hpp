@@ -1,5 +1,6 @@
 #pragma once
 
+#include <engine/audio.hpp>
 #include <esm/reader.hpp>
 #include <file/configuration_manager.hpp>
 #include <game/fnv/fnv.hpp>
@@ -49,10 +50,12 @@ private:
 
     std::vector<fs::path> mastersPlugins;
     GameWorld             world;
-    FalloutNVGame         game;
+    Game::FalloutNVGame   game;
 
     SDL_Window*   window;
     SDL_GLContext openGLContext;
+
+    AudioEngine mAudioEngine;
 
     bool initSDL();
     bool initConfiguration();

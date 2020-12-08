@@ -16,7 +16,6 @@ extern "C" {
 #include <unordered_map>
 
 #define DEFAULT_AUDIO_SAMPLE_FMT AV_SAMPLE_FMT_S16
-#define MESSAGE_QUEUE_SIZE       64
 
 inline int openContext(LibAVAudioContext* ctx)
 {
@@ -305,8 +304,6 @@ void LibAVDecoder::decodeThread()
 
 void LibAVDecoder::init()
 {
-    std::thread decodingThread(decodeThread);
+    std::thread decodingThread(&LibAVDecoder::decodeThread, this);
     decodingThread.detach();
 }
-
-SPSCRingBuffer<DecoderMessage> LibAVDecoder::messageQueue { MESSAGE_QUEUE_SIZE };

@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include <util/ringbuffer.hpp>
+#include <util/timer.hpp>
 
 #include "structs.hpp"
 #include "video_audio.hpp"
@@ -43,11 +44,11 @@ enum class VideoSync {
 
 class LibAVVideoDecoder {
 public:
-    int  open(const char* path);
-    void close();
+    ssize_t open(const char* path);
+    void    close();
 
-    void updateFrame(MediaFrame& dst);
-    bool isFinished() { return finished; }
+    size_t updateFrame(MediaFrame& dst);
+    bool   isFinished() { return finished; }
 
     unsigned int getHeight() { return mOutputVideoParams.height; };
     unsigned int getWidth() { return mOutputVideoParams.width; };
@@ -58,6 +59,7 @@ public:
     static void dispatchThread(LibAVVideoDecoder* obj);
 
     VideoState mVideoState;
+    Timer      mTimer;
 
     SPSCRingBuffer<MediaFrame> textureFrameQueue;
     SPSCRingBuffer<AVPacket*>  videoPacketQueue;

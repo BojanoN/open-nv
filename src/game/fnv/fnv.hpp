@@ -1,18 +1,24 @@
 #pragma once
 
 #include "../game.hpp"
+#include "../rendermanager.hpp"
 
 #include <esm/types.hpp>
 #include <unordered_set>
 
+namespace Game {
+
 class FalloutNVGame : public Game::Game {
 public:
     FalloutNVGame(GameWorld::GameWorld& gw)
-        : Game::Game(gw)
+        : Game(gw)
     {
     }
-    void load();
+    void start();
 
 private:
     static const std::unordered_set<ESM::ESMType> initialToplevelGroups;
+
+    RenderStateManager mRenderManager;
 };
+}

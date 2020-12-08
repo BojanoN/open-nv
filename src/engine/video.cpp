@@ -2,7 +2,6 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <SDL2/SDL.h>
 
 #include <resources/shader.hpp>
 #include <types/errorpair.hpp>
@@ -21,23 +20,18 @@ unsigned int VideoPlayer::elements[6] = {
 };
 // clang-format on
 
-// TODO: serve the video shader from some type of cache or manager to avoid recompiling the shaders
-// every time we try to play a file
 VideoPlayer::VideoPlayer(unsigned int width, unsigned int height)
-    : // TODO: fetch the output values to match our current resolution
-    // possibly from a settings manager
-    outputVideoParams(width, height)
-    , decoder(width, height)
-
+    : decoder()
 {
     Types::ErrorPair<std::shared_ptr<Shader>> err = ShaderManager::getShader(VideoPlayer::videoVertexShader, VideoPlayer::videoFragmentShader);
     if (err.fail()) {
         throw std::runtime_error("Unable to get video player shaders!");
     }
+
     videoShader = err.value;
 }
 
-int VideoPlayer::play(const char* path, SDL_Window* window)
+ssize_t VideoPlayer::play(const char* path, SDL_Window* window)
 {
     glEnable(GL_TEXTURE_2D);
 
@@ -81,6 +75,9 @@ int VideoPlayer::play(const char* path, SDL_Window* window)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    return this->update();
+
+    /*
     while (true) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -103,9 +100,7 @@ int VideoPlayer::play(const char* path, SDL_Window* window)
             return -1;
         }
         SDL_GL_SwapWindow(window);
-    }
-
-    return 0;
+    }*/
 };
 
 void VideoPlayer::close()
@@ -121,14 +116,14 @@ void VideoPlayer::close()
     delete[] mCurrentTextureFrame.data;
 }
 
-bool VideoPlayer::update()
+ssize_t VideoPlayer::update()
 {
 
     if (decoder.isFinished() && decoder.textureFrameQueue.empty()) {
-        return false;
+        return -1;
     }
 
-    decoder.updateFrame(mCurrentTextureFrame);
+    ssize_t timeNextUpdate = decoder.updateFrame(mCurrentTextureFrame);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -144,7 +139,7 @@ bool VideoPlayer::update()
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, outputVideoParams.width, outputVideoParams.height, GL_RGB, GL_UNSIGNED_BYTE, mCurrentTextureFrame.data);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-    return true;
+    return timeNextUpdate;
 }
 
 const std::string VideoPlayer::videoVertexShader   = "video.vs";

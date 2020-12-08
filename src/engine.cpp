@@ -1,9 +1,9 @@
 #include "engine.hpp"
 
+#include "types/errorpair.hpp"
 #include <engine/audio.hpp>
 #include <engine/video.hpp>
 #include <logc/log.h>
-#include "types/errorpair.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -11,7 +11,6 @@
 
 #include <cstdlib>
 #include <system_error>
-
 
 namespace Engine {
 
@@ -22,13 +21,12 @@ namespace fs = std::filesystem;
 Engine::Engine(const std::string& configPath, const std::string& dirInstall)
     : game(this->world)
 {
-    this->dirInstall = fs::path(dirInstall);
-    this->dirWorking = fs::current_path();
-    this->dirResource     = this->dirWorking / dirNameResource;
-    this->dirData         = this->dirInstall / dirNameGameData;
+    this->dirInstall  = fs::path(dirInstall);
+    this->dirWorking  = fs::current_path();
+    this->dirResource = this->dirWorking / dirNameResource;
+    this->dirData     = this->dirInstall / dirNameGameData;
     File::Reader::setRootFilePath(this->dirData);
 }
-
 
 Engine::~Engine()
 {
@@ -41,8 +39,8 @@ Engine::~Engine()
     File::Reader::destroyFileProvider();
 }
 
-
-bool Engine::initConfiguration() {
+bool Engine::initConfiguration()
+{
     ShaderManager::shaderPath = this->dirResource / dirNameShader;
 
     // Probe user config directory
@@ -72,22 +70,21 @@ bool Engine::initConfiguration() {
         std::error_code errorInCopy;
         fs::copy(fs::path(this->dirInstall) / fileNameGameDefaultConfiguration, dirUserConfiguration / fileNameGameDefaultConfiguration, errorInCopy);
 
-        if(errorInCopy) {
+        if (errorInCopy) {
             log_error("Unable to copy configuration file.");
             return false;
         }
-
     }
 
     log_info("Loading configuration files from %s ...", dirUserConfiguration.string().c_str());
- 
+
     for (auto& file : fs::directory_iterator(dirUserConfiguration)) {
-        
+
         if (file.path().extension() == extConfigurationFile) {
             log_info("Loading configuration file: %s ...", file.path().string().c_str());
-            
+
             bool loadedConfigFromFile = configManager.loadFile(file.path().string());
-            if(!loadedConfigFromFile) {
+            if (!loadedConfigFromFile) {
                 log_warn("Error while reading configuration from file %s", file.path().string().c_str());
             }
         }
@@ -104,7 +101,6 @@ bool Engine::initConfiguration() {
     }
     return true;
 }
-
 
 bool Engine::initSDL()
 {
@@ -128,12 +124,12 @@ bool Engine::initSDL()
     File::Configuration& displayConfiguration = this->configManager.getConfiguration(displayConfigurationName);
 
     // Check for previously defined resolution
-    ErrorPair<uint64_t> cfgValScreenWidth = displayConfiguration.nGetUInt(cfgScreenWidth); 
-    ErrorPair<uint64_t> cfgValScreenHeight = displayConfiguration.nGetUInt(cfgScreenHeight); 
+    ErrorPair<uint64_t> cfgValScreenWidth  = displayConfiguration.nGetUInt(cfgScreenWidth);
+    ErrorPair<uint64_t> cfgValScreenHeight = displayConfiguration.nGetUInt(cfgScreenHeight);
 
-    if(cfgValScreenWidth.success() && cfgValScreenHeight.success()) {
+    if (cfgValScreenWidth.success() && cfgValScreenHeight.success()) {
 
-        windowWidth = cfgValScreenWidth.value;
+        windowWidth  = cfgValScreenWidth.value;
         windowHeight = cfgValScreenHeight.value;
 
     } else {
@@ -154,9 +150,7 @@ bool Engine::initSDL()
 
         displayConfiguration.nSetUInt(cfgScreenWidth, windowWidth);
         displayConfiguration.nSetUInt(cfgScreenHeight, windowHeight);
-
     }
-
 
     this->window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (this->window == nullptr) {
@@ -173,10 +167,10 @@ bool Engine::initSDL()
 bool Engine::start()
 {
     log_info("Loading configuration...");
-    
+
     bool initializedConfiguration = initConfiguration();
-    if(!initializedConfiguration) {
-        
+    if (!initializedConfiguration) {
+
         log_fatal("Cannot initialize configuration.");
         return false;
     }
@@ -185,7 +179,7 @@ bool Engine::start()
 
     File::Configuration& displayConfiguration = this->configManager.getConfiguration(displayConfigurationName);
 
-    if (!AudioEngine::init()) {
+    if (!mAudioEngine.init()) {
         log_fatal("Audio engine initialization failed!");
 
         return false;
@@ -205,12 +199,12 @@ bool Engine::start()
     ErrorPair<uint64_t> cfgValScreenWidth  = displayConfiguration.nGetUInt(cfgScreenWidth);
     ErrorPair<uint64_t> cfgValScreenHeight = displayConfiguration.nGetUInt(cfgScreenHeight);
 
-    if(cfgValScreenWidth.fail() || cfgValScreenHeight.fail()) {
-        log_error("Screen size uninitialied when initializing SDL.");
+    if (cfgValScreenWidth.fail() || cfgValScreenHeight.fail()) {
+        log_error("Screen size uninitialized when initializing SDL.");
     } else {
         fs::path fileIntroMovie = (this->dirData / dirNameVideo) / fileNameIntroMovie;
 
-        uint64_t displayWidth = cfgValScreenWidth.value;
+        uint64_t displayWidth  = cfgValScreenWidth.value;
         uint64_t displayHeight = cfgValScreenHeight.value;
 
         VideoPlayer* introMoviePlayer = new VideoPlayer(displayWidth, displayHeight);
@@ -230,7 +224,7 @@ bool Engine::start()
         world.loadGameSettings(gameFile, this->configManager);
     }
 
-    game.load();
+    game.start();
 
     return true;
 }

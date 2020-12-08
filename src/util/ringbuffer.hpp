@@ -111,19 +111,19 @@ public:
         this->buffer = std::make_unique<T[]>(size);
     }
 
-    int put(const T& elem)
+    bool put(const T& elem)
     {
         std::unique_lock<std::mutex> bufferLock(mMutex);
 
         if (capacity == mCurrentSize) {
-            return -1;
+            return false;
         }
 
         buffer[mTail] = elem;
         mTail         = (mTail + 1) % capacity;
         mCurrentSize++;
 
-        return 0;
+        return true;
     }
 
     bool get(T& dst)

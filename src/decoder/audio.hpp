@@ -59,10 +59,11 @@ struct DecoderMessage {
 
 class LibAVDecoder {
 public:
-    static void init();
-
-    static SPSCRingBuffer<DecoderMessage> messageQueue;
+    void                           init();
+    SPSCRingBuffer<DecoderMessage> messageQueue { MESSAGE_QUEUE_SIZE };
 
 private:
-    static void decodeThread();
+    void decodeThread();
+
+    inline constexpr static size_t MESSAGE_QUEUE_SIZE = 64;
 };

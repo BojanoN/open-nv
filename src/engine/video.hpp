@@ -5,13 +5,11 @@
 
 #include <memory>
 
-struct SDL_Window;
-
 class VideoPlayer {
 public:
     VideoPlayer(unsigned int displayWidth, unsigned int displayHeight);
 
-    int  play(const char* path, SDL_Window* window);
+    int  play(const char* path);
     void close();
 
     bool update();

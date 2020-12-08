@@ -1,5 +1,7 @@
 #include "fnv.hpp"
 
+namespace Game {
+
 const std::unordered_set<ESM::ESMType> FalloutNVGame::initialToplevelGroups {
     ESM::ESMType::PROJ,
     ESM::ESMType::IDLM,
@@ -53,7 +55,8 @@ const std::unordered_set<ESM::ESMType> FalloutNVGame::initialToplevelGroups {
     ESM::ESMType::SCOL,
 };
 
-void FalloutNVGame::load()
+void FalloutNVGame::start()
 {
     world.loadTopLevelGroups("FalloutNV.esm", FalloutNVGame::initialToplevelGroups);
+}
 }

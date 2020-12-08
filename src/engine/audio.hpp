@@ -45,21 +45,21 @@ public:
 
 class AudioEngine {
 public:
-    static bool init();
-    static void close();
+    bool init();
+    void close();
 
-    static StreamPlayer*      playFile(const char* path);
+    StreamPlayer*             playFile(const char* path);
     static const AudioDevice& getCurrentDevice();
 
-    static void playingThread();
+    void playingThread();
 
     AudioEngine(AudioEngine& other) = delete;
     void operator=(const AudioEngine&) = delete;
 
-    static AudioEngine* getInstance();
-
 private:
-    static AudioDevice currentDevice;
+    static AudioDevice             currentDevice;
+    inline constexpr static size_t PLAY_QUEUE_SIZE = 64;
+    RingBuffer<StreamPlayer*>      playThreadQueue { PLAY_QUEUE_SIZE };
 
-    static SPSCRingBuffer<StreamPlayer*> playThreadQueue;
+    LibAVDecoder mAudioDecoder;
 };

@@ -11,8 +11,6 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
-#define PLAY_QUEUE_SIZE 64
-
 bool AudioEngine::init()
 {
     if (currentDevice.device) {
@@ -48,15 +46,15 @@ bool AudioEngine::init()
 
     alIsExtensionPresent("EAX2.0");
 
-    LibAVDecoder::init();
+    mAudioDecoder.init();
 
-    std::thread playThread(playingThread);
+    std::thread playThread(&AudioEngine::playingThread, this);
     playThread.detach();
 
     return true;
 }
 
-inline int updateStream(StreamPlayer* stream)
+inline int updateStream(StreamPlayer* stream, SPSCRingBuffer<DecoderMessage>& messageQueue)
 {
     ALint processed, streamState;
 
@@ -79,7 +77,7 @@ inline int updateStream(StreamPlayer* stream)
         if (stream->deviceBuffer.empty()) {
             if (!stream->audioContext.isFinished()) {
 
-                LibAVDecoder::messageQueue.put(frameRequest);
+                messageQueue.put(frameRequest);
                 continue;
             } else {
                 break;
@@ -99,7 +97,7 @@ inline int updateStream(StreamPlayer* stream)
         alSourceQueueBuffers(stream->mSource, 1, &bufid);
 
         stream->deviceBuffer.pop();
-        LibAVDecoder::messageQueue.put(frameRequest);
+        messageQueue.put(frameRequest);
     }
 
     if (streamState != AL_PLAYING && streamState != AL_PAUSED) {
@@ -122,7 +120,7 @@ inline int updateStream(StreamPlayer* stream)
     return 0;
 }
 
-inline int startStream(StreamPlayer* stream)
+inline int startStream(StreamPlayer* stream, SPSCRingBuffer<DecoderMessage>& messageQueue)
 {
     alGenSources(1, &stream->mSource);
     if (alGetError() != AL_NO_ERROR) {
@@ -155,17 +153,6 @@ inline int startStream(StreamPlayer* stream)
     /* Fill the buffer queue */
     for (i = 0; i < NO_BUFFERS; i++) {
 
-        /*
-        if (stream->deviceBuffer.empty()) {
-            if (!stream->audioContext.isFinished()) {
-
-                LibAVDecoder::messageQueue.put(frameRequest);
-                continue;
-            } else {
-                break;
-            }
-        }*/
-
         framePtr = stream->deviceBuffer.peek();
 
         alBufferData(stream->mBuffers[i], currentDevice.outputFormat, framePtr->data, DEFAULT_DECODER_BUF_SIZE, currentDevice.sampleRate);
@@ -175,7 +162,7 @@ inline int startStream(StreamPlayer* stream)
         }
 
         stream->deviceBuffer.pop();
-        LibAVDecoder::messageQueue.put(frameRequest);
+        messageQueue.put(frameRequest);
     }
 
     alSourceQueueBuffers(stream->mSource, i, stream->mBuffers);
@@ -211,7 +198,8 @@ void AudioEngine::playingThread()
     StreamPlayer* tmpPtr;
     unsigned int  currentID = 0;
 
-    DecoderMessage message;
+    DecoderMessage                  message;
+    SPSCRingBuffer<DecoderMessage>& qDecoderMessage = this->mAudioDecoder.messageQueue;
 
     log_info("Audio playing thread: starting...");
 
@@ -234,7 +222,7 @@ void AudioEngine::playingThread()
 
             tmpPtr->audioContext.deviceBuffer = &tmpPtr->deviceBuffer;
 
-            LibAVDecoder::messageQueue.put(message);
+            qDecoderMessage.put(message);
         }
 
         std::this_thread::sleep_for(std::chrono::microseconds(10));
@@ -242,7 +230,7 @@ void AudioEngine::playingThread()
         for (StreamPlayer* stream : activeStreams) {
             if (!stream->active) {
                 // TODO: initial buffer fill
-                if (startStream(stream) < 0) {
+                if (startStream(stream, qDecoderMessage) < 0) {
                     deletionQueue.push_back(stream);
                     closeStream(stream);
                     continue;
@@ -254,7 +242,7 @@ void AudioEngine::playingThread()
                 continue;
             }
 
-            if (updateStream(stream) < 0) {
+            if (updateStream(stream, qDecoderMessage) < 0) {
                 deletionQueue.push_back(stream);
                 closeStream(stream);
                 continue;
@@ -306,5 +294,3 @@ StreamPlayer* AudioEngine::playFile(const char* path)
 const AudioDevice& AudioEngine::getCurrentDevice() { return AudioEngine::currentDevice; };
 
 AudioDevice AudioEngine::currentDevice {};
-
-SPSCRingBuffer<StreamPlayer*> AudioEngine::playThreadQueue { PLAY_QUEUE_SIZE };

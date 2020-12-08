@@ -19,7 +19,7 @@ extern "C" {
 
 #define MIN_VIDEO_DELAY_SEC 0.01
 
-LibAVVideoDecoder::LibAVVideoDecoder(size_t width, size_t height)
+LibAVVideoDecoder::LibAVVideoDecoder()
     : textureFrameQueue(TEXFRAME_QUEUE_SIZE)
     , videoPacketQueue(PACKET_QUEUE_SIZE)
     , mFmtCtx(nullptr)
@@ -30,9 +30,10 @@ LibAVVideoDecoder::LibAVVideoDecoder(size_t width, size_t height)
     , mConvertedFrameSize(0)
     , mVideoStreamIndex(-1)
     , mAudioStreamIndex(-1)
-    , mOutputVideoParams(width, height)
+
     , finished(false)
 {
+    mOutputVideoParams(width, height)
 }
 
 int LibAVVideoDecoder::open(const char* path)
@@ -259,7 +260,7 @@ void LibAVVideoDecoder::close()
 
     audioPlayer.close();
 
-    // Sleep a bit to make sure the threads dont segfault
+    // Sleep a bit to make sure the all queues in threads are flushed
     std::this_thread::sleep_for(std::chrono::microseconds(100));
 
     AVPacket* leftover;
@@ -310,17 +311,18 @@ void log_frame(AVFrame* pFrame, AVCodecContext* pCodecContext)
         pFrame->display_picture_number);
 }
 
-void LibAVVideoDecoder::updateFrame(MediaFrame& frame)
+size_t LibAVVideoDecoder::updateFrame(MediaFrame& frame)
 {
     double audioClock = audioPlayer.lastAudioFramePTS;
 
-    while (this->textureFrameQueue.empty()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds((int)(timeBase - MIN_VIDEO_DELAY_SEC)));
+    if (this->textureFrameQueue.empty()) {
+        return mTimer.getElapsedMicroseconds();
+        // std::this_thread::sleep_for(std::chrono::milliseconds((int)(timeBase - MIN_VIDEO_DELAY_SEC)));
     }
 
     uint8_t* oldData = frame.data;
     if (!this->textureFrameQueue.get(frame)) {
-        return;
+        return mTimer.getElapsedMicroseconds();
     }
     if (oldData != nullptr) {
         // Free allocated data from old frame
@@ -333,9 +335,7 @@ void LibAVVideoDecoder::updateFrame(MediaFrame& frame)
         actualDelay = timeBase - MIN_VIDEO_DELAY_SEC; //0.023;
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds((unsigned int)(actualDelay * 1000)));
-
-    return;
+    return mTimer.getElapsedMicroseconds() +  (size_t)(actualDelay * 1000000)));
 }
 
 void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
