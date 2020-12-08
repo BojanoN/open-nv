@@ -1,11 +1,16 @@
 #pragma once
 
 #include "configuration.hpp"
+#include "error/error.hpp"
+#include "types/errorpair.hpp"
 #include <istream>
 #include <string>
 #include <unordered_map>
 
 namespace File {
+
+using Err::Error;
+using Types::ErrorPair;
 
 class ConfigurationManager {
 
@@ -25,7 +30,16 @@ private:
 
     static const char unsignedPrefix = 'u';
 
+    static const uint32_t bufferSize = 4096;
+    inline static const char* lineBufferFormatString = " %4096[^\r\n]";
+    static const uint32_t configurationNameSize = 128;
+
     std::unordered_map<std::string, Configuration> configurations;
+
+    bool shouldSkip(const char* line, uint64_t lineLength);
+    bool isCategoryName(const char* line, uint64_t lineLength);
+    void loadValue(const char* name, const char* value, Configuration *const currentConfiguration);
+    void setCurrentConfiguration(const char* line, uint64_t lineLength, char *const currentConfigName, Configuration* *const currentConfiguration);
 
 public:
     ConfigurationManager()
@@ -36,12 +50,21 @@ public:
     ~ConfigurationManager() = default;
 
     //
-    bool loadFile(const std::string& path) noexcept;
+    Error loadFile(const char* path) noexcept;
 
     // throws out_of_range
     Configuration& getConfiguration(const std::string& name) { return configurations.at(name); }
     Configuration& getDefaultConfiguration() { return configurations[defaultConfigurationName]; }
     Configuration& getGameSettingsConfiguration() { return configurations[gameSettingsConfigurationName]; }
+
+    ErrorPair<Configuration*> nGetConfiguration(const char* configurationName) {
+        std::string sName(configurationName);
+        auto iterator = configurations.find(sName);
+        if(iterator == configurations.end()) {
+            return ErrorPair<Configuration*>(Err::InvalidArgument);
+        }
+        return ErrorPair<Configuration*>(Err::Success, &iterator->second);
+    }
 
 #ifdef DEBUG
     std::unordered_map<std::string, Configuration>& getAll()
@@ -49,9 +72,6 @@ public:
         return configurations;
     }
 #endif
-
-    // for \r\n compatibility
-    void readLine(std::istream& input, std::string& str);
 };
 
 }; // namespace File

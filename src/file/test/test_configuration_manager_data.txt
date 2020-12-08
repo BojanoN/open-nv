@@ -1,0 +1,11 @@
+[Category_1]
+uValue=2
+iValue=-4
+fValue=4.5
+sValue=Stevo
+
+[Category_2]
+uValue=67
+iValue=232
+fValue=0.45
+sValue=Mile

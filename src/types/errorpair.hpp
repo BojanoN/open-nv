@@ -12,7 +12,7 @@ struct ErrorPair {
 	Error error;
 	ValueType value;
 
-	ErrorPair() {}
+	ErrorPair() : error{Err::Success} {}
 	ErrorPair(Error error, ValueType value) : error{error}, value{value} {}
 	ErrorPair(Error error) : error{error} {}
 

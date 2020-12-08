@@ -16,6 +16,8 @@ enum ErrorCodes : error_t {
 	codeFloatInfinity,
 	codeFloatNaN,
 	codeMemoryError,
+	codeFileNotFound,
+	codeIOError,
 };
 
 
@@ -41,5 +43,7 @@ inline Error OutOfRange(codeOutOfRange);
 inline Error FloatInfinity(codeFloatInfinity);
 inline Error FloatNaN(codeFloatNaN);
 inline Error MemoryError(codeMemoryError);
+inline Error FileNotFound(codeFileNotFound);
+inline Error IOError(codeIOError);
 
 };

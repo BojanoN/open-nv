@@ -4,6 +4,7 @@
 #include <engine/video.hpp>
 #include <logc/log.h>
 #include "types/errorpair.hpp"
+#include "error/error.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -16,6 +17,7 @@
 namespace Engine {
 
 using Types::ErrorPair;
+using Err::Error;
 
 namespace fs = std::filesystem;
 
@@ -86,8 +88,9 @@ bool Engine::initConfiguration() {
         if (file.path().extension() == extConfigurationFile) {
             log_info("Loading configuration file: %s ...", file.path().string().c_str());
             
-            bool loadedConfigFromFile = configManager.loadFile(file.path().string());
-            if(!loadedConfigFromFile) {
+            //bool loadedConfigFromFile = configManager.loadFile(file.path().string());
+            Error loadedConfigFromFile = configManager.loadFile(file.path().string().c_str());
+            if(loadedConfigFromFile.fail()) {
                 log_warn("Error while reading configuration from file %s", file.path().string().c_str());
             }
         }
@@ -152,8 +155,15 @@ bool Engine::initSDL()
         windowWidth  = currentDisplayMode.w;
         windowHeight = currentDisplayMode.h;
 
-        displayConfiguration.nSetUInt(cfgScreenWidth, windowWidth);
-        displayConfiguration.nSetUInt(cfgScreenHeight, windowHeight);
+        Error didSetWindowWidth = displayConfiguration.nSetUInt(cfgScreenWidth, windowWidth);
+        if(didSetWindowWidth.fail()) {
+            log_error("Cannot set window width.");
+        } else {
+            Error didSetWindowHeight = displayConfiguration.nSetUInt(cfgScreenHeight, windowHeight);
+            if(didSetWindowHeight.fail()) {
+                log_error("Cannot set window height.");
+            }
+        }
 
     }
 
