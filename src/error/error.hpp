@@ -17,7 +17,9 @@ typedef uint32_t error_t;
     X(codeFloatNaN)              \
     X(codeMemoryError)           \
     X(codeResourceCreationError) \
-    X(codeShaderCreationError)
+    X(codeShaderCreationError)   \
+    X(codeFileNotFound)          \
+    X(codeInitError)
 
 #define X(name) name,
 
@@ -73,5 +75,7 @@ inline Error FloatNaN(codeFloatNaN);
 inline Error MemoryError(codeMemoryError);
 inline Error ResourceCreationError(codeResourceCreationError);
 inline Error ShaderCreationError(codeShaderCreationError);
+inline Error FileNotFound(codeFileNotFound);
+inline Error InitError(codeInitError);
 
 };

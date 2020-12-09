@@ -1,5 +1,9 @@
 #pragma once
 
+#include <error/error.h>
+
+using namespace Types;
+
 namespace Game {
 
 enum class GameStateType {
@@ -10,10 +14,10 @@ enum class GameStateType {
 
 class GameState {
 public:
-    virtual void enter()   = 0;
-    virtual void exit()    = 0;
-    virtual void suspend() = 0;
-    virtual void resume()  = 0;
+    virtual Error enter()   = 0;
+    virtual void  exit()    = 0;
+    virtual void  suspend() = 0;
+    virtual void  resume()  = 0;
 
     const GameStateType mStateType;
 
@@ -27,7 +31,7 @@ public:
     DrawableGameState()
         : GameState(GameStateType::Drawable) {};
 
-    virtual void draw() = 0;
+    virtual bool draw() = 0;
 };
 
 }

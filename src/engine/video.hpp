@@ -1,18 +1,25 @@
 #pragma once
 
 #include <decoder/video.hpp>
+#include <types/errorpair.hpp>
 #include <util/shader.hpp>
 
 #include <memory>
 
+namespace File {
+class Configuration;
+}
+
 class VideoPlayer {
 public:
-    VideoPlayer(unsigned int displayWidth, unsigned int displayHeight);
+    VideoPlayer(File::Configuration& displayConfiguration)
+        : decoder(displayConfiguration) {};
 
-    int  play(const char* path);
-    void close();
+    Types::Error init();
+    ssize_t      play(const char* path);
+    void         close();
 
-    bool update();
+    ssize_t update();
 
 private:
     std::shared_ptr<Shader> videoShader;

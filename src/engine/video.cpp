@@ -4,7 +4,6 @@
 #include <GL/glu.h>
 
 #include <resources/shader.hpp>
-#include <types/errorpair.hpp>
 
 // clang-format off
 float VideoPlayer::vertices[16] = {
@@ -20,18 +19,20 @@ unsigned int VideoPlayer::elements[6] = {
 };
 // clang-format on
 
-VideoPlayer::VideoPlayer(unsigned int width, unsigned int height)
-    : decoder()
+Types::Error VideoPlayer::init()
 {
     Types::ErrorPair<std::shared_ptr<Shader>> err = ShaderManager::getShader(VideoPlayer::videoVertexShader, VideoPlayer::videoFragmentShader);
     if (err.fail()) {
-        throw std::runtime_error("Unable to get video player shaders!");
+        log_error("Unable to get video player shaders!");
+        return err.error;
     }
 
     videoShader = err.value;
+
+    return Err::Success;
 }
 
-ssize_t VideoPlayer::play(const char* path, SDL_Window* window)
+ssize_t VideoPlayer::play(const char* path)
 {
     glEnable(GL_TEXTURE_2D);
 
@@ -64,7 +65,7 @@ ssize_t VideoPlayer::play(const char* path, SDL_Window* window)
     glGenTextures(1, &mVideoFrameTexture);
     glBindTexture(GL_TEXTURE_2D, mVideoFrameTexture);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, outputVideoParams.width, outputVideoParams.height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, decoder.mOutputVideoParams.width, decoder.mOutputVideoParams.height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -76,31 +77,6 @@ ssize_t VideoPlayer::play(const char* path, SDL_Window* window)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     return this->update();
-
-    /*
-    while (true) {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-            case SDL_KEYDOWN:
-                if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                    SDL_GL_SwapWindow(window);
-
-                    this->close();
-                    return 0;
-                }
-            }
-        }
-        if (!this->update()) {
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            SDL_GL_SwapWindow(window);
-
-            this->close();
-            return -1;
-        }
-        SDL_GL_SwapWindow(window);
-    }*/
 };
 
 void VideoPlayer::close()
@@ -136,7 +112,7 @@ ssize_t VideoPlayer::update()
     glUniform1i(glGetUniformLocation(videoShader->shaderProgramID, "videoFrame"), 0);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, outputVideoParams.width, outputVideoParams.height, GL_RGB, GL_UNSIGNED_BYTE, mCurrentTextureFrame.data);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, decoder.mOutputVideoParams.width, decoder.mOutputVideoParams.height, GL_RGB, GL_UNSIGNED_BYTE, mCurrentTextureFrame.data);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     return timeNextUpdate;

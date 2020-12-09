@@ -17,20 +17,17 @@ struct AVFrame;
 struct SwsContext;
 struct SwrContext;
 
+namespace File {
+class Configuration;
+}
 struct VideoState {
     double lastFramePTS;
     double videoClock;
 };
 
 struct VideoParameters {
-    size_t width;
-    size_t height;
-
-    VideoParameters(size_t w, size_t h)
-        : width(w)
-        , height(h)
-    {
-    }
+    size_t width  = 0;
+    size_t height = 0;
 };
 
 enum class VideoSync {
@@ -44,8 +41,8 @@ enum class VideoSync {
 
 class LibAVVideoDecoder {
 public:
-    ssize_t open(const char* path);
-    void    close();
+    int  open(const char* path);
+    void close();
 
     size_t updateFrame(MediaFrame& dst);
     bool   isFinished() { return finished; }
@@ -53,16 +50,17 @@ public:
     unsigned int getHeight() { return mOutputVideoParams.height; };
     unsigned int getWidth() { return mOutputVideoParams.width; };
 
-    LibAVVideoDecoder(size_t width, size_t height);
+    LibAVVideoDecoder(File::Configuration& displayConfiguration);
 
     static void videoDecodeThread(LibAVVideoDecoder* objptr);
     static void dispatchThread(LibAVVideoDecoder* obj);
 
     VideoState mVideoState;
-    Timer      mTimer;
 
     SPSCRingBuffer<MediaFrame> textureFrameQueue;
     SPSCRingBuffer<AVPacket*>  videoPacketQueue;
+
+    VideoParameters mOutputVideoParams;
 
 private:
     VideoAudioPlayer audioPlayer;
@@ -78,9 +76,8 @@ private:
     int mVideoStreamIndex;
     int mAudioStreamIndex;
 
-    VideoParameters mOutputVideoParams;
-
     double timeBase;
+    bool   finished;
 
-    bool finished;
+    File::Configuration& mDisplayConfiguration;
 };

@@ -1,5 +1,6 @@
 #include "video.hpp"
 #include "av_utils.hpp"
+#include "constants.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -11,6 +12,7 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+#include <file/configuration.hpp>
 #include <logc/log.h>
 #include <thread>
 
@@ -19,7 +21,7 @@ extern "C" {
 
 #define MIN_VIDEO_DELAY_SEC 0.01
 
-LibAVVideoDecoder::LibAVVideoDecoder()
+LibAVVideoDecoder::LibAVVideoDecoder(File::Configuration& displayConfiguration)
     : textureFrameQueue(TEXFRAME_QUEUE_SIZE)
     , videoPacketQueue(PACKET_QUEUE_SIZE)
     , mFmtCtx(nullptr)
@@ -30,10 +32,12 @@ LibAVVideoDecoder::LibAVVideoDecoder()
     , mConvertedFrameSize(0)
     , mVideoStreamIndex(-1)
     , mAudioStreamIndex(-1)
-
     , finished(false)
+    , mDisplayConfiguration(displayConfiguration)
 {
-    mOutputVideoParams(width, height)
+    // No error checking since this is guaranteed to be initialized when the engine is started
+    mOutputVideoParams.width  = displayConfiguration.nGetUInt(Constants::VideoDecoder::cfgScreenWidth).value;
+    mOutputVideoParams.height = displayConfiguration.nGetUInt(Constants::VideoDecoder::cfgScreenHeight).value;
 }
 
 int LibAVVideoDecoder::open(const char* path)
@@ -316,7 +320,7 @@ size_t LibAVVideoDecoder::updateFrame(MediaFrame& frame)
     double audioClock = audioPlayer.lastAudioFramePTS;
 
     if (this->textureFrameQueue.empty()) {
-        return mTimer.getElapsedMicroseconds();
+        return 0;
         // std::this_thread::sleep_for(std::chrono::milliseconds((int)(timeBase - MIN_VIDEO_DELAY_SEC)));
     }
 
@@ -335,7 +339,7 @@ size_t LibAVVideoDecoder::updateFrame(MediaFrame& frame)
         actualDelay = timeBase - MIN_VIDEO_DELAY_SEC; //0.023;
     }
 
-    return mTimer.getElapsedMicroseconds() +  (size_t)(actualDelay * 1000000)));
+    return (size_t)(actualDelay * 1000000);
 }
 
 void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
