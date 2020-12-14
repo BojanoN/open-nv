@@ -6,14 +6,10 @@
 
 #include <memory>
 
-namespace File {
-class Configuration;
-}
-
 class VideoPlayer {
 public:
-    VideoPlayer(File::Configuration& displayConfiguration)
-        : decoder(displayConfiguration) {};
+    VideoPlayer()
+        : decoder() {};
 
     Types::Error init();
     ssize_t      play(const char* path);

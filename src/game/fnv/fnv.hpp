@@ -10,11 +10,13 @@ namespace Game {
 
 class FalloutNVGame : public Game::Game {
 public:
-    FalloutNVGame(GameWorld::GameWorld& gw)
-        : Game(gw)
+    FalloutNVGame(GameWorld::GameWorld& gw, const std::string& dirInstall)
+        : Game(gw, dirInstall)
     {
     }
-    void start();
+
+    virtual Err::Error start();
+    virtual void       setWindow(SDL_Window* window);
 
 private:
     static const std::unordered_set<ESM::ESMType> initialToplevelGroups;

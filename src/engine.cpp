@@ -19,7 +19,7 @@ using Types::ErrorPair;
 namespace fs = std::filesystem;
 
 Engine::Engine(const std::string& configPath, const std::string& dirInstall)
-    : game(this->world)
+    : game(this->world, dirInstall)
 {
     this->dirInstall  = fs::path(dirInstall);
     this->dirWorking  = fs::current_path();
@@ -34,7 +34,7 @@ Engine::~Engine()
     SDL_DestroyWindow(this->window);
     SDL_Quit();
 
-    AudioEngine::close();
+    this->mAudioEngine.close();
 
     File::Reader::destroyFileProvider();
 }
@@ -99,6 +99,7 @@ bool Engine::initConfiguration()
             this->mastersPlugins.push_back(file.path());
         }
     }
+
     return true;
 }
 
@@ -133,7 +134,7 @@ bool Engine::initSDL()
         windowHeight = cfgValScreenHeight.value;
 
     } else {
-        // Fallback to native is none
+        // Fallback to native if none
         log_info("No previous screen size defined, using native display size...");
 
         SDL_DisplayMode currentDisplayMode;
@@ -196,23 +197,6 @@ bool Engine::start()
         return false;
     }
 
-    ErrorPair<uint64_t> cfgValScreenWidth  = displayConfiguration.nGetUInt(cfgScreenWidth);
-    ErrorPair<uint64_t> cfgValScreenHeight = displayConfiguration.nGetUInt(cfgScreenHeight);
-
-    if (cfgValScreenWidth.fail() || cfgValScreenHeight.fail()) {
-        log_error("Screen size uninitialized when initializing SDL.");
-    } else {
-        fs::path fileIntroMovie = (this->dirData / dirNameVideo) / fileNameIntroMovie;
-
-        uint64_t displayWidth  = cfgValScreenWidth.value;
-        uint64_t displayHeight = cfgValScreenHeight.value;
-
-        VideoPlayer* introMoviePlayer = new VideoPlayer(displayWidth, displayHeight);
-        if (introMoviePlayer->play(fileIntroMovie.string().c_str(), this->window) < 0) {
-            log_error("Failed to play intro video!");
-        }
-    }
-
     try {
         world.loadMastersAndPlugins(this->mastersPlugins);
     } catch (std::runtime_error& e) {
@@ -224,9 +208,12 @@ bool Engine::start()
         world.loadGameSettings(gameFile, this->configManager);
     }
 
+    game.setWindow(this->window);
     game.start();
 
     return true;
 }
+
+ConfigurationManager Engine::configManager = {};
 
 }; // namespace Engine

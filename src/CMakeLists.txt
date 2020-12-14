@@ -137,8 +137,9 @@ set(sources
   ./gameworld.cpp
   ./types/conversion.cpp
   ./game/rendermanager.cpp
+  ./game/videostate.cpp
   ./game/fnv/fnv.cpp
-  ./game/fnv/states/loadingscreen.cpp
+ # ./game/fnv/states/loadingscreen.cpp
   ./main.cpp
   ./nif/nifdata.cpp
   ./nif/nifreader.cpp

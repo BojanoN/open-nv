@@ -2,7 +2,8 @@
 
 namespace Constants {
 namespace VideoDecoder {
-    inline constexpr const char* cfgScreenWidth  = "uSize W";
-    inline constexpr const char* cfgScreenHeight = "uSize H";
+    inline constexpr const char* cfgScreenWidth       = "uSize W";
+    inline constexpr const char* cfgScreenHeight      = "uSize H";
+    inline constexpr const char* cfgDisplayConfigName = "Display";
 }
 }

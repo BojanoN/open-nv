@@ -12,8 +12,10 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+#include <engine.hpp>
 #include <file/configuration.hpp>
 #include <logc/log.h>
+
 #include <thread>
 
 #define TEXFRAME_QUEUE_SIZE 16
@@ -21,7 +23,7 @@ extern "C" {
 
 #define MIN_VIDEO_DELAY_SEC 0.01
 
-LibAVVideoDecoder::LibAVVideoDecoder(File::Configuration& displayConfiguration)
+LibAVVideoDecoder::LibAVVideoDecoder()
     : textureFrameQueue(TEXFRAME_QUEUE_SIZE)
     , videoPacketQueue(PACKET_QUEUE_SIZE)
     , mFmtCtx(nullptr)
@@ -33,11 +35,11 @@ LibAVVideoDecoder::LibAVVideoDecoder(File::Configuration& displayConfiguration)
     , mVideoStreamIndex(-1)
     , mAudioStreamIndex(-1)
     , finished(false)
-    , mDisplayConfiguration(displayConfiguration)
+    , mDisplayConfiguration(Engine::Engine::configManager.getConfiguration(Constants::VideoDecoder::cfgDisplayConfigName))
 {
     // No error checking since this is guaranteed to be initialized when the engine is started
-    mOutputVideoParams.width  = displayConfiguration.nGetUInt(Constants::VideoDecoder::cfgScreenWidth).value;
-    mOutputVideoParams.height = displayConfiguration.nGetUInt(Constants::VideoDecoder::cfgScreenHeight).value;
+    mOutputVideoParams.width  = mDisplayConfiguration.nGetUInt(Constants::VideoDecoder::cfgScreenWidth).value;
+    mOutputVideoParams.height = mDisplayConfiguration.nGetUInt(Constants::VideoDecoder::cfgScreenHeight).value;
 }
 
 int LibAVVideoDecoder::open(const char* path)
@@ -326,7 +328,7 @@ size_t LibAVVideoDecoder::updateFrame(MediaFrame& frame)
 
     uint8_t* oldData = frame.data;
     if (!this->textureFrameQueue.get(frame)) {
-        return mTimer.getElapsedMicroseconds();
+        return 0;
     }
     if (oldData != nullptr) {
         // Free allocated data from old frame

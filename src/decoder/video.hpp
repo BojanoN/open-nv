@@ -16,10 +16,10 @@ struct AVStream;
 struct AVFrame;
 struct SwsContext;
 struct SwrContext;
-
 namespace File {
 class Configuration;
 }
+
 struct VideoState {
     double lastFramePTS;
     double videoClock;
@@ -50,7 +50,7 @@ public:
     unsigned int getHeight() { return mOutputVideoParams.height; };
     unsigned int getWidth() { return mOutputVideoParams.width; };
 
-    LibAVVideoDecoder(File::Configuration& displayConfiguration);
+    LibAVVideoDecoder();
 
     static void videoDecodeThread(LibAVVideoDecoder* objptr);
     static void dispatchThread(LibAVVideoDecoder* obj);
@@ -79,5 +79,6 @@ private:
     double timeBase;
     bool   finished;
 
+    // TODO: adjust configuration and config manager so we can mark this as const
     File::Configuration& mDisplayConfiguration;
 };

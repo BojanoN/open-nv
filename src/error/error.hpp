@@ -19,7 +19,9 @@ typedef uint32_t error_t;
     X(codeResourceCreationError) \
     X(codeShaderCreationError)   \
     X(codeFileNotFound)          \
-    X(codeInitError)
+    X(codeInitError)             \
+    X(codeEndOfOperation)        \
+    X(codeContinue)
 
 #define X(name) name,
 
@@ -77,5 +79,6 @@ inline Error ResourceCreationError(codeResourceCreationError);
 inline Error ShaderCreationError(codeShaderCreationError);
 inline Error FileNotFound(codeFileNotFound);
 inline Error InitError(codeInitError);
-
+inline Error EndOfOperation(codeEndOfOperation);
+inline Error Continue(codeContinue);
 };

@@ -26,22 +26,21 @@ public:
     virtual void  suspend();
     virtual void  resume();
 
-    virtual bool draw();
+    virtual DrawableGameStateStatus draw();
 
-    static ErrorPair<std::shared_ptr<VideoState>> create(const char* filePath);
+    static ErrorPair<std::shared_ptr<GameState>> create(const char* filePath);
 
-    virtual ~VideoState() {};
+    virtual ~VideoState();
 
 private:
-    VideoState(File::Configuration& displayConfiguration)
-        : mDisplayConfiguration(displayConfiguration)
-        , timeNextUpdate(0) {};
+    VideoState(const char* path)
+        : mpathVideoFile(path)
+        , mTimeNextUpdateUsec(0) {};
 
-    File::Configuration&         mDisplayConfiguration;
     std::unique_ptr<VideoPlayer> mVideoPlayer;
-    const char*                  mpathVideoFile;
+    const std::string            mpathVideoFile;
 
-    size_t mtimeNextUpdateUsec;
+    size_t mTimeNextUpdateUsec;
     Timer  mTimer;
 };
 }

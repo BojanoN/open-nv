@@ -1,5 +1,9 @@
 #include "fnv.hpp"
 
+#include "constants.hpp"
+#include <game/videostate.hpp>
+#include <logc/log.h>
+
 namespace Game {
 
 const std::unordered_set<ESM::ESMType> FalloutNVGame::initialToplevelGroups {
@@ -55,8 +59,39 @@ const std::unordered_set<ESM::ESMType> FalloutNVGame::initialToplevelGroups {
     ESM::ESMType::SCOL,
 };
 
-void FalloutNVGame::start()
+namespace fs = std::filesystem;
+using namespace Types;
+
+void FalloutNVGame::setWindow(SDL_Window* window)
+{
+    this->mRenderManager.mSDLWindow = window;
+}
+
+Err::Error FalloutNVGame::start()
 {
     world.loadTopLevelGroups("FalloutNV.esm", FalloutNVGame::initialToplevelGroups);
+
+    fs::path fileIntroMovie = (this->dirInstallDir) / Constants::FNV::relpathIntroVideo;
+
+    ErrorPair<std::shared_ptr<GameState>> errIntroVideoState = VideoState::create(fileIntroMovie.string().c_str());
+    if (errIntroVideoState.fail()) {
+        log_error("Unable to play intro video!");
+        return errIntroVideoState.error;
+    }
+
+    this->mRenderManager.push(errIntroVideoState.value);
+
+    Error errEnter = this->mRenderManager.enter();
+    if (errEnter.fail()) {
+        return errEnter;
+    }
+
+    while (this->mRenderManager.draw()) {
+    }
+
+    this->mRenderManager.exit();
+    this->mRenderManager.pop();
+
+    return Err::Success;
 }
 }

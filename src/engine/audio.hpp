@@ -45,6 +45,9 @@ public:
 
 class AudioEngine {
 public:
+    AudioEngine() {};
+    ~AudioEngine() {};
+
     bool init();
     void close();
 

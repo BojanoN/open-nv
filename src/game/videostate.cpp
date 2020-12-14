@@ -7,9 +7,14 @@ namespace Game {
 namespace fs = std::filesystem;
 using namespace Types;
 
-ErrorPair<std::shared_ptr<VideoState>> VideoState::create(const char* pathVideoFile)
+VideoState::~VideoState()
 {
-    ErrorPair<std::shared_ptr<VideoState>> ret;
+    this->mVideoPlayer->close();
+}
+
+ErrorPair<std::shared_ptr<GameState>> VideoState::create(const char* pathVideoFile)
+{
+    ErrorPair<std::shared_ptr<GameState>> ret;
 
     fs::path filePath { pathVideoFile };
 
@@ -19,14 +24,14 @@ ErrorPair<std::shared_ptr<VideoState>> VideoState::create(const char* pathVideoF
         return ret;
     }
 
-    VideoState* instance = new VideoState();
+    VideoState* instance = new VideoState(pathVideoFile);
     if (instance == nullptr) {
         log_fatal("Unable to allocate memory for VideoState!");
         ret.error = Err::MemoryError;
         return ret;
     }
 
-    VideoPlayer* player = new VideoPlayer(mDisplayConfiguration);
+    VideoPlayer* player = new VideoPlayer();
     if (player == nullptr) {
         log_fatal("Unable to allocate memory for VideoPlayer!");
         ret.error = Err::MemoryError;
@@ -45,10 +50,9 @@ ErrorPair<std::shared_ptr<VideoState>> VideoState::create(const char* pathVideoF
         return ret;
     }
 
-    instance->mpathVideoFile = pathVideoFile;
-    instance->mVideoPlayer   = std::unique_ptr<VideoPlayer>(player);
+    instance->mVideoPlayer = std::unique_ptr<VideoPlayer>(player);
 
-    ret.value = std::shared_ptr<VideoState>(instance);
+    ret.value = std::shared_ptr<GameState>(instance);
     ret.error = Err::Success;
 
     return ret;
@@ -56,28 +60,42 @@ ErrorPair<std::shared_ptr<VideoState>> VideoState::create(const char* pathVideoF
 
 Error VideoState::enter()
 {
-    ssize_t timeNextUpdateUsec = mVideoPlayer->play(mpathVideoFile);
-    if (timeNextUpdate < 0) {
-        log_error("Unable to play video file %s", mpathVideoFile);
+    ssize_t timeNextUpdateUsec = mVideoPlayer->play(mpathVideoFile.c_str());
+    if (timeNextUpdateUsec < 0) {
+        log_error("Unable to play video file %s", mpathVideoFile.c_str());
         return Err::InitError;
     }
 
     mTimer.start();
-    mtimeNextUpdateUsec = mTimer.getElapsedMicroseconds() + timeNextUpdateUsec;
+    mTimeNextUpdateUsec = mTimer.getElapsedMicroseconds() + timeNextUpdateUsec;
 
     return Err::Success;
 }
 
-bool VideoState::draw()
+void VideoState::exit()
 {
-    ssize_t timeNextUpdateUsec = mVideoPlayer->update();
-    if (timeNextUpdate < 0) {
-        return false;
+}
+void VideoState::resume()
+{
+}
+void VideoState::suspend()
+{
+}
+
+DrawableGameStateStatus VideoState::draw()
+{
+    if (mTimer.getElapsedMicroseconds() < mTimeNextUpdateUsec) {
+        return DrawableGameStateStatus::Continue;
     }
 
-    mtimeNextUpdateUsec = mTimer.getElapsedMicroseconds() + timeNextUpdateUsec;
+    ssize_t timeNextUpdateUsec = mVideoPlayer->update();
+    if (timeNextUpdateUsec < 0) {
+        return DrawableGameStateStatus::EndOfOperation;
+    }
 
-    return true;
+    mTimeNextUpdateUsec = mTimer.getElapsedMicroseconds() + timeNextUpdateUsec;
+
+    return DrawableGameStateStatus::ScreenContentChanged;
 }
 
 }

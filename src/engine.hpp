@@ -41,8 +41,6 @@ private:
     static inline const char* cfgScreenHeight          = "uSize H";
     static inline const char* windowName               = "OpenNV";
 
-    ConfigurationManager configManager;
-
     fs::path dirInstall;
     fs::path dirWorking;
     fs::path dirData;
@@ -67,6 +65,8 @@ public:
     ~Engine();
 
     bool start();
+
+    static ConfigurationManager configManager;
 };
 
 }; // namespace Engine
