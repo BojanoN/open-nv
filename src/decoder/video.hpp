@@ -18,6 +18,7 @@ struct SwsContext;
 struct SwrContext;
 namespace File {
 class Configuration;
+
 }
 
 struct VideoState {
@@ -39,7 +40,13 @@ enum class VideoSync {
 #define VIDEO_AUDIO_BUFFER_NO   8
 #define VIDEO_AUDIO_BUFFER_SIZE 8192
 
+using File::Configuration;
+
 class LibAVVideoDecoder {
+
+    
+
+
 public:
     int  open(const char* path);
     void close();
@@ -80,5 +87,5 @@ private:
     bool   finished;
 
     // TODO: adjust configuration and config manager so we can mark this as const
-    File::Configuration& mDisplayConfiguration;
+    const Configuration* mDisplayConfiguration;
 };

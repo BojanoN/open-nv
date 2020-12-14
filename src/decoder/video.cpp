@@ -38,8 +38,8 @@ LibAVVideoDecoder::LibAVVideoDecoder()
     , mDisplayConfiguration(Engine::Engine::configManager.getConfiguration(Constants::VideoDecoder::cfgDisplayConfigName))
 {
     // No error checking since this is guaranteed to be initialized when the engine is started
-    mOutputVideoParams.width  = mDisplayConfiguration.nGetUInt(Constants::VideoDecoder::cfgScreenWidth).value;
-    mOutputVideoParams.height = mDisplayConfiguration.nGetUInt(Constants::VideoDecoder::cfgScreenHeight).value;
+    mOutputVideoParams.width  = mDisplayConfiguration->nGetUInt(Constants::VideoDecoder::cfgScreenWidth).value;
+    mOutputVideoParams.height = mDisplayConfiguration->nGetUInt(Constants::VideoDecoder::cfgScreenHeight).value;
 }
 
 int LibAVVideoDecoder::open(const char* path)

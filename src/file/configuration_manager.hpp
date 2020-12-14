@@ -39,7 +39,8 @@ public:
     bool loadFile(const std::string& path) noexcept;
 
     // throws out_of_range
-    Configuration& getConfiguration(const std::string& name) { return configurations.at(name); }
+    const Configuration* getConfiguration(const std::string& name) { return &configurations.at(name); }
+    Configuration& getMutableConfiguration(const std::string& name) { return configurations.at(name); }
     Configuration& getDefaultConfiguration() { return configurations[defaultConfigurationName]; }
     Configuration& getGameSettingsConfiguration() { return configurations[gameSettingsConfigurationName]; }
 

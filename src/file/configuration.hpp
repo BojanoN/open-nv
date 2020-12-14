@@ -58,11 +58,11 @@ public:
     const double&      getDouble(const std::string& name) const { return get<double>(name); }
     const bool&        getBool(const std::string& name) const { return get<bool>(name); }
 
-    Types::ErrorPair<uint64_t>    nGetUInt(const std::string& name);
-    Types::ErrorPair<int64_t>     nGetInt(const std::string& name);
-    Types::ErrorPair<float>       nGetFloat(const std::string& name);
-    Types::ErrorPair<bool>        nGetBool(const std::string& name);
-    Types::ErrorPair<const char*> nGetString(const std::string& name);
+    Types::ErrorPair<uint64_t>    nGetUInt(const std::string& name) const;
+    Types::ErrorPair<int64_t>     nGetInt(const std::string& name) const;
+    Types::ErrorPair<float>       nGetFloat(const std::string& name) const;
+    Types::ErrorPair<bool>        nGetBool(const std::string& name) const;
+    Types::ErrorPair<const char*> nGetString(const std::string& name) const;
 
     bool contains(const std::string& name) const;
 
