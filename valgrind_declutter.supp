@@ -1,0 +1,6 @@
+{
+   <libraries>
+   Memcheck:Leak
+   
+   obj:./lib/lib*
+}
