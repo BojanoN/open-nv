@@ -87,5 +87,5 @@ private:
     bool   finished;
 
     // TODO: adjust configuration and config manager so we can mark this as const
-    const Configuration* mDisplayConfiguration;
+    const Configuration *const mDisplayConfiguration;
 };
