@@ -122,7 +122,7 @@ bool Engine::initSDL()
 
     size_t windowHeight, windowWidth;
 
-    File::Configuration& displayConfiguration = this->configManager.getConfiguration(displayConfigurationName);
+    File::Configuration& displayConfiguration = this->configManager.getMutableConfiguration(displayConfigurationName);
 
     // Check for previously defined resolution
     ErrorPair<uint64_t> cfgValScreenWidth  = displayConfiguration.nGetUInt(cfgScreenWidth);
@@ -178,7 +178,7 @@ bool Engine::start()
 
     log_info("Initializing engine components.");
 
-    File::Configuration& displayConfiguration = this->configManager.getConfiguration(displayConfigurationName);
+    File::Configuration& displayConfiguration = this->configManager.getMutableConfiguration(displayConfigurationName);
 
     if (!mAudioEngine.init()) {
         log_fatal("Audio engine initialization failed!");

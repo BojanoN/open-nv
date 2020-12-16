@@ -34,7 +34,7 @@ Error Configuration::isValidConfigurationName(const std::string& name, char pref
 	return Err::Success;
 }
 
-Types::ErrorPair<uint64_t> Configuration::nGetUInt(const std::string& name) {
+Types::ErrorPair<uint64_t> Configuration::nGetUInt(const std::string& name) const {
 	Error nameError = isValidConfigurationName(name, uIntPrefix);
 	if(nameError.fail()) {
 		return Types::ErrorPair<uint64_t>(nameError);
@@ -44,7 +44,7 @@ Types::ErrorPair<uint64_t> Configuration::nGetUInt(const std::string& name) {
 		return Types::ErrorPair<uint64_t>(Err::KeyNotFound);
 	}
 
-	uint64_t configurationValue = nValues[name].uValue;
+	uint64_t configurationValue = nValues.at(name).uValue;
 	return Types::ErrorPair<uint64_t>(Err::Success, configurationValue);
 }
 
@@ -58,7 +58,7 @@ Error Configuration::nSetUInt(const std::string& name, uint64_t value) {
 	return Err::Success;
 }
 
-Types::ErrorPair<int64_t> Configuration::nGetInt(const std::string& name) {
+Types::ErrorPair<int64_t> Configuration::nGetInt(const std::string& name) const {
 	Error nameError = isValidConfigurationName(name, intPrefix);
 	if(nameError.fail()) {
 		return Types::ErrorPair<int64_t>(nameError);
@@ -68,7 +68,7 @@ Types::ErrorPair<int64_t> Configuration::nGetInt(const std::string& name) {
 		return Types::ErrorPair<int64_t>(Err::KeyNotFound);
 	}
 
-	return Types::ErrorPair<int64_t>(Err::Success, nValues[name].iValue);
+	return Types::ErrorPair<int64_t>(Err::Success, nValues.at(name).iValue);
 }
 
 Error Configuration::nSetInt(const std::string& name, int64_t value) {
@@ -81,7 +81,7 @@ Error Configuration::nSetInt(const std::string& name, int64_t value) {
 	return Err::Success;
 }
 
-Types::ErrorPair<float> Configuration::nGetFloat(const std::string& name) {
+Types::ErrorPair<float> Configuration::nGetFloat(const std::string& name) const {
 	Error nameError = isValidConfigurationName(name, floatPrefix);
 	if(nameError.fail()) {
 		return Types::ErrorPair<float>(nameError);
@@ -91,7 +91,7 @@ Types::ErrorPair<float> Configuration::nGetFloat(const std::string& name) {
 		return Types::ErrorPair<float>(Err::KeyNotFound);
 	}
 
-	return Types::ErrorPair<float>(Err::Success, nValues[name].fValue);
+	return Types::ErrorPair<float>(Err::Success, nValues.at(name).fValue);
 }
 
 Error Configuration::nSetFloat(const std::string& name, float value) {
@@ -104,7 +104,7 @@ Error Configuration::nSetFloat(const std::string& name, float value) {
 	return Err::Success;
 }
 
-Types::ErrorPair<bool> Configuration::nGetBool(const std::string& name) {
+Types::ErrorPair<bool> Configuration::nGetBool(const std::string& name) const {
 	Error nameError = isValidConfigurationName(name, boolPrefix);
 	if(nameError.fail()) {
 		return Types::ErrorPair<bool>(nameError);
@@ -114,7 +114,7 @@ Types::ErrorPair<bool> Configuration::nGetBool(const std::string& name) {
 		return Types::ErrorPair<bool>(Err::KeyNotFound);
 	}
 
-	return Types::ErrorPair<bool>(Err::Success, nValues[name].bValue);
+	return Types::ErrorPair<bool>(Err::Success, nValues.at(name).bValue);
 }
 
 Error Configuration::nSetBool(const std::string& name, bool value) {
@@ -127,7 +127,7 @@ Error Configuration::nSetBool(const std::string& name, bool value) {
 	return Err::Success;
 }
 
-Types::ErrorPair<const char*> Configuration::nGetString(const std::string& name) {
+Types::ErrorPair<const char*> Configuration::nGetString(const std::string& name) const {
 	Error nameError = isValidConfigurationName(name, stringPrefix);
 	if(nameError.fail()) {
 		return Types::ErrorPair<const char*>(nameError);
@@ -137,7 +137,7 @@ Types::ErrorPair<const char*> Configuration::nGetString(const std::string& name)
 		return Types::ErrorPair<const char*>(Err::KeyNotFound);
 	}
 
-	return Types::ErrorPair<const char*>(Err::Success, (const char*) nValues[name].szValue);
+	return Types::ErrorPair<const char*>(Err::Success, (const char*) nValues.at(name).szValue);
 }
 
 Error Configuration::nSetString(const std::string& name, const char* value) {
