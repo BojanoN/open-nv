@@ -10,6 +10,8 @@ extern "C" {
 #include <decoder/audio.hpp>
 #include <util/ringbuffer.hpp>
 
+#include <thread>
+
 #define POOL_ALLOC_SIZE 16
 #define NO_BUFFERS      8
 
@@ -64,5 +66,7 @@ private:
     inline constexpr static size_t PLAY_QUEUE_SIZE = 64;
     RingBuffer<StreamPlayer*>      playThreadQueue { PLAY_QUEUE_SIZE };
 
-    LibAVDecoder mAudioDecoder;
+    LibAVDecoder      mAudioDecoder;
+    std::atomic<bool> active;
+    std::thread::id   playThreadID;
 };

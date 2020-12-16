@@ -3,6 +3,9 @@
 #include "logc/log.h"
 
 #include <GL/glew.h>
+
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <glm/glm.hpp>
 
 #include <cstring>

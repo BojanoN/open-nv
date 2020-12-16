@@ -15,6 +15,7 @@ extern "C" {
 #include <engine.hpp>
 #include <file/configuration.hpp>
 #include <logc/log.h>
+#include <util/thread.hpp>
 
 #include <thread>
 
@@ -247,15 +248,9 @@ int LibAVVideoDecoder::open(const char* path)
     }
 
     // Start the dispatching thread
-    std::thread dispatchThread(LibAVVideoDecoder::dispatchThread, this);
-    dispatchThread.detach();
-
-    std::thread videoThread(LibAVVideoDecoder::videoDecodeThread, this);
-    videoThread.detach();
-
-    // Start the decoding threads
-    std::thread audioThread(VideoAudioPlayer::audioThread, &this->audioPlayer);
-    audioThread.detach();
+    this->dispatchThreadID    = ThreadManager::startThread(LibAVVideoDecoder::dispatchThread, this);
+    this->videoDecodeThreadID = ThreadManager::startThread(LibAVVideoDecoder::videoDecodeThread, this);
+    this->audioDecodeThreadID = ThreadManager::startThread(VideoAudioPlayer::audioThread, &this->audioPlayer);
 
     return 0;
 }
@@ -281,6 +276,10 @@ void LibAVVideoDecoder::close()
         textureFrameQueue.get(leftoverTextureFrame);
         av_free(leftoverTextureFrame.data);
     }
+
+    ThreadManager::stopThread(this->audioDecodeThreadID);
+    ThreadManager::stopThread(this->videoDecodeThreadID);
+    ThreadManager::stopThread(this->dispatchThreadID);
 
     sws_freeContext(mRescaler);
 
@@ -338,7 +337,7 @@ size_t LibAVVideoDecoder::updateFrame(MediaFrame& frame)
     double actualDelay = frame.pts - audioClock;
 
     if (actualDelay - (timeBase - MIN_VIDEO_DELAY_SEC) < 10E-7) {
-        actualDelay = timeBase - MIN_VIDEO_DELAY_SEC; //0.023;
+        actualDelay = timeBase - MIN_VIDEO_DELAY_SEC;
     }
 
     return (size_t)(actualDelay * 1000000);
@@ -475,6 +474,9 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
             }
 
             uint8_t* dst[4] = { frameData, nullptr, nullptr, nullptr };
+            if (obj->finished) {
+                return;
+            }
 
             ret = sws_scale(
                 obj->mRescaler, obj->mFrame->data,

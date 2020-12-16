@@ -1,8 +1,9 @@
 #pragma once
 
+#include <util/shader.hpp>
+
 #include <decoder/video.hpp>
 #include <types/errorpair.hpp>
-#include <util/shader.hpp>
 
 #include <memory>
 

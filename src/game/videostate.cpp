@@ -82,20 +82,20 @@ void VideoState::suspend()
 {
 }
 
-DrawableGameStateStatus VideoState::draw()
+DrawableStatus VideoState::draw()
 {
     if (mTimer.getElapsedMicroseconds() < mTimeNextUpdateUsec) {
-        return DrawableGameStateStatus::Continue;
+        return DrawableStatus::Continue;
     }
 
     ssize_t timeNextUpdateUsec = mVideoPlayer->update();
     if (timeNextUpdateUsec < 0) {
-        return DrawableGameStateStatus::EndOfOperation;
+        return DrawableStatus::EndOfOperation;
     }
 
     mTimeNextUpdateUsec = mTimer.getElapsedMicroseconds() + timeNextUpdateUsec;
 
-    return DrawableGameStateStatus::ScreenContentChanged;
+    return DrawableStatus::ScreenContentChanged;
 }
 
 }

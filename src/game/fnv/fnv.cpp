@@ -1,7 +1,10 @@
 #include "fnv.hpp"
 
-#include "constants.hpp"
 #include <game/videostate.hpp>
+
+#include "states/loadingscreen.hpp"
+
+#include "constants.hpp"
 #include <logc/log.h>
 
 namespace Game {
@@ -71,6 +74,7 @@ Err::Error FalloutNVGame::start()
 {
     world.loadTopLevelGroups("FalloutNV.esm", FalloutNVGame::initialToplevelGroups);
 
+    // Intro movie
     fs::path fileIntroMovie = (this->dirInstallDir) / Constants::FNV::relpathIntroVideo;
 
     ErrorPair<std::shared_ptr<GameState>> errIntroVideoState = VideoState::create(fileIntroMovie.string().c_str());
@@ -91,6 +95,25 @@ Err::Error FalloutNVGame::start()
 
     this->mRenderManager.exit();
     this->mRenderManager.pop();
+
+    ErrorPair<std::shared_ptr<GameState>> errLoadingScreen = LoadingScreen::create();
+    if (errLoadingScreen.fail()) {
+        log_error("Unable to create loading screen!");
+        return errLoadingScreen.error;
+    }
+
+    mRenderManager.push(errLoadingScreen.value);
+
+    while (true) {
+        if (!mRenderManager.draw()) {
+            mRenderManager.exit();
+            mRenderManager.pop();
+
+            if (mRenderManager.empty()) {
+                break;
+            }
+        }
+    }
 
     return Err::Success;
 }

@@ -24,7 +24,7 @@ protected:
         : mStateType(type) {};
 };
 
-enum class DrawableGameStateStatus {
+enum class DrawableStatus {
     Continue,
     EndOfOperation,
     ScreenContentChanged,
@@ -36,7 +36,7 @@ public:
     DrawableGameState()
         : GameState(GameStateType::Drawable) {};
 
-    virtual DrawableGameStateStatus draw() = 0;
+    virtual DrawableStatus draw() = 0;
 };
 
 }

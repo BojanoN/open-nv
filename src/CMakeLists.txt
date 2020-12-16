@@ -130,6 +130,7 @@ set(sources
   ./util/strmanip.cpp
   ./util/stringutils.cpp
   ./util/compress.cpp
+  ./util/thread.cpp
   ./gamedata.cpp
   ./resources/texture2D.cpp
   ./resources/resource.cpp
@@ -139,7 +140,7 @@ set(sources
   ./game/rendermanager.cpp
   ./game/videostate.cpp
   ./game/fnv/fnv.cpp
- # ./game/fnv/states/loadingscreen.cpp
+  ./game/fnv/states/loadingscreen.cpp
   ./main.cpp
   ./nif/nifdata.cpp
   ./nif/nifreader.cpp

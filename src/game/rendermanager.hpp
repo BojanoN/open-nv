@@ -19,6 +19,8 @@ public:
     Err::Error enter();
     void       exit();
 
+    bool empty() { return mStateStack.empty(); };
+
     bool draw();
 
     SDL_Window* mSDLWindow = nullptr;

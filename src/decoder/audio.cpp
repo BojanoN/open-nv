@@ -11,6 +11,7 @@ extern "C" {
 #include <engine/audio.hpp>
 #include <logc/log.h>
 #include <util/ringbuffer.hpp>
+#include <util/thread.hpp>
 
 #include <thread>
 #include <unordered_map>
@@ -255,10 +256,18 @@ void LibAVDecoder::decodeThread()
     log_info("Audio decoding thread: starting...");
 
     while (true) {
+
+        if (!this->active.load()) {
+            return;
+        }
+
         while (messageQueue.empty()) {
             std::this_thread::sleep_for(std::chrono::nanoseconds(100));
         }
 
+        if (!this->active.load()) {
+            return;
+        }
         messageQueue.get(currentMessage);
         switch (currentMessage.messageType) {
         case DecoderMessageType::FrameRequest: {
@@ -304,6 +313,13 @@ void LibAVDecoder::decodeThread()
 
 void LibAVDecoder::init()
 {
-    std::thread decodingThread(&LibAVDecoder::decodeThread, this);
-    decodingThread.detach();
+    active.store(true);
+    this->decodeThreadID = ThreadManager::startThread(&LibAVDecoder::decodeThread, this);
+}
+
+void LibAVDecoder::close()
+{
+    this->active.store(false);
+    ThreadManager::stopThread(this->decodeThreadID);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }

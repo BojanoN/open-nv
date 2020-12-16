@@ -2,6 +2,8 @@
 
 #include <atomic>
 #include <cstdint>
+#include <thread>
+
 #include <util/ringbuffer.hpp>
 
 #include "structs.hpp"
@@ -59,11 +61,15 @@ struct DecoderMessage {
 
 class LibAVDecoder {
 public:
-    void                           init();
+    void init();
+    void close();
+
     SPSCRingBuffer<DecoderMessage> messageQueue { MESSAGE_QUEUE_SIZE };
 
 private:
-    void decodeThread();
+    void              decodeThread();
+    std::atomic<bool> active;
+    std::thread::id   decodeThreadID;
 
     inline constexpr static size_t MESSAGE_QUEUE_SIZE = 64;
 };

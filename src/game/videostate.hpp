@@ -26,7 +26,7 @@ public:
     virtual void  suspend();
     virtual void  resume();
 
-    virtual DrawableGameStateStatus draw();
+    virtual DrawableStatus draw();
 
     static ErrorPair<std::shared_ptr<GameState>> create(const char* filePath);
 

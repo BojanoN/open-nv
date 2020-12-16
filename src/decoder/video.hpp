@@ -6,6 +6,8 @@
 #include <util/ringbuffer.hpp>
 #include <util/timer.hpp>
 
+#include <thread>
+
 #include "structs.hpp"
 #include "video_audio.hpp"
 
@@ -78,6 +80,10 @@ private:
 
     double timeBase;
     bool   finished;
+
+    std::thread::id videoDecodeThreadID;
+    std::thread::id audioDecodeThreadID;
+    std::thread::id dispatchThreadID;
 
     // TODO: adjust configuration and config manager so we can mark this as const
     File::Configuration& mDisplayConfiguration;

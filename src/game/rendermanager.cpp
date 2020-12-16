@@ -61,12 +61,12 @@ bool RenderStateManager::draw()
         }
     }
 
-    DrawableGameStateStatus statusDraw = static_cast<DrawableGameState*>(mStateStack.top().get())->draw();
-    if (statusDraw == DrawableGameStateStatus::EndOfOperation) {
+    DrawableStatus statusDraw = static_cast<DrawableGameState*>(mStateStack.top().get())->draw();
+    if (statusDraw == DrawableStatus::EndOfOperation) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         return false;
     }
-    if (statusDraw == DrawableGameStateStatus::ScreenContentChanged) {
+    if (statusDraw == DrawableStatus::ScreenContentChanged) {
         SDL_GL_SwapWindow(mSDLWindow);
     }
 

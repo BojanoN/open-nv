@@ -1,16 +1,17 @@
 #pragma once
 
+#include <resources/shader.hpp>
+
 #include <engine/audio.hpp>
 #include <esm/reader.hpp>
 #include <file/configuration_manager.hpp>
 #include <game/fnv/fnv.hpp>
 #include <gameworld.hpp>
-#include <resources/shader.hpp>
+#include <util/thread.hpp>
 
 #include <filesystem>
 #include <string>
 
-#include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 

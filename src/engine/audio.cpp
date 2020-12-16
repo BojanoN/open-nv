@@ -1,9 +1,10 @@
 #include "audio.hpp"
 
+#include <util/thread.hpp>
+
 #include <cstddef>
 #include <logc/log.h>
 #include <stdexcept>
-#include <thread>
 #include <unordered_set>
 #include <vector>
 
@@ -46,10 +47,11 @@ bool AudioEngine::init()
 
     alIsExtensionPresent("EAX2.0");
 
+    this->active.store(true);
+
     mAudioDecoder.init();
 
-    std::thread playThread(&AudioEngine::playingThread, this);
-    playThread.detach();
+    playThreadID = ThreadManager::startThread(&AudioEngine::playingThread, this);
 
     return true;
 }
@@ -205,6 +207,10 @@ void AudioEngine::playingThread()
 
     while (true) {
 
+        if (!this->active.load()) {
+            return;
+        }
+
         while (playThreadQueue.empty() && activeStreams.empty()) {
             std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
@@ -266,6 +272,11 @@ void AudioEngine::playingThread()
 }
 void AudioEngine::close()
 {
+    this->mAudioDecoder.close();
+
+    this->active.store(false);
+    ThreadManager::stopThread(this->playThreadID);
+
     alcMakeContextCurrent(NULL);
     alcDestroyContext(currentDevice.deviceContext);
     alcCloseDevice(currentDevice.device);
