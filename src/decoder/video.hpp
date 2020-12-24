@@ -6,8 +6,6 @@
 #include <util/ringbuffer.hpp>
 #include <util/timer.hpp>
 
-#include <thread>
-
 #include "structs.hpp"
 #include "video_audio.hpp"
 
@@ -46,9 +44,6 @@ using File::Configuration;
 
 class LibAVVideoDecoder {
 
-    
-
-
 public:
     int  open(const char* path);
     void close();
@@ -85,13 +80,12 @@ private:
     int mVideoStreamIndex;
     int mAudioStreamIndex;
 
-    double timeBase;
-    bool   finished;
+    double            timeBase;
+    std::atomic<bool> finished;
 
-    std::thread::id videoDecodeThreadID;
-    std::thread::id audioDecodeThreadID;
-    std::thread::id dispatchThreadID;
+    std::atomic<bool> videoDecodeThreadFinished;
+    std::atomic<bool> dispatchThreadFinished;
 
     // TODO: adjust configuration and config manager so we can mark this as const
-    const Configuration *const mDisplayConfiguration;
+    const Configuration* const mDisplayConfiguration;
 };

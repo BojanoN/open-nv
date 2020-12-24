@@ -52,5 +52,6 @@ private:
     MediaFrame currentFrame;
     size_t     mCurrentFrameReadPos;
 
-    bool finished;
+    std::atomic<bool> finished;
+    std::atomic<bool> audioThreadFinished;
 };

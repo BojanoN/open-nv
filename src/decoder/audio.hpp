@@ -68,8 +68,8 @@ public:
 
 private:
     void              decodeThread();
-    std::atomic<bool> active;
-    std::thread::id   decodeThreadID;
+    std::atomic<bool> active               = false;
+    std::atomic<bool> decodeThreadFinished = false;
 
     inline constexpr static size_t MESSAGE_QUEUE_SIZE = 64;
 };

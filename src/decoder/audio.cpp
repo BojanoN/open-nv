@@ -257,17 +257,21 @@ void LibAVDecoder::decodeThread()
 
     while (true) {
 
-        if (!this->active.load()) {
+        if (!this->active.load(std::memory_order_acq_rel)) {
+            this->decodeThreadFinished.store(true, std::memory_order_acq_rel);
             return;
         }
 
-        while (messageQueue.empty()) {
+        if (messageQueue.empty()) {
             std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+            continue;
         }
 
-        if (!this->active.load()) {
+        if (!this->active.load(std::memory_order_acq_rel)) {
+            this->decodeThreadFinished.store(true, std::memory_order_acq_rel);
             return;
         }
+
         messageQueue.get(currentMessage);
         switch (currentMessage.messageType) {
         case DecoderMessageType::FrameRequest: {
@@ -314,12 +318,16 @@ void LibAVDecoder::decodeThread()
 void LibAVDecoder::init()
 {
     active.store(true);
-    this->decodeThreadID = ThreadManager::startThread(&LibAVDecoder::decodeThread, this);
+
+    std::thread decodingThread(&LibAVDecoder::decodeThread, this);
+    decodingThread.detach();
 }
 
 void LibAVDecoder::close()
 {
     this->active.store(false);
-    ThreadManager::stopThread(this->decodeThreadID);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    while (!this->decodeThreadFinished.load(std::memory_order_acq_rel)) {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
 }

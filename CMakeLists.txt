@@ -23,6 +23,7 @@ list(APPEND IncludeDirectories
   "${LibraryDirectory}/src/libav"
   )
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 add_compile_options(-DLOG_USE_COLOR -Wall)
 
 add_subdirectory(${SourceDirectory})

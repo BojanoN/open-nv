@@ -1,10 +1,9 @@
 #include "audio.hpp"
 
-#include <util/thread.hpp>
-
 #include <cstddef>
 #include <logc/log.h>
 #include <stdexcept>
+#include <thread>
 #include <unordered_set>
 #include <vector>
 
@@ -51,7 +50,8 @@ bool AudioEngine::init()
 
     mAudioDecoder.init();
 
-    playThreadID = ThreadManager::startThread(&AudioEngine::playingThread, this);
+    std::thread playingThread(&AudioEngine::playingThread, this);
+    playingThread.detach();
 
     return true;
 }
@@ -207,12 +207,14 @@ void AudioEngine::playingThread()
 
     while (true) {
 
-        if (!this->active.load()) {
+        if (!this->active.load(std::memory_order_acq_rel)) {
+            this->playThreadFinished.store(true, std::memory_order_acq_rel);
             return;
         }
 
-        while (playThreadQueue.empty() && activeStreams.empty()) {
+        if (playThreadQueue.empty() && activeStreams.empty()) {
             std::this_thread::sleep_for(std::chrono::microseconds(100));
+            continue;
         }
 
         while (!playThreadQueue.empty()) {
@@ -272,10 +274,13 @@ void AudioEngine::playingThread()
 }
 void AudioEngine::close()
 {
-    this->mAudioDecoder.close();
-
     this->active.store(false);
-    ThreadManager::stopThread(this->playThreadID);
+
+    while (!this->playThreadFinished.load(std::memory_order_acq_rel)) {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+
+    this->mAudioDecoder.close();
 
     alcMakeContextCurrent(NULL);
     alcDestroyContext(currentDevice.deviceContext);

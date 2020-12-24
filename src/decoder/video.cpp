@@ -15,8 +15,6 @@ extern "C" {
 #include <engine.hpp>
 #include <file/configuration.hpp>
 #include <logc/log.h>
-#include <util/thread.hpp>
-
 #include <thread>
 
 #define TEXFRAME_QUEUE_SIZE 16
@@ -147,6 +145,7 @@ int LibAVVideoDecoder::open(const char* path)
         mOutputVideoParams.height,
         AV_PIX_FMT_RGB24,
         1);
+    // mConvertedFrame->data[0] = (uint8_t*)av_malloc(mConvertedFrameSize);
 
     // Init rescaler
     // TODO: determine optimal sampling method via output resolution
@@ -199,6 +198,7 @@ int LibAVVideoDecoder::open(const char* path)
             avformat_free_context(pFormat);
 
             av_frame_free(&mFrame);
+            av_freep(&mConvertedFrame->data[0]);
             av_frame_free(&mConvertedFrame);
 
             return AVERROR_DECODER_NOT_FOUND;
@@ -222,6 +222,7 @@ int LibAVVideoDecoder::open(const char* path)
             avformat_free_context(pFormat);
 
             av_frame_free(&mFrame);
+            av_freep(&mConvertedFrame->data[0]);
             av_frame_free(&mConvertedFrame);
 
             return err;
@@ -241,6 +242,7 @@ int LibAVVideoDecoder::open(const char* path)
             avformat_free_context(pFormat);
 
             av_frame_free(&mFrame);
+            av_freep(&mConvertedFrame->data[0]);
             av_frame_free(&mConvertedFrame);
 
             return -1;
@@ -248,21 +250,28 @@ int LibAVVideoDecoder::open(const char* path)
     }
 
     // Start the dispatching thread
-    this->dispatchThreadID    = ThreadManager::startThread(LibAVVideoDecoder::dispatchThread, this);
-    this->videoDecodeThreadID = ThreadManager::startThread(LibAVVideoDecoder::videoDecodeThread, this);
-    this->audioDecodeThreadID = ThreadManager::startThread(VideoAudioPlayer::audioThread, &this->audioPlayer);
+    std::thread dispThread(LibAVVideoDecoder::dispatchThread, this);
+    std::thread videoDecThread(LibAVVideoDecoder::videoDecodeThread, this);
+    std::thread audioDecThread(VideoAudioPlayer::audioThread, &this->audioPlayer);
+
+    dispThread.detach();
+    videoDecThread.detach();
+    audioDecThread.detach();
 
     return 0;
 }
 
 void LibAVVideoDecoder::close()
 {
-    this->finished = true;
 
     audioPlayer.close();
 
-    // Sleep a bit to make sure the all queues in threads are flushed
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    this->finished.store(true, std::memory_order_acq_rel);
+    // Sleep a bit to make sure the all threads are stopped
+    while (!this->dispatchThreadFinished.load(std::memory_order_acq_rel)
+        || !this->videoDecodeThreadFinished.load(std::memory_order_acq_rel)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
 
     AVPacket* leftover;
 
@@ -277,10 +286,6 @@ void LibAVVideoDecoder::close()
         av_free(leftoverTextureFrame.data);
     }
 
-    ThreadManager::stopThread(this->audioDecodeThreadID);
-    ThreadManager::stopThread(this->videoDecodeThreadID);
-    ThreadManager::stopThread(this->dispatchThreadID);
-
     sws_freeContext(mRescaler);
 
     avcodec_close(mVideoCodecCtx);
@@ -289,6 +294,7 @@ void LibAVVideoDecoder::close()
     avformat_free_context(mFmtCtx);
 
     av_frame_free(&mFrame);
+    av_freep(&mConvertedFrame->data[0]);
     av_frame_free(&mConvertedFrame);
 }
 
@@ -314,6 +320,88 @@ void log_frame(AVFrame* pFrame, AVCodecContext* pCodecContext)
         pFrame->key_frame,
         pFrame->coded_picture_number,
         pFrame->display_picture_number);
+}
+
+void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
+{
+    AVPacket* packet = av_packet_alloc();
+
+    if (packet == nullptr) {
+        log_fatal("Video decoding thread: Out of memory!");
+        obj->dispatchThreadFinished.store(true, std::memory_order_acq_rel);
+        return;
+    }
+
+    int videoStreamIndex = obj->mVideoStreamIndex;
+    int audioStreamIndex = obj->mAudioStreamIndex;
+
+    SPSCRingBuffer<AVPacket*>& videoPacketQueue = obj->videoPacketQueue;
+    SPSCRingBuffer<AVPacket*>& audioPacketQueue = obj->audioPlayer.audioPacketQueue;
+
+    int ret;
+
+    videoPacketQueue.reset();
+    audioPacketQueue.reset();
+
+    // Receive and dispatch packets
+    do {
+
+        if (obj->finished.load(std::memory_order_acq_rel)) {
+            break;
+        }
+
+        ret = av_read_frame(obj->mFmtCtx, packet);
+        if (ret == AVERROR_EOF) {
+            obj->finished.store(true, std::memory_order_acq_rel);
+            obj->dispatchThreadFinished.store(true, std::memory_order_acq_rel);
+            av_packet_free(&packet);
+            return;
+        }
+
+        if (ret < 0) {
+            log_error("Dispatch thread: Error reading packet: %s", LibAV::getError(ret));
+            obj->finished.store(true, std::memory_order_acq_rel);
+            obj->dispatchThreadFinished.store(true, std::memory_order_acq_rel);
+            av_packet_free(&packet);
+            return;
+        }
+
+        if (packet->stream_index == audioStreamIndex) {
+            while (audioPacketQueue.full() && !obj->finished) {
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
+
+            if (obj->finished.load(std::memory_order_acq_rel)) {
+                break;
+            }
+
+            AVPacket* audioPacket = av_packet_clone(packet);
+            audioPacketQueue.put(audioPacket);
+            av_packet_unref(packet);
+
+        } else if (packet->stream_index == videoStreamIndex) {
+            while (videoPacketQueue.full() && !obj->finished) {
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
+
+            if (obj->finished.load(std::memory_order_acq_rel)) {
+                break;
+            }
+
+            AVPacket* videoPacket = av_packet_clone(packet);
+            videoPacketQueue.put(videoPacket);
+            av_packet_unref(packet);
+
+        } else {
+            log_warn("Dispatch thread: Unknown stream id %u encountered: ", packet->stream_index);
+            av_packet_unref(packet);
+        }
+    } while (true);
+
+    av_packet_free(&packet);
+    obj->dispatchThreadFinished.store(true, std::memory_order_acq_rel);
+
+    return;
 }
 
 size_t LibAVVideoDecoder::updateFrame(MediaFrame& frame)
@@ -343,82 +431,6 @@ size_t LibAVVideoDecoder::updateFrame(MediaFrame& frame)
     return (size_t)(actualDelay * 1000000);
 }
 
-void LibAVVideoDecoder::dispatchThread(LibAVVideoDecoder* obj)
-{
-    AVPacket* packet = av_packet_alloc();
-
-    if (packet == nullptr) {
-        log_fatal("Video decoding thread: Out of memory!");
-        return;
-    }
-
-    int videoStreamIndex = obj->mVideoStreamIndex;
-    int audioStreamIndex = obj->mAudioStreamIndex;
-
-    SPSCRingBuffer<AVPacket*>& videoPacketQueue = obj->videoPacketQueue;
-    SPSCRingBuffer<AVPacket*>& audioPacketQueue = obj->audioPlayer.audioPacketQueue;
-
-    int ret;
-
-    videoPacketQueue.reset();
-    audioPacketQueue.reset();
-
-    // Receive and dispatch packets
-    do {
-
-        if (obj->finished) {
-            break;
-        }
-
-        ret = av_read_frame(obj->mFmtCtx, packet);
-        if (ret == AVERROR_EOF) {
-            obj->finished = true;
-            av_packet_free(&packet);
-            return;
-        }
-
-        if (ret < 0) {
-            log_error("Dispatch thread: Error reading packet: %s", LibAV::getError(ret));
-            obj->finished = true;
-            av_packet_free(&packet);
-            return;
-        }
-
-        if (packet->stream_index == audioStreamIndex) {
-            while (audioPacketQueue.full() && !obj->finished) {
-                std::this_thread::sleep_for(std::chrono::microseconds(100));
-            }
-
-            if (obj->finished) {
-                break;
-            }
-
-            AVPacket* audioPacket = av_packet_clone(packet);
-            audioPacketQueue.put(audioPacket);
-            av_packet_unref(packet);
-        } else if (packet->stream_index == videoStreamIndex) {
-            while (videoPacketQueue.full() && !obj->finished) {
-                std::this_thread::sleep_for(std::chrono::microseconds(100));
-            }
-
-            if (obj->finished) {
-                break;
-            }
-
-            AVPacket* videoPacket = av_packet_clone(packet);
-            videoPacketQueue.put(videoPacket);
-            av_packet_unref(packet);
-        } else {
-            log_warn("Dispatch thread: Unknown stream id %u encountered: ", packet->stream_index);
-            av_packet_unref(packet);
-        }
-    } while (true);
-
-    av_packet_free(&packet);
-
-    return;
-}
-
 void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
 {
     int          ret;
@@ -432,21 +444,25 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
     obj->textureFrameQueue.reset();
 
     while (true) {
-        if (obj->finished) {
-            return;
-        }
 
         // Receive packet
         while (obj->videoPacketQueue.empty()) {
             std::this_thread::sleep_for(std::chrono::microseconds(10));
         }
 
+        if (obj->finished.load(std::memory_order_acq_rel)) {
+            obj->videoDecodeThreadFinished.store(true, std::memory_order_acq_rel);
+            return;
+        }
+
         obj->videoPacketQueue.get(packet);
 
         ret = avcodec_send_packet(obj->mVideoCodecCtx, packet);
         if (ret < 0) {
-            obj->finished = true;
+            obj->finished.load(std::memory_order_acq_rel);
             log_error("Video decoding thread: Error sending packet to decoder: %s", LibAV::getError(ret));
+            obj->videoDecodeThreadFinished.store(true, std::memory_order_acq_rel);
+
             return;
         }
         av_packet_unref(packet);
@@ -454,14 +470,19 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
         // Decode all frames from the packet
         do {
 
-            if (obj->finished) {
+            if (obj->finished.load(std::memory_order_acq_rel)) {
+                av_packet_free(&packet);
+                obj->videoDecodeThreadFinished.store(true, std::memory_order_acq_rel);
                 return;
             }
 
             ret = avcodec_receive_frame(obj->mVideoCodecCtx, obj->mFrame);
             if (ret == AVERROR_EOF) {
-                obj->finished = true;
-                break;
+                av_packet_free(&packet);
+                obj->finished.load(std::memory_order_acq_rel);
+                obj->videoDecodeThreadFinished.store(true, std::memory_order_acq_rel);
+
+                return;
             }
             if (ret == AVERROR(EAGAIN)) {
                 continue;
@@ -470,11 +491,18 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
             uint8_t* frameData = (uint8_t*)av_malloc(obj->mConvertedFrameSize);
             if (frameData == nullptr) {
                 log_error("Video decoder thread: out of memory");
-                break;
+                obj->finished.load(std::memory_order_acq_rel);
+                obj->videoDecodeThreadFinished.store(true, std::memory_order_acq_rel);
+
+                return;
             }
 
             uint8_t* dst[4] = { frameData, nullptr, nullptr, nullptr };
-            if (obj->finished) {
+            if (obj->finished.load(std::memory_order_acq_rel)) {
+                av_free(frameData);
+                av_packet_free(&packet);
+                obj->videoDecodeThreadFinished.store(true, std::memory_order_acq_rel);
+
                 return;
             }
 
@@ -484,8 +512,10 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
                 dst, obj->mConvertedFrame->linesize);
             if (ret < 0) {
                 log_error("Video decoding thread: Error rescaling: %s", LibAV::getError(ret));
-                obj->finished = true;
-                break;
+                obj->finished.load(std::memory_order_acq_rel);
+                obj->videoDecodeThreadFinished.store(true, std::memory_order_acq_rel);
+
+                return;
             }
 
             MediaFrame frame;
@@ -498,6 +528,7 @@ void LibAVVideoDecoder::videoDecodeThread(LibAVVideoDecoder* obj)
 
             double frameDelay = obj->mFrame->repeat_pict * av_q2d(obj->mFmtCtx->streams[obj->mVideoStreamIndex]->time_base) * 0.5;
             frame.pts         = pts - frameDelay;
+            av_packet_free(&packet);
 
             while (obj->textureFrameQueue.full()) {
                 std::this_thread::sleep_for(std::chrono::microseconds(10));

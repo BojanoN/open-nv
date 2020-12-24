@@ -10,8 +10,6 @@ extern "C" {
 #include <decoder/audio.hpp>
 #include <util/ringbuffer.hpp>
 
-#include <thread>
-
 #define POOL_ALLOC_SIZE 16
 #define NO_BUFFERS      8
 
@@ -47,7 +45,9 @@ public:
 
 class AudioEngine {
 public:
-    AudioEngine() {};
+    AudioEngine()
+        : active(false)
+        , playThreadFinished(false) {};
     ~AudioEngine() {};
 
     bool init();
@@ -68,5 +68,5 @@ private:
 
     LibAVDecoder      mAudioDecoder;
     std::atomic<bool> active;
-    std::thread::id   playThreadID;
+    std::atomic<bool> playThreadFinished;
 };

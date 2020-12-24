@@ -5,6 +5,10 @@
 
 #include <resources/shader.hpp>
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+}
+
 // clang-format off
 float VideoPlayer::vertices[16] = {
  -1.0f,  1.0f,  0.0f, 0.0f,
@@ -87,7 +91,7 @@ void VideoPlayer::close()
     glDeleteTextures(1, &mVideoFrameTexture);
 
     decoder.close();
-    delete[] mCurrentTextureFrame.data;
+    av_free(mCurrentTextureFrame.data);
 }
 
 ssize_t VideoPlayer::update()

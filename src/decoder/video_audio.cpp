@@ -49,7 +49,7 @@ int VideoAudioPlayer::init(AVCodecContext* audioCodecContext, AVStream* stream)
     mAudioCodecCtx = audioCodecContext;
 
     mFrame  = (AVFrame*)av_frame_alloc();
-    mPacket = av_packet_alloc();
+    mPacket = nullptr;
 
     this->stream = stream;
 
@@ -83,6 +83,9 @@ bool VideoAudioPlayer::decodeAudioFrame()
         return false;
     } else if (ret == AVERROR(EAGAIN)) {
         // The decoder is done with the previous packet, fetch and send a new one
+        if (mPacket != nullptr) {
+            av_packet_unref(mPacket);
+        }
         if (audioPacketQueue.empty()) {
             std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
@@ -131,6 +134,7 @@ bool VideoAudioPlayer::decodeAudioFrame()
         return false;
     }
     lastAudioFramePTS = av_q2d(stream->time_base) * mFrame->pts - (BUFFER_MSEC_LENGTH * (VIDEO_AUDIO_BUFFER_NO));
+    av_packet_free(&mPacket);
 
     if (lastAudioFramePTS < 0.) {
         lastAudioFramePTS = 0.0;
@@ -190,10 +194,14 @@ void VideoAudioPlayer::audioThread(VideoAudioPlayer* obj)
         alBufferData(mBuffers[i], AL_FORMAT_STEREO16, obj->decodedDataBuffer, got, 48000);
         if (alGetError() != AL_NO_ERROR) {
             log_error("Error buffering audio for playback");
+            obj->audioThreadFinished.store(true, std::memory_order_acq_rel);
+
             return;
         }
 
         if (endOfPlayback) {
+            obj->audioThreadFinished.store(true, std::memory_order_acq_rel);
+
             break;
         }
     }
@@ -201,11 +209,15 @@ void VideoAudioPlayer::audioThread(VideoAudioPlayer* obj)
     alSourcePlay(mSource);
     if (alGetError() != AL_NO_ERROR) {
         fprintf(stderr, "Error starting playback\n");
+        obj->audioThreadFinished.store(true, std::memory_order_acq_rel);
+
         return;
     }
 
     if (endOfPlayback) {
-        obj->finished = true;
+        obj->finished.store(true, std::memory_order_acq_rel);
+        obj->audioThreadFinished.store(true, std::memory_order_acq_rel);
+
         return;
     }
 
@@ -213,6 +225,11 @@ void VideoAudioPlayer::audioThread(VideoAudioPlayer* obj)
         ALint processed, state;
 
         bool endOfPlayback = false;
+
+        if (obj->finished.load(std::memory_order_acq_rel)) {
+            obj->audioThreadFinished.store(true, std::memory_order_acq_rel);
+            return;
+        }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(4));
 
@@ -236,6 +253,7 @@ void VideoAudioPlayer::audioThread(VideoAudioPlayer* obj)
 
             if (alGetError() != AL_NO_ERROR) {
                 log_error("Error buffering audio data");
+                obj->audioThreadFinished.store(true, std::memory_order_acq_rel);
                 return;
             }
 
@@ -250,23 +268,32 @@ void VideoAudioPlayer::audioThread(VideoAudioPlayer* obj)
 
             alGetSourcei(mSource, AL_BUFFERS_QUEUED, &queued);
             if (queued == 0) {
+                obj->audioThreadFinished.store(true, std::memory_order_acq_rel);
                 return;
             }
 
             alSourcePlay(mSource);
             if (alGetError() != AL_NO_ERROR) {
+                obj->audioThreadFinished.store(true, std::memory_order_acq_rel);
                 return;
             }
         }
     }
     if (endOfPlayback) {
-        obj->finished = true;
+        obj->finished.store(true, std::memory_order_acq_rel);
+        obj->audioThreadFinished.store(true, std::memory_order_acq_rel);
         return;
     }
 }
 
 void VideoAudioPlayer::close()
 {
+    this->finished.store(true, std::memory_order_acq_rel);
+
+    while (!this->audioThreadFinished.load(std::memory_order_acq_rel)) {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+
     alDeleteSources(1, &mSource);
     if (alGetError() != AL_NO_ERROR) {
         log_error("Unable to delete audio source");
@@ -279,10 +306,6 @@ void VideoAudioPlayer::close()
         return;
     }
 
-    this->finished = true;
-
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
-
     AVPacket* leftover;
 
     while (!audioPacketQueue.empty()) {
@@ -290,9 +313,8 @@ void VideoAudioPlayer::close()
         av_packet_free(&leftover);
     }
 
-    av_packet_free(&mPacket);
     av_frame_free(&mFrame);
-
+    av_free(mResampleBuffer);
     swr_free(&mResampler);
     avcodec_close(mAudioCodecCtx);
     avcodec_free_context(&mAudioCodecCtx);

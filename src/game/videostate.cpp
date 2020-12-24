@@ -9,7 +9,6 @@ using namespace Types;
 
 VideoState::~VideoState()
 {
-    this->mVideoPlayer->close();
 }
 
 ErrorPair<std::shared_ptr<GameState>> VideoState::create(const char* pathVideoFile)
@@ -74,6 +73,7 @@ Error VideoState::enter()
 
 void VideoState::exit()
 {
+    this->mVideoPlayer->close();
 }
 void VideoState::resume()
 {
