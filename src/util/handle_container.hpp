@@ -7,28 +7,10 @@
 #include <cassert>
 #endif
 
-#include <resources/resource.hpp>
+#include <resources/handle_resource.hpp>
 
-struct ResourceHandle {
-    uint32_t index;
-    unsigned generation : 20;
-    unsigned resourceType : 12;
-
-    inline bool valid()
-    {
-        return *reintepret_cast<uint64_t*>(&index) != 0;
-    }
-
-    inline bool operator==(ResourceHandle r)
-    {
-        *reintepret_cast<uint64_t*>(&this->index) == *reintepret_cast<uint64_t*>(&r);
-    }
-};
-
-template <typename T, uint32_t N = 4096>
+template <typename T, HandleResourceType type, uint32_t N = 4096>
 struct HandleContainer {
-
-    static_assert(std::is_base_of<Resource, T>::value, "Handle containers can only be instantatiated for Resource types!");
 
     HandleContainer()
         : mFreelistHead(0)
@@ -36,10 +18,13 @@ struct HandleContainer {
         , mNoAllocatedResources(0)
     {
         for (uint32_t i = 0; i < N; i++) {
-            mIndices[i].nextIndex          = i + 1;
-            mIndices[i].resourceArrayIndex = HandleContainer::Sentinel;
-            mIndices[i].handle.index       = 0;
-            mIndices[i].handle.generation  = 1;
+            InternalIndex& currentIndex = mIndices[i];
+
+            currentIndex.nextIndex           = i + 1;
+            currentIndex.resourceArrayIndex  = HandleContainer::Sentinel;
+            currentIndex.handle.index        = i;
+            currentIndex.handle.generation   = 1;
+            currentIndex.handle.resourceType = type;
         }
     };
     ~HandleContainer() {};
@@ -50,10 +35,10 @@ struct HandleContainer {
         assert(isValid(handle));
 #endif
 
-        return mResource[mIndices[handle.index].resourceArrayIndex];
+        return mResource[mIndices[handle.index].resourceArrayIndex].resource;
     }
 
-    inline bool isValid(ResourceHandle handle)
+    inline bool isValid(const ResourceHandle handle)
     {
 #ifdef DEBUG
         assert(handle < N);
@@ -61,9 +46,7 @@ struct HandleContainer {
 
         InternalIndex& index = mIndices[handle.index];
         return index.resourceArrayIndex != HandleContainer::Sentinel
-            && handle < N
-            && handle == index.handle
-            && handle.resourceType == index.handle.resourceType;
+            && handle == index.handle;
     }
 
     inline void release(ResourceHandle handle)
@@ -82,8 +65,8 @@ struct HandleContainer {
         // Release index
         handleIndex.resourceArrayIndex = HandleContainer::Sentinel;
         handleIndex.handle.generation++;
-        handleIndex.nextIndex = mFreelistHead;
-        mFreelistHead         = handleIndex.handle.index;
+        handleIndex.nextIndex = mFreelistTail;
+        mFreelistTail         = handleIndex.handle.index;
 
         mNoAllocatedResources--;
     }
@@ -91,13 +74,14 @@ struct HandleContainer {
     inline ResourceHandle create()
     {
         if (mNoAllocatedResources == N) {
-            return reinterpret_cast<ResourceHandle>(0);
+            uint64_t ret = 0;
+            return *reinterpret_cast<ResourceHandle*>(&ret);
         }
 
-        InternalIndex& index     = mIndices[mFreelistTail];
+        InternalIndex& index     = mIndices[mFreelistHead];
         index.resourceArrayIndex = mNoAllocatedResources;
 
-        mFreelistTail = index.nextIndex;
+        mFreelistHead = index.nextIndex;
         mNoAllocatedResources++;
 
         return index.handle;

@@ -1,45 +1,53 @@
 #pragma once
 
-#include <render/renderer.hpp>
+// clang-format off
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+// clang-format on
 
-#define NO_RENDERER_OBJECTS 4096
+#include <render/renderer.hpp>
+#include <util/handle_container.hpp>
 
 namespace Render {
 
 class OpenGLRenderer : public Renderer {
 public:
-    OpenGLRenderer() {};
+    OpenGLRenderer();
     ~OpenGLRenderer() {};
 
-    virtual VertexBuffer*  createVertexBuffer(const void* data, size_t size);
-    virtual VertexArray*   createVertexArray(VertexBuffer* buffers, size_t noBuffers);
-    virtual ElementBuffer* createElementBuffer(const void* data, size_t size);
+    virtual ResourceHandle createVertexBuffer(const void* data, size_t size);
+    virtual ResourceHandle createVertexArray();
+    virtual ResourceHandle createElementBuffer(const void* data, size_t size);
 
-    virtual void setVertexBuffer(const VertexBuffer* buffer);
-    virtual void setVertexArray(const VertexArray* array);
-    virtual void setElementBuffer(const ElementBuffer* buffer);
+    virtual void destroyVertexBuffer(ResourceHandle vertexBufferHandle);
+    virtual void destroyVertexArray(ResourceHandle vertexArrayHandle);
+    virtual void destroyElementBuffer(ResourceHandle elementBufferHandle);
+
+    virtual void setVertexBuffer(const ResourceHandle vertexBufferHandle);
+    virtual void setVertexArray(const ResourceHandle vertexArrayHandle);
+    virtual void setElementBuffer(const ResourceHandle elementBufferHandle);
 
     virtual void clearScreen();
     virtual void drawTriangleArray(size_t count, size_t offset);
-    virtual void drawTrianglesIndexed(size_t count, size_t offset);
+    virtual void drawTrianglesIndexed(size_t count);
 
     virtual void createShaderProgramFromPath(const char* vertexShaderPath, const char* fragmentShaderPath);
     virtual void createShaderProgramFromSource(const char* vertexShaderSource, const char* fragmentShaderSource);
 
-    virtual void loadTexture(const Texture2D& texture);
-    virtual void setTexture(const Texture2D& texture, size_t offset);
+    virtual ResourceHandle loadTexture(const Texture2D& texture);
+    virtual void           setTexture(const ResourceHandle textureHandle, size_t offset);
 
     virtual void setRendererState(const RendererState* state);
 
 private:
-    GLUint       mVertexBuffers[NO_RENDERER_OBJECTS]             = { 0 };
-    unsigned int mVertexBufferHandleCounter[NO_RENDERER_OBJECTS] = { 0 };
+    typedef HandleContainer<GLuint, HandleResourceType::VertexBuffer>  GLVertexBufferHandleContainer;
+    typedef HandleContainer<GLuint, HandleResourceType::ElementBuffer> GLElementBufferHandleContainer;
+    typedef HandleContainer<GLuint, HandleResourceType::VertexArray>   GLVertexArrayHandleContainer;
 
-    GLUint       mVertexArrays[NO_RENDERER_OBJECTS]             = { 0 };
-    unsigned int mVertexArrayHandleCounter[NO_RENDERER_OBJECTS] = { 0 };
-
-    GLUint       mElementBuffers[NO_RENDERER_OBJECTS]             = { 0 };
-    unsigned int mElementBufferHandleCounter[NO_RENDERER_OBJECTS] = { 0 };
+    GLVertexBufferHandleContainer  mVertexBufferContainer;
+    GLElementBufferHandleContainer mElementBufferContainer;
+    GLVertexArrayHandleContainer   mVertexArrayContainer;
 };
 
 };

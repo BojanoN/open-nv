@@ -45,10 +45,3 @@ Types::ErrorPair<std::shared_ptr<T>> Resource<T>::get(const std::string& resourc
 
     return ret;
 }
-
-// NB: maximum allowed number of distinct resource type is 4096
-enum class ResourceType : uint16_t {
-    VertexBuffer,
-    VertexArray,
-    ElementBuffer
-};
